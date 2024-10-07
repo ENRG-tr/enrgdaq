@@ -34,6 +34,9 @@ class DAQJobN1081B(DAQJob):
         if not success:
             raise Exception("Login failed")
         while True:
+            if self._should_stop:
+                return
+
             self._loop()
             time.sleep(N1081B_QUERY_INTERVAL_SECONDS)
 
