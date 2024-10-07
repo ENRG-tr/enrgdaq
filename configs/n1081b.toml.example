@@ -1,0 +1,4 @@
+daq_job_type="n1081b"
+host="1.2.3.4"
+port="8080"
+sections_to_store=["SEC_B", "SEC_D"]
