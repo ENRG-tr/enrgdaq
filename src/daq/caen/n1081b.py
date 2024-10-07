@@ -28,6 +28,10 @@ class DAQJobN1081B(DAQJob):
         super().__init__(config)
         self.device = N1081B(f"{config.host}:{config.port}?")
 
+        for section in config.sections_to_store:
+            if section not in N1081B.Section.__members__:
+                raise Exception(f"Invalid section: {section}")
+
     def start(self):
         self.device.connect()
         success = self.device.login("password")
