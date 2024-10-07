@@ -1,6 +1,10 @@
+import logging
 import time
 
 from daq.daq_job import load_daq_jobs, start_daq_jobs
+
+# set logging level to debug
+logging.basicConfig(level=logging.DEBUG)
 
 daq_jobs = load_daq_jobs("configs/")
 threads = start_daq_jobs(daq_jobs)
