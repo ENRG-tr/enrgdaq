@@ -6,7 +6,7 @@ import tomllib
 from daq.caen.n1081b import DAQJobN1081B
 from daq.models import DAQJob, DAQJobConfig
 
-DAQ_JOB_TYPE_TO_CLASS = {
+DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
     "n1081b": DAQJobN1081B,
 }
 
@@ -14,11 +14,11 @@ DAQ_JOB_TYPE_TO_CLASS = {
 def build_daq_job(toml_config: dict) -> DAQJob:
     generic_daq_job_config = DAQJobConfig.from_dict(toml_config)
 
-    # Get DAQ and DAQ config clasess based on daq_job_type
-    daq_job_class = DAQ_JOB_TYPE_TO_CLASS[generic_daq_job_config.daq_job_type]
-    if not issubclass(daq_job_class, DAQJob):
+    if generic_daq_job_config.daq_job_type not in DAQ_JOB_TYPE_TO_CLASS:
         raise Exception(f"Invalid DAQ job type: {generic_daq_job_config.daq_job_type}")
 
+    # Get DAQ and DAQ config clasess based on daq_job_type
+    daq_job_class = DAQ_JOB_TYPE_TO_CLASS[generic_daq_job_config.daq_job_type]
     daq_job_config_class = daq_job_class.config_type
 
     # Load the config in
