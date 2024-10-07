@@ -1,0 +1,12 @@
+[project]
+name = "enrgdaq"
+version = "0.1.0"
+description = "DAQ for ENRG neutrino experiments"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "n1081b-sdk",
+]
+
+[tool.uv.sources]
+n1081b-sdk = { git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" }
