@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 from typing import Any
 
@@ -12,10 +13,12 @@ class DAQJobConfig(DataClassJsonMixin):
 class DAQJob:
     config_type: Any
     config: Any
+    logger: logging.Logger
     _should_stop: bool
 
     def __init__(self, config: Any):
         self.config = config
+        self.logger = logging.getLogger(type(self).__name__)
         self._should_stop = False
 
     def start(self):
