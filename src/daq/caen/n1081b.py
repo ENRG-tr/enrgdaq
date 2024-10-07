@@ -1,15 +1,12 @@
-import logging
 import time
 from dataclasses import dataclass
 
 from N1081B import N1081B
+from websocket import WebSocket
 
 from daq.models import DAQJob, DAQJobConfig
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
-
-# set logging level to debug
-logging.basicConfig(level=logging.DEBUG)
 
 
 @dataclass
@@ -34,16 +31,46 @@ class DAQJobN1081B(DAQJob):
                 raise Exception(f"Invalid section: {section}")
 
     def start(self):
-        self.device.connect()
-        success = self.device.login(self.config.password)
-        if not success:
-            raise Exception("Login failed")
+        while True:
+            # Try to connect to the device
+            if not self._try_connect():
+                self.logger.error("Connection failed, retrying")
+                continue
+
+            self._start()
+
+    def _start(self):
         while True:
             if self._should_stop:
-                return
+                return True
 
-            self._loop()
+            # Stop if the connection is dropped
+            if isinstance(self.device.ws, WebSocket) and not self.device.ws.connected:
+                self.logger.error("Connection dropped")
+                break
+
+            try:
+                self._loop()
+            except ConnectionResetError:
+                self.logger.error("Connection reset")
+                break
+            except ConnectionAbortedError:
+                self.logger.error("Connection aborted")
+                break
+
             time.sleep(N1081B_QUERY_INTERVAL_SECONDS)
+
+    def _try_connect(self):
+        try:
+            if not self.device.connect():
+                return False
+        except ConnectionRefusedError:
+            return False
+
+        if not self.device.login(self.config.password):
+            raise Exception("Login failed")
+
+        return True
 
     def _loop(self):
         for section in self.config.sections_to_store:
@@ -55,11 +82,11 @@ class DAQJobN1081B(DAQJob):
 
             data = res["data"]
             if "counters" not in data:
-                logging.info(f"No counters in section {section}")
+                self.logger.info(f"No counters in section {section}")
                 continue
 
-            logging.info(f"For section {section}")
+            self.logger.info(f"For section {section}")
             for counter in data["counters"]:
-                logging.info(f"Lemo {counter['lemo']}: {counter['value']}")
+                self.logger.info(f"Lemo {counter['lemo']}: {counter['value']}")
 
-        logging.info("===")
+        self.logger.info("===")
