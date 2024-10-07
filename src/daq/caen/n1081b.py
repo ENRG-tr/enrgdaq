@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 class DAQN1081BConfig(DAQJobConfig):
     host: str
     port: str
+    password: str
     sections_to_store: list[str]
 
 
@@ -34,7 +35,7 @@ class DAQJobN1081B(DAQJob):
 
     def start(self):
         self.device.connect()
-        success = self.device.login("password")
+        success = self.device.login(self.config.password)
         if not success:
             raise Exception("Login failed")
         while True:
