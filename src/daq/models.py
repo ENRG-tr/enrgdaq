@@ -16,6 +16,7 @@ class DAQJob:
 
     def __init__(self, config: Any):
         self.config = config
+        self._should_stop = False
 
     def start(self):
         pass
