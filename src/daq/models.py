@@ -11,8 +11,8 @@ class DAQJobConfig(DataClassJsonMixin):
 
 class DAQJob:
     config_type: Any
-    _should_stop: bool
     config: Any
+    _should_stop: bool
 
     def __init__(self, config: Any):
         self.config = config
