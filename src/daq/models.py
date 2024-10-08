@@ -1,4 +1,5 @@
 import logging
+import threading
 from dataclasses import dataclass
 from typing import Any
 
@@ -26,3 +27,9 @@ class DAQJob:
 
     def stop(self):
         self._should_stop = True
+
+
+@dataclass
+class DAQJobThread:
+    daq_job: DAQJob
+    thread: threading.Thread

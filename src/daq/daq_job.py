@@ -5,7 +5,7 @@ import threading
 import tomllib
 
 from daq.caen.n1081b import DAQJobN1081B
-from daq.models import DAQJob, DAQJobConfig
+from daq.models import DAQJob, DAQJobConfig, DAQJobThread
 
 DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
     "n1081b": DAQJobN1081B,
@@ -40,14 +40,14 @@ def load_daq_jobs(job_config_dir: str) -> list[DAQJob]:
     return jobs
 
 
-def start_daq_job(daq_job: DAQJob) -> threading.Thread:
+def start_daq_job(daq_job: DAQJob) -> DAQJobThread:
     thread = threading.Thread(target=daq_job.start, daemon=True)
     thread.start()
 
-    return thread
+    return DAQJobThread(daq_job, thread)
 
 
-def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[threading.Thread]:
+def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobThread]:
     threads = []
     for daq_job in daq_jobs:
         threads.append(start_daq_job(daq_job))
