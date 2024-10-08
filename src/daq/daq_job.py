@@ -1,4 +1,5 @@
 import glob
+import os
 import threading
 
 import tomllib
@@ -29,7 +30,7 @@ def build_daq_job(toml_config: dict) -> DAQJob:
 
 def load_daq_jobs(job_config_dir: str) -> list[DAQJob]:
     jobs = []
-    job_files = glob.glob(f"{job_config_dir}/*.toml")
+    job_files = glob.glob(os.path.join(job_config_dir, "*.toml"))
     for job_file in job_files:
         with open(job_file, "rb") as f:
             job_config = tomllib.load(f)
