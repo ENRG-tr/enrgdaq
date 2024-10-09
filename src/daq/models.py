@@ -26,7 +26,11 @@ class DAQJob:
         pass
 
     def stop(self):
+        assert not self._should_stop, "DAQ job is already stopped"
         self._should_stop = True
+
+    def __del__(self):
+        self.logger.info("DAQ job is being deleted")
 
 
 @dataclass
