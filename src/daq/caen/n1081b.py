@@ -37,9 +37,9 @@ class DAQJobN1081B(DAQJob):
                 self.logger.error("Connection failed, retrying")
                 continue
 
-            self._start()
+            self._start_loop()
 
-    def _start(self):
+    def _start_loop(self):
         while True:
             if self._should_stop:
                 return True
@@ -60,7 +60,7 @@ class DAQJobN1081B(DAQJob):
 
             time.sleep(N1081B_QUERY_INTERVAL_SECONDS)
 
-    def _try_connect(self):
+    def _try_connect(self) -> bool:
         try:
             if not self.device.connect():
                 return False
