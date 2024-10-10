@@ -1,13 +1,13 @@
 import logging
 import time
 
+import coloredlogs
+
 from daq.daq_job import load_daq_jobs, start_daq_job, start_daq_jobs
-from daq.models import DAQJobMessageStop
 from daq.store.models import DAQJobStore
 
-logging.basicConfig(
+coloredlogs.install(
     level=logging.DEBUG,
-    format="[%(asctime)s] [%(name)s] %(levelname)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
