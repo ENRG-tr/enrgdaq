@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from N1081B import N1081B
 from websocket import WebSocket
 
-from daq.models import DAQJob, DAQJobConfig
+from daq.models import DAQJob, DAQJobConfig, DAQJobMessage
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
 
@@ -30,49 +30,38 @@ class DAQJobN1081B(DAQJob):
             if section not in N1081B.Section.__members__:
                 raise Exception(f"Invalid section: {section}")
 
+    def handle_message(self, message: DAQJobMessage):
+        super().handle_message(message)
+
+        # Do not handle the rest of the messages if the connection is not established
+        if not self._is_connected():
+            return False
+
     def start(self):
         while True:
-            # Try to connect to the device
-            if not self._try_connect():
-                self._logger.error("Connection failed, retrying")
-                continue
+            self.consume()
 
-            self._start_loop()
+            # Log in if not connected
+            if not self._is_connected():
+                self._logger.error("Connecting to the device...")
+                self._connect_to_device()
 
-    def _start_loop(self):
-        while True:
-            if self._should_stop:
-                return True
-
-            # Stop if the connection is dropped
-            if isinstance(self.device.ws, WebSocket) and not self.device.ws.connected:
-                self._logger.error("Connection dropped")
-                break
-
-            try:
-                self._loop()
-            except ConnectionResetError:
-                self._logger.error("Connection reset")
-                break
-            except ConnectionAbortedError:
-                self._logger.error("Connection aborted")
-                break
+            # Poll sections
+            self._poll_sections()
 
             time.sleep(N1081B_QUERY_INTERVAL_SECONDS)
 
-    def _try_connect(self) -> bool:
-        try:
-            if not self.device.connect():
-                return False
-        except ConnectionRefusedError:
-            return False
+    def _is_connected(self) -> bool:
+        return isinstance(self.device.ws, WebSocket) and self.device.ws.connected
+
+    def _connect_to_device(self):
+        if not self.device.connect():
+            raise Exception("Connection failed")
 
         if not self.device.login(self.config.password):
             raise Exception("Login failed")
 
-        return True
-
-    def _loop(self):
+    def _poll_sections(self):
         for section in self.config.sections_to_store:
             section = N1081B.Section[section]
 

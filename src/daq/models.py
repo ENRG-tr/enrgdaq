@@ -1,6 +1,7 @@
 import logging
 import threading
 from dataclasses import dataclass
+from queue import Queue
 from typing import Any
 
 from dataclasses_json import DataClassJsonMixin
@@ -14,20 +15,32 @@ class DAQJobConfig(DataClassJsonMixin):
 class DAQJob:
     config_type: Any
     config: Any
+    message_in: Queue["DAQJobMessage"]
+    message_out: Queue["DAQJobMessage"]
+
     _logger: logging.Logger
-    _should_stop: bool
 
     def __init__(self, config: Any):
         self.config = config
+        self.message_in = Queue()
+        self.message_out = Queue()
         self._logger = logging.getLogger(type(self).__name__)
         self._should_stop = False
 
-    def start(self):
-        pass
+    def consume(self):
+        # consume messages from the queue
+        while not self.message_in.empty():
+            message = self.message_in.get()
+            if not self.handle_message(message):
+                self.message_in.put_nowait(message)
 
-    def stop(self):
-        assert not self._should_stop, "DAQ job is already stopped"
-        self._should_stop = True
+    def handle_message(self, message: "DAQJobMessage") -> bool:
+        if isinstance(message, DAQJobMessageStop):
+            raise DAQJobStopError(message.reason)
+        return True
+
+    def start(self):
+        raise NotImplementedError
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")
@@ -37,3 +50,18 @@ class DAQJob:
 class DAQJobThread:
     daq_job: DAQJob
     thread: threading.Thread
+
+
+@dataclass
+class DAQJobMessage:
+    pass
+
+
+@dataclass
+class DAQJobMessageStop(DAQJobMessage):
+    reason: str
+
+
+class DAQJobStopError(Exception):
+    def __init__(self, reason: str):
+        self.reason = reason

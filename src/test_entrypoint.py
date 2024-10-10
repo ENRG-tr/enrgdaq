@@ -1,12 +1,13 @@
 import logging
 import time
 
-from daq.daq_job import load_daq_jobs, start_daq_jobs
+from daq.daq_job import load_daq_jobs, start_daq_job, start_daq_jobs
+from daq.models import DAQJobMessageStop
 from daq.store.models import DAQJobStore
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format="[%(asctime)s] [%(name)s.%(funcName)s:%(lineno)d] %(levelname)s: %(message)s",
+    format="[%(asctime)s] [%(name)s] %(levelname)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
@@ -20,8 +21,12 @@ if len(store_jobs) == 0:
     logging.warning("No store job found, data will not be stored")
 
 while True:
-    any_thread_alive = any(t.thread.is_alive() for t in daq_job_threads)
-    if not any_thread_alive:
-        break
+    dead_threads = [t for t in daq_job_threads if not t.thread.is_alive()]
+    # Clean up dead threads
+    daq_job_threads = [t for t in daq_job_threads if t not in dead_threads]
+
+    # Restart jobs that have stopped
+    for thread in dead_threads:
+        daq_job_threads.append(start_daq_job(thread.daq_job))
 
     time.sleep(1)
