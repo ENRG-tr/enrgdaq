@@ -43,7 +43,7 @@ class DAQJobN1081B(DAQJob):
 
             # Log in if not connected
             if not self._is_connected():
-                self._logger.error("Connecting to the device...")
+                self._logger.info("Connecting to the device...")
                 self._connect_to_device()
 
             # Poll sections
