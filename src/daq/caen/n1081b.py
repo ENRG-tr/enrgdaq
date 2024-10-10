@@ -34,7 +34,7 @@ class DAQJobN1081B(DAQJob):
         while True:
             # Try to connect to the device
             if not self._try_connect():
-                self.logger.error("Connection failed, retrying")
+                self._logger.error("Connection failed, retrying")
                 continue
 
             self._start_loop()
@@ -46,16 +46,16 @@ class DAQJobN1081B(DAQJob):
 
             # Stop if the connection is dropped
             if isinstance(self.device.ws, WebSocket) and not self.device.ws.connected:
-                self.logger.error("Connection dropped")
+                self._logger.error("Connection dropped")
                 break
 
             try:
                 self._loop()
             except ConnectionResetError:
-                self.logger.error("Connection reset")
+                self._logger.error("Connection reset")
                 break
             except ConnectionAbortedError:
-                self.logger.error("Connection aborted")
+                self._logger.error("Connection aborted")
                 break
 
             time.sleep(N1081B_QUERY_INTERVAL_SECONDS)
@@ -82,11 +82,11 @@ class DAQJobN1081B(DAQJob):
 
             data = res["data"]
             if "counters" not in data:
-                self.logger.info(f"No counters in section {section}")
+                self._logger.info(f"No counters in section {section}")
                 continue
 
-            self.logger.info(f"For section {section}")
+            self._logger.info(f"For section {section}")
             for counter in data["counters"]:
-                self.logger.info(f"Lemo {counter['lemo']}: {counter['value']}")
+                self._logger.info(f"Lemo {counter['lemo']}: {counter['value']}")
 
-        self.logger.info("===")
+        self._logger.info("===")

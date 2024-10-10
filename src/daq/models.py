@@ -14,12 +14,12 @@ class DAQJobConfig(DataClassJsonMixin):
 class DAQJob:
     config_type: Any
     config: Any
-    logger: logging.Logger
+    _logger: logging.Logger
     _should_stop: bool
 
     def __init__(self, config: Any):
         self.config = config
-        self.logger = logging.getLogger(type(self).__name__)
+        self._logger = logging.getLogger(type(self).__name__)
         self._should_stop = False
 
     def start(self):
@@ -30,7 +30,7 @@ class DAQJob:
         self._should_stop = True
 
     def __del__(self):
-        self.logger.info("DAQ job is being deleted")
+        self._logger.info("DAQ job is being deleted")
 
 
 @dataclass
