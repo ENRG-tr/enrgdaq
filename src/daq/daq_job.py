@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 import threading
 
@@ -41,6 +42,7 @@ def load_daq_jobs(job_config_dir: str) -> list[DAQJob]:
 
 
 def start_daq_job(daq_job: DAQJob) -> DAQJobThread:
+    logging.debug(f"Starting {type(daq_job).__name__}")
     thread = threading.Thread(target=daq_job.start, daemon=True)
     thread.start()
 
