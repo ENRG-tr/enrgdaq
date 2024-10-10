@@ -4,13 +4,15 @@ from dataclasses import dataclass
 from N1081B import N1081B
 from websocket import WebSocket
 
-from daq.models import DAQJob, DAQJobConfig, DAQJobMessage
+from daq.base import DAQJob
+from daq.models import DAQJobMessage
+from daq.store.models import StorableDAQJobConfig
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
 
 
 @dataclass
-class DAQN1081BConfig(DAQJobConfig):
+class DAQN1081BConfig(StorableDAQJobConfig):
     host: str
     port: str
     password: str

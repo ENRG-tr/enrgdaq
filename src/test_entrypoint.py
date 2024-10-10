@@ -4,7 +4,7 @@ import time
 import coloredlogs
 
 from daq.daq_job import load_daq_jobs, start_daq_job, start_daq_jobs
-from daq.store.models import DAQJobStore
+from daq.store.base import DAQJobStore
 
 coloredlogs.install(
     level=logging.DEBUG,

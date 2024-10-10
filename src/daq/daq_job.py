@@ -5,10 +5,11 @@ import threading
 
 import tomllib
 
+from daq.base import DAQJob, DAQJobThread
 from daq.caen.n1081b import DAQJobN1081B
-from daq.models import DAQJob, DAQJobConfig, DAQJobThread
+from daq.models import DAQJobConfig
 
-DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
+DAQ_JOB_TYPE_TO_CLASS: dict[str, type["DAQJob"]] = {
     "n1081b": DAQJobN1081B,
 }
 

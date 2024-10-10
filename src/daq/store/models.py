@@ -1,27 +1,27 @@
 import time
 from dataclasses import dataclass
 
-from daq.models import DAQJob, DAQJobMessage
+from dataclasses_json import DataClassJsonMixin
+
+from daq.base import DAQJob
+from daq.models import DAQJobConfig, DAQJobMessage
 
 
-class DAQJobStore(DAQJob):
-    allowed_message_types: list[type["DAQJobMessageStore"]]
+@dataclass
+class DAQJobStoreConfig(DataClassJsonMixin):
+    """
+    Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+    """
 
-    def start(self):
-        while True:
-            self.consume()
-            time.sleep(0.5)
-
-    def handle_message(self, message: DAQJobMessage) -> bool:
-        is_message_allowed = False
-        for allowed_message_type in self.allowed_message_types:
-            if isinstance(message, allowed_message_type):
-                is_message_allowed = True
-        if not is_message_allowed:
-            raise Exception(f"Invalid message type: {type(message)}")
-        return super().handle_message(message)
+    daq_job_store_type: str
 
 
 @dataclass
 class DAQJobMessageStore(DAQJobMessage):
+    store_config: DAQJobStoreConfig
     daq_job: DAQJob
+
+
+@dataclass
+class StorableDAQJobConfig(DAQJobConfig):
+    store_config: type[DAQJobStoreConfig]
