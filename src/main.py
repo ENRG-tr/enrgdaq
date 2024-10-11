@@ -5,7 +5,6 @@ from queue import Empty
 import coloredlogs
 
 from daq.daq_job import load_daq_jobs, parse_store_config, start_daq_job, start_daq_jobs
-from daq.models import DAQJobMessageStop
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore
 
