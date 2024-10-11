@@ -9,6 +9,7 @@ from typing import Any, cast
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from utils.file import add_date_to_file_name
 
 
 @dataclass
@@ -34,18 +35,7 @@ class DAQJobStoreCSV(DAQJobStore):
     def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigCSV, message.store_config)
-        file_path = store_config.file_path
-
-        # Append date to file name if specified
-        if store_config.add_date:
-            splitted_file_path = os.path.splitext(file_path)
-            date_text = datetime.now().strftime("%Y-%m-%d")
-            if len(splitted_file_path) > 1:
-                file_path = (
-                    f"{splitted_file_path[0]}_{date_text}{splitted_file_path[1]}"
-                )
-            else:
-                file_path = f"{splitted_file_path[0]}_{date_text}"
+        file_path = add_date_to_file_name(store_config.file_path, store_config.add_date)
 
         self._logger.debug(
             f"Handling message for DAQ Job: {type(message.daq_job).__name__}"
