@@ -52,14 +52,19 @@ class DAQJobStoreCSV(DAQJobStore):
         )
 
         if file_path not in self._open_files:
+            file_exists = os.path.exists(file_path)
             # Create the file if it doesn't exist
-            Path(file_path).touch(exist_ok=True)
+            if not file_exists:
+                Path(file_path).touch()
 
             # Open file and write csv headers
             file = open(file_path, "a")
             self._open_files[file_path] = file
             writer = csv.writer(file)
-            writer.writerow(message.keys)
+
+            # Write headers if file haven't existed before
+            if not file_exists:
+                writer.writerow(message.keys)
         else:
             file = self._open_files[file_path]
             writer = csv.writer(file)
