@@ -32,6 +32,7 @@ while True:
     for thread in dead_threads:
         daq_job_threads.append(start_daq_job(thread.daq_job))
 
+    # Get messages from DAQ Jobs
     daq_messages = []
     for thread in daq_job_threads:
         try:
@@ -41,14 +42,26 @@ while True:
         except Empty:
             pass
 
-    # Handle store messages
+    # Send messages to appropriate DAQ Jobs
     for message in daq_messages:
-        if isinstance(message, DAQJobMessageStore):
-            if isinstance(message.store_config, dict):
-                message.store_config = parse_store_config(message.store_config)
-            for store_job in store_jobs:
-                if not store_job.can_store(message):
+        if isinstance(message, DAQJobMessageStore) and isinstance(
+            message.store_config, dict
+        ):
+            # Parse store config of DAQJobMessageStore
+            message.store_config = parse_store_config(message.store_config)
+
+        for daq_job_thread in daq_job_threads:
+            daq_job = daq_job_thread.daq_job
+
+            # Send if message is allowed for this DAQ Job
+            if any(
+                isinstance(message, msg_type)
+                for msg_type in daq_job.allowed_message_in_types
+            ):
+                # Drop message type that is not supported by this DAQ Job
+                if isinstance(daq_job, DAQJobStore) and not daq_job.can_store(message):
                     continue
-                store_job.message_in.put(message, timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
+
+                daq_job.message_in.put(message, timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
 
     time.sleep(1)

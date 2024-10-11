@@ -24,6 +24,7 @@ class DAQJobStoreROOTConfig(DAQJobConfig):
 class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
+    allowed_message_in_types = [DAQJobMessageStore]
     _open_files: dict[str, Any]
 
     def __init__(self, config: Any):

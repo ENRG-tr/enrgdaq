@@ -25,6 +25,7 @@ class DAQJobStoreCSVConfig(DAQJobConfig):
 class DAQJobStoreCSV(DAQJobStore):
     config_type = DAQJobStoreCSVConfig
     allowed_store_config_types = [DAQJobStoreConfigCSV]
+    allowed_message_in_types = [DAQJobMessageStore]
     _open_files: dict[str, TextIOWrapper]
 
     def __init__(self, config: Any):
@@ -35,10 +36,6 @@ class DAQJobStoreCSV(DAQJobStore):
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigCSV, message.store_config)
         file_path = add_date_to_file_name(store_config.file_path, store_config.add_date)
-
-        self._logger.debug(
-            f"Handling message for DAQ Job: {type(message.daq_job).__name__}"
-        )
 
         if file_path not in self._open_files:
             file_exists = os.path.exists(file_path)

@@ -15,7 +15,9 @@ class DAQJobStore(DAQJob):
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not self.can_store(message):
-            raise Exception(f"Invalid message type: {type(message)}")
+            raise Exception(
+                f"Invalid message type '{type(message)}' for DAQJob '{type(self).__name__}'"
+            )
         return super().handle_message(message)
 
     def can_store(self, message: DAQJobMessage) -> bool:

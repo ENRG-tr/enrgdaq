@@ -8,10 +8,11 @@ from daq.models import DAQJobMessage, DAQJobMessageStop, DAQJobStopError
 
 
 class DAQJob:
+    allowed_message_in_types: list[type[DAQJobMessage]] = []
     config_type: Any
     config: Any
-    message_in: Queue["DAQJobMessage"]
-    message_out: Queue["DAQJobMessage"]
+    message_in: Queue[DAQJobMessage]
+    message_out: Queue[DAQJobMessage]
 
     _logger: logging.Logger
 
@@ -32,6 +33,15 @@ class DAQJob:
     def handle_message(self, message: "DAQJobMessage") -> bool:
         if isinstance(message, DAQJobMessageStop):
             raise DAQJobStopError(message.reason)
+        # check if the message is accepted
+        is_message_type_accepted = False
+        for accepted_message_type in self.allowed_message_in_types:
+            if isinstance(message, accepted_message_type):
+                is_message_type_accepted = True
+        if not is_message_type_accepted:
+            raise Exception(
+                f"Message type {type(message)} is not accepted by {type(self).__name__}"
+            )
         return True
 
     def start(self):
