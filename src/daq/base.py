@@ -40,7 +40,7 @@ class DAQJob:
                 is_message_type_accepted = True
         if not is_message_type_accepted:
             raise Exception(
-                f"Message type {type(message)} is not accepted by {type(self).__name__}"
+                f"Message type '{type(message)}' is not accepted by '{type(self).__name__}'"
             )
         return True
 
