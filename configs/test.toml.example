@@ -1,0 +1,8 @@
+daq_job_type="test"
+rand_min=1
+rand_max=100
+
+[store_config]
+daq_job_store_type="csv"
+file_path="test.csv"
+add_date=true

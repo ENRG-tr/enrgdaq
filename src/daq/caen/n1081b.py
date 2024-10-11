@@ -6,13 +6,13 @@ from websocket import WebSocket
 
 from daq.base import DAQJob
 from daq.models import DAQJobMessage
-from daq.store.models import StorableDAQJobConfig
+from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
 
 
 @dataclass
-class DAQN1081BConfig(StorableDAQJobConfig):
+class DAQJobN1081BConfig(StorableDAQJobConfig):
     host: str
     port: str
     password: str
@@ -20,11 +20,11 @@ class DAQN1081BConfig(StorableDAQJobConfig):
 
 
 class DAQJobN1081B(DAQJob):
-    config_type = DAQN1081BConfig
+    config_type = DAQJobN1081BConfig
     device: N1081B
-    config: DAQN1081BConfig
+    config: DAQJobN1081BConfig
 
-    def __init__(self, config: DAQN1081BConfig):
+    def __init__(self, config: DAQJobN1081BConfig):
         super().__init__(config)
         self.device = N1081B(f"{config.host}:{config.port}?")
 
@@ -80,4 +80,16 @@ class DAQJobN1081B(DAQJob):
             for counter in data["counters"]:
                 self._logger.info(f"Lemo {counter['lemo']}: {counter['value']}")
 
+            self._send_store_message(data)
+
         self._logger.info("===")
+
+    def _send_store_message(self, data: dict):
+        self.message_out.put(
+            DAQJobMessageStore(
+                store_config=self.config.store_config,
+                daq_job=self,
+                keys=[x["lemo"] for x in data["counters"]],
+                data=[[x["value"] for x in data["counters"]]],
+            )
+        )

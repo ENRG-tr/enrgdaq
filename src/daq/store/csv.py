@@ -6,14 +6,9 @@ from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, cast
 
+from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
-
-
-@dataclass
-class DAQJobMessageStoreCSV(DAQJobMessageStore):
-    header: list[str]
-    data: list[list[str]]
 
 
 @dataclass
@@ -22,15 +17,21 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfig):
     add_date: bool
 
 
+@dataclass
+class DAQJobStoreCSVConfig(DAQJobConfig):
+    pass
+
+
 class DAQJobStoreCSV(DAQJobStore):
-    allowed_message_types = [DAQJobMessageStoreCSV]
+    config_type = DAQJobStoreCSVConfig
+    allowed_store_config_types = [DAQJobStoreConfigCSV]
     _open_files: dict[str, TextIOWrapper]
 
     def __init__(self, config: Any):
         super().__init__(config)
         self._open_files = {}
 
-    def handle_message(self, message: DAQJobMessageStoreCSV) -> bool:
+    def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigCSV, message.store_config)
         file_path = store_config.file_path
@@ -58,7 +59,7 @@ class DAQJobStoreCSV(DAQJobStore):
             file = open(file_path, "a")
             self._open_files[file_path] = file
             writer = csv.writer(file)
-            writer.writerow(message.header)
+            writer.writerow(message.keys)
         else:
             file = self._open_files[file_path]
             writer = csv.writer(file)

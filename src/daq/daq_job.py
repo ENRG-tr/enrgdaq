@@ -6,12 +6,9 @@ import threading
 import tomllib
 
 from daq.base import DAQJob, DAQJobThread
-from daq.caen.n1081b import DAQJobN1081B
 from daq.models import DAQJobConfig
-
-DAQ_JOB_TYPE_TO_CLASS: dict[str, type["DAQJob"]] = {
-    "n1081b": DAQJobN1081B,
-}
+from daq.store.models import DAQJobStoreConfig
+from daq.types import DAQ_JOB_TYPE_TO_CLASS
 
 
 def build_daq_job(toml_config: dict) -> DAQJob:
@@ -22,7 +19,7 @@ def build_daq_job(toml_config: dict) -> DAQJob:
 
     # Get DAQ and DAQ config clasess based on daq_job_type
     daq_job_class = DAQ_JOB_TYPE_TO_CLASS[generic_daq_job_config.daq_job_type]
-    daq_job_config_class = daq_job_class.config_type
+    daq_job_config_class: DAQJobConfig = daq_job_class.config_type
 
     # Load the config in
     config = daq_job_config_class.schema().load(toml_config)
@@ -56,3 +53,15 @@ def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobThread]:
         threads.append(start_daq_job(daq_job))
 
     return threads
+
+
+def parse_store_config(config: dict) -> DAQJobStoreConfig:
+    from daq.store.types import DAQ_STORE_CONFIG_TYPE_TO_CLASS
+
+    if "daq_job_store_type" not in config:
+        raise Exception("No daq_job_store_type specified in config")
+
+    daq_job_store_type = config["daq_job_store_type"]
+    store_config_class = DAQ_STORE_CONFIG_TYPE_TO_CLASS[daq_job_store_type]
+
+    return store_config_class.schema().load(config)

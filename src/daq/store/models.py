@@ -1,5 +1,5 @@
-import time
 from dataclasses import dataclass
+from typing import Any
 
 from dataclasses_json import DataClassJsonMixin
 
@@ -18,10 +18,12 @@ class DAQJobStoreConfig(DataClassJsonMixin):
 
 @dataclass
 class DAQJobMessageStore(DAQJobMessage):
-    store_config: DAQJobStoreConfig
+    store_config: dict | DAQJobStoreConfig
     daq_job: DAQJob
+    keys: list[str]
+    data: list[list[Any]]
 
 
 @dataclass
 class StorableDAQJobConfig(DAQJobConfig):
-    store_config: type[DAQJobStoreConfig]
+    store_config: dict

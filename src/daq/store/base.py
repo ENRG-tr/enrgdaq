@@ -2,11 +2,11 @@ import time
 
 from daq.base import DAQJob
 from daq.models import DAQJobMessage
-from daq.store.models import DAQJobMessageStore
+from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
 class DAQJobStore(DAQJob):
-    allowed_message_types: list[type["DAQJobMessageStore"]]
+    allowed_store_config_types: list[type[DAQJobStoreConfig]]
 
     def start(self):
         while True:
@@ -14,10 +14,15 @@ class DAQJobStore(DAQJob):
             time.sleep(0.5)
 
     def handle_message(self, message: DAQJobMessage) -> bool:
-        is_message_allowed = False
-        for allowed_message_type in self.allowed_message_types:
-            if isinstance(message, allowed_message_type):
-                is_message_allowed = True
-        if not is_message_allowed:
+        if not self.can_store(message):
             raise Exception(f"Invalid message type: {type(message)}")
         return super().handle_message(message)
+
+    def can_store(self, message: DAQJobMessage) -> bool:
+        if not isinstance(message, DAQJobMessageStore):
+            return False
+        is_message_allowed = False
+        for allowed_config_type in self.allowed_store_config_types:
+            if isinstance(message.store_config, allowed_config_type):
+                is_message_allowed = True
+        return is_message_allowed
