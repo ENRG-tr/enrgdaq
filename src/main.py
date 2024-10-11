@@ -5,6 +5,7 @@ from queue import Empty
 import coloredlogs
 
 from daq.daq_job import load_daq_jobs, parse_store_config, start_daq_job, start_daq_jobs
+from daq.models import DAQJobMessageStop
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore
 
@@ -13,17 +14,18 @@ coloredlogs.install(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+DAQ_SUPERVISOR_SLEEP_TIME = 0.5
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
 
 daq_jobs = load_daq_jobs("configs/")
 daq_job_threads = start_daq_jobs(daq_jobs)
 
-store_jobs = [x for x in daq_jobs if isinstance(x, DAQJobStore)]
-
-if len(store_jobs) == 0:
+if not any(x for x in daq_jobs if isinstance(x, DAQJobStore)):
     logging.warning("No store job found, data will not be stored")
 
-while True:
+
+def loop():
+    global daq_job_threads
     dead_threads = [t for t in daq_job_threads if not t.thread.is_alive()]
     # Clean up dead threads
     daq_job_threads = [t for t in daq_job_threads if t not in dead_threads]
@@ -64,4 +66,14 @@ while True:
 
                 daq_job.message_in.put(message, timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
 
-    time.sleep(1)
+    time.sleep(DAQ_SUPERVISOR_SLEEP_TIME)
+
+
+while True:
+    try:
+        loop()
+    except KeyboardInterrupt:
+        logging.warning("KeyboardInterrupt received, cleaning up")
+        for daq_job_thread in daq_job_threads:
+            daq_job_thread.daq_job.__del__()
+        break
