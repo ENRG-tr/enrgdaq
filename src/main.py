@@ -37,9 +37,10 @@ def loop():
     daq_messages = []
     for thread in daq_job_threads:
         try:
-            daq_messages.append(
-                thread.daq_job.message_out.get(timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
-            )
+            while True:
+                daq_messages.append(
+                    thread.daq_job.message_out.get(timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
+                )
         except Empty:
             pass
 
