@@ -11,7 +11,11 @@ class DAQJobStore(DAQJob):
     def start(self):
         while True:
             self.consume()
+            self.store_loop()
             time.sleep(0.5)
+
+    def store_loop(self):
+        raise NotImplementedError
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not self.can_store(message):
