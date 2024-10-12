@@ -11,5 +11,11 @@ dependencies = [
     "uproot>=5.4.1",
 ]
 
+[tool.uv]
+dev-dependencies = [
+    "pre-commit>=4.0.1",
+    "ruff>=0.6.9",
+]
+
 [tool.uv.sources]
 n1081b-sdk = { git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" }
