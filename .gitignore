@@ -163,6 +163,6 @@ cython_debug/
 
 configs/*.toml
 configs/*.toml.disabled
-out/
+out/*
 
 .vscode/*
