@@ -1,10 +1,10 @@
 import csv
 import os
+from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
-from queue import Empty, Queue
 from typing import Any, cast
 
 from daq.models import DAQJobConfig
@@ -31,7 +31,7 @@ class DAQJobStoreCSVConfig(DAQJobConfig):
 class CSVFile:
     file: TextIOWrapper
     last_flush_date: datetime
-    write_queue: Queue[list[Any]]
+    write_queue: deque[list[Any]]
 
 
 class DAQJobStoreCSV(DAQJobStore):
@@ -55,11 +55,11 @@ class DAQJobStoreCSV(DAQJobStore):
 
         # Write headers if the file is new
         if new_file:
-            file.write_queue.put(message.keys)
+            file.write_queue.append(message.keys)
 
         # Append rows to write_queue
         for row in message.data:
-            file.write_queue.put(row)
+            file.write_queue.append(row)
 
         return True
 
@@ -74,7 +74,7 @@ class DAQJobStoreCSV(DAQJobStore):
                 Path(file_path).touch()
 
             # Open file
-            file = CSVFile(open(file_path, "a"), datetime.now(), Queue())
+            file = CSVFile(open(file_path, "a"), datetime.now(), deque())
             self._open_csv_files[file_path] = file
         else:
             file_exists = True
@@ -104,8 +104,8 @@ class DAQJobStoreCSV(DAQJobStore):
             rows_to_write.clear()
             for _ in range(DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE):
                 try:
-                    rows_to_write.append(file.write_queue.get_nowait())
-                except Empty:
+                    rows_to_write.append(file.write_queue.pop())
+                except IndexError:
                     break
             if len(rows_to_write) > 0:
                 writer.writerows(rows_to_write)

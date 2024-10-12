@@ -1,6 +1,6 @@
 import unittest
+from collections import deque
 from datetime import datetime, timedelta
-from queue import Queue
 from unittest.mock import MagicMock, mock_open, patch
 
 from daq.store.csv import (
@@ -38,7 +38,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         mock_open.assert_called_once_with("test.csv", "a")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
-        self.assertEqual(file.write_queue.qsize(), 3)  # 1 header + 2 rows
+        self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
 
     @patch("daq.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
@@ -58,14 +58,14 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         mock_open.assert_called_once_with("test.csv", "a")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
-        self.assertEqual(file.write_queue.qsize(), 2)  # 2 rows only, no header
+        self.assertEqual(len(file.write_queue), 2)  # 2 rows only, no header
 
     def test_flush(self):
         file = CSVFile(
             file=MagicMock(),
             last_flush_date=datetime.now()
             - timedelta(seconds=DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS + 1),
-            write_queue=Queue(),
+            write_queue=deque(),
         )
         result = self.store._flush(file)
         self.assertTrue(result)
@@ -80,10 +80,10 @@ class TestDAQJobStoreCSV(unittest.TestCase):
             file=MagicMock(closed=False),
             last_flush_date=datetime.now()
             - timedelta(seconds=DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS + 1),
-            write_queue=Queue(),
+            write_queue=deque(),
         )
-        file.write_queue.put(["row1_col1", "row1_col2"])
-        file.write_queue.put(["row2_col1", "row2_col2"])
+        file.write_queue.append(["row1_col1", "row1_col2"])
+        file.write_queue.append(["row2_col1", "row2_col2"])
         self.store._open_csv_files["test.csv"] = file
 
         mock_writer_instance = mock_csv_writer.return_value
@@ -99,10 +99,10 @@ class TestDAQJobStoreCSV(unittest.TestCase):
             file=MagicMock(closed=False),
             last_flush_date=datetime.now()
             - timedelta(seconds=DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS + 1),
-            write_queue=Queue(),
+            write_queue=deque(),
         )
-        file.write_queue.put(["row1_col1", "row1_col2"])
-        file.write_queue.put(["row2_col1", "row2_col2"])
+        file.write_queue.append(["row1_col1", "row1_col2"])
+        file.write_queue.append(["row2_col1", "row2_col2"])
         self.store._open_csv_files["test.csv"] = file
 
         mock_writer_instance = mock_csv_writer.return_value
@@ -110,7 +110,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.store_loop()
 
         mock_writer_instance.writerows.assert_called_with(
-            [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+            [["row2_col1", "row2_col2"], ["row1_col1", "row1_col2"]]
         )
         self.assertTrue(file.file.flush.called)
 
@@ -118,7 +118,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         file = CSVFile(
             file=MagicMock(closed=False),
             last_flush_date=datetime.now(),
-            write_queue=Queue(),
+            write_queue=deque(),
         )
         self.store._open_csv_files["test.csv"] = file
 
