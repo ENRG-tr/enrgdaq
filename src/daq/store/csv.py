@@ -12,7 +12,7 @@ from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 from utils.file import modify_file_path
 
-DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 5 * 60
+DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 15
 DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE = 1000
 
 
@@ -102,15 +102,13 @@ class DAQJobStoreCSV(DAQJobStore):
             rows_to_write = []
 
             # Write rows in batches
-            while True:
-                rows_to_write.clear()
-                for _ in range(DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE):
-                    try:
-                        rows_to_write.append(file.write_queue.get_nowait())
-                    except Empty:
-                        break
-                if len(rows_to_write) == 0:
+            rows_to_write.clear()
+            for _ in range(DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE):
+                try:
+                    rows_to_write.append(file.write_queue.get_nowait())
+                except Empty:
                     break
+            if len(rows_to_write) > 0:
                 total_rows_to_write += len(rows_to_write)
                 writer.writerows(rows_to_write)
 

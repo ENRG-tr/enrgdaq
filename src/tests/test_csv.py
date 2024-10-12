@@ -93,6 +93,27 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         mock_writer_instance.writerows.assert_called()
         self.assertTrue(file.file.flush.called)
 
+    @patch("csv.writer")
+    def test_store_loop_writerows(self, mock_csv_writer):
+        file = CSVFile(
+            file=MagicMock(closed=False),
+            last_flush_date=datetime.now()
+            - timedelta(seconds=DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS + 1),
+            write_queue=Queue(),
+        )
+        file.write_queue.put(["row1_col1", "row1_col2"])
+        file.write_queue.put(["row2_col1", "row2_col2"])
+        self.store._open_csv_files["test.csv"] = file
+
+        mock_writer_instance = mock_csv_writer.return_value
+
+        self.store.store_loop()
+
+        mock_writer_instance.writerows.assert_called_with(
+            [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+        )
+        self.assertTrue(file.file.flush.called)
+
     def test_del(self):
         file = CSVFile(
             file=MagicMock(closed=False),
