@@ -1,6 +1,6 @@
 import unittest
 
-from test.test_csv import TestDAQJobStoreCSV
+from tests.test_csv import TestDAQJobStoreCSV
 
 
 def run_tests():
