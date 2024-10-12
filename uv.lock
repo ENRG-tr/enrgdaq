@@ -216,7 +216,7 @@ wheels = [
 [[package]]
 name = "n1081b-sdk"
 version = "1.0.0"
-source = { git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git#8d62bc11210c2bdf3044cb29b99b280d5c962da7" }
+source = { git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git#3217fb0fdb5e5997116c687b1d15bed174fc0400" }
 dependencies = [
     { name = "websocket-client" },
 ]
