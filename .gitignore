@@ -162,4 +162,7 @@ cython_debug/
 #.idea/
 
 configs/*.toml
+configs/*.toml.disabled
+out/
+
 .vscode/*
