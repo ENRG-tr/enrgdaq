@@ -98,21 +98,14 @@ class DAQJobStoreCSV(DAQJobStore):
                 files_to_delete.append(file_path)
                 continue
             writer = csv.writer(file.file)
-            rows_to_write = []
 
-            # Write rows in batches
-            rows_to_write.clear()
-            for _ in range(DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE):
-                try:
-                    rows_to_write.append(file.write_queue.pop())
-                except IndexError:
-                    break
-            if len(rows_to_write) > 0:
-                writer.writerows(rows_to_write)
+            row_size = len(file.write_queue)
+            if row_size > 0:
+                writer.writerows(list(file.write_queue))
 
             # Flush if the flush time is up
             if self._flush(file):
-                self._logger.debug(f"Flushed '{file.file.name}'")
+                self._logger.debug(f"Flushed '{file.file.name}' ({row_size} rows)")
         for file_path in files_to_delete:
             del self._open_csv_files[file_path]
 

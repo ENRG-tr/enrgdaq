@@ -110,7 +110,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.store_loop()
 
         mock_writer_instance.writerows.assert_called_with(
-            [["row2_col1", "row2_col2"], ["row1_col1", "row1_col2"]]
+            [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
         )
         self.assertTrue(file.file.flush.called)
 
