@@ -3,9 +3,8 @@ repos:
     # uv version.
     rev: 0.4.20
     hooks:
-      # Run the pip compile
-      - id: pip-compile
-        args: [requirements.in, -o, requirements.txt]
+      - id: uv-export
+        args: ['--no-hashes']
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
     rev: 0.4.20
