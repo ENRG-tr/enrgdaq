@@ -35,3 +35,21 @@ pip install -r requirements.txt
 ```
 python src/main.py
 ```
+
+# Development
+
+## Pre commit hooks
+
+We use pre-commit hooks to ensure that the code is formatted correctly and that the tests pass before committing. To install the pre-commit hooks, run the following command:
+
+```
+pre-commit install
+```
+
+## Running tests
+
+To run the tests, use the following command:
+
+```
+python src/run_tests.py
+```
