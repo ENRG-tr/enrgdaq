@@ -90,8 +90,10 @@ class DAQJobStoreCSV(DAQJobStore):
         return True
 
     def store_loop(self):
-        for file in self._open_csv_files.values():
+        files_to_delete = []
+        for file_path, file in self._open_csv_files.items():
             if file.file.closed:
+                files_to_delete.append(file_path)
                 continue
             writer = csv.writer(file.file)
             total_rows_to_write = 0
@@ -115,6 +117,8 @@ class DAQJobStoreCSV(DAQJobStore):
                 self._logger.debug(
                     f"Flushed {total_rows_to_write} rows to '{file.file.name}'"
                 )
+        for file_path in files_to_delete:
+            del self._open_csv_files[file_path]
 
     def __del__(self):
         self.store_loop()
