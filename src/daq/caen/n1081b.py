@@ -76,13 +76,14 @@ class DAQJobN1081B(DAQJob):
                 self._logger.info(f"No counters in section {section}")
                 continue
 
-            self._send_store_message(data)
+            self._send_store_message(data, section.name)
 
-    def _send_store_message(self, data: dict):
+    def _send_store_message(self, data: dict, section):
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
                 daq_job=self,
+                prefix=section,
                 keys=[f"lemo_{x['lemo']}" for x in data["counters"]],
                 data=[[x["value"] for x in data["counters"]]],
             )

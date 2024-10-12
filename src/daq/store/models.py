@@ -22,6 +22,7 @@ class DAQJobMessageStore(DAQJobMessage):
     daq_job: DAQJob
     keys: list[str]
     data: list[list[Any]]
+    prefix: str | None = None
 
 
 @dataclass

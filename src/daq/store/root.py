@@ -7,7 +7,7 @@ import uproot
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
-from utils.file import add_date_to_file_name
+from utils.file import modify_file_path
 
 
 @dataclass
@@ -34,7 +34,9 @@ class DAQJobStoreROOT(DAQJobStore):
     def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigROOT, message.store_config)
-        file_path = add_date_to_file_name(store_config.file_path, store_config.add_date)
+        file_path = modify_file_path(
+            store_config.file_path, store_config.add_date, message.prefix
+        )
 
         if file_path not in self._open_files:
             file_exists = os.path.exists(file_path)

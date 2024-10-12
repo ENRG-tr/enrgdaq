@@ -10,7 +10,7 @@ from typing import Any, cast
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
-from utils.file import add_date_to_file_name
+from utils.file import modify_file_path
 
 DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 5 * 60
 DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE = 1000
@@ -48,7 +48,9 @@ class DAQJobStoreCSV(DAQJobStore):
     def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigCSV, message.store_config)
-        file_path = add_date_to_file_name(store_config.file_path, store_config.add_date)
+        file_path = modify_file_path(
+            store_config.file_path, store_config.add_date, message.prefix
+        )
         file, new_file = self._open_csv_file(file_path)
 
         # Write headers if the file is new
