@@ -38,32 +38,22 @@ class DAQJobStoreCSV(DAQJobStore):
     config_type = DAQJobStoreCSVConfig
     allowed_store_config_types = [DAQJobStoreConfigCSV]
     allowed_message_in_types = [DAQJobMessageStore]
-    _open_files: dict[str, CSVFile]
+
+    _open_csv_files: dict[str, CSVFile]
 
     def __init__(self, config: Any):
         super().__init__(config)
-        self._open_files = {}
+        self._open_csv_files = {}
 
     def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigCSV, message.store_config)
         file_path = add_date_to_file_name(store_config.file_path, store_config.add_date)
+        file, new_file = self._open_csv_file(file_path)
 
-        if file_path not in self._open_files:
-            file_exists = os.path.exists(file_path)
-            # Create the file if it doesn't exist
-            if not file_exists:
-                Path(file_path).touch()
-
-            # Open file and write csv headers
-            file = CSVFile(open(file_path, "a"), datetime.now(), Queue())
-            self._open_files[file_path] = file
-
-            # Write headers if file haven't existed before
-            if not file_exists:
-                file.write_queue.put(message.keys)
-        else:
-            file = self._open_files[file_path]
+        # Write headers if the file is new
+        if new_file:
+            file.write_queue.put(message.keys)
 
         # Append rows to write_queue
         for row in message.data:
@@ -71,8 +61,36 @@ class DAQJobStoreCSV(DAQJobStore):
 
         return True
 
+    def _open_csv_file(self, file_path: str) -> tuple[CSVFile, bool]:
+        """
+        Opens a file and returns (CSVFile, new_file)
+        """
+        if file_path not in self._open_csv_files:
+            file_exists = os.path.exists(file_path)
+            # Create the file if it doesn't exist
+            if not file_exists:
+                Path(file_path).touch()
+
+            # Open file
+            file = CSVFile(open(file_path, "a"), datetime.now(), Queue())
+            self._open_csv_files[file_path] = file
+        else:
+            file_exists = True
+            file = self._open_csv_files[file_path]
+        return file, not file_exists
+
+    def _flush(self, file: CSVFile) -> bool:
+        if (
+            datetime.now() - file.last_flush_date
+        ).total_seconds() < DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS:
+            return False
+
+        file.file.flush()
+        file.last_flush_date = datetime.now()
+        return True
+
     def store_loop(self):
-        for file in self._open_files.values():
+        for file in self._open_csv_files.values():
             if file.file.closed:
                 continue
             writer = csv.writer(file.file)
@@ -92,12 +110,8 @@ class DAQJobStoreCSV(DAQJobStore):
                 total_rows_to_write += len(rows_to_write)
                 writer.writerows(rows_to_write)
 
-            # Flush if the time is up
-            if (
-                datetime.now() - file.last_flush_date
-            ).total_seconds() > DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS:
-                file.file.flush()
-                file.last_flush_date = datetime.now()
+            # Flush if the flush time is up
+            if self._flush(file):
                 self._logger.debug(
                     f"Flushed {total_rows_to_write} rows to '{file.file.name}'"
                 )
@@ -106,7 +120,7 @@ class DAQJobStoreCSV(DAQJobStore):
         self.store_loop()
 
         # Close all open files
-        for file in self._open_files.values():
+        for file in self._open_csv_files.values():
             if file.file.closed:
                 continue
             file.file.close()
