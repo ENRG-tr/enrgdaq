@@ -1,5 +1,6 @@
 import time
 from dataclasses import dataclass
+from datetime import datetime
 
 from N1081B import N1081B
 from websocket import WebSocket
@@ -79,12 +80,14 @@ class DAQJobN1081B(DAQJob):
             self._send_store_message(data, section.name)
 
     def _send_store_message(self, data: dict, section):
+        keys = ["timestamp", *[f"lemo_{x['lemo']}" for x in data["counters"]]]
+        values = [datetime.now().timestamp(), *[x["value"] for x in data["counters"]]]
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
                 daq_job=self,
                 prefix=section,
-                keys=[f"lemo_{x['lemo']}" for x in data["counters"]],
-                data=[[x["value"] for x in data["counters"]]],
+                keys=keys,
+                data=values,
             )
         )
