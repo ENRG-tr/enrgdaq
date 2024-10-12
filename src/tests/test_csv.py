@@ -17,7 +17,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.config = MagicMock()
         self.store = DAQJobStoreCSV(self.config)
 
-    @patch("daq.store.csv.add_date_to_file_name", return_value="test.csv")
+    @patch("daq.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=False)
     @patch("pathlib.Path.touch")
@@ -30,16 +30,17 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+        message.prefix = None
 
         self.store.handle_message(message)
 
-        mock_add_date.assert_called_once_with("test.csv", True)
+        mock_add_date.assert_called_once_with("test.csv", True, None)
         mock_open.assert_called_once_with("test.csv", "a")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
         self.assertEqual(file.write_queue.qsize(), 3)  # 1 header + 2 rows
 
-    @patch("daq.store.csv.add_date_to_file_name", return_value="test.csv")
+    @patch("daq.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=True)
     def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):
@@ -49,10 +50,11 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+        message.prefix = None
 
         self.store.handle_message(message)
 
-        mock_add_date.assert_called_once_with("test.csv", True)
+        mock_add_date.assert_called_once_with("test.csv", True, None)
         mock_open.assert_called_once_with("test.csv", "a")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
