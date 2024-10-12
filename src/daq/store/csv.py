@@ -102,6 +102,7 @@ class DAQJobStoreCSV(DAQJobStore):
             row_size = len(file.write_queue)
             if row_size > 0:
                 writer.writerows(list(file.write_queue))
+            file.write_queue.clear()
 
             # Flush if the flush time is up
             if self._flush(file):
