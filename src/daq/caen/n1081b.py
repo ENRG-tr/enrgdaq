@@ -76,20 +76,14 @@ class DAQJobN1081B(DAQJob):
                 self._logger.info(f"No counters in section {section}")
                 continue
 
-            self._logger.info(f"For section {section}")
-            for counter in data["counters"]:
-                self._logger.info(f"Lemo {counter['lemo']}: {counter['value']}")
-
             self._send_store_message(data)
-
-        self._logger.info("===")
 
     def _send_store_message(self, data: dict):
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
                 daq_job=self,
-                keys=[x["lemo"] for x in data["counters"]],
+                keys=[f"lemo_{x['lemo']}" for x in data["counters"]],
                 data=[[x["value"] for x in data["counters"]]],
             )
         )
