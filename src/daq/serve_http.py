@@ -32,7 +32,7 @@ class DAQJobServeHTTP(DAQJob):
 
             def do_GET(self) -> None:
                 self.path = self.path.replace(
-                    "$TODAY", datetime.now().strftime("%Y-%m-%d")
+                    "TODAY", datetime.now().strftime("%Y-%m-%d")
                 )
                 return super().do_GET()
 
