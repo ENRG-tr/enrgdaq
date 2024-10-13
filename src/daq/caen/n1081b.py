@@ -88,7 +88,7 @@ class DAQJobN1081B(DAQJob):
     def _send_store_message(self, data: dict, section):
         keys = ["timestamp", *[f"lemo_{x['lemo']}" for x in data["counters"]]]
         values = [
-            datetime.now().timestamp(),
+            int(datetime.now().timestamp() * 1000),  # unix timestamp in milliseconds
             *[x["value"] for x in data["counters"]],
         ]
         self.message_out.put(
