@@ -1,7 +1,7 @@
 import logging
 import threading
 from dataclasses import dataclass
-from queue import Queue
+from queue import Empty, Queue
 from typing import Any
 
 from daq.models import DAQJobMessage, DAQJobMessageStop, DAQJobStopError
@@ -25,10 +25,13 @@ class DAQJob:
 
     def consume(self):
         # consume messages from the queue
-        while not self.message_in.empty():
-            message = self.message_in.get()
-            if not self.handle_message(message):
-                self.message_in.put_nowait(message)
+        while True:
+            try:
+                message = self.message_in.get_nowait()
+                if not self.handle_message(message):
+                    self.message_in.put_nowait(message)
+            except Empty:
+                break
 
     def handle_message(self, message: "DAQJobMessage") -> bool:
         if isinstance(message, DAQJobMessageStop):

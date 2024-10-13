@@ -53,7 +53,9 @@ class TestDAQJobN1081B(unittest.TestCase):
     @patch.object(N1081B, "get_function_results", return_value={"data": {}})
     def test_poll_sections_no_counters(self, mock_get_function_results):
         self.daq_job._send_store_message = MagicMock()
-        self.daq_job._poll_sections()
+        with self.assertRaises(Exception) as context:
+            self.daq_job._poll_sections()
+        self.assertTrue("No counters in section" in str(context.exception))
         self.daq_job._send_store_message.assert_not_called()
 
     @patch("time.sleep", return_value=None, side_effect=StopIteration)
@@ -71,7 +73,9 @@ class TestDAQJobN1081B(unittest.TestCase):
     @patch.object(N1081B, "get_function_results", return_value=None)
     def test_poll_sections_no_results(self, mock_get_function_results):
         self.daq_job._send_store_message = MagicMock()
-        self.daq_job._poll_sections()
+        with self.assertRaises(Exception) as context:
+            self.daq_job._poll_sections()
+        self.assertTrue("No results" in str(context.exception))
         self.daq_job._send_store_message.assert_not_called()
 
     @patch.object(

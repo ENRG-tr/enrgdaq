@@ -48,6 +48,7 @@ class DAQJobN1081B(DAQJob):
             if not self._is_connected():
                 self._logger.info("Connecting to the device...")
                 self._connect_to_device()
+                self._logger.info("Connected!")
 
             # Poll sections
             self._poll_sections()
@@ -70,12 +71,11 @@ class DAQJobN1081B(DAQJob):
 
             res = self.device.get_function_results(section)
             if not res:
-                continue
+                raise Exception("No results")
 
             data = res["data"]
             if "counters" not in data:
-                self._logger.info(f"No counters in section {section}")
-                continue
+                raise Exception(f"No counters in section {section}")
 
             self._send_store_message(data, section.name)
 
