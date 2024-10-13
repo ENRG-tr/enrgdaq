@@ -61,7 +61,8 @@ class TestMain(unittest.TestCase):
             daq_job_threads = [mock_thread_alive, mock_thread_dead, mock_thread_store]
             daq_job_threads: list[DAQJobThread] = daq_job_threads
 
-            result = loop(daq_job_threads)
+            # TODO: test stats
+            result, _ = loop(daq_job_threads, {})
 
             self.assertEqual(
                 result, [mock_thread_alive, mock_thread_store, mock_thread_dead]
@@ -79,7 +80,7 @@ class TestMain(unittest.TestCase):
         daq_job_threads = [mock_thread]
         daq_job_threads: list[DAQJobThread] = daq_job_threads
 
-        result = get_messages_from_daq_jobs(daq_job_threads)
+        result = get_messages_from_daq_jobs(daq_job_threads, {})
 
         self.assertEqual(result, [mock_message])
 
@@ -94,7 +95,7 @@ class TestMain(unittest.TestCase):
         daq_job_threads = [mock_thread]
         daq_job_threads: list[DAQJobThread] = daq_job_threads
 
-        send_messages_to_daq_jobs(daq_job_threads, [mock_message])
+        send_messages_to_daq_jobs(daq_job_threads, [mock_message], {})
 
         mock_parse_store_config.assert_called_once_with({})
         self.assertFalse(mock_thread.daq_job.message_in.empty())
