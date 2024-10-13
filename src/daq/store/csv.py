@@ -74,7 +74,7 @@ class DAQJobStoreCSV(DAQJobStore):
                 Path(file_path).touch()
 
             # Open file
-            file = CSVFile(open(file_path, "a"), datetime.now(), deque())
+            file = CSVFile(open(file_path, "a", newline=""), datetime.now(), deque())
             self._open_csv_files[file_path] = file
         else:
             file_exists = True
