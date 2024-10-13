@@ -2,7 +2,7 @@ import http.server
 import socketserver
 import threading
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from daq.base import DAQJob
 from daq.models import DAQJobConfig
@@ -31,9 +31,15 @@ class DAQJobServeHTTP(DAQJob):
                 super().__init__(*args, directory=serve_path, **kwargs)
 
             def do_GET(self) -> None:
-                self.path = self.path.replace(
-                    "TODAY", datetime.now().strftime("%Y-%m-%d")
-                )
+                REPLACE_DICT = {
+                    "TODAY": datetime.now().strftime("%Y-%m-%d"),
+                    "YESTERDAY": (datetime.now() - timedelta(days=1)).strftime(
+                        "%Y-%m-%d"
+                    ),
+                }
+                for key, value in REPLACE_DICT.items():
+                    self.path = self.path.replace(key, value)
+
                 return super().do_GET()
 
             def log_message(self, format: str, *args) -> None:
