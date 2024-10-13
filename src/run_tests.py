@@ -16,5 +16,5 @@ def run_tests():
 
 if __name__ == "__main__":
     test_suite = run_tests()
-    runner = unittest.TextTestRunner(verbosity=3)
+    runner = unittest.TextTestRunner(verbosity=1)
     runner.run(test_suite)

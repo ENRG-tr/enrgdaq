@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 from N1081B import N1081B
 from websocket import WebSocket
 
-from daq.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig
+from daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig
 from daq.store.models import DAQJobMessageStore
 
 

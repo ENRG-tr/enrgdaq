@@ -3,7 +3,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, mock_open, patch
 
-from daq.store.csv import (
+from daq.jobs.store.csv import (
     DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS,
     CSVFile,
     DAQJobStoreConfigCSV,
@@ -17,7 +17,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.config = MagicMock()
         self.store = DAQJobStoreCSV(self.config)
 
-    @patch("daq.store.csv.modify_file_path", return_value="test.csv")
+    @patch("daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=False)
     @patch("pathlib.Path.touch")
@@ -40,7 +40,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         file = self.store._open_csv_files["test.csv"]
         self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
 
-    @patch("daq.store.csv.modify_file_path", return_value="test.csv")
+    @patch("daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=True)
     def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):
