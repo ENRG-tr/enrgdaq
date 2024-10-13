@@ -10,6 +10,7 @@ from daq.models import DAQJobMessage
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
+N1081B_WEBSOCKET_TIMEOUT_SECONDS = 5
 
 
 @dataclass
@@ -64,6 +65,11 @@ class DAQJobN1081B(DAQJob):
 
         if not self.device.login(self.config.password):
             raise Exception("Login failed")
+
+        if isinstance(self.device.ws, WebSocket):
+            self.device.ws.settimeout(N1081B_WEBSOCKET_TIMEOUT_SECONDS)
+        else:
+            raise Exception("Websocket not found")
 
     def _poll_sections(self):
         for section in self.config.sections_to_store:

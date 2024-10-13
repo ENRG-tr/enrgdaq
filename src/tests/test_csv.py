@@ -35,7 +35,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.csv", True, None)
-        mock_open.assert_called_once_with("test.csv", "a")
+        mock_open.assert_called_once_with("test.csv", "a", newline="")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
         self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
@@ -55,7 +55,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.csv", True, None)
-        mock_open.assert_called_once_with("test.csv", "a")
+        mock_open.assert_called_once_with("test.csv", "a", newline="")
         self.assertIn("test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["test.csv"]
         self.assertEqual(len(file.write_queue), 2)  # 2 rows only, no header
