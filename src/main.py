@@ -7,10 +7,10 @@ import coloredlogs
 
 from daq.base import DAQJob, DAQJobThread
 from daq.daq_job import load_daq_jobs, parse_store_config, start_daq_job, start_daq_jobs
+from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore
-from daq.types import DAQJobStatsDict
 
 DAQ_SUPERVISOR_SLEEP_TIME = 0.5
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
@@ -36,10 +36,23 @@ def loop(
     # Get messages from DAQ Jobs
     daq_messages_out = get_messages_from_daq_jobs(daq_job_threads, daq_job_stats)
 
+    # Add supervisor messages
+    daq_messages_out.extend(get_supervisor_messages(daq_job_threads, daq_job_stats))
+
     # Send messages to appropriate DAQ Jobs
     send_messages_to_daq_jobs(daq_job_threads, daq_messages_out, daq_job_stats)
 
     return daq_job_threads, daq_job_stats
+
+
+def get_supervisor_messages(
+    daq_job_threads: list[DAQJobThread], daq_job_stats: DAQJobStatsDict
+):
+    messages = []
+
+    # Send stats message
+    messages.append(DAQJobMessageStats(daq_job_stats))
+    return messages
 
 
 def get_or_create_daq_job_stats(

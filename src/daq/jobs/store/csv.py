@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Optional, cast
 
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
@@ -20,6 +20,7 @@ DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE = 1000
 class DAQJobStoreConfigCSV(DAQJobStoreConfig):
     file_path: str
     add_date: bool
+    overwrite: Optional[bool] = None
 
 
 @dataclass
@@ -32,6 +33,7 @@ class CSVFile:
     file: TextIOWrapper
     last_flush_date: datetime
     write_queue: deque[list[Any]]
+    overwrite: Optional[bool] = None
 
 
 class DAQJobStoreCSV(DAQJobStore):
@@ -51,10 +53,12 @@ class DAQJobStoreCSV(DAQJobStore):
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.prefix
         )
-        file, new_file = self._open_csv_file(file_path)
+        file, new_file = self._open_csv_file(file_path, store_config.overwrite)
+        if file.overwrite:
+            file.write_queue.clear()
 
         # Write headers if the file is new
-        if new_file:
+        if new_file or file.overwrite:
             file.write_queue.append(message.keys)
 
         # Append rows to write_queue
@@ -63,7 +67,9 @@ class DAQJobStoreCSV(DAQJobStore):
 
         return True
 
-    def _open_csv_file(self, file_path: str) -> tuple[CSVFile, bool]:
+    def _open_csv_file(
+        self, file_path: str, overwrite: Optional[bool]
+    ) -> tuple[CSVFile, bool]:
         """
         Opens a file and returns (CSVFile, new_file)
         """
@@ -74,7 +80,12 @@ class DAQJobStoreCSV(DAQJobStore):
                 Path(file_path).touch()
 
             # Open file
-            file = CSVFile(open(file_path, "a", newline=""), datetime.now(), deque())
+            file = CSVFile(
+                open(file_path, "a" if not overwrite else "w", newline=""),
+                datetime.now(),
+                deque(),
+                overwrite,
+            )
             self._open_csv_files[file_path] = file
         else:
             file_exists = True
@@ -103,6 +114,11 @@ class DAQJobStoreCSV(DAQJobStore):
             if row_size > 0:
                 writer.writerows(list(file.write_queue))
             file.write_queue.clear()
+
+            if file.overwrite:
+                file.file.close()
+                files_to_delete.append(file_path)
+                continue
 
             # Flush if the flush time is up
             if self._flush(file):
