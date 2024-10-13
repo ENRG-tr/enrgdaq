@@ -45,7 +45,7 @@ class DAQJobHandleStats(DAQJob):
         def datetime_to_str(dt: Optional[datetime]):
             if dt is None:
                 return "N/A"
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
+            return int(dt.timestamp() * 1000)
 
         data_to_send = []
         for daq_job_type, msg in message.stats.items():
