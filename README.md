@@ -40,7 +40,7 @@ python src/main.py
 
 ## Pre commit hooks
 
-We use pre-commit hooks to ensure that the code is formatted correctly and that the tests pass before committing. To install the pre-commit hooks, run the following command:
+To install the pre-commit hooks, run the following command:
 
 ```
 pre-commit install
