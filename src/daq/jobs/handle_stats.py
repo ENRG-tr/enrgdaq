@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from daq.base import DAQJob
-from daq.models import DAQJobMessage, DAQJobStats
+from daq.models import DAQJobMessage, DAQJobStats, DAQJobStatsRecord
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
 
 DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
@@ -40,6 +40,8 @@ class DAQJobHandleStats(DAQJob):
             "message_in_count",
             "last_message_out_date",
             "message_out_count",
+            "last_restart_date",
+            "restart_count",
         ]
 
         def datetime_to_str(dt: Optional[datetime]):
@@ -47,15 +49,20 @@ class DAQJobHandleStats(DAQJob):
                 return "N/A"
             return int(dt.timestamp() * 1000)
 
+        def unpack_record(record: DAQJobStatsRecord):
+            return [
+                datetime_to_str(record.last_updated),
+                record.count,
+            ]
+
         data_to_send = []
         for daq_job_type, msg in message.stats.items():
             data_to_send.append(
                 [
                     daq_job_type.__name__,
-                    datetime_to_str(msg.last_message_in_date),
-                    msg.message_in_count,
-                    datetime_to_str(msg.last_message_out_date),
-                    msg.message_out_count,
+                    *unpack_record(msg.message_in_stats),
+                    *unpack_record(msg.message_out_stats),
+                    *unpack_record(msg.restart_stats),
                 ]
             )
 

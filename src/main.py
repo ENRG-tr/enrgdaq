@@ -1,6 +1,5 @@
 import logging
 import time
-from datetime import datetime
 from queue import Empty
 
 import coloredlogs
@@ -32,6 +31,8 @@ def loop(
     # Restart jobs that have stopped
     for thread in dead_threads:
         daq_job_threads.append(start_daq_job(thread.daq_job))
+        # Update restart stats
+        get_daq_job_stats(daq_job_stats, type(thread.daq_job)).restart_stats.increase()
 
     # Get messages from DAQ Jobs
     daq_messages_out = get_messages_from_daq_jobs(daq_job_threads, daq_job_stats)
@@ -55,16 +56,11 @@ def get_supervisor_messages(
     return messages
 
 
-def get_or_create_daq_job_stats(
+def get_daq_job_stats(
     daq_job_stats: DAQJobStatsDict, daq_job_type: type[DAQJob]
 ) -> DAQJobStats:
     if daq_job_type not in daq_job_stats:
-        daq_job_stats[daq_job_type] = DAQJobStats(
-            message_in_count=0,
-            message_out_count=0,
-            last_message_in_date=None,
-            last_message_out_date=None,
-        )
+        daq_job_stats[daq_job_type] = DAQJobStats()
     return daq_job_stats[daq_job_type]
 
 
@@ -78,11 +74,10 @@ def get_messages_from_daq_jobs(
                 res.append(
                     thread.daq_job.message_out.get(timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
                 )
-
                 # Update stats
-                stats = get_or_create_daq_job_stats(daq_job_stats, type(thread.daq_job))
-                stats.message_out_count += 1
-                stats.last_message_out_date = datetime.now()
+                get_daq_job_stats(
+                    daq_job_stats, type(thread.daq_job)
+                ).message_out_stats.increase()
         except Empty:
             pass
     return res
@@ -113,9 +108,9 @@ def send_messages_to_daq_jobs(
                 daq_job.message_in.put(message, timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT)
 
                 # Update stats
-                stats = get_or_create_daq_job_stats(daq_job_stats, type(daq_job))
-                stats.message_in_count += 1
-                stats.last_message_in_date = datetime.now()
+                get_daq_job_stats(
+                    daq_job_stats, type(daq_job)
+                ).message_in_stats.increase()
 
 
 if __name__ == "__main__":
@@ -124,7 +119,9 @@ if __name__ == "__main__":
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     daq_job_threads = start_daq_job_threads()
-    daq_job_stats: DAQJobStatsDict = {}
+    daq_job_stats: DAQJobStatsDict = {
+        type(thread.daq_job): DAQJobStats() for thread in daq_job_threads
+    }
 
     if not any(x for x in daq_job_threads if isinstance(x.daq_job, DAQJobStore)):
         logging.warning("No store job found, data will not be stored")

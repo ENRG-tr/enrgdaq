@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
 
@@ -21,11 +21,30 @@ class DAQJobMessageStop(DAQJobMessage):
 
 
 @dataclass
+class DAQJobStatsRecord:
+    count: int
+    last_updated: Optional[datetime]
+
+    @staticmethod
+    def new() -> "DAQJobStatsRecord":
+        return DAQJobStatsRecord(count=0, last_updated=None)
+
+    def increase(self, amount: int = 1):
+        self.count += amount
+        self.last_updated = datetime.now()
+
+
+@dataclass
 class DAQJobStats:
-    message_in_count: int
-    message_out_count: int
-    last_message_in_date: Optional[datetime]
-    last_message_out_date: Optional[datetime]
+    message_in_stats: DAQJobStatsRecord = field(
+        default_factory=lambda: DAQJobStatsRecord.new()
+    )
+    message_out_stats: DAQJobStatsRecord = field(
+        default_factory=lambda: DAQJobStatsRecord.new()
+    )
+    restart_stats: DAQJobStatsRecord = field(
+        default_factory=lambda: DAQJobStatsRecord.new()
+    )
 
 
 class DAQJobStopError(Exception):
