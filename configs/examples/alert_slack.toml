@@ -1,0 +1,2 @@
+daq_job_type = "alert_slack"
+slack_webhook_url = "https://hooks.slack.com/services/xxxxxxxxxxxxxxxxxxxxxxxxx"

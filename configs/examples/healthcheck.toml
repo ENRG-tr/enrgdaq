@@ -1,0 +1,22 @@
+daq_job_type = "healthcheck"
+
+[store_config]
+daq_job_store_type = "csv"
+file_path = "out/healthcheck.csv"
+add_date = true
+
+# Alert if restarted
+[[healthcheck_stats]]
+daq_job_type = "n1081b"
+stats_key = "restart_stats"
+interval = "1m"
+alert_if_interval_is = "satisfied"
+alert_info = { message = "N1081B job crashed and got restarted!", severity = "error" }
+
+# Alert if no message out
+[[healthcheck_stats]]
+daq_job_type = "n1081b"
+stats_key = "message_out_stats"
+interval = "2m"
+alert_if_interval_is = "unsatisfied"
+alert_info = { message = "N1081B has been unresponsive for the last 2 minutes!", severity = "error" }
