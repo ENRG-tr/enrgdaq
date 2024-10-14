@@ -1,0 +1,6 @@
+daq_job_type = "handle_alerts"
+
+[store_config]
+daq_job_store_type = "csv"
+file_path = "out/healthcheck.csv"
+add_date = true
