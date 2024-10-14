@@ -9,9 +9,7 @@ from dataclasses_json import DataClassJsonMixin
 from daq.alert.base import DAQAlertInfo, DAQJobMessageAlert
 from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
-from daq.models import DAQJobStats
-from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
-from utils.time import get_now_unix_timestamp_ms
+from daq.models import DAQJobConfig, DAQJobStats
 
 
 class AlertCondition(str, Enum):
@@ -53,7 +51,7 @@ class HealthcheckStatsItem(HealthcheckItem):
 
 
 @dataclass
-class DAQJobHealthcheckConfig(StorableDAQJobConfig):
+class DAQJobHealthcheckConfig(DAQJobConfig):
     healthcheck_stats: list[HealthcheckStatsItem]
 
 
@@ -151,18 +149,3 @@ class DAQJobHealthcheck(DAQJob):
                 alert_info=item.alert_info,
             )
         )
-        if len(self.config.store_config) > 0:
-            self.message_out.put(
-                DAQJobMessageStore(
-                    store_config=self.config.store_config,
-                    daq_job=self,
-                    keys=["timestamp", "severity", "message"],
-                    data=[
-                        [
-                            get_now_unix_timestamp_ms(),
-                            item.alert_info.severity,
-                            item.alert_info.message,
-                        ]
-                    ],
-                )
-            )

@@ -1,10 +1,5 @@
 daq_job_type = "healthcheck"
 
-[store_config]
-daq_job_store_type = "csv"
-file_path = "out/healthcheck.csv"
-add_date = true
-
 # Alert if restarted
 [[healthcheck_stats]]
 daq_job_type = "n1081b"
