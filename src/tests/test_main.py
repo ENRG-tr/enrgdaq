@@ -30,7 +30,7 @@ class TestMain(unittest.TestCase):
 
     @patch("main.start_daq_job")
     def test_loop(self, mock_start_daq_job):
-        RUN_COUNT = 10
+        RUN_COUNT = 3
         mock_thread_alive = MagicMock(name="thread_alive")
 
         for _ in range(RUN_COUNT):

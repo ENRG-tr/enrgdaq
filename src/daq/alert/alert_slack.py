@@ -2,13 +2,13 @@ from dataclasses import dataclass
 
 from slack_webhook import Slack
 
-from daq.alert.base import DAQJobAlert, DAQJobMessageAlert, DAQJobMessageAlertSeverity
+from daq.alert.base import DAQAlertSeverity, DAQJobAlert, DAQJobMessageAlert
 from daq.models import DAQJobConfig
 
 ALERT_SEVERITY_TO_SLACK_COLOR = {
-    DAQJobMessageAlertSeverity.INFO: "good",
-    DAQJobMessageAlertSeverity.WARNING: "warning",
-    DAQJobMessageAlertSeverity.ERROR: "danger",
+    DAQAlertSeverity.INFO: "good",
+    DAQAlertSeverity.WARNING: "warning",
+    DAQAlertSeverity.ERROR: "danger",
 }
 
 
@@ -18,6 +18,7 @@ class DAQJobAlertSlackConfig(DAQJobConfig):
 
 
 class DAQJobAlertSlack(DAQJobAlert):
+    config_type = DAQJobAlertSlackConfig
     config: DAQJobAlertSlackConfig
     _slack: Slack
 
@@ -27,20 +28,20 @@ class DAQJobAlertSlack(DAQJobAlert):
 
     def alert_loop(self):
         for alert in self._alerts:
-            self.send_alert(alert)
+            self.send_webhook(alert)
 
-    def send_alert(self, alert: DAQJobMessageAlert):
+    def send_webhook(self, alert: DAQJobMessageAlert):
         self._slack.post(
             attachments=[
                 {
-                    "fallback": alert.message,
-                    "color": ALERT_SEVERITY_TO_SLACK_COLOR[alert.severity],
+                    "fallback": alert.alert_info.message,
+                    "color": ALERT_SEVERITY_TO_SLACK_COLOR[alert.alert_info.severity],
                     "author_name": type(alert.daq_job).__name__,
                     "title": "Alert!",
                     "fields": [
                         {
                             "title": "Severity",
-                            "value": alert.severity,
+                            "value": alert.alert_info.severity,
                             "short": True,
                         },
                         {
@@ -50,7 +51,7 @@ class DAQJobAlertSlack(DAQJobAlert):
                         },
                         {
                             "title": "Message",
-                            "value": alert.message,
+                            "value": alert.alert_info.message,
                             "short": False,
                         },
                     ],

@@ -2,12 +2,12 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from daq.alert.base import DAQJobMessageAlert, DAQJobMessageAlertSeverity
-from daq.alert.slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
+from daq.alert.alert_slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
+from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
 
 
 class TestDAQJobAlertSlack(unittest.TestCase):
-    @patch("daq.alert.slack.Slack")
+    @patch("daq.alert.alert_slack.Slack")
     def setUp(self, MockSlack):
         self.mock_slack = MockSlack.return_value
         self.config = DAQJobAlertSlackConfig(
@@ -22,11 +22,13 @@ class TestDAQJobAlertSlack(unittest.TestCase):
     def test_send_alert(self):
         alert = DAQJobMessageAlert(
             daq_job=MagicMock(),
-            severity=DAQJobMessageAlertSeverity.ERROR,
-            message="Test error message",
+            alert_info=DAQAlertInfo(
+                severity=DAQAlertSeverity.ERROR,
+                message="Test error message",
+            ),
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
-        self.daq_job.send_alert(alert)
+        self.daq_job.send_webhook(alert)
         self.mock_slack.post.assert_called_once_with(
             attachments=[
                 {
@@ -37,7 +39,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                     "fields": [
                         {
                             "title": "Severity",
-                            "value": DAQJobMessageAlertSeverity.ERROR,
+                            "value": DAQAlertSeverity.ERROR,
                             "short": True,
                         },
                         {
@@ -58,14 +60,18 @@ class TestDAQJobAlertSlack(unittest.TestCase):
     def test_alert_loop(self):
         alert1 = DAQJobMessageAlert(
             daq_job=MagicMock(),
-            severity=DAQJobMessageAlertSeverity.INFO,
-            message="Test info message",
+            alert_info=DAQAlertInfo(
+                severity=DAQAlertSeverity.INFO,
+                message="Test info message",
+            ),
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
         alert2 = DAQJobMessageAlert(
             daq_job=MagicMock(),
-            severity=DAQJobMessageAlertSeverity.WARNING,
-            message="Test warning message",
+            alert_info=DAQAlertInfo(
+                severity=DAQAlertSeverity.WARNING,
+                message="Test warning message",
+            ),
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
         self.daq_job._alerts = [alert1, alert2]

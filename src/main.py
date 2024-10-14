@@ -4,6 +4,7 @@ from queue import Empty
 
 import coloredlogs
 
+from daq.alert.base import DAQJobAlert
 from daq.base import DAQJob, DAQJobThread
 from daq.daq_job import load_daq_jobs, parse_store_config, start_daq_job, start_daq_jobs
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
@@ -11,7 +12,7 @@ from daq.models import DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore
 
-DAQ_SUPERVISOR_SLEEP_TIME = 0.5
+DAQ_SUPERVISOR_SLEEP_TIME = 0.2
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
 
 
@@ -113,6 +114,17 @@ def send_messages_to_daq_jobs(
                 ).message_in_stats.increase()
 
 
+def warn_for_lack_of_daq_jobs(daq_job_threads: list[DAQJobThread]):
+    DAQ_JOB_ABSENT_WARNINGS = {
+        DAQJobStore: "No store job found, data will not be stored",
+        DAQJobAlert: "No alert job found, alerts will not be sent",
+    }
+
+    for daq_job_type, warning_message in DAQ_JOB_ABSENT_WARNINGS.items():
+        if not any(x for x in daq_job_threads if isinstance(x.daq_job, daq_job_type)):
+            logging.warning(warning_message)
+
+
 if __name__ == "__main__":
     coloredlogs.install(
         level=logging.DEBUG,
@@ -123,8 +135,7 @@ if __name__ == "__main__":
         type(thread.daq_job): DAQJobStats() for thread in daq_job_threads
     }
 
-    if not any(x for x in daq_job_threads if isinstance(x.daq_job, DAQJobStore)):
-        logging.warning("No store job found, data will not be stored")
+    warn_for_lack_of_daq_jobs(daq_job_threads)
 
     while True:
         try:
