@@ -72,6 +72,35 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         self.daq_job_healthcheck.handle_checks()
         mock_send_alert.assert_not_called()
 
+    @patch("daq.jobs.healthcheck.DAQJobHealthcheck.send_alert")
+    def test_handle_checks_should_alert_then_not_alert_then_alert_again(
+        self, mock_send_alert
+    ):
+        mock_stats = MagicMock()
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+
+        # First check should trigger an alert
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
+        # Reset mock to check for second call
+        mock_send_alert.reset_mock()
+
+        # Update stats to a recent time, should not trigger an alert
+        mock_stats.message_out_stats.last_updated = datetime.now()
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_not_called()
+
+        # Update stats to an old time again, should trigger an alert
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
     def test_parse_interval(self):
         self.assertEqual(self.healthcheck_item.parse_interval(), timedelta(minutes=5))
 
