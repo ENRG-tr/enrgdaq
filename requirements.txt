@@ -22,6 +22,7 @@ pre-commit==4.0.1
 pyreadline3==3.5.4 ; sys_platform == 'win32'
 pyyaml==6.0.2
 ruff==0.6.9
+slack-webhook==1.0.7
 typing-extensions==4.12.2
 typing-inspect==0.9.0
 uproot==5.4.1

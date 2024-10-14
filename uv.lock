@@ -130,6 +130,7 @@ dependencies = [
     { name = "coloredlogs" },
     { name = "dataclasses-json" },
     { name = "n1081b-sdk" },
+    { name = "slack-webhook" },
     { name = "uproot" },
 ]
 
@@ -144,6 +145,7 @@ requires-dist = [
     { name = "coloredlogs", specifier = ">=15.0.1" },
     { name = "dataclasses-json", specifier = ">=0.6.7" },
     { name = "n1081b-sdk", git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" },
+    { name = "slack-webhook", specifier = ">=1.0.7" },
     { name = "uproot", specifier = ">=5.4.1" },
 ]
 
@@ -358,6 +360,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/bb/a4/c84bc13d0b573cf7bb7d17b16d6d29f84267c92d79b2f478d4ce322e8e72/ruff-0.6.9-py3-none-win32.whl", hash = "sha256:eb61ec9bdb2506cffd492e05ac40e5bc6284873aceb605503d8494180d6fc84d", size = 8522088 },
     { url = "https://files.pythonhosted.org/packages/74/be/fc352bd8ca40daae8740b54c1c3e905a7efe470d420a268cd62150248c91/ruff-0.6.9-py3-none-win_amd64.whl", hash = "sha256:785d31851c1ae91f45b3d8fe23b8ae4b5170089021fbb42402d811135f0b7117", size = 9359275 },
     { url = "https://files.pythonhosted.org/packages/3e/14/fd026bc74ded05e2351681545a5f626e78ef831f8edce064d61acd2e6ec7/ruff-0.6.9-py3-none-win_arm64.whl", hash = "sha256:a9641e31476d601f83cd602608739a0840e348bda93fec9f1ee816f8b6798b93", size = 8679879 },
+]
+
+[[package]]
+name = "slack-webhook"
+version = "1.0.7"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/b8/e66a00f989b580865c0aa16c320267d4e8be17a32930faaf868ebcdcd293/slack-webhook-1.0.7.tar.gz", hash = "sha256:78f3cae5f7a5669ba7cfd15f5c98454c539eeb5d5498b22e23fd9e803a8b6215", size = 3319 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c0/e1/6514f89cf7aa66c3ba7736e766a45e93141eaf520fdc50983ad5cd5eed77/slack_webhook-1.0.7-py3-none-any.whl", hash = "sha256:56ce0dd5d2cf48758201670c95384e2d132c0e9eb68e1a5d7348ea99adcc201a", size = 3700 },
 ]
 
 [[package]]
