@@ -64,6 +64,8 @@ class DAQJobHealthcheck(DAQJob):
     _current_stats: DAQJobStatsDict
     _daq_job_type_to_class: dict[str, type[DAQJob]]
 
+    _healthcheck_stats: list[HealthcheckStatsItem]
+
     def __init__(self, config: DAQJobHealthcheckConfig):
         from daq.types import DAQ_JOB_TYPE_TO_CLASS
 
@@ -72,9 +74,11 @@ class DAQJobHealthcheck(DAQJob):
 
         super().__init__(config)
 
+        self._healthcheck_stats = []
+
         if config.enable_alerts_on_restart:
             for daq_job_type, daq_job_type_class in self._daq_job_type_to_class.items():
-                self.config.healthcheck_stats.append(
+                self._healthcheck_stats.append(
                     HealthcheckStatsItem(
                         alert_info=DAQAlertInfo(
                             message=f"{daq_job_type_class.__name__} crashed and got restarted!",
@@ -87,8 +91,10 @@ class DAQJobHealthcheck(DAQJob):
                     )
                 )
 
+        self._healthcheck_stats.extend(list(self.config.healthcheck_stats))
+
         # Sanity check config
-        for item in config.healthcheck_stats:
+        for item in self._healthcheck_stats:
             if item.alert_if_interval_is not in AlertCondition:
                 raise ValueError(
                     f"Invalid alert condition: {item.alert_if_interval_is}"
@@ -124,7 +130,7 @@ class DAQJobHealthcheck(DAQJob):
     def handle_checks(self):
         res: list[tuple[HealthcheckItem, bool]] = []
 
-        for item in self.config.healthcheck_stats:
+        for item in self._healthcheck_stats:
             # Get the current DAQJobStats by daq_job_type of item
             item_daq_job_type = self._daq_job_type_to_class[item.daq_job_type]
             if item_daq_job_type not in self._current_stats:
