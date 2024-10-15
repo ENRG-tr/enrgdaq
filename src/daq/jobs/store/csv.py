@@ -121,8 +121,8 @@ class DAQJobStoreCSV(DAQJobStore):
                 continue
 
             # Flush if the flush time is up
-            if self._flush(file):
-                self._logger.debug(f"Flushed '{file.file.name}' ({row_size} rows)")
+            self._flush(file)
+
         for file_path in files_to_delete:
             del self._open_csv_files[file_path]
 
