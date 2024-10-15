@@ -1,3 +1,4 @@
+import sys
 import unittest
 
 from tests.test_csv import TestDAQJobStoreCSV
@@ -26,4 +27,6 @@ def run_tests():
 if __name__ == "__main__":
     test_suite = run_tests()
     runner = unittest.TextTestRunner(verbosity=1)
-    runner.run(test_suite)
+    result = runner.run(test_suite)
+
+    sys.exit(not result.wasSuccessful())
