@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 
 from daq.base import DAQJobThread
 from daq.models import DAQJobMessage
-from daq.store.base import DAQJobStore
 from daq.store.models import DAQJobMessageStore
 from main import (
     DAQ_JOB_QUEUE_ACTION_TIMEOUT,
@@ -29,46 +28,47 @@ class TestMain(unittest.TestCase):
         self.assertEqual(result, ["thread1", "thread2"])
 
     @patch("main.restart_daq_job")
-    def test_loop(self, mock_restart_daq_job):
-        RUN_COUNT = 3
-        mock_thread_alive = MagicMock(name="thread_alive")
+    @patch("main.get_messages_from_daq_jobs")
+    @patch("main.get_supervisor_messages")
+    @patch("main.send_messages_to_daq_jobs")
+    def test_loop(
+        self,
+        mock_send_messages_to_daq_jobs,
+        mock_get_supervisor_messages,
+        mock_get_messages_from_daq_jobs,
+        mock_restart_daq_job,
+    ):
+        mock_thread_alive = MagicMock()
+        mock_thread_alive.thread.is_alive.return_value = True
+        mock_thread_dead = MagicMock()
+        mock_thread_dead.thread.is_alive.return_value = False
+        mock_restart_daq_job.return_value = mock_thread_alive
 
-        for _ in range(RUN_COUNT):
-            mock_thread_dead = MagicMock(name="thread_dead")
-            mock_thread_dead.daq_job = MagicMock()
-            mock_thread_dead.daq_job.message_out = Queue()
-            mock_thread_alive.daq_job.message_out = Queue()
-            mock_thread_alive.thread.is_alive.return_value = True
-            mock_thread_dead.thread.is_alive.return_value = False
+        daq_job_threads: list[DAQJobThread] = [mock_thread_alive, mock_thread_dead]
+        daq_job_stats = {}
 
-            mock_thread_store = MagicMock(spec=DAQJobStore, name="thread_store")
-            mock_thread_store.daq_job = MagicMock()
-            mock_thread_store.daq_job.allowed_message_in_types = [MagicMock]
-            mock_thread_store.daq_job.message_in = Queue()
-            mock_thread_store.daq_job.message_out = Queue()
-            mock_thread_store.daq_job.can_store = MagicMock(return_value=True)
-            mock_thread_store.thread = MagicMock()
-            mock_thread_store.thread.is_alive.return_value = True
+        mock_get_messages_from_daq_jobs.return_value = ["message1"]
+        mock_get_supervisor_messages.return_value = ["message2"]
 
-            mock_store_message = MagicMock(spec=DAQJobMessageStore)
-            mock_store_message.store_config = MagicMock()
+        result_threads, result_stats = loop(daq_job_threads, daq_job_stats)
 
-            # we will expect this to be received by mock_thread_store
-            mock_thread_alive.daq_job.message_out.put(mock_store_message)
+        mock_restart_daq_job.assert_called_once_with(mock_thread_dead.daq_job)
+        mock_get_messages_from_daq_jobs.assert_called_once_with(
+            [mock_thread_alive, mock_restart_daq_job.return_value], daq_job_stats
+        )
+        mock_get_supervisor_messages.assert_called_once_with(
+            [mock_thread_alive, mock_restart_daq_job.return_value], daq_job_stats
+        )
+        mock_send_messages_to_daq_jobs.assert_called_once_with(
+            [mock_thread_alive, mock_restart_daq_job.return_value],
+            ["message1", "message2"],
+            daq_job_stats,
+        )
 
-            mock_restart_daq_job.return_value = mock_thread_store
-
-            daq_job_threads = [mock_thread_alive, mock_thread_dead, mock_thread_store]
-            daq_job_threads: list[DAQJobThread] = daq_job_threads
-
-            # TODO: test stats
-            result, _ = loop(daq_job_threads, {})
-
-            self.assertEqual(
-                result, [mock_thread_alive, mock_thread_store, mock_thread_dead]
-            )
-            self.assertEqual(mock_thread_alive.daq_job.message_out.qsize(), 0)
-            self.assertEqual(mock_thread_store.daq_job.message_in.qsize(), 1)
+        self.assertEqual(
+            result_threads, [mock_thread_alive, mock_restart_daq_job.return_value]
+        )
+        self.assertEqual(result_stats, daq_job_stats)
 
     def test_get_messages_from_daq_jobs(self):
         mock_thread = MagicMock()
