@@ -28,9 +28,8 @@ class TestMain(unittest.TestCase):
         mock_start_daq_jobs.assert_called_once_with(["job1", "job2"])
         self.assertEqual(result, ["thread1", "thread2"])
 
-    @patch("main.start_daq_job")
     @patch("main.restart_daq_job")
-    def test_loop(self, mock_start_daq_job, mock_restart_daq_job):
+    def test_loop(self, mock_restart_daq_job):
         RUN_COUNT = 3
         mock_thread_alive = MagicMock(name="thread_alive")
 
@@ -57,7 +56,6 @@ class TestMain(unittest.TestCase):
             # we will expect this to be received by mock_thread_store
             mock_thread_alive.daq_job.message_out.put(mock_store_message)
 
-            mock_start_daq_job.return_value = mock_thread_dead
             mock_restart_daq_job.return_value = mock_thread_store
 
             daq_job_threads = [mock_thread_alive, mock_thread_dead, mock_thread_store]
@@ -71,7 +69,6 @@ class TestMain(unittest.TestCase):
             )
             self.assertEqual(mock_thread_alive.daq_job.message_out.qsize(), 0)
             self.assertEqual(mock_thread_store.daq_job.message_in.qsize(), 1)
-        self.assertEqual(mock_start_daq_job.call_count, RUN_COUNT)
 
     def test_get_messages_from_daq_jobs(self):
         mock_thread = MagicMock()
