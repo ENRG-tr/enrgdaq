@@ -6,7 +6,7 @@ from typing import Optional
 
 from dataclasses_json import DataClassJsonMixin
 
-from daq.alert.base import DAQAlertInfo, DAQJobMessageAlert
+from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
 from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobConfig, DAQJobStats
@@ -53,6 +53,7 @@ class HealthcheckStatsItem(HealthcheckItem):
 @dataclass
 class DAQJobHealthcheckConfig(DAQJobConfig):
     healthcheck_stats: list[HealthcheckStatsItem]
+    enable_alerts_on_restart: bool = True
 
 
 class DAQJobHealthcheck(DAQJob):
@@ -70,6 +71,22 @@ class DAQJobHealthcheck(DAQJob):
         self._current_stats = {}
 
         super().__init__(config)
+
+        if config.enable_alerts_on_restart:
+            for daq_job_type, daq_job_type_class in self._daq_job_type_to_class.items():
+                self.config.healthcheck_stats.append(
+                    HealthcheckStatsItem(
+                        alert_info=DAQAlertInfo(
+                            message=f"{daq_job_type_class.__name__} crashed and got restarted!",
+                            severity=DAQAlertSeverity.ERROR,
+                        ),
+                        daq_job_type=daq_job_type,
+                        alert_if_interval_is=AlertCondition.SATISFIED,
+                        stats_key="restart_stats",
+                        interval="1m",
+                    )
+                )
+
         # Sanity check config
         for item in config.healthcheck_stats:
             if item.alert_if_interval_is not in AlertCondition:

@@ -27,6 +27,7 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         self.config = DAQJobHealthcheckConfig(
             daq_job_type="test",
             healthcheck_stats=[self.healthcheck_item],
+            enable_alerts_on_restart=False,
         )
         self.daq_job_healthcheck = DAQJobHealthcheck(self.config)
 
