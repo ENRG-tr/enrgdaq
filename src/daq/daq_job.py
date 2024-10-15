@@ -47,6 +47,14 @@ def start_daq_job(daq_job: DAQJob) -> DAQJobThread:
     return DAQJobThread(daq_job, thread)
 
 
+def restart_daq_job(daq_job: DAQJob) -> DAQJobThread:
+    logging.info(f"Restarting {type(daq_job).__name__}")
+    new_daq_job = type(daq_job)(daq_job.config)
+    thread = threading.Thread(target=new_daq_job.start, daemon=True)
+    thread.start()
+    return DAQJobThread(new_daq_job, thread)
+
+
 def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobThread]:
     threads = []
     for daq_job in daq_jobs:

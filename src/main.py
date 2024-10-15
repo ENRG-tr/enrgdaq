@@ -6,7 +6,12 @@ import coloredlogs
 
 from daq.alert.base import DAQJobAlert
 from daq.base import DAQJob, DAQJobThread
-from daq.daq_job import load_daq_jobs, parse_store_config, start_daq_job, start_daq_jobs
+from daq.daq_job import (
+    load_daq_jobs,
+    parse_store_config,
+    restart_daq_job,
+    start_daq_jobs,
+)
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
@@ -31,7 +36,7 @@ def loop(
 
     # Restart jobs that have stopped
     for thread in dead_threads:
-        daq_job_threads.append(start_daq_job(thread.daq_job))
+        daq_job_threads.append(restart_daq_job(thread.daq_job))
         # Update restart stats
         get_daq_job_stats(daq_job_stats, type(thread.daq_job)).restart_stats.increase()
 

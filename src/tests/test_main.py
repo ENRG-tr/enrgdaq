@@ -29,7 +29,8 @@ class TestMain(unittest.TestCase):
         self.assertEqual(result, ["thread1", "thread2"])
 
     @patch("main.start_daq_job")
-    def test_loop(self, mock_start_daq_job):
+    @patch("main.restart_daq_job")
+    def test_loop(self, mock_start_daq_job, mock_restart_daq_job):
         RUN_COUNT = 3
         mock_thread_alive = MagicMock(name="thread_alive")
 
@@ -57,6 +58,7 @@ class TestMain(unittest.TestCase):
             mock_thread_alive.daq_job.message_out.put(mock_store_message)
 
             mock_start_daq_job.return_value = mock_thread_dead
+            mock_restart_daq_job.return_value = mock_thread_store
 
             daq_job_threads = [mock_thread_alive, mock_thread_dead, mock_thread_store]
             daq_job_threads: list[DAQJobThread] = daq_job_threads

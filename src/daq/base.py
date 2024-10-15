@@ -6,6 +6,9 @@ from typing import Any
 
 from daq.models import DAQJobMessage, DAQJobMessageStop, DAQJobStopError
 
+daq_job_instance_id = 0
+daq_job_instance_id_lock = threading.Lock()
+
 
 class DAQJob:
     allowed_message_in_types: list[type[DAQJobMessage]] = []
@@ -13,14 +16,22 @@ class DAQJob:
     config: Any
     message_in: Queue[DAQJobMessage]
     message_out: Queue[DAQJobMessage]
+    instance_id: int
 
     _logger: logging.Logger
 
     def __init__(self, config: Any):
+        global daq_job_instance_id, daq_job_instance_id_lock
+
+        with daq_job_instance_id_lock:
+            self.instance_id = daq_job_instance_id
+            daq_job_instance_id += 1
+        self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
+
         self.config = config
         self.message_in = Queue()
         self.message_out = Queue()
-        self._logger = logging.getLogger(type(self).__name__)
+
         self._should_stop = False
 
     def consume(self):
