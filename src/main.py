@@ -134,6 +134,7 @@ if __name__ == "__main__":
     coloredlogs.install(
         level=logging.DEBUG,
         datefmt="%Y-%m-%d %H:%M:%S",
+        fmt="%(asctime)s %(hostname)s %(name)s %(levelname)s %(message)s",
     )
     daq_job_threads = start_daq_job_threads()
     daq_job_stats: DAQJobStatsDict = {
