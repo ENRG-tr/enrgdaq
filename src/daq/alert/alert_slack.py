@@ -31,6 +31,9 @@ class DAQJobAlertSlack(DAQJobAlert):
             self.send_webhook(alert)
 
     def send_webhook(self, alert: DAQJobMessageAlert):
+        self._logger.info(
+            f"Sending alert to Slack: [{alert.alert_info.severity}] {alert.alert_info.message}"
+        )
         self._slack.post(
             attachments=[
                 {
