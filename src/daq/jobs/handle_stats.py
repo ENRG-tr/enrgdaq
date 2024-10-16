@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from daq.base import DAQJob
 from daq.models import DAQJobMessage, DAQJobStats, DAQJobStatsRecord
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
+from utils.time import get_unix_timestamp_ms
 
 DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
 
@@ -47,7 +48,7 @@ class DAQJobHandleStats(DAQJob):
         def datetime_to_str(dt: Optional[datetime]):
             if dt is None:
                 return "N/A"
-            return int(dt.timestamp() * 1000)
+            return get_unix_timestamp_ms(dt)
 
         def unpack_record(record: DAQJobStatsRecord):
             return [

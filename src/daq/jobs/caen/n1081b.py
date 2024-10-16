@@ -1,6 +1,5 @@
 import time
 from dataclasses import dataclass
-from datetime import datetime
 
 from N1081B import N1081B
 from websocket import WebSocket
@@ -8,6 +7,7 @@ from websocket import WebSocket
 from daq.base import DAQJob
 from daq.models import DAQJobMessage
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
+from utils.time import get_now_unix_timestamp_ms
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
 N1081B_WEBSOCKET_TIMEOUT_SECONDS = 5
@@ -88,7 +88,7 @@ class DAQJobN1081B(DAQJob):
     def _send_store_message(self, data: dict, section):
         keys = ["timestamp", *[f"lemo_{x['lemo']}" for x in data["counters"]]]
         values = [
-            int(datetime.now().timestamp() * 1000),  # unix timestamp in milliseconds
+            get_now_unix_timestamp_ms(),  # unix timestamp in milliseconds
             *[x["value"] for x in data["counters"]],
         ]
         self.message_out.put(
