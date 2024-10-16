@@ -1,10 +1,9 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from N1081B import N1081B
 from websocket import WebSocket
 
-from daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig
+from daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig, N1081BPatched
 from daq.store.models import DAQJobMessageStore
 
 
@@ -20,8 +19,8 @@ class TestDAQJobN1081B(unittest.TestCase):
         )
         self.daq_job = DAQJobN1081B(self.config)
 
-    @patch.object(N1081B, "connect", return_value=True)
-    @patch.object(N1081B, "login", return_value=True)
+    @patch.object(N1081BPatched, "connect", return_value=True)
+    @patch.object(N1081BPatched, "login", return_value=True)
     def test_connect_to_device_success(self, mock_login, mock_connect):
         self.daq_job.device.ws = MagicMock(spec=WebSocket)
         self.daq_job._connect_to_device()
@@ -29,21 +28,21 @@ class TestDAQJobN1081B(unittest.TestCase):
         mock_login.assert_called_once_with("password")
         self.assertTrue(isinstance(self.daq_job.device.ws, WebSocket))
 
-    @patch.object(N1081B, "connect", return_value=False)
+    @patch.object(N1081BPatched, "connect", return_value=False)
     def test_connect_to_device_failure(self, mock_connect):
         with self.assertRaises(Exception) as context:
             self.daq_job._connect_to_device()
         self.assertTrue("Connection failed" in str(context.exception))
 
-    @patch.object(N1081B, "login", return_value=False)
-    @patch.object(N1081B, "connect", return_value=True)
+    @patch.object(N1081BPatched, "login", return_value=False)
+    @patch.object(N1081BPatched, "connect", return_value=True)
     def test_login_failure(self, mock_connect, mock_login):
         with self.assertRaises(Exception) as context:
             self.daq_job._connect_to_device()
         self.assertTrue("Login failed" in str(context.exception))
 
     @patch.object(
-        N1081B,
+        N1081BPatched,
         "get_function_results",
         return_value={"data": {"counters": [{"lemo": 1, "value": 100}]}},
     )
@@ -53,7 +52,7 @@ class TestDAQJobN1081B(unittest.TestCase):
         self.daq_job._send_store_message.assert_called()
         self.assertEqual(self.daq_job._send_store_message.call_count, 2)
 
-    @patch.object(N1081B, "get_function_results", return_value={"data": {}})
+    @patch.object(N1081BPatched, "get_function_results", return_value={"data": {}})
     def test_poll_sections_no_counters(self, mock_get_function_results):
         self.daq_job._send_store_message = MagicMock()
         with self.assertRaises(Exception) as context:
@@ -73,7 +72,7 @@ class TestDAQJobN1081B(unittest.TestCase):
         mock_connect_to_device.assert_called_once()
         mock_poll_sections.assert_called_once()
 
-    @patch.object(N1081B, "get_function_results", return_value=None)
+    @patch.object(N1081BPatched, "get_function_results", return_value=None)
     def test_poll_sections_no_results(self, mock_get_function_results):
         self.daq_job._send_store_message = MagicMock()
         with self.assertRaises(Exception) as context:
@@ -82,7 +81,7 @@ class TestDAQJobN1081B(unittest.TestCase):
         self.daq_job._send_store_message.assert_not_called()
 
     @patch.object(
-        N1081B,
+        N1081BPatched,
         "get_function_results",
         return_value={"data": {"counters": [{"lemo": 1, "value": 100}]}},
     )
@@ -112,8 +111,8 @@ class TestDAQJobN1081B(unittest.TestCase):
             DAQJobN1081B(invalid_config)
         self.assertTrue("Invalid section: INVALID_SECTION" in str(context.exception))
 
-    @patch.object(N1081B, "connect", return_value=True)
-    @patch.object(N1081B, "login", return_value=True)
+    @patch.object(N1081BPatched, "connect", return_value=True)
+    @patch.object(N1081BPatched, "login", return_value=True)
     def test_connect_to_device_timeout(self, mock_login, mock_connect):
         self.daq_job.device.ws = MagicMock(spec=WebSocket)
         self.daq_job.device.ws.settimeout = MagicMock(side_effect=Exception("Timeout"))
@@ -123,7 +122,9 @@ class TestDAQJobN1081B(unittest.TestCase):
         mock_connect.assert_called_once()
         mock_login.assert_called_once_with("password")
 
-    @patch.object(N1081B, "get_function_results", side_effect=Exception("Timeout"))
+    @patch.object(
+        N1081BPatched, "get_function_results", side_effect=Exception("Timeout")
+    )
     def test_poll_sections_timeout(self, mock_get_function_results):
         self.daq_job._send_store_message = MagicMock()
         with self.assertRaises(Exception) as context:
@@ -131,8 +132,8 @@ class TestDAQJobN1081B(unittest.TestCase):
         self.assertTrue("Timeout" in str(context.exception))
         self.daq_job._send_store_message.assert_not_called()
 
-    @patch.object(N1081B, "connect", return_value=True)
-    @patch.object(N1081B, "login", return_value=True)
+    @patch.object(N1081BPatched, "connect", return_value=True)
+    @patch.object(N1081BPatched, "login", return_value=True)
     def test_connect_to_device_no_websocket(self, mock_login, mock_connect):
         self.daq_job.device.ws = None  # type: ignore
         with self.assertRaises(Exception) as context:

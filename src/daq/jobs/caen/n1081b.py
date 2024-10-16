@@ -2,7 +2,7 @@ import time
 from dataclasses import dataclass
 
 from N1081B import N1081B
-from websocket import WebSocket
+from websocket import WebSocket, create_connection
 
 from daq.base import DAQJob
 from daq.models import DAQJobMessage
@@ -21,6 +21,17 @@ class DAQJobN1081BConfig(StorableDAQJobConfig):
     sections_to_store: list[str]
 
 
+class N1081BPatched(N1081B):
+    def __init__(self, ip):
+        super().__init__(ip)
+
+    def connect(self):
+        self.ws = create_connection(
+            self.API_ENDPOINT, timeout=N1081B_WEBSOCKET_TIMEOUT_SECONDS
+        )
+        return self.ws.connected
+
+
 class DAQJobN1081B(DAQJob):
     config_type = DAQJobN1081BConfig
     device: N1081B
@@ -28,7 +39,7 @@ class DAQJobN1081B(DAQJob):
 
     def __init__(self, config: DAQJobN1081BConfig):
         super().__init__(config)
-        self.device = N1081B(f"{config.host}:{config.port}?")
+        self.device = N1081BPatched(f"{config.host}:{config.port}?")
 
         for section in config.sections_to_store:
             if section not in N1081B.Section.__members__:
