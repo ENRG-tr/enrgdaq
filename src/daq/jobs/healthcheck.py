@@ -157,7 +157,7 @@ class DAQJobHealthcheck(DAQJob):
 
         # Alert if it's new
         for item, should_alert in res:
-            item_id = id(item.to_json())
+            item_id = hash(item.to_json())
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
                 self.send_alert(item)
