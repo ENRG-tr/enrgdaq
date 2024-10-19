@@ -10,9 +10,9 @@ class DAQJobConfig(DataClassJsonMixin):
     daq_job_type: str
 
 
-@dataclass
+@dataclass(kw_only=True)
 class DAQJobMessage(DataClassJsonMixin):
-    pass
+    id: Optional[str] = None
 
 
 @dataclass

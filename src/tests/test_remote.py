@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from daq.jobs.test_job import DAQJobTest
+from daq.models import DAQJobMessage
 from daq.store.models import DAQJobMessageStore
 
 
@@ -24,11 +25,8 @@ class TestDAQJobRemote(unittest.TestCase):
         self.daq_job_remote._zmq_remote = self.mock_receiver
 
     def test_handle_message(self):
-        message = DAQJobMessageStore(
-            store_config={},
-            data=[],
-            keys=[],
-            daq_job_info=DAQJobTest({"daq_job_type": "test"}).get_info(),
+        message = DAQJobMessage(
+            id="testmsg",
         )
         self.daq_job_remote.handle_message(message)
         self.mock_sender.send.assert_called_once_with(
@@ -50,6 +48,7 @@ class TestDAQJobRemote(unittest.TestCase):
 
     def test_receive_thread(self):
         message = DAQJobMessageStore(
+            id="testmsg",
             store_config={},
             data=[],
             keys=[],

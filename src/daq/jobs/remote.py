@@ -6,7 +6,11 @@ from dataclasses import dataclass
 import zmq
 
 from daq.base import DAQJob
+from daq.jobs.handle_stats import DAQJobMessageStats
 from daq.models import DAQJobConfig, DAQJobMessage
+from daq.store.models import DAQJobMessageStore
+
+DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 1000
 
 
 @dataclass
@@ -30,6 +34,7 @@ class DAQJobRemote(DAQJob):
     _zmq_local: zmq.Socket
     _zmq_remote: zmq.Socket
     _message_class_cache: dict
+    _remote_message_ids: set[str]
 
     def __init__(self, config: DAQJobRemoteConfig):
         super().__init__(config)
@@ -46,8 +51,19 @@ class DAQJobRemote(DAQJob):
         self._message_class_cache = {
             x.__name__: x for x in DAQJobMessage.__subclasses__()
         }
+        self._remote_message_ids = set()
 
     def handle_message(self, message: DAQJobMessage) -> bool:
+        if (
+            isinstance(message, DAQJobMessageStats)
+            or isinstance(
+                message, DAQJobMessageStore
+            )  # TODO: we should be able to send store messages
+            or message.id in self._remote_message_ids
+            or not super().handle_message(message)
+        ):
+            return False
+
         self._zmq_local.send(self._pack_message(message))
         return True
 
@@ -69,7 +85,7 @@ class DAQJobRemote(DAQJob):
 
     def _pack_message(self, message: DAQJobMessage) -> bytes:
         message_type = type(message).__name__
-        return json.dumps([message_type, message.to_dict()]).encode("utf-8")
+        return json.dumps([message_type, message.to_json()]).encode("utf-8")
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
         message_type, data = json.loads(message.decode("utf-8"))
@@ -81,4 +97,10 @@ class DAQJobRemote(DAQJob):
 
         if not issubclass(message_class, DAQJobMessage):
             raise Exception(f"Invalid message type: {message_type}")
-        return message_class.from_dict(data)
+
+        res = message_class.from_json(data)
+        assert res.id is not None, "Message id is not set"
+        self._remote_message_ids.add(res.id)
+        if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
+            self._remote_message_ids.pop()
+        return res
