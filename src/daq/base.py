@@ -29,6 +29,8 @@ class DAQJob:
             self.instance_id = daq_job_instance_id
             daq_job_instance_id += 1
         self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
+        if isinstance(config, DAQJobConfig):
+            self._logger.setLevel(config.verbosity.to_logging_level())
 
         self.config = config
         self.message_in = Queue()

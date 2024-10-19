@@ -70,6 +70,9 @@ class DAQJobRemote(DAQJob):
     def _start_receive_thread(self):
         while True:
             message = self._zmq_remote.recv()
+            self._logger.debug(
+                f"Received {len(message)} bytes from remote ({self.config.zmq_remote_url})"
+            )
             # remote message_in -> message_out
             self.message_out.put(self._unpack_message(message))
 
@@ -78,13 +81,14 @@ class DAQJobRemote(DAQJob):
 
         while True:
             if not self._receive_thread.is_alive():
-                raise RuntimeError("receive thread died")
+                raise RuntimeError("Receive thread died")
             # message_in -> remote message_out
             self.consume()
             time.sleep(0.1)
 
     def _pack_message(self, message: DAQJobMessage) -> bytes:
         message_type = type(message).__name__
+        self._logger.debug(f"Packing message {message_type} ({message.id})")
         return json.dumps([message_type, message.to_json()]).encode("utf-8")
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
@@ -94,11 +98,12 @@ class DAQJobRemote(DAQJob):
 
         message_class = self._message_class_cache[message_type]
 
-        res = message_class.from_json(data)
+        res: DAQJobMessage = message_class.from_json(data)
         if res.id is None:
             raise Exception("Message id is not set")
 
         self._remote_message_ids.add(res.id)
         if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
+        self._logger.debug(f"Unpacked message {message_type} ({res.id})")
         return res

@@ -1,18 +1,32 @@
+import logging
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from dataclasses_json import DataClassJsonMixin
 
 
-@dataclass
+class LogVerbosity(str, Enum):
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+
+    def to_logging_level(self) -> int:
+        return logging._nameToLevel[self.value]
+
+
+@dataclass(kw_only=True)
 class DAQJobConfig(DataClassJsonMixin):
+    verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_type: str
 
 
 @dataclass(kw_only=True)
 class DAQJobMessage(DataClassJsonMixin):
-    id: Optional[str] = None
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
 
 
 @dataclass
