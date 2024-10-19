@@ -2,6 +2,7 @@
 #    uv export --no-hashes --output-file=requirements.txt
 awkward==2.6.9
 awkward-cpp==39
+caen-libs==1.1.0
 cffi==1.17.1 ; implementation_name == 'pypy'
 cfgv==3.4.0
 coloredlogs==15.0.1

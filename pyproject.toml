@@ -5,6 +5,7 @@ description = "DAQ for ENRG neutrino experiments"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "caen-libs>=1.1.0",
     "coloredlogs>=15.0.1",
     "dataclasses-json>=0.6.7",
     "n1081b-sdk",

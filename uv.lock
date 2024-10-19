@@ -44,6 +44,15 @@ wheels = [
 ]
 
 [[package]]
+name = "caen-libs"
+version = "1.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/f9/4afb6fd9e12d8fae76353d8f42495d2727aa924a58507bcddb8798c170b9/caen_libs-1.1.0.tar.gz", hash = "sha256:6fac986835eb497f1396c7daad25e83c328283b3cfa250a3be229fd8abdd7272", size = 50118 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/8b/f608b59e092ae34875436863787ac06ad4dc898d4f13fe6dcab7eb17098c/caen_libs-1.1.0-py3-none-any.whl", hash = "sha256:88384e804d25105009abd3bc89232f6b5c358f8481931dbdd64585df2a485702", size = 55270 },
+]
+
+[[package]]
 name = "cffi"
 version = "1.17.1"
 source = { registry = "https://pypi.org/simple" }
@@ -160,6 +169,7 @@ name = "enrgdaq"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "caen-libs" },
     { name = "coloredlogs" },
     { name = "dataclasses-json" },
     { name = "n1081b-sdk" },
@@ -176,6 +186,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "caen-libs", specifier = ">=1.1.0" },
     { name = "coloredlogs", specifier = ">=15.0.1" },
     { name = "dataclasses-json", specifier = ">=0.6.7" },
     { name = "n1081b-sdk", git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" },
