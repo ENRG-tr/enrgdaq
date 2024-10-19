@@ -89,14 +89,10 @@ class DAQJobRemote(DAQJob):
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
         message_type, data = json.loads(message.decode("utf-8"))
-        if message_type in self._message_class_cache:
-            message_class = self._message_class_cache[message_type]
-        else:
-            message_class = globals()[message_type]
-            self._message_class_cache[message_type] = message_class
-
-        if not issubclass(message_class, DAQJobMessage):
+        if message_type not in self._message_class_cache:
             raise Exception(f"Invalid message type: {message_type}")
+
+        message_class = self._message_class_cache[message_type]
 
         res = message_class.from_json(data)
         assert res.id is not None, "Message id is not set"
