@@ -1,4 +1,3 @@
-import pickle
 import threading
 import time
 import unittest
@@ -26,10 +25,15 @@ class TestDAQJobRemote(unittest.TestCase):
 
     def test_handle_message(self):
         message = DAQJobMessageStore(
-            store_config={}, data=[], keys=[], daq_job=DAQJobTest({})
+            store_config={},
+            data=[],
+            keys=[],
+            daq_job_info=DAQJobTest({"daq_job_type": "test"}).get_info(),
         )
         self.daq_job_remote.handle_message(message)
-        self.mock_sender.send.assert_called_once_with(pickle.dumps(message))
+        self.mock_sender.send.assert_called_once_with(
+            self.daq_job_remote._pack_message(message)
+        )
 
     def test_start(self):
         mock_receive_thread = MagicMock()
@@ -45,7 +49,12 @@ class TestDAQJobRemote(unittest.TestCase):
             self.daq_job_remote.start()
 
     def test_receive_thread(self):
-        message = DAQJobMessageStore(store_config={}, data=[], keys=[], daq_job=None)  # type: ignore
+        message = DAQJobMessageStore(
+            store_config={},
+            data=[],
+            keys=[],
+            daq_job_info=DAQJobTest({"daq_job_type": "test"}).get_info(),
+        )
         self.daq_job_remote.message_out = MagicMock()
 
         call_count = 0
@@ -54,12 +63,12 @@ class TestDAQJobRemote(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             if call_count >= 2:
-                raise Exception("Stop receive thread")
-            return pickle.dumps(message)
+                raise RuntimeError("Stop receive thread")
+            return self.daq_job_remote._pack_message(message)
 
         self.mock_receiver.recv.side_effect = side_effect
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             self.daq_job_remote._start_receive_thread()
         self.daq_job_remote.message_out.put.assert_called_once_with(message)
         self.assertEqual(self.daq_job_remote.message_out.put.call_count, 1)

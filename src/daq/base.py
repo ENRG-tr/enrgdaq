@@ -1,10 +1,11 @@
 import logging
 import threading
+import uuid
 from dataclasses import dataclass
 from queue import Empty, Queue
 from typing import Any
 
-from daq.models import DAQJobMessage, DAQJobMessageStop, DAQJobStopError
+from daq.models import DAQJobConfig, DAQJobMessage, DAQJobMessageStop, DAQJobStopError
 
 daq_job_instance_id = 0
 daq_job_instance_id_lock = threading.Lock()
@@ -17,6 +18,7 @@ class DAQJob:
     message_in: Queue[DAQJobMessage]
     message_out: Queue[DAQJobMessage]
     instance_id: int
+    unique_id: str
 
     _logger: logging.Logger
 
@@ -33,6 +35,7 @@ class DAQJob:
         self.message_out = Queue()
 
         self._should_stop = False
+        self.unique_id = str(uuid.uuid4())
 
     def consume(self):
         # consume messages from the queue
@@ -61,6 +64,16 @@ class DAQJob:
     def start(self):
         raise NotImplementedError
 
+    def get_info(self) -> "DAQJobInfo":
+        return DAQJobInfo(
+            daq_job_type=self.config.daq_job_type
+            if isinstance(self.config, DAQJobConfig)
+            else self.config["daq_job_type"],
+            daq_job_class_name=type(self).__name__,
+            unique_id=self.unique_id,
+            instance_id=self.instance_id,
+        )
+
     def __del__(self):
         self._logger.info("DAQ job is being deleted")
 
@@ -69,3 +82,11 @@ class DAQJob:
 class DAQJobThread:
     daq_job: DAQJob
     thread: threading.Thread
+
+
+@dataclass
+class DAQJobInfo:
+    daq_job_type: str
+    daq_job_class_name: str  # has type(self).__name__
+    unique_id: str
+    instance_id: int

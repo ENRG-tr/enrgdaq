@@ -105,7 +105,7 @@ class DAQJobN1081B(DAQJob):
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                daq_job=self,
+                daq_job_info=self.get_info(),
                 prefix=section,
                 keys=keys,
                 data=[values],

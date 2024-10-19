@@ -21,7 +21,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
 
     def test_send_alert(self):
         alert = DAQJobMessageAlert(
-            daq_job=MagicMock(),
+            daq_job_info=MagicMock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.ERROR,
                 message="Test error message",
@@ -34,7 +34,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 {
                     "fallback": "Test error message",
                     "color": "danger",
-                    "author_name": type(alert.daq_job).__name__,
+                    "author_name": alert.daq_job_info.daq_job_class_name,
                     "title": "Alert!",
                     "fields": [
                         {
@@ -59,7 +59,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
 
     def test_alert_loop(self):
         alert1 = DAQJobMessageAlert(
-            daq_job=MagicMock(),
+            daq_job_info=MagicMock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.INFO,
                 message="Test info message",
@@ -67,7 +67,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
         alert2 = DAQJobMessageAlert(
-            daq_job=MagicMock(),
+            daq_job_info=MagicMock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.WARNING,
                 message="Test warning message",

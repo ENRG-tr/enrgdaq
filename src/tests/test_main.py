@@ -89,7 +89,7 @@ class TestMain(unittest.TestCase):
         mock_thread.daq_job.allowed_message_in_types = [DAQJobMessageStore]
         mock_thread.daq_job.message_in = Queue()
         mock_message = DAQJobMessageStore(
-            store_config={}, keys=[], data=[], daq_job=MagicMock()
+            store_config={}, keys=[], data=[], daq_job_info=MagicMock()
         )
         daq_job_threads = [mock_thread]
         daq_job_threads: list[DAQJobThread] = daq_job_threads

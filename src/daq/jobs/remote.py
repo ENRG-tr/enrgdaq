@@ -1,4 +1,4 @@
-import pickle
+import json
 import threading
 import time
 from dataclasses import dataclass
@@ -27,6 +27,9 @@ class DAQJobRemote(DAQJob):
     allowed_message_in_types = [DAQJobMessage]  # accept all message types
     config_type = DAQJobRemoteConfig
     config: DAQJobRemoteConfig
+    _zmq_local: zmq.Socket
+    _zmq_remote: zmq.Socket
+    _message_class_cache: dict
 
     def __init__(self, config: DAQJobRemoteConfig):
         super().__init__(config)
@@ -35,21 +38,24 @@ class DAQJobRemote(DAQJob):
         self._zmq_remote = self._zmq_context.socket(zmq.PULL)
         self._zmq_local.connect(config.zmq_local_url)
         self._zmq_remote.connect(config.zmq_remote_url)
+        self._message_class_cache = {}
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread, daemon=True
         )
+        self._message_class_cache = {
+            x.__name__: x for x in DAQJobMessage.__subclasses__()
+        }
 
     def handle_message(self, message: DAQJobMessage) -> bool:
-        print(type(message))
-        self._zmq_local.send(pickle.dumps(message))
+        self._zmq_local.send(self._pack_message(message))
         return True
 
     def _start_receive_thread(self):
         while True:
             message = self._zmq_remote.recv()
             # remote message_in -> message_out
-            self.message_out.put(pickle.loads(message))
+            self.message_out.put(self._unpack_message(message))
 
     def start(self):
         self._receive_thread.start()
@@ -60,3 +66,19 @@ class DAQJobRemote(DAQJob):
             # message_in -> remote message_out
             self.consume()
             time.sleep(0.1)
+
+    def _pack_message(self, message: DAQJobMessage) -> bytes:
+        message_type = type(message).__name__
+        return json.dumps([message_type, message.to_dict()]).encode("utf-8")
+
+    def _unpack_message(self, message: bytes) -> DAQJobMessage:
+        message_type, data = json.loads(message.decode("utf-8"))
+        if message_type in self._message_class_cache:
+            message_class = self._message_class_cache[message_type]
+        else:
+            message_class = globals()[message_type]
+            self._message_class_cache[message_type] = message_class
+
+        if not issubclass(message_class, DAQJobMessage):
+            raise Exception(f"Invalid message type: {message_type}")
+        return message_class.from_dict(data)

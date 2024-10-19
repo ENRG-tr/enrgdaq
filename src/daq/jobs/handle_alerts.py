@@ -35,7 +35,7 @@ class DAQJobHandleAlerts(DAQJob):
         data_to_send = [
             [
                 get_unix_timestamp_ms(message.date),
-                type(message.daq_job).__name__,
+                message.daq_job_info.daq_job_class_name,
                 message.alert_info.severity,
                 message.alert_info.message,
             ]
@@ -44,7 +44,7 @@ class DAQJobHandleAlerts(DAQJob):
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                daq_job=self,
+                daq_job_info=self.get_info(),
                 keys=keys,
                 data=data_to_send,
             )

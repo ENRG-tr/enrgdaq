@@ -22,7 +22,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
 
         message = MagicMock(spec=DAQJobMessageAlert)
         message.date = date
-        message.daq_job = MagicMock()
+        message.daq_job_info = MagicMock()
         message.alert_info = MagicMock()
         message.alert_info.severity = "high"
         message.alert_info.message = "Test alert message"
@@ -42,7 +42,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
             [
                 [
                     get_unix_timestamp_ms(date),
-                    type(message.daq_job).__name__,
+                    message.daq_job_info.daq_job_class_name,
                     "high",
                     "Test alert message",
                 ]

@@ -11,7 +11,7 @@ class DAQJobConfig(DataClassJsonMixin):
 
 
 @dataclass
-class DAQJobMessage:
+class DAQJobMessage(DataClassJsonMixin):
     pass
 
 
