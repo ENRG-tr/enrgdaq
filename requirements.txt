@@ -2,6 +2,7 @@
 #    uv export --no-hashes --output-file=requirements.txt
 awkward==2.6.9
 awkward-cpp==39
+cffi==1.17.1 ; implementation_name == 'pypy'
 cfgv==3.4.0
 coloredlogs==15.0.1
 cramjam==2.8.4
@@ -19,8 +20,10 @@ numpy==2.1.2
 packaging==24.1
 platformdirs==4.3.6
 pre-commit==4.0.1
+pycparser==2.22 ; implementation_name == 'pypy'
 pyreadline3==3.5.4 ; sys_platform == 'win32'
 pyyaml==6.0.2
+pyzmq==26.2.0
 ruff==0.6.9
 slack-webhook==1.0.7
 typing-extensions==4.12.2

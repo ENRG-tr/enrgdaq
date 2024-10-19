@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 from dataclasses_json import DataClassJsonMixin
 
@@ -19,10 +19,19 @@ class DAQJobStoreConfig(DataClassJsonMixin):
 @dataclass
 class DAQJobMessageStore(DAQJobMessage):
     store_config: dict | DAQJobStoreConfig
-    daq_job: DAQJob
+    daq_job: Optional[DAQJob]
     keys: list[str]
     data: list[list[Any]]
     prefix: str | None = None
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["daq_job"]
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.daq_job = None  # type: ignore
 
 
 @dataclass
