@@ -17,12 +17,12 @@ class TestDAQJobRemote(unittest.TestCase):
         self.mock_receiver = self.mock_context.socket.return_value
         self.config = DAQJobRemoteConfig(
             daq_job_type="remote",
-            zmq_sender_url="tcp://localhost:5555",
-            zmq_receiver_url="tcp://localhost:5556",
+            zmq_local_url="tcp://localhost:5555",
+            zmq_remote_url="tcp://localhost:5556",
         )
         self.daq_job_remote = DAQJobRemote(self.config)
-        self.daq_job_remote._zmq_sender = self.mock_sender
-        self.daq_job_remote._zmq_receiver = self.mock_receiver
+        self.daq_job_remote._zmq_local = self.mock_sender
+        self.daq_job_remote._zmq_remote = self.mock_receiver
 
     def test_handle_message(self):
         message = DAQJobMessageStore(

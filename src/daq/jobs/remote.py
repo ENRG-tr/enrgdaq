@@ -11,8 +11,8 @@ from daq.models import DAQJobConfig, DAQJobMessage
 
 @dataclass
 class DAQJobRemoteConfig(DAQJobConfig):
-    zmq_sender_url: str
-    zmq_receiver_url: str
+    zmq_local_url: str
+    zmq_remote_url: str
 
 
 class DAQJobRemote(DAQJob):
@@ -25,27 +25,29 @@ class DAQJobRemote(DAQJob):
     """
 
     allowed_message_in_types = [DAQJobMessage]  # accept all message types
-    config = DAQJobRemoteConfig
+    config_type = DAQJobRemoteConfig
+    config: DAQJobRemoteConfig
 
     def __init__(self, config: DAQJobRemoteConfig):
         super().__init__(config)
         self._zmq_context = zmq.Context()
-        self._zmq_sender = self._zmq_context.socket(zmq.PUSH)
-        self._zmq_receiver = self._zmq_context.socket(zmq.PULL)
-        self._zmq_sender.connect(config.zmq_sender_url)
-        self._zmq_receiver.connect(config.zmq_receiver_url)
+        self._zmq_local = self._zmq_context.socket(zmq.PUSH)
+        self._zmq_remote = self._zmq_context.socket(zmq.PULL)
+        self._zmq_local.connect(config.zmq_local_url)
+        self._zmq_remote.connect(config.zmq_remote_url)
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread, daemon=True
         )
 
     def handle_message(self, message: DAQJobMessage) -> bool:
-        self._zmq_sender.send(pickle.dumps(message))
+        print(type(message))
+        self._zmq_local.send(pickle.dumps(message))
         return True
 
     def _start_receive_thread(self):
         while True:
-            message = self._zmq_receiver.recv()
+            message = self._zmq_remote.recv()
             # remote message_in -> message_out
             self.message_out.put(pickle.loads(message))
 
