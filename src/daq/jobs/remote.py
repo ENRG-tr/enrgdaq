@@ -95,7 +95,9 @@ class DAQJobRemote(DAQJob):
         message_class = self._message_class_cache[message_type]
 
         res = message_class.from_json(data)
-        assert res.id is not None, "Message id is not set"
+        if res.id is None:
+            raise Exception("Message id is not set")
+
         self._remote_message_ids.add(res.id)
         if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
