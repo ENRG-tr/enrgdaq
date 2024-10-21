@@ -1,3 +1,3 @@
 daq_job_type = "remote"
 zmq_local_url = "tcp://localhost:10191"
-zmq_remote_url = "tcp://1.2.3.4:10191"
+zmq_remote_urls = ["tcp://1.2.3.4:10191"]
