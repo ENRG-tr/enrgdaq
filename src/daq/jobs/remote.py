@@ -104,7 +104,7 @@ class DAQJobRemote(DAQJob):
         message_type = type(message).__name__
         self._logger.debug(f"Packing message {message_type} ({message.id})")
         if use_pickle:
-            return pickle.dumps(message)
+            return pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
 
         return json.dumps([message_type, message.to_json()]).encode("utf-8")
 
