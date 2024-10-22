@@ -95,6 +95,7 @@ def send_messages_to_daq_jobs(
     daq_job_stats: DAQJobStatsDict,
 ):
     for message in daq_messages:
+        # TODO: Make this into a generalized interface
         if isinstance(message, DAQJobMessageStore) and isinstance(
             message.store_config, dict
         ):

@@ -1,4 +1,5 @@
 import json
+import pickle
 import threading
 import time
 from dataclasses import dataclass
@@ -99,22 +100,31 @@ class DAQJobRemote(DAQJob):
             self.consume()
             time.sleep(0.1)
 
-    def _pack_message(self, message: DAQJobMessage) -> bytes:
+    def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
+        if use_pickle:
+            return pickle.dumps(message)
+
         message_type = type(message).__name__
         self._logger.debug(f"Packing message {message_type} ({message.id})")
         return json.dumps([message_type, message.to_json()]).encode("utf-8")
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
-        message_type, data = json.loads(message.decode("utf-8"))
-        if message_type not in self._message_class_cache:
-            raise Exception(f"Invalid message type: {message_type}")
+        try:
+            res = pickle.loads(message)
+            if not isinstance(res, DAQJobMessage):
+                raise Exception("Message is not DAQJobMessage")
+            message_type = type(res).__name__
+        except pickle.UnpicklingError:
+            message_type, data = json.loads(message.decode("utf-8"))
+            if message_type not in self._message_class_cache:
+                raise Exception(f"Invalid message type: {message_type}")
 
-        message_class = self._message_class_cache[message_type]
+            message_class = self._message_class_cache[message_type]
 
-        res = message_class.from_json(data)
+            res = message_class.from_json(data)
+
         if res.id is None:
             raise Exception("Message id is not set")
-
         self._remote_message_ids.add(res.id)
         if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
