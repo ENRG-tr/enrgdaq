@@ -101,11 +101,11 @@ class DAQJobRemote(DAQJob):
             time.sleep(0.1)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
+        message_type = type(message).__name__
+        self._logger.debug(f"Packing message {message_type} ({message.id})")
         if use_pickle:
             return pickle.dumps(message)
 
-        message_type = type(message).__name__
-        self._logger.debug(f"Packing message {message_type} ({message.id})")
         return json.dumps([message_type, message.to_json()]).encode("utf-8")
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
