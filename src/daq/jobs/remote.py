@@ -9,7 +9,6 @@ import zmq
 from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats
 from daq.models import DAQJobConfig, DAQJobMessage
-from daq.store.models import DAQJobMessageStore
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 
@@ -69,9 +68,6 @@ class DAQJobRemote(DAQJob):
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
             isinstance(message, DAQJobMessageStats)
-            or isinstance(
-                message, DAQJobMessageStore
-            )  # TODO: we should be able to send store messages
             or message.id in self._remote_message_ids
             or not super().handle_message(message)
         ):
