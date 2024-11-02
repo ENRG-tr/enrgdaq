@@ -1,11 +1,16 @@
 import http.server
-import socketserver
 import threading
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from daq.base import DAQJob
 from daq.models import DAQJobConfig
+
+try:
+    from socketserver import ForkingMixIn  # type: ignore
+except ImportError:
+    # For Windows
+    from socketserver import ThreadingMixIn as ForkingMixIn
 
 
 @dataclass
@@ -25,6 +30,9 @@ class DAQJobServeHTTP(DAQJob):
     def start(self):
         # Start a BasicHTTPServer in this thread
         serve_path = self.config.serve_path
+
+        class ThreadingHTTPServer(ForkingMixIn, http.server.HTTPServer):  # type: ignore
+            pass
 
         class Handler(http.server.SimpleHTTPRequestHandler):
             def __init__(self, *args, **kwargs):
@@ -46,7 +54,7 @@ class DAQJobServeHTTP(DAQJob):
                 pass
 
         def start_server():
-            with socketserver.TCPServer(
+            with ThreadingHTTPServer(
                 (self.config.host, self.config.port), Handler
             ) as httpd:
                 self._logger.info(
