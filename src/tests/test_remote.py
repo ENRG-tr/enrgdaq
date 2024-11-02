@@ -76,7 +76,9 @@ class TestDAQJobRemote(unittest.TestCase):
             self.daq_job_remote._start_receive_thread(
                 "tcp://localhost:5556", self.mock_receiver
             )
-        self.daq_job_remote.message_out.put.assert_called_once_with(message)
+        assert_msg = message
+        assert_msg.is_remote = True
+        self.daq_job_remote.message_out.put.assert_called_once_with(assert_msg)
         self.assertEqual(self.daq_job_remote.message_out.put.call_count, 1)
         self.assertEqual(call_count, 2)
 

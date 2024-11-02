@@ -70,6 +70,7 @@ class DAQJobRemote(DAQJob):
             isinstance(message, DAQJobMessageStats)
             or message.id in self._remote_message_ids
             or not super().handle_message(message)
+            or message.is_remote
         ):
             return True  # Silently ignore
 
@@ -82,8 +83,10 @@ class DAQJobRemote(DAQJob):
             self._logger.debug(
                 f"Received {len(message)} bytes from remote ({remote_url})"
             )
+            recv_message = self._unpack_message(message)
+            recv_message.is_remote = True
             # remote message_in -> message_out
-            self.message_out.put(self._unpack_message(message))
+            self.message_out.put(recv_message)
 
     def start(self):
         for remote_url in self._zmq_remotes.keys():
