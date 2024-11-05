@@ -77,6 +77,8 @@ class DAQJobStoreCSV(DAQJobStore):
             file_exists = os.path.exists(file_path)
             # Create the file if it doesn't exist
             if not file_exists:
+                # Create the directory if it doesn't exist
+                Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
                 Path(file_path).touch()
 
             # Open file
