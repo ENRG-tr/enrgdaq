@@ -2,6 +2,6 @@ daq_job_type = "handle_stats"
 
 [store_config]
 daq_job_store_type = "csv"
-file_path = "out/stats.csv"
+file_path = "stats.csv"
 add_date = false
 overwrite = true
