@@ -25,7 +25,7 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfig):
 
 @dataclass
 class DAQJobStoreCSVConfig(DAQJobConfig):
-    pass
+    out_dir: str = "out/"
 
 
 @dataclass
@@ -53,6 +53,8 @@ class DAQJobStoreCSV(DAQJobStore):
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.prefix
         )
+        file_path = os.path.join(self.config.out_dir, file_path)
+
         file, new_file = self._open_csv_file(file_path, store_config.overwrite)
         if file.overwrite:
             file.write_queue.clear()

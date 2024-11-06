@@ -14,7 +14,7 @@ from daq.store.models import DAQJobMessageStore
 
 class TestDAQJobStoreCSV(unittest.TestCase):
     def setUp(self):
-        self.config = MagicMock()
+        self.config = MagicMock(out_dir="out/")
         self.store = DAQJobStoreCSV(self.config)
 
     @patch("daq.jobs.store.csv.modify_file_path", return_value="test.csv")
@@ -35,9 +35,9 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.csv", True, None)
-        mock_open.assert_called_once_with("test.csv", "a", newline="")
-        self.assertIn("test.csv", self.store._open_csv_files)
-        file = self.store._open_csv_files["test.csv"]
+        mock_open.assert_called_once_with("out/test.csv", "a", newline="")
+        self.assertIn("out/test.csv", self.store._open_csv_files)
+        file = self.store._open_csv_files["out/test.csv"]
         self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
 
     @patch("daq.jobs.store.csv.modify_file_path", return_value="test.csv")
@@ -55,9 +55,9 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.csv", True, None)
-        mock_open.assert_called_once_with("test.csv", "a", newline="")
-        self.assertIn("test.csv", self.store._open_csv_files)
-        file = self.store._open_csv_files["test.csv"]
+        mock_open.assert_called_once_with("out/test.csv", "a", newline="")
+        self.assertIn("out/test.csv", self.store._open_csv_files)
+        file = self.store._open_csv_files["out/test.csv"]
         self.assertEqual(len(file.write_queue), 2)  # 2 rows only, no header
 
     def test_flush(self):
