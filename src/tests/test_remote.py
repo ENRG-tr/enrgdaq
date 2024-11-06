@@ -23,7 +23,6 @@ class TestDAQJobRemote(unittest.TestCase):
         )
         self.daq_job_remote = DAQJobRemote(self.config)
         self.daq_job_remote._zmq_local = self.mock_sender
-        self.daq_job_remote._zmq_remotes = {"tcp://localhost:5556": self.mock_receiver}
 
     def test_handle_message(self):
         message = DAQJobMessage(
@@ -41,9 +40,7 @@ class TestDAQJobRemote(unittest.TestCase):
             time.sleep(0.1)
             mock_receive_thread.is_alive.return_value = False
 
-        self.daq_job_remote._receive_threads = {
-            "tcp://localhost:5556": mock_receive_thread
-        }
+        self.daq_job_remote._receive_thread = mock_receive_thread
         threading.Thread(target=stop_receive_thread, daemon=True).start()
 
         with self.assertRaises(RuntimeError):
@@ -70,12 +67,12 @@ class TestDAQJobRemote(unittest.TestCase):
                 raise RuntimeError("Stop receive thread")
             return self.daq_job_remote._pack_message(message)
 
+        self.daq_job_remote._create_zmq_sub = MagicMock(return_value=self.mock_receiver)
         self.mock_receiver.recv.side_effect = side_effect
 
         with self.assertRaises(RuntimeError):
-            self.daq_job_remote._start_receive_thread(
-                "tcp://localhost:5556", self.mock_receiver
-            )
+            self.daq_job_remote._start_receive_thread(["tcp://localhost:5556"])
+
         assert_msg = message
         assert_msg.is_remote = True
         self.daq_job_remote.message_out.put.assert_called_once_with(assert_msg)

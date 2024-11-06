@@ -37,7 +37,7 @@ class DAQJobRemote(DAQJob):
     _zmq_remotes: dict[str, zmq.Socket]
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
-    _receive_threads: dict[str, threading.Thread]
+    _receive_thread: threading.Thread
 
     def __init__(self, config: DAQJobRemoteConfig):
         super().__init__(config)
@@ -47,17 +47,11 @@ class DAQJobRemote(DAQJob):
         self._zmq_remotes = {}
         self._zmq_local.bind(config.zmq_local_url)
 
-        self._receive_threads = {}
-        for remote_url in config.zmq_remote_urls:
-            self._logger.debug(f"Connecting to {remote_url}")
-            zmq_remote = self._zmq_context.socket(zmq.SUB)
-            zmq_remote.connect(remote_url)
-            self._zmq_remotes[remote_url] = zmq_remote
-            self._receive_threads[remote_url] = threading.Thread(
-                target=self._start_receive_thread,
-                args=(remote_url, zmq_remote),
-                daemon=True,
-            )
+        self._receive_thread = threading.Thread(
+            target=self._start_receive_thread,
+            args=(config.zmq_remote_urls,),
+            daemon=True,
+        )
         self._message_class_cache = {}
 
         self._message_class_cache = {
@@ -77,23 +71,31 @@ class DAQJobRemote(DAQJob):
         self._zmq_local.send(self._pack_message(message))
         return True
 
-    def _start_receive_thread(self, remote_url: str, zmq_remote: zmq.Socket):
+    def _create_zmq_sub(self, remote_urls: list[str]):
+        ctx = zmq.Context()
+        zmq_sub = ctx.socket(zmq.SUB)
+        for remote_url in remote_urls:
+            self._logger.debug(f"Connecting to {remote_url}")
+            zmq_sub.connect(remote_url)
+            zmq_sub.subscribe("")
+        return zmq_sub
+
+    def _start_receive_thread(self, remote_urls: list[str]):
+        zmq_sub = self._create_zmq_sub(remote_urls)
+
         while True:
-            message = zmq_remote.recv()
-            self._logger.debug(
-                f"Received {len(message)} bytes from remote ({remote_url})"
-            )
+            message = zmq_sub.recv()
+            self._logger.debug(f"Received {len(message)} bytes from")
             recv_message = self._unpack_message(message)
             recv_message.is_remote = True
             # remote message_in -> message_out
             self.message_out.put(recv_message)
 
     def start(self):
-        for remote_url in self._zmq_remotes.keys():
-            self._receive_threads[remote_url].start()
+        self._receive_thread.start()
 
         while True:
-            if not any(x.is_alive() for x in self._receive_threads.values()):
+            if not self._receive_thread.is_alive():
                 raise RuntimeError("Receive thread died")
             # message_in -> remote message_out
             self.consume()
