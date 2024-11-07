@@ -4,7 +4,6 @@ port = "8080"
 password = "password"
 sections_to_store = ["SEC_B", "SEC_D"]
 
-[store_config]
-daq_job_store_type = "csv"
+[store_config.csv]
 file_path = "n1081b.csv"
 add_date = true

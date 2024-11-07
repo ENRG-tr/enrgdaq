@@ -9,7 +9,7 @@ from daq.jobs.store.csv import (
     DAQJobStoreConfigCSV,
     DAQJobStoreCSV,
 )
-from daq.store.models import DAQJobMessageStore
+from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
 class TestDAQJobStoreCSV(unittest.TestCase):
@@ -25,8 +25,8 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self, mock_touch, mock_exists, mock_open, mock_add_date
     ):
         message = MagicMock(spec=DAQJobMessageStore)
-        message.store_config = DAQJobStoreConfigCSV(
-            daq_job_store_type="csv", file_path="test.csv", add_date=True
+        message.store_config = DAQJobStoreConfig(
+            csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
@@ -45,8 +45,8 @@ class TestDAQJobStoreCSV(unittest.TestCase):
     @patch("os.path.exists", return_value=True)
     def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):
         message = MagicMock(spec=DAQJobMessageStore)
-        message.store_config = DAQJobStoreConfigCSV(
-            daq_job_store_type="csv", file_path="test.csv", add_date=True
+        message.store_config = DAQJobStoreConfig(
+            csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]

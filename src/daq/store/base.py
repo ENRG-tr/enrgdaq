@@ -2,11 +2,11 @@ import time
 
 from daq.base import DAQJob
 from daq.models import DAQJobMessage
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from daq.store.models import DAQJobMessageStore
 
 
 class DAQJobStore(DAQJob):
-    allowed_store_config_types: list[type[DAQJobStoreConfig]]
+    allowed_store_config_types: list
 
     def start(self):
         while True:
@@ -29,6 +29,6 @@ class DAQJobStore(DAQJob):
             return False
         is_message_allowed = False
         for allowed_config_type in self.allowed_store_config_types:
-            if isinstance(message.store_config, allowed_config_type):
+            if message.store_config.has_store_config(allowed_config_type):
                 is_message_allowed = True
         return is_message_allowed

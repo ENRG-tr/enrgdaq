@@ -9,17 +9,11 @@ from typing import Any, Optional, cast
 
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from daq.store.models import DAQJobMessageStore, DAQJobStoreConfigCSV
 from utils.file import modify_file_path
 
 DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 15
 DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE = 1000
-
-
-class DAQJobStoreConfigCSV(DAQJobStoreConfig):
-    file_path: str
-    add_date: bool
-    overwrite: Optional[bool] = None
 
 
 class DAQJobStoreCSVConfig(DAQJobConfig):
@@ -47,7 +41,7 @@ class DAQJobStoreCSV(DAQJobStore):
 
     def handle_message(self, message: DAQJobMessageStore) -> bool:
         super().handle_message(message)
-        store_config = cast(DAQJobStoreConfigCSV, message.store_config)
+        store_config = cast(DAQJobStoreConfigCSV, message.store_config.csv)
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.prefix
         )

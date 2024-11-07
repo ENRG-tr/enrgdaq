@@ -7,7 +7,7 @@ from daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from daq.jobs.store.csv import DAQJobStoreConfigCSV
 from daq.jobs.test_job import DAQJobTest
 from daq.models import DAQJobMessage
-from daq.store.models import DAQJobMessageStore
+from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
 class TestDAQJobRemote(unittest.TestCase):
@@ -49,8 +49,8 @@ class TestDAQJobRemote(unittest.TestCase):
     def test_receive_thread(self):
         message = DAQJobMessageStore(
             id="testmsg",
-            store_config=DAQJobStoreConfigCSV(
-                daq_job_store_type="csv", file_path="test", add_date=True
+            store_config=DAQJobStoreConfig(
+                csv=DAQJobStoreConfigCSV(file_path="test", add_date=True)
             ),
             data=[],
             keys=[],

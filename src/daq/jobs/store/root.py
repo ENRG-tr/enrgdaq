@@ -5,13 +5,8 @@ import uproot
 
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from daq.store.models import DAQJobMessageStore, DAQJobStoreConfigROOT
 from utils.file import modify_file_path
-
-
-class DAQJobStoreConfigROOT(DAQJobStoreConfig):
-    file_path: str
-    add_date: bool
 
 
 class DAQJobStoreROOTConfig(DAQJobConfig):
