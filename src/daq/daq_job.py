@@ -7,7 +7,6 @@ import msgspec
 
 from daq.base import DAQJob, DAQJobThread
 from daq.models import DAQJobConfig
-from daq.store.models import DAQJobStoreConfig
 from daq.types import DAQ_JOB_TYPE_TO_CLASS
 
 
@@ -61,15 +60,3 @@ def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobThread]:
         threads.append(start_daq_job(daq_job))
 
     return threads
-
-
-def parse_store_config(config: dict) -> DAQJobStoreConfig:
-    from daq.store.types import DAQ_STORE_CONFIG_TYPE_TO_CLASS
-
-    if "daq_job_store_type" not in config:
-        raise Exception("No daq_job_store_type specified in config")
-
-    daq_job_store_type = config["daq_job_store_type"]
-    store_config_class = DAQ_STORE_CONFIG_TYPE_TO_CLASS[daq_job_store_type]
-
-    return store_config_class(**config)

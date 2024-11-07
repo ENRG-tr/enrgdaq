@@ -8,14 +8,12 @@ from daq.alert.base import DAQJobAlert
 from daq.base import DAQJob, DAQJobThread
 from daq.daq_job import (
     load_daq_jobs,
-    parse_store_config,
     restart_daq_job,
     start_daq_jobs,
 )
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
-from daq.store.models import DAQJobMessageStore
 
 DAQ_SUPERVISOR_SLEEP_TIME = 0.2
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
@@ -95,13 +93,6 @@ def send_messages_to_daq_jobs(
     daq_job_stats: DAQJobStatsDict,
 ):
     for message in daq_messages:
-        # TODO: Make this into a generalized interface
-        if isinstance(message, DAQJobMessageStore) and isinstance(
-            message.store_config, dict
-        ):
-            # Parse store config of DAQJobMessageStore
-            message.store_config = parse_store_config(message.store_config)
-
         for daq_job_thread in daq_job_threads:
             daq_job = daq_job_thread.daq_job
             # Send if message is allowed for this DAQ Job

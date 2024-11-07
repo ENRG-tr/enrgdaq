@@ -83,8 +83,7 @@ class TestMain(unittest.TestCase):
 
         self.assertEqual(result, [mock_message])
 
-    @patch("main.parse_store_config")
-    def test_send_messages_to_daq_jobs(self, mock_parse_store_config):
+    def test_send_messages_to_daq_jobs(self):
         mock_thread = MagicMock()
         mock_thread.daq_job.allowed_message_in_types = [DAQJobMessageStore]
         mock_thread.daq_job.message_in = Queue()
@@ -96,7 +95,6 @@ class TestMain(unittest.TestCase):
 
         send_messages_to_daq_jobs(daq_job_threads, [mock_message], {})
 
-        mock_parse_store_config.assert_called_once_with({})
         self.assertFalse(mock_thread.daq_job.message_in.empty())
         self.assertEqual(
             mock_thread.daq_job.message_in.get(timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT),
