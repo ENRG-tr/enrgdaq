@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 
 from N1081B import N1081B
 from websocket import WebSocket, create_connection
@@ -13,7 +12,6 @@ N1081B_QUERY_INTERVAL_SECONDS = 1
 N1081B_WEBSOCKET_TIMEOUT_SECONDS = 5
 
 
-@dataclass
 class DAQJobN1081BConfig(StorableDAQJobConfig):
     host: str
     port: str

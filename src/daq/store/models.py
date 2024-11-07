@@ -1,14 +1,12 @@
-from dataclasses import dataclass
 from typing import Any
 
-from dataclasses_json import DataClassJsonMixin
+from msgspec import Struct
 
 from daq.base import DAQJobInfo
 from daq.models import DAQJobConfig, DAQJobMessage
 
 
-@dataclass
-class DAQJobStoreConfig(DataClassJsonMixin):
+class DAQJobStoreConfig(Struct):
     """
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
     """
@@ -16,7 +14,6 @@ class DAQJobStoreConfig(DataClassJsonMixin):
     daq_job_store_type: str
 
 
-@dataclass
 class DAQJobMessageStore(DAQJobMessage):
     store_config: dict | DAQJobStoreConfig
     daq_job_info: DAQJobInfo
@@ -25,6 +22,5 @@ class DAQJobMessageStore(DAQJobMessage):
     prefix: str | None = None
 
 
-@dataclass
 class StorableDAQJobConfig(DAQJobConfig):
     store_config: dict

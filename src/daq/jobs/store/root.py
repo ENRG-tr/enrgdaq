@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 from typing import Any, cast
 
 import uproot
@@ -10,13 +9,11 @@ from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 from utils.file import modify_file_path
 
 
-@dataclass
 class DAQJobStoreConfigROOT(DAQJobStoreConfig):
     file_path: str
     add_date: bool
 
 
-@dataclass
 class DAQJobStoreROOTConfig(DAQJobConfig):
     pass
 

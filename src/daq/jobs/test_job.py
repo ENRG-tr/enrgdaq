@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 from random import randint
 
 from N1081B import N1081B
@@ -8,7 +7,6 @@ from daq.base import DAQJob
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
 
 
-@dataclass
 class DAQJobTestConfig(StorableDAQJobConfig):
     rand_min: int
     rand_max: int

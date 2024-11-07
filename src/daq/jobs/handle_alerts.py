@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 
 from daq.alert.base import DAQJobMessageAlert
 from daq.base import DAQJob
@@ -7,7 +6,6 @@ from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
 from utils.time import get_unix_timestamp_ms
 
 
-@dataclass
 class DAQJobHandleAlertsConfig(StorableDAQJobConfig):
     pass
 

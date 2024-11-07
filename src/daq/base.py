@@ -92,3 +92,12 @@ class DAQJobInfo:
     daq_job_class_name: str  # has type(self).__name__
     unique_id: str
     instance_id: int
+
+    @staticmethod
+    def mock() -> "DAQJobInfo":
+        return DAQJobInfo(
+            daq_job_type="mock",
+            daq_job_class_name="mock",
+            unique_id="mock",
+            instance_id=0,
+        )

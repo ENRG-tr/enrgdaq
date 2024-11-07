@@ -2,7 +2,7 @@ import unittest
 from queue import Queue
 from unittest.mock import MagicMock, patch
 
-from daq.base import DAQJobThread
+from daq.base import DAQJobInfo, DAQJobThread
 from daq.models import DAQJobMessage
 from daq.store.models import DAQJobMessageStore
 from main import (
@@ -89,7 +89,7 @@ class TestMain(unittest.TestCase):
         mock_thread.daq_job.allowed_message_in_types = [DAQJobMessageStore]
         mock_thread.daq_job.message_in = Queue()
         mock_message = DAQJobMessageStore(
-            store_config={}, keys=[], data=[], daq_job_info=MagicMock()
+            store_config={}, keys=[], data=[], daq_job_info=DAQJobInfo.mock()
         )
         daq_job_threads = [mock_thread]
         daq_job_threads: list[DAQJobThread] = daq_job_threads

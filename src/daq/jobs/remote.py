@@ -1,9 +1,8 @@
-import json
 import pickle
 import threading
 import time
-from dataclasses import dataclass
 
+import msgspec
 import zmq
 
 from daq.base import DAQJob
@@ -13,7 +12,6 @@ from daq.models import DAQJobConfig, DAQJobMessage
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 
 
-@dataclass
 class DAQJobRemoteConfig(DAQJobConfig):
     zmq_local_url: str
     zmq_remote_urls: list[str]
@@ -107,22 +105,22 @@ class DAQJobRemote(DAQJob):
         if use_pickle:
             return pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
 
-        return json.dumps([message_type, message.to_json()]).encode("utf-8")
+        return msgspec.msgpack.encode([message_type, message])
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
+        # TODO: fix unpack without pickle
         try:
             res = pickle.loads(message)
             if not isinstance(res, DAQJobMessage):
                 raise Exception("Message is not DAQJobMessage")
             message_type = type(res).__name__
         except pickle.UnpicklingError:
-            message_type, data = json.loads(message.decode("utf-8"))
+            message_type, data = msgspec.msgpack.decode(message)
             if message_type not in self._message_class_cache:
                 raise Exception(f"Invalid message type: {message_type}")
-
             message_class = self._message_class_cache[message_type]
 
-            res = message_class.from_json(data)
+            res = message_class(**data)
 
         if res.id is None:
             raise Exception("Message id is not set")

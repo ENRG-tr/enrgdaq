@@ -1,5 +1,3 @@
-from dataclasses import dataclass
-
 from slack_webhook import Slack
 
 from daq.alert.base import DAQAlertSeverity, DAQJobAlert, DAQJobMessageAlert
@@ -12,7 +10,6 @@ ALERT_SEVERITY_TO_SLACK_COLOR = {
 }
 
 
-@dataclass
 class DAQJobAlertSlackConfig(DAQJobConfig):
     slack_webhook_url: str
 

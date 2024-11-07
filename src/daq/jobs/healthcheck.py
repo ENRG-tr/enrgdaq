@@ -1,10 +1,10 @@
 import time
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
-from dataclasses_json import DataClassJsonMixin
+import msgspec
+from msgspec import Struct
 
 from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
 from daq.base import DAQJob
@@ -17,12 +17,10 @@ class AlertCondition(str, Enum):
     UNSATISFIED = "unsatisfied"
 
 
-@dataclass
-class HealthcheckItem(DataClassJsonMixin):
+class HealthcheckItem(Struct):
     alert_info: DAQAlertInfo
 
 
-@dataclass
 class HealthcheckStatsItem(HealthcheckItem):
     daq_job_type: str
     stats_key: str
@@ -50,7 +48,6 @@ class HealthcheckStatsItem(HealthcheckItem):
             raise ValueError(f"Invalid interval unit: {unit}")
 
 
-@dataclass
 class DAQJobHealthcheckConfig(DAQJobConfig):
     healthcheck_stats: list[HealthcheckStatsItem]
     enable_alerts_on_restart: bool = True
@@ -157,7 +154,7 @@ class DAQJobHealthcheck(DAQJob):
 
         # Alert if it's new
         for item, should_alert in res:
-            item_id = hash(item.to_json())
+            item_id = hash(msgspec.json.encode(item))
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
                 self.send_alert(item)

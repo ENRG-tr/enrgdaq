@@ -58,7 +58,7 @@ def get_supervisor_messages(
     messages = []
 
     # Send stats message
-    messages.append(DAQJobMessageStats(daq_job_stats))
+    messages.append(DAQJobMessageStats(stats=daq_job_stats))
     return messages
 
 

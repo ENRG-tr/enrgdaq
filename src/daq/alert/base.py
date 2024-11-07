@@ -1,10 +1,9 @@
 import time
-from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from dataclasses_json import DataClassJsonMixin
+from msgspec import Struct
 
 from daq.base import DAQJob, DAQJobInfo
 from daq.models import DAQJobMessage
@@ -16,13 +15,11 @@ class DAQAlertSeverity(str, Enum):
     ERROR = "error"
 
 
-@dataclass
-class DAQAlertInfo(DataClassJsonMixin):
+class DAQAlertInfo(Struct):
     message: str
     severity: DAQAlertSeverity
 
 
-@dataclass
 class DAQJobMessageAlert(DAQJobMessage):
     daq_job_info: DAQJobInfo
     date: datetime

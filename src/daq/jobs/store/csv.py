@@ -16,14 +16,12 @@ DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 15
 DAQ_JOB_STORE_CSV_WRITE_BATCH_SIZE = 1000
 
 
-@dataclass
 class DAQJobStoreConfigCSV(DAQJobStoreConfig):
     file_path: str
     add_date: bool
     overwrite: Optional[bool] = None
 
 
-@dataclass
 class DAQJobStoreCSVConfig(DAQJobConfig):
     out_dir: str = "out/"
 

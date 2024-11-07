@@ -1,9 +1,10 @@
 import unittest
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from daq.alert.alert_slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
 from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
+from daq.base import DAQJobInfo
 
 
 class TestDAQJobAlertSlack(unittest.TestCase):
@@ -21,7 +22,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
 
     def test_send_alert(self):
         alert = DAQJobMessageAlert(
-            daq_job_info=MagicMock(),
+            daq_job_info=DAQJobInfo.mock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.ERROR,
                 message="Test error message",
@@ -59,7 +60,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
 
     def test_alert_loop(self):
         alert1 = DAQJobMessageAlert(
-            daq_job_info=MagicMock(),
+            daq_job_info=DAQJobInfo.mock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.INFO,
                 message="Test info message",
@@ -67,7 +68,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
         alert2 = DAQJobMessageAlert(
-            daq_job_info=MagicMock(),
+            daq_job_info=DAQJobInfo.mock(),
             alert_info=DAQAlertInfo(
                 severity=DAQAlertSeverity.WARNING,
                 message="Test warning message",

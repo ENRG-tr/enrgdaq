@@ -10,9 +10,7 @@ from utils.time import get_unix_timestamp_ms
 
 class TestDAQJobHandleAlerts(unittest.TestCase):
     def setUp(self):
-        self.config = DAQJobHandleAlertsConfig(
-            daq_job_type="", store_config=MagicMock()
-        )
+        self.config = DAQJobHandleAlertsConfig(daq_job_type="", store_config={})
         self.daq_job = DAQJobHandleAlerts(config=self.config)
         self.daq_job.message_out = MagicMock()
 

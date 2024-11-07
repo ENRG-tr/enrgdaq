@@ -1,6 +1,5 @@
 import http.server
 import threading
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from daq.base import DAQJob
@@ -13,7 +12,6 @@ except ImportError:
     from socketserver import ThreadingMixIn as ForkingMixIn
 
 
-@dataclass
 class DAQJobServeHTTPConfig(DAQJobConfig):
     serve_path: str
     host: str

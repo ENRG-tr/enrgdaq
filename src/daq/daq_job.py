@@ -3,7 +3,7 @@ import logging
 import os
 import threading
 
-import tomllib
+import msgspec
 
 from daq.base import DAQJob, DAQJobThread
 from daq.models import DAQJobConfig
@@ -11,8 +11,8 @@ from daq.store.models import DAQJobStoreConfig
 from daq.types import DAQ_JOB_TYPE_TO_CLASS
 
 
-def build_daq_job(toml_config: dict) -> DAQJob:
-    generic_daq_job_config = DAQJobConfig.from_dict(toml_config)
+def build_daq_job(toml_config: bytes) -> DAQJob:
+    generic_daq_job_config = msgspec.toml.decode(toml_config, type=DAQJobConfig)
 
     if generic_daq_job_config.daq_job_type not in DAQ_JOB_TYPE_TO_CLASS:
         raise Exception(f"Invalid DAQ job type: {generic_daq_job_config.daq_job_type}")
@@ -22,7 +22,7 @@ def build_daq_job(toml_config: dict) -> DAQJob:
     daq_job_config_class: DAQJobConfig = daq_job_class.config_type
 
     # Load the config in
-    config = daq_job_config_class.schema().load(toml_config)
+    config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
     return daq_job_class(config)
 
@@ -32,9 +32,9 @@ def load_daq_jobs(job_config_dir: str) -> list[DAQJob]:
     job_files = glob.glob(os.path.join(job_config_dir, "*.toml"))
     for job_file in job_files:
         with open(job_file, "rb") as f:
-            job_config = tomllib.load(f)
+            job_config_raw = f.read()
 
-        jobs.append(build_daq_job(job_config))
+        jobs.append(build_daq_job(job_config_raw))
 
     return jobs
 
@@ -72,4 +72,4 @@ def parse_store_config(config: dict) -> DAQJobStoreConfig:
     daq_job_store_type = config["daq_job_store_type"]
     store_config_class = DAQ_STORE_CONFIG_TYPE_TO_CLASS[daq_job_store_type]
 
-    return store_config_class.schema().load(config)
+    return store_config_class(**config)

@@ -1,5 +1,4 @@
 import time
-from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -11,12 +10,10 @@ from utils.time import get_unix_timestamp_ms
 DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
 
 
-@dataclass
 class DAQJobHandleStatsConfig(StorableDAQJobConfig):
     pass
 
 
-@dataclass
 class DAQJobMessageStats(DAQJobMessage):
     stats: DAQJobStatsDict
 
