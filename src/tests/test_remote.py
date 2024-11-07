@@ -22,7 +22,7 @@ class TestDAQJobRemote(unittest.TestCase):
             zmq_remote_urls=["tcp://localhost:5556"],
         )
         self.daq_job_remote = DAQJobRemote(self.config)
-        self.daq_job_remote._zmq_local = self.mock_sender
+        self.daq_job_remote._zmq_pub = self.mock_sender
 
     def test_handle_message(self):
         message = DAQJobMessage(

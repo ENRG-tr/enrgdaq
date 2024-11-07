@@ -1,6 +1,7 @@
 import pickle
 import threading
 import time
+from typing import Optional
 
 import msgspec
 import zmq
@@ -31,8 +32,8 @@ class DAQJobRemote(DAQJob):
     allowed_message_in_types = [DAQJobMessage]  # accept all message types
     config_type = DAQJobRemoteConfig
     config: DAQJobRemoteConfig
-    _zmq_local: zmq.Socket
-    _zmq_remotes: dict[str, zmq.Socket]
+    _zmq_pub: zmq.Socket
+    _zmq_sub: Optional[zmq.Socket]
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
@@ -41,9 +42,9 @@ class DAQJobRemote(DAQJob):
         super().__init__(config)
         self._zmq_context = zmq.Context()
         self._logger.debug(f"Listening on {config.zmq_local_url}")
-        self._zmq_local = self._zmq_context.socket(zmq.PUB)
-        self._zmq_remotes = {}
-        self._zmq_local.bind(config.zmq_local_url)
+        self._zmq_pub = self._zmq_context.socket(zmq.PUB)
+        self._zmq_pub.bind(config.zmq_local_url)
+        self._zmq_sub = None
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
@@ -66,7 +67,7 @@ class DAQJobRemote(DAQJob):
         ):
             return True  # Silently ignore
 
-        self._zmq_local.send(self._pack_message(message))
+        self._zmq_pub.send(self._pack_message(message))
         return True
 
     def _create_zmq_sub(self, remote_urls: list[str]):
@@ -79,11 +80,11 @@ class DAQJobRemote(DAQJob):
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
-        zmq_sub = self._create_zmq_sub(remote_urls)
+        self._zmq_sub = self._create_zmq_sub(remote_urls)
 
         while True:
-            message = zmq_sub.recv()
-            self._logger.debug(f"Received {len(message)} bytes from")
+            message = self._zmq_sub.recv()
+            self._logger.debug(f"Received {len(message)} bytes")
             recv_message = self._unpack_message(message)
             recv_message.is_remote = True
             # remote message_in -> message_out
@@ -131,8 +132,8 @@ class DAQJobRemote(DAQJob):
         return res
 
     def __del__(self):
-        for remote_url in self._zmq_remotes.keys():
-            self._zmq_remotes[remote_url].close()
-        self._zmq_local.close()
+        if self._zmq_sub is not None:
+            self._zmq_sub.close()
+        self._zmq_pub.close()
 
         return super().__del__()
