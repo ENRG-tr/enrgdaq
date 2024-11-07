@@ -120,7 +120,7 @@ class DAQJobRemote(DAQJob):
                 raise Exception(f"Invalid message type: {message_type}")
             message_class = self._message_class_cache[message_type]
 
-            res = message_class(**data)
+            res = msgspec.convert(data, type=message_class)
 
         if res.id is None:
             raise Exception("Message id is not set")
