@@ -1,4 +1,4 @@
-daq_job_type = "handle_stats"
+daq_job_type = "DAQJobHandleStats"
 
 [store_config.csv]
 file_path = "stats.csv"

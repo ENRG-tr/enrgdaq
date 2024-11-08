@@ -1,4 +1,4 @@
-daq_job_type = "test"
+daq_job_type = "DAQJobTest"
 rand_min = 1
 rand_max = 100
 

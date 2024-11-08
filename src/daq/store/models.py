@@ -36,12 +36,30 @@ class StorableDAQJobConfig(DAQJobConfig):
     store_config: DAQJobStoreConfig
 
 
-class DAQJobStoreConfigCSV(Struct):
+class DAQJobStoreTarget(Struct):
+    instances: Optional[list["DAQJobStoreTargetInstance"]] = None
+    jobs: Optional[list["DAQJobStoreTargetJob"]] = None
+
+
+class DAQJobStoreTargetInstance(Struct):
+    supervisor_id: Optional[str] = None
+    is_self: Optional[bool] = None
+
+
+class DAQJobStoreTargetJob(Struct):
+    job_name: str
+
+
+class DAQJobStoreConfigBase(Struct, kw_only=True):
+    target: Optional[DAQJobStoreTarget] = None
+
+
+class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool
     overwrite: Optional[bool] = None
 
 
-class DAQJobStoreConfigROOT(Struct):
+class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool

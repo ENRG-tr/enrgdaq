@@ -8,16 +8,29 @@ import msgspec
 from daq.base import DAQJob, DAQJobThread
 from daq.models import DAQJobConfig
 from daq.types import DAQ_JOB_TYPE_TO_CLASS
+from utils.subclasses import all_subclasses
+
+ALL_DAQ_JOBS = all_subclasses(DAQJob)
 
 
 def build_daq_job(toml_config: bytes) -> DAQJob:
     generic_daq_job_config = msgspec.toml.decode(toml_config, type=DAQJobConfig)
+    daq_job_class = None
 
-    if generic_daq_job_config.daq_job_type not in DAQ_JOB_TYPE_TO_CLASS:
+    if generic_daq_job_config.daq_job_type in DAQ_JOB_TYPE_TO_CLASS:
+        daq_job_class = DAQ_JOB_TYPE_TO_CLASS[generic_daq_job_config.daq_job_type]
+        logging.warning(
+            f"DAQ job type '{generic_daq_job_config.daq_job_type}' is deprecated, please use the '{daq_job_class.__name__}' instead"
+        )
+    else:
+        for daq_job in ALL_DAQ_JOBS:
+            if daq_job.__name__ == generic_daq_job_config.daq_job_type:
+                daq_job_class = daq_job
+
+    if daq_job_class is None:
         raise Exception(f"Invalid DAQ job type: {generic_daq_job_config.daq_job_type}")
 
-    # Get DAQ and DAQ config clasess based on daq_job_type
-    daq_job_class = DAQ_JOB_TYPE_TO_CLASS[generic_daq_job_config.daq_job_type]
+    # Get DAQ config clase based on daq_job_type
     daq_job_config_class: DAQJobConfig = daq_job_class.config_type
 
     # Load the config in

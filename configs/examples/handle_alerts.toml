@@ -1,4 +1,4 @@
-daq_job_type = "handle_alerts"
+daq_job_type = "DAQJobHandleAlerts"
 
 [store_config.csv]
 file_path = "alerts.csv"

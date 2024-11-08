@@ -1,2 +1,2 @@
-daq_job_type = "alert_slack"
+daq_job_type = "DAQJobAlertSlack"
 slack_webhook_url = "https://hooks.slack.com/services/xxxxxxxxxxxxxxxxxxxxxxxxx"

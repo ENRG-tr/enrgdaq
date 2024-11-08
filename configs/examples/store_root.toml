@@ -1,1 +1,1 @@
-daq_job_type = "store_root"
+daq_job_type = "DAQJobStoreROOT"

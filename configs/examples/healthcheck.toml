@@ -1,4 +1,4 @@
-daq_job_type = "healthcheck"
+daq_job_type = "DAQJobHealthcheck"
 
 # Alert if restarted
 [[healthcheck_stats]]
