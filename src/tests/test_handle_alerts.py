@@ -62,8 +62,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
         self.assertFalse(result)
         self.daq_job.message_out.put.assert_not_called()
 
-    @patch("time.sleep", return_value=None)
-    def test_start(self, mock_sleep):
+    def test_start(self):
         self.daq_job.consume = MagicMock(side_effect=[None, Exception("Stop")])
 
         with self.assertRaises(Exception) as context:
@@ -71,7 +70,6 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
 
         self.assertEqual(str(context.exception), "Stop")
         self.daq_job.consume.assert_called()
-        mock_sleep.assert_called()
 
 
 if __name__ == "__main__":

@@ -11,6 +11,8 @@ from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobConfig, DAQJobStats
 
+HEALTHCHECK_LOOP_INTERVAL_SECONDS = 0.1
+
 
 class AlertCondition(str, Enum):
     SATISFIED = "satisfied"
@@ -115,7 +117,7 @@ class DAQJobHealthcheck(DAQJob):
         while True:
             self.consume()
             self.handle_checks()
-            time.sleep(0.5)
+            time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
     def handle_message(self, message: DAQJobMessageStats) -> bool:
         if not super().handle_message(message):

@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from typing import Dict, Optional
 
@@ -25,8 +24,7 @@ class DAQJobHandleStats(DAQJob):
 
     def start(self):
         while True:
-            self.consume()
-            time.sleep(1)
+            self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessageStats) -> bool:
         if not super().handle_message(message):

@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -36,10 +35,9 @@ class DAQJobAlert(DAQJob):
 
     def start(self):
         while True:
-            self.consume()
+            self.consume(nowait=False)
             self.alert_loop()
             self._alerts.clear()
-            time.sleep(0.5)
 
     def handle_message(self, message: DAQJobMessageAlert) -> bool:
         self._alerts.append(message)

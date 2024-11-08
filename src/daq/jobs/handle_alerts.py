@@ -1,5 +1,3 @@
-import time
-
 from daq.alert.base import DAQJobMessageAlert
 from daq.base import DAQJob
 from daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
@@ -17,8 +15,7 @@ class DAQJobHandleAlerts(DAQJob):
 
     def start(self):
         while True:
-            self.consume()
-            time.sleep(0.5)
+            self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessageAlert) -> bool:
         super().handle_message(message)

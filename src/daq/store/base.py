@@ -4,6 +4,8 @@ from daq.base import DAQJob
 from daq.models import DAQJobMessage
 from daq.store.models import DAQJobMessageStore
 
+STORE_LOOP_INTERVAL_SECONDS = 0.1
+
 
 class DAQJobStore(DAQJob):
     allowed_store_config_types: list
@@ -12,7 +14,7 @@ class DAQJobStore(DAQJob):
         while True:
             self.consume()
             self.store_loop()
-            time.sleep(0.5)
+            time.sleep(STORE_LOOP_INTERVAL_SECONDS)
 
     def store_loop(self):
         raise NotImplementedError

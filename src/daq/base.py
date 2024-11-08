@@ -39,13 +39,16 @@ class DAQJob:
         self._should_stop = False
         self.unique_id = str(uuid.uuid4())
 
-    def consume(self):
+    def consume(self, nowait=True):
         # consume messages from the queue
         while True:
             try:
-                message = self.message_in.get_nowait()
+                if nowait:
+                    message = self.message_in.get_nowait()
+                else:
+                    message = self.message_in.get()
                 if not self.handle_message(message):
-                    self.message_in.put_nowait(message)
+                    self.message_in.put(message)
             except Empty:
                 break
 
