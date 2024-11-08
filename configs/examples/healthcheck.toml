@@ -2,7 +2,7 @@ daq_job_type = "DAQJobHealthcheck"
 
 # Alert if restarted
 [[healthcheck_stats]]
-daq_job_type = "n1081b"
+daq_job_type = "DAQJobN1081B"
 stats_key = "restart_stats"
 interval = "1m"
 alert_if_interval_is = "satisfied"
@@ -10,7 +10,7 @@ alert_info = { message = "N1081B job crashed and got restarted!", severity = "er
 
 # Alert if no message out
 [[healthcheck_stats]]
-daq_job_type = "n1081b"
+daq_job_type = "DAQJobN1081B"
 stats_key = "message_out_stats"
 interval = "2m"
 alert_if_interval_is = "unsatisfied"
