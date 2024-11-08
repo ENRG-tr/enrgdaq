@@ -1,7 +1,7 @@
 import time
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional
+from typing import Callable, Optional
 
 import msgspec
 from msgspec import Struct
@@ -64,11 +64,12 @@ class DAQJobHealthcheck(DAQJob):
     _daq_job_type_to_class: dict[str, type[DAQJob]]
 
     _healthcheck_stats: list[HealthcheckStatsItem]
+    _get_daq_job_class: Callable[[str], Optional[type[DAQJob]]]
 
     def __init__(self, config: DAQJobHealthcheckConfig):
-        from daq.types import DAQ_JOB_TYPE_TO_CLASS
+        from daq.types import ALL_DAQ_JOBS, get_daq_job_class
 
-        self._daq_job_type_to_class = DAQ_JOB_TYPE_TO_CLASS
+        self._get_daq_job_class = get_daq_job_class
         self._current_stats = {}
 
         super().__init__(config)
@@ -76,14 +77,14 @@ class DAQJobHealthcheck(DAQJob):
         self._healthcheck_stats = []
 
         if config.enable_alerts_on_restart:
-            for daq_job_type, daq_job_type_class in self._daq_job_type_to_class.items():
+            for daq_job_type_class in ALL_DAQ_JOBS:
                 self._healthcheck_stats.append(
                     HealthcheckStatsItem(
                         alert_info=DAQAlertInfo(
                             message=f"{daq_job_type_class.__name__} crashed and got restarted!",
                             severity=DAQAlertSeverity.ERROR,
                         ),
-                        daq_job_type=daq_job_type,
+                        daq_job_type=daq_job_type_class.__name__,
                         alert_if_interval_is=AlertCondition.SATISFIED,
                         stats_key="restart_stats",
                         interval="1m",
@@ -100,7 +101,7 @@ class DAQJobHealthcheck(DAQJob):
                 )
             if item.stats_key not in DAQJobStats.__annotations__.keys():
                 raise ValueError(f"Invalid stats key: {item.stats_key}")
-            if item.daq_job_type not in self._daq_job_type_to_class:
+            if self._get_daq_job_class(item.daq_job_type) is None:
                 raise ValueError(f"Invalid DAQ job type: {item.daq_job_type}")
             if item.interval is None and item.amount is None:
                 raise ValueError("interval or amount must be specified")
@@ -131,7 +132,7 @@ class DAQJobHealthcheck(DAQJob):
 
         for item in self._healthcheck_stats:
             # Get the current DAQJobStats by daq_job_type of item
-            item_daq_job_type = self._daq_job_type_to_class[item.daq_job_type]
+            item_daq_job_type = self._get_daq_job_class(item.daq_job_type)
             if item_daq_job_type not in self._current_stats:
                 continue
 
