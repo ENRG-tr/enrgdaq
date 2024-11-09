@@ -2,6 +2,7 @@ import logging
 import threading
 import uuid
 from dataclasses import dataclass
+from datetime import timedelta
 from queue import Empty, Queue
 from typing import Any
 
@@ -19,7 +20,8 @@ class DAQJob:
     message_out: Queue[DAQJobMessage]
     instance_id: int
     unique_id: str
-
+    restart_offset: timedelta
+    _has_been_freed: bool
     _logger: logging.Logger
 
     def __init__(self, config: Any):
@@ -36,7 +38,7 @@ class DAQJob:
         self.message_in = Queue()
         self.message_out = Queue()
 
-        self._should_stop = False
+        self._has_been_freed = False
         self.unique_id = str(uuid.uuid4())
 
     def consume(self, nowait=True):
@@ -81,6 +83,13 @@ class DAQJob:
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")
+        self._has_been_freed = True
+
+    def free(self):
+        if self._has_been_freed:
+            return
+        self._has_been_freed = True
+        self.__del__()
 
 
 @dataclass
