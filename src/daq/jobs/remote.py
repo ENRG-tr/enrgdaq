@@ -141,7 +141,7 @@ class DAQJobRemote(DAQJob):
         return res
 
     def __del__(self):
-        if self._zmq_sub_ctx is not None:
+        if getattr(self, "_zmq_sub_ctx", None) is not None:
             self._zmq_sub_ctx.destroy()
         if self._zmq_pub_ctx is not None:
             self._zmq_pub_ctx.destroy()

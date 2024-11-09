@@ -67,13 +67,16 @@ class TestSupervisor(unittest.TestCase):
 
         self.supervisor.daq_job_threads = [mock_thread_alive, mock_thread_dead]
         self.supervisor.daq_job_stats = {}
+        self.supervisor.restart_schedules = []
 
         mock_get_messages_from_daq_jobs.return_value = ["message1"]
         mock_get_supervisor_messages.return_value = ["message2"]
 
         self.supervisor.loop()
 
-        mock_restart_daq_job.assert_called_once_with(mock_thread_dead.daq_job)
+        mock_restart_daq_job.assert_called_once_with(
+            type(mock_thread_dead.daq_job), mock_thread_dead.daq_job.config
+        )
         mock_get_messages_from_daq_jobs.assert_called_once()
         mock_get_supervisor_messages.assert_called_once()
         mock_send_messages_to_daq_jobs.assert_called_once()

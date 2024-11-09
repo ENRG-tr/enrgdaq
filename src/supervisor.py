@@ -80,7 +80,7 @@ class Supervisor:
         res = []
         for thread in dead_threads:
             restart_offset = getattr(thread.daq_job, "restart_offset", None)
-            if restart_offset is None:
+            if not isinstance(restart_offset, timedelta):
                 restart_offset = timedelta(seconds=0)
             else:
                 logging.info(
