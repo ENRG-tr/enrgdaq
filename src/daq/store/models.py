@@ -1,6 +1,6 @@
 from typing import Any, Optional
 
-from msgspec import Struct, field
+from msgspec import Struct
 
 from daq.models import DAQJobConfig, DAQJobMessage, DAQRemoteConfig
 
@@ -54,7 +54,7 @@ class DAQJobStoreTargetInstance(Struct):
 
 
 class DAQJobStoreConfigBase(Struct, kw_only=True):
-    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
+    remote_config: Optional[DAQRemoteConfig] = None
 
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
