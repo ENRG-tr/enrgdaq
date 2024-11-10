@@ -65,10 +65,13 @@ class TestDAQJobRemote(unittest.TestCase):
             call_count += 1
             if call_count >= 2:
                 raise RuntimeError("Stop receive thread")
-            return self.daq_job_remote._pack_message(message)
+            return [
+                DEFAULT_REMOTE_TOPIC.encode(),
+                self.daq_job_remote._pack_message(message),
+            ]
 
         self.daq_job_remote._create_zmq_sub = MagicMock(return_value=self.mock_receiver)
-        self.mock_receiver.recv.side_effect = side_effect
+        self.mock_receiver.recv_multipart.side_effect = side_effect
 
         with self.assertRaises(RuntimeError):
             self.daq_job_remote._start_receive_thread(["tcp://localhost:5556"])

@@ -2,7 +2,7 @@ from typing import Any, Optional
 
 from msgspec import Struct
 
-from daq.models import DAQJobConfig, DAQJobMessage
+from daq.models import REMOTE_TOPIC_VOID, DAQJobConfig, DAQJobMessage
 
 
 class DAQJobStoreConfig(Struct, dict=True):
@@ -36,6 +36,8 @@ class DAQJobMessageStore(DAQJobMessage):
                 continue
             if value.remote_topic is not None:
                 self.remote_topic = value.remote_topic
+            if getattr(value, "remote_disable", False):
+                self.remote_topic = REMOTE_TOPIC_VOID
 
 
 class StorableDAQJobConfig(DAQJobConfig):
@@ -53,6 +55,7 @@ class DAQJobStoreTargetInstance(Struct):
 
 class DAQJobStoreConfigBase(Struct, kw_only=True):
     remote_topic: Optional[str] = None
+    remote_disable: Optional[bool] = None
 
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):

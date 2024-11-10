@@ -11,6 +11,9 @@ from models import SupervisorConfig
 
 DEFAULT_REMOTE_TOPIC = "DAQ"
 
+# Don't send messages to remote if the topic is this
+REMOTE_TOPIC_VOID = "@void_message"
+
 
 class LogVerbosity(str, Enum):
     DEBUG = "DEBUG"

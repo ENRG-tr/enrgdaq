@@ -27,6 +27,7 @@ class DAQJobHandleAlerts(DAQJob):
             "message",
         ]
 
+        assert message.daq_job_info is not None
         data_to_send = [
             [
                 get_unix_timestamp_ms(message.date),
