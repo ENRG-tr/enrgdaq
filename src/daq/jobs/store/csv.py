@@ -35,8 +35,9 @@ class DAQJobStoreCSV(DAQJobStore):
 
     _open_csv_files: dict[str, CSVFile]
 
-    def __init__(self, config: Any):
-        super().__init__(config)
+    def __init__(self, config: DAQJobStoreCSVConfig, **kwargs):
+        super().__init__(config, **kwargs)
+
         self._open_csv_files = {}
 
     def handle_message(self, message: DAQJobMessageStore) -> bool:

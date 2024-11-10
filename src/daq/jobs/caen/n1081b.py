@@ -35,8 +35,9 @@ class DAQJobN1081B(DAQJob):
     device: N1081B
     config: DAQJobN1081BConfig
 
-    def __init__(self, config: DAQJobN1081BConfig):
-        super().__init__(config)
+    def __init__(self, config: DAQJobN1081BConfig, **kwargs):
+        super().__init__(config, **kwargs)
+
         self.device = N1081BPatched(f"{config.host}:{config.port}?")
 
         for section in config.sections_to_store:

@@ -19,8 +19,9 @@ class DAQJobStoreROOT(DAQJobStore):
     allowed_message_in_types = [DAQJobMessageStore]
     _open_files: dict[str, Any]
 
-    def __init__(self, config: Any):
-        super().__init__(config)
+    def __init__(self, config: Any, **kwargs):
+        super().__init__(config, **kwargs)
+
         self._open_files = {}
 
     def handle_message(self, message: DAQJobMessageStore) -> bool:

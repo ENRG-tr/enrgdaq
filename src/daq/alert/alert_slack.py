@@ -19,8 +19,8 @@ class DAQJobAlertSlack(DAQJobAlert):
     config: DAQJobAlertSlackConfig
     _slack: Slack
 
-    def __init__(self, config: DAQJobAlertSlackConfig):
-        super().__init__(config)
+    def __init__(self, config: DAQJobAlertSlackConfig, **kwargs):
+        super().__init__(config, **kwargs)
         self._slack = Slack(url=config.slack_webhook_url)
 
     def alert_loop(self):

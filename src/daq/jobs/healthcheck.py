@@ -66,13 +66,13 @@ class DAQJobHealthcheck(DAQJob):
     _healthcheck_stats: list[HealthcheckStatsItem]
     _get_daq_job_class: Callable[[str], Optional[type[DAQJob]]]
 
-    def __init__(self, config: DAQJobHealthcheckConfig):
+    def __init__(self, config: DAQJobHealthcheckConfig, **kwargs):
+        super().__init__(config, **kwargs)
+
         from daq.types import ALL_DAQ_JOBS, get_daq_job_class
 
         self._get_daq_job_class = get_daq_job_class
         self._current_stats = {}
-
-        super().__init__(config)
 
         self._healthcheck_stats = []
 

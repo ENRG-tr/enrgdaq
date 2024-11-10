@@ -22,9 +22,6 @@ class DAQJobServeHTTP(DAQJob):
     config_type = DAQJobServeHTTPConfig
     config: DAQJobServeHTTPConfig
 
-    def __init__(self, config: DAQJobServeHTTPConfig):
-        super().__init__(config)
-
     def start(self):
         # Start a BasicHTTPServer in this thread
         serve_path = self.config.serve_path

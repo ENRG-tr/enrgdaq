@@ -44,8 +44,9 @@ class DAQJobRemote(DAQJob):
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
 
-    def __init__(self, config: DAQJobRemoteConfig):
-        super().__init__(config)
+    def __init__(self, config: DAQJobRemoteConfig, **kwargs):
+        super().__init__(config, **kwargs)
+
         self._zmq_pub_ctx = zmq.Context()
         self._logger.debug(f"Listening on {config.zmq_local_url}")
         self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
