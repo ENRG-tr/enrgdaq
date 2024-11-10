@@ -29,7 +29,7 @@ def build_daq_job(toml_config: bytes, supervisor_config: SupervisorConfig) -> DA
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
-    return daq_job_class(config, supervisor_config=supervisor_config)
+    return daq_job_class(config, supervisor_config=supervisor_config.clone())
 
 
 def load_daq_jobs(
@@ -64,7 +64,9 @@ def restart_daq_job(
     supervisor_config: SupervisorConfig,
 ) -> DAQJobThread:
     logging.info(f"Restarting {daq_job_type.__name__}")
-    new_daq_job = daq_job_type(daq_job_config, supervisor_config=supervisor_config)
+    new_daq_job = daq_job_type(
+        daq_job_config, supervisor_config=supervisor_config.clone()
+    )
     thread = threading.Thread(target=new_daq_job.start, daemon=True)
     thread.start()
     return DAQJobThread(new_daq_job, thread)
