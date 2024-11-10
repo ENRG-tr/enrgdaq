@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from daq.jobs.store.csv import DAQJobStoreConfigCSV
 from daq.jobs.test_job import DAQJobTest
-from daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage
+from daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage, DAQRemoteConfig
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
@@ -81,6 +81,45 @@ class TestDAQJobRemote(unittest.TestCase):
         self.daq_job_remote.message_out.put.assert_called_once_with(assert_msg)
         self.assertEqual(self.daq_job_remote.message_out.put.call_count, 1)
         self.assertEqual(call_count, 2)
+
+    def test_handle_message_with_remote_config(self):
+        message = DAQJobMessage(
+            id="testmsg",
+            remote_config=DAQRemoteConfig(remote_topic="custom_topic"),
+        )
+        self.daq_job_remote.handle_message(message)
+        self.mock_sender.send_multipart.assert_called_once_with(
+            ["custom_topic".encode(), self.daq_job_remote._pack_message(message)]
+        )
+
+    def test_handle_message_with_remote_disable(self):
+        message = DAQJobMessage(
+            id="testmsg",
+            remote_config=DAQRemoteConfig(remote_disable=True),
+        )
+        result = self.daq_job_remote.handle_message(message)
+        self.assertTrue(result)
+        self.mock_sender.send_multipart.assert_not_called()
+
+    def test_handle_message_with_default_remote_topic(self):
+        message = DAQJobMessage(
+            id="testmsg",
+            remote_config=DAQRemoteConfig(),
+        )
+        self.daq_job_remote.handle_message(message)
+        self.mock_sender.send_multipart.assert_called_once_with(
+            [DEFAULT_REMOTE_TOPIC.encode(), self.daq_job_remote._pack_message(message)]
+        )
+
+    def test_handle_message_with_custom_remote_topic(self):
+        message = DAQJobMessage(
+            id="testmsg",
+            remote_config=DAQRemoteConfig(remote_topic="custom_topic"),
+        )
+        self.daq_job_remote.handle_message(message)
+        self.mock_sender.send_multipart.assert_called_once_with(
+            ["custom_topic".encode(), self.daq_job_remote._pack_message(message)]
+        )
 
 
 if __name__ == "__main__":

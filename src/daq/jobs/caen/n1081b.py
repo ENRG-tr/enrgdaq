@@ -101,10 +101,9 @@ class DAQJobN1081B(DAQJob):
             get_now_unix_timestamp_ms(),  # unix timestamp in milliseconds
             *[x["value"] for x in data["counters"]],
         ]
-        self.message_out.put(
+        self._put_message_out(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                daq_job_info=self.info,
                 prefix=section,
                 keys=keys,
                 data=[values],

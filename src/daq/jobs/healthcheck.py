@@ -165,9 +165,8 @@ class DAQJobHealthcheck(DAQJob):
                 self._sent_alert_items.remove(item_id)
 
     def send_alert(self, item: HealthcheckItem):
-        self.message_out.put(
+        self._put_message_out(
             DAQJobMessageAlert(
-                daq_job_info=self.info,
                 date=datetime.now(),
                 alert_info=item.alert_info,
             )

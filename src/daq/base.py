@@ -13,6 +13,7 @@ from daq.models import (
     DAQJobMessageStop,
     DAQJobStopError,
 )
+from daq.store.models import DAQJobMessageStore
 from models import SupervisorConfig
 
 daq_job_instance_id = 0
@@ -95,6 +96,18 @@ class DAQJob:
             instance_id=self.instance_id,
             supervisor_config=getattr(self, "_supervisor_config", None),
         )
+
+    def _put_message_out(self, message: DAQJobMessage):
+        message.daq_job_info = self.info
+        message.remote_config = self.config.remote_config
+
+        # Get the remote config from the store config if it exists
+        if isinstance(message, DAQJobMessageStore):
+            store_remote_config = message.get_remote_config()
+            if store_remote_config is not None:
+                message.remote_config = store_remote_config
+
+        self.message_out.put(message)
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")

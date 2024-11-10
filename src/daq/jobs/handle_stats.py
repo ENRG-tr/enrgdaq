@@ -62,10 +62,9 @@ class DAQJobHandleStats(DAQJob):
                 ]
             )
 
-        self.message_out.put(
+        self._put_message_out(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                daq_job_info=self.info,
                 keys=keys,
                 data=data_to_send,
             )

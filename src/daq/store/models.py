@@ -1,8 +1,8 @@
 from typing import Any, Optional
 
-from msgspec import Struct
+from msgspec import Struct, field
 
-from daq.models import REMOTE_TOPIC_VOID, DAQJobConfig, DAQJobMessage
+from daq.models import DAQJobConfig, DAQJobMessage, DAQRemoteConfig
 
 
 class DAQJobStoreConfig(Struct, dict=True):
@@ -29,15 +29,15 @@ class DAQJobMessageStore(DAQJobMessage):
     data: list[list[Any]]
     prefix: str | None = None
 
-    def __post_init__(self):
+    def get_remote_config(self) -> Optional[DAQRemoteConfig]:
         for key in dir(self.store_config):
             value = getattr(self.store_config, key)
             if not isinstance(value, DAQJobStoreConfigBase):
                 continue
-            if value.remote_topic is not None:
-                self.remote_topic = value.remote_topic
-            if getattr(value, "remote_disable", False):
-                self.remote_topic = REMOTE_TOPIC_VOID
+            if value.remote_config is None:
+                continue
+            return value.remote_config
+        return None
 
 
 class StorableDAQJobConfig(DAQJobConfig):
@@ -54,8 +54,7 @@ class DAQJobStoreTargetInstance(Struct):
 
 
 class DAQJobStoreConfigBase(Struct, kw_only=True):
-    remote_topic: Optional[str] = None
-    remote_disable: Optional[bool] = None
+    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
 
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):

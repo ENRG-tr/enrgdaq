@@ -44,8 +44,14 @@ class DAQJobInfo:
         )
 
 
+class DAQRemoteConfig(Struct, kw_only=True):
+    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
+    remote_disable: Optional[bool] = False
+
+
 class DAQJobConfig(Struct, kw_only=True):
     verbosity: LogVerbosity = LogVerbosity.INFO
+    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
     daq_job_type: str
 
 
@@ -54,7 +60,7 @@ class DAQJobMessage(Struct, kw_only=True):
     timestamp: Optional[datetime] = field(default_factory=datetime.now)
     is_remote: bool = False
     daq_job_info: Optional["DAQJobInfo"] = None
-    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
 
 
 class DAQJobMessageStop(DAQJobMessage):

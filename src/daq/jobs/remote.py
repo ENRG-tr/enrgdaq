@@ -11,7 +11,6 @@ from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats
 from daq.models import (
     DEFAULT_REMOTE_TOPIC,
-    REMOTE_TOPIC_VOID,
     DAQJobConfig,
     DAQJobMessage,
 )
@@ -84,11 +83,10 @@ class DAQJobRemote(DAQJob):
         ):
             return True  # Silently ignore
 
-        remote_topic = message.remote_topic or DEFAULT_REMOTE_TOPIC
-
-        # Don't send message if the topic is void
-        if remote_topic == REMOTE_TOPIC_VOID:
+        if message.remote_config.remote_disable:
             return True
+
+        remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
 
         self._zmq_pub.send_multipart(
             [remote_topic.encode(), self._pack_message(message)]
