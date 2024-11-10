@@ -9,7 +9,7 @@ import zmq
 
 from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats
-from daq.models import DAQJobConfig, DAQJobMessage
+from daq.models import DEFAULT_REMOTE_TOPIC, DAQJobConfig, DAQJobMessage
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 
@@ -17,6 +17,7 @@ DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 class DAQJobRemoteConfig(DAQJobConfig):
     zmq_local_url: str
     zmq_remote_urls: list[str]
+    topics: list[str] = []
 
 
 class DAQJobRemote(DAQJob):
@@ -67,14 +68,24 @@ class DAQJobRemote(DAQJob):
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
+            # Do not send stats messages to the remote
             isinstance(message, DAQJobMessageStats)
+            # Ignore if we already received the message
             or message.id in self._remote_message_ids
+            # Ignore if the message is not allowed by the DAQ Job
             or not super().handle_message(message)
+            # Ignore if the message is remote, meaning it was sent by another Supervisor
             or message.is_remote
         ):
             return True  # Silently ignore
 
-        self._zmq_pub.send(self._pack_message(message))
+        remote_topic = message.remote_topic or DEFAULT_REMOTE_TOPIC
+        self._zmq_pub.send_multipart(
+            [remote_topic.encode(), self._pack_message(message)]
+        )
+        self._logger.debug(
+            f"Sent message '{type(message).__name__}' to topic '{remote_topic}'"
+        )
         return True
 
     def _create_zmq_sub(self, remote_urls: list[str]) -> zmq.Socket:
@@ -83,7 +94,10 @@ class DAQJobRemote(DAQJob):
         for remote_url in remote_urls:
             self._logger.debug(f"Connecting to {remote_url}")
             zmq_sub.connect(remote_url)
-            zmq_sub.subscribe("")
+            zmq_sub.subscribe(DEFAULT_REMOTE_TOPIC)
+            for topic in self.config.topics:
+                zmq_sub.subscribe(topic)
+                self._logger.info(f"Subscribed to topic '{topic}'")
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
@@ -94,8 +108,10 @@ class DAQJobRemote(DAQJob):
                 message = self._zmq_sub.recv()
             except zmq.ContextTerminated:
                 break
-            self._logger.debug(f"Received {len(message)} bytes")
             recv_message = self._unpack_message(message)
+            self._logger.debug(
+                f"Received {len(message)} bytes for message {type(recv_message).__name__}"
+            )
             recv_message.is_remote = True
             # remote message_in -> message_out
             self.message_out.put(recv_message)
@@ -112,7 +128,6 @@ class DAQJobRemote(DAQJob):
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         message_type = type(message).__name__
-        self._logger.debug(f"Packing message {message_type} ({message.id})")
         if use_pickle:
             return pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -138,7 +153,6 @@ class DAQJobRemote(DAQJob):
         self._remote_message_ids.add(res.id)
         if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
-        self._logger.debug(f"Unpacked message {message_type} ({res.id})")
         return res
 
     def __del__(self):

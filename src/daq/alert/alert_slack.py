@@ -31,6 +31,7 @@ class DAQJobAlertSlack(DAQJobAlert):
         self._logger.info(
             f"Sending alert to Slack: [{alert.alert_info.severity}] {alert.alert_info.message}"
         )
+        assert alert.daq_job_info is not None
         self._slack.post(
             attachments=[
                 {

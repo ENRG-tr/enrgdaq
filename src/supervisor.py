@@ -1,12 +1,17 @@
 import logging
+import os
+import platform
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty
 
+import msgspec
+
 from daq.alert.base import DAQJobAlert
 from daq.base import DAQJob, DAQJobThread
 from daq.daq_job import (
+    SUPERVISOR_CONFIG_FILE_PATH,
     load_daq_jobs,
     restart_daq_job,
     start_daq_jobs,
@@ -14,6 +19,7 @@ from daq.daq_job import (
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobConfig, DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
+from models import SupervisorConfig
 
 DAQ_SUPERVISOR_SLEEP_TIME_SECONDS = 0.2
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
@@ -32,6 +38,10 @@ class Supervisor:
     restart_schedules: list[RestartDAQJobSchedule]
 
     def init(self):
+        self.config = self._load_supervisor_config()
+        # Change logging name based on supervisor id
+        logging.getLogger().name = f"Supervisor({self.config.supervisor_id})"
+
         self.restart_schedules = []
         self.daq_job_threads = self.start_daq_job_threads()
         self.daq_job_stats: DAQJobStatsDict = {
@@ -40,7 +50,7 @@ class Supervisor:
         self.warn_for_lack_of_daq_jobs()
 
     def start_daq_job_threads(self) -> list[DAQJobThread]:
-        return start_daq_jobs(load_daq_jobs("configs/"))
+        return start_daq_jobs(load_daq_jobs("configs/", self.config))
 
     def run(self):
         while True:
@@ -103,7 +113,9 @@ class Supervisor:
                 continue
             self.daq_job_threads.append(
                 restart_daq_job(
-                    restart_schedule.daq_job_type, restart_schedule.daq_job_config
+                    restart_schedule.daq_job_type,
+                    restart_schedule.daq_job_config,
+                    self.config,
                 )
             )
 
@@ -137,7 +149,10 @@ class Supervisor:
         for thread in self.daq_job_threads:
             try:
                 while True:
-                    res.append(thread.daq_job.message_out.get_nowait())
+                    msg = thread.daq_job.message_out.get_nowait()
+                    if msg.daq_job_info is None:
+                        msg.daq_job_info = thread.daq_job.info
+                    res.append(msg)
                     # Update stats
                     self.get_daq_job_stats(
                         self.daq_job_stats, type(thread.daq_job)
@@ -180,3 +195,13 @@ class Supervisor:
                 x for x in self.daq_job_threads if isinstance(x.daq_job, daq_job_type)
             ):
                 logging.warning(warning_message)
+
+    def _load_supervisor_config(self):
+        if not os.path.exists(SUPERVISOR_CONFIG_FILE_PATH):
+            logging.warning(
+                f"No supervisor config file found at '{SUPERVISOR_CONFIG_FILE_PATH}', using default config"
+            )
+            return SupervisorConfig(supervisor_id=platform.node())
+
+        with open(SUPERVISOR_CONFIG_FILE_PATH, "rb") as f:
+            return msgspec.toml.decode(f.read(), type=SupervisorConfig)

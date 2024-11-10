@@ -2,7 +2,6 @@ from typing import Any, Optional
 
 from msgspec import Struct
 
-from daq.base import DAQJobInfo
 from daq.models import DAQJobConfig, DAQJobMessage
 
 
@@ -26,10 +25,17 @@ class DAQJobStoreConfig(Struct, dict=True):
 
 class DAQJobMessageStore(DAQJobMessage):
     store_config: DAQJobStoreConfig
-    daq_job_info: DAQJobInfo
     keys: list[str]
     data: list[list[Any]]
     prefix: str | None = None
+
+    def __post_init__(self):
+        for key in dir(self.store_config):
+            value = getattr(self.store_config, key)
+            if not isinstance(value, DAQJobStoreConfigBase):
+                continue
+            if value.remote_topic is not None:
+                self.remote_topic = value.remote_topic
 
 
 class StorableDAQJobConfig(DAQJobConfig):
@@ -38,7 +44,6 @@ class StorableDAQJobConfig(DAQJobConfig):
 
 class DAQJobStoreTarget(Struct):
     instances: Optional[list["DAQJobStoreTargetInstance"]] = None
-    jobs: Optional[list["DAQJobStoreTargetJob"]] = None
 
 
 class DAQJobStoreTargetInstance(Struct):
@@ -46,12 +51,8 @@ class DAQJobStoreTargetInstance(Struct):
     is_self: Optional[bool] = None
 
 
-class DAQJobStoreTargetJob(Struct):
-    job_name: str
-
-
 class DAQJobStoreConfigBase(Struct, kw_only=True):
-    target: Optional[DAQJobStoreTarget] = None
+    remote_topic: Optional[str] = None
 
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):

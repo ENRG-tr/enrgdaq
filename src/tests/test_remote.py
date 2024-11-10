@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from daq.jobs.store.csv import DAQJobStoreConfigCSV
 from daq.jobs.test_job import DAQJobTest
-from daq.models import DAQJobMessage
+from daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage
 from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
@@ -29,8 +29,8 @@ class TestDAQJobRemote(unittest.TestCase):
             id="testmsg",
         )
         self.daq_job_remote.handle_message(message)
-        self.mock_sender.send.assert_called_once_with(
-            self.daq_job_remote._pack_message(message)
+        self.mock_sender.send_multipart.assert_called_once_with(
+            [DEFAULT_REMOTE_TOPIC.encode(), self.daq_job_remote._pack_message(message)]
         )
 
     def test_start(self):

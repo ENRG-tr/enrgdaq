@@ -4,9 +4,16 @@ import uuid
 from dataclasses import dataclass
 from datetime import timedelta
 from queue import Empty, Queue
-from typing import Any
+from typing import Any, Optional
 
-from daq.models import DAQJobConfig, DAQJobMessage, DAQJobMessageStop, DAQJobStopError
+from daq.models import (
+    DAQJobConfig,
+    DAQJobInfo,
+    DAQJobMessage,
+    DAQJobMessageStop,
+    DAQJobStopError,
+)
+from models import SupervisorConfig
 
 daq_job_instance_id = 0
 daq_job_instance_id_lock = threading.Lock()
@@ -21,11 +28,13 @@ class DAQJob:
     instance_id: int
     unique_id: str
     restart_offset: timedelta
+    info: "DAQJobInfo"
     _has_been_freed: bool
     _logger: logging.Logger
-    info: "DAQJobInfo"
 
-    def __init__(self, config: Any):
+    def __init__(
+        self, config: Any, supervisor_config: Optional[SupervisorConfig] = None
+    ):
         global daq_job_instance_id, daq_job_instance_id_lock
 
         with daq_job_instance_id_lock:
@@ -41,6 +50,9 @@ class DAQJob:
 
         self._has_been_freed = False
         self.unique_id = str(uuid.uuid4())
+
+        if supervisor_config is not None:
+            self._supervisor_config = supervisor_config
         self.info = self._create_info()
 
     def consume(self, nowait=True):
@@ -81,6 +93,7 @@ class DAQJob:
             daq_job_class_name=type(self).__name__,
             unique_id=self.unique_id,
             instance_id=self.instance_id,
+            supervisor_config=getattr(self, "_supervisor_config", None),
         )
 
     def __del__(self):
@@ -98,20 +111,3 @@ class DAQJob:
 class DAQJobThread:
     daq_job: DAQJob
     thread: threading.Thread
-
-
-@dataclass
-class DAQJobInfo:
-    daq_job_type: str
-    daq_job_class_name: str  # has type(self).__name__
-    unique_id: str
-    instance_id: int
-
-    @staticmethod
-    def mock() -> "DAQJobInfo":
-        return DAQJobInfo(
-            daq_job_type="mock",
-            daq_job_class_name="mock",
-            unique_id="mock",
-            instance_id=0,
-        )

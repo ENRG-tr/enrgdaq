@@ -13,6 +13,7 @@ class TestSupervisor(unittest.TestCase):
         self.supervisor = Supervisor()
         self.supervisor.daq_job_stats = {}
         self.supervisor.daq_job_threads = []
+        self.supervisor.config = MagicMock()
 
     @patch("supervisor.start_daq_jobs")
     @patch("supervisor.load_daq_jobs")
@@ -20,13 +21,12 @@ class TestSupervisor(unittest.TestCase):
         mock_load_daq_jobs.return_value = ["job1", "job2"]
         mock_start_daq_jobs.return_value = ["thread1", "thread2"]
 
-        supervisor = Supervisor()
-        result = supervisor.start_daq_job_threads()
+        result = self.supervisor.start_daq_job_threads()
 
-        supervisor.daq_job_stats = {}
-        supervisor.daq_job_threads = []
+        self.supervisor.daq_job_stats = {}
+        self.supervisor.daq_job_threads = []
 
-        mock_load_daq_jobs.assert_called_once_with("configs/")
+        mock_load_daq_jobs.assert_called_once_with("configs/", self.supervisor.config)
         mock_start_daq_jobs.assert_called_once_with(["job1", "job2"])
         self.assertEqual(result, ["thread1", "thread2"])
 
@@ -37,15 +37,14 @@ class TestSupervisor(unittest.TestCase):
         mock_thread.daq_job = MagicMock()
         mock_start_daq_job_threads.return_value = [mock_thread]
 
-        supervisor = Supervisor()
-        supervisor.init()
+        self.supervisor.init()
 
         mock_start_daq_job_threads.assert_called_once()
         mock_warn_for_lack_of_daq_jobs.assert_called_once()
-        self.assertEqual(supervisor.daq_job_threads, [mock_thread])
-        self.assertIn(type(mock_thread.daq_job), supervisor.daq_job_stats)
+        self.assertEqual(self.supervisor.daq_job_threads, [mock_thread])
+        self.assertIn(type(mock_thread.daq_job), self.supervisor.daq_job_stats)
         self.assertIsInstance(
-            supervisor.daq_job_stats[type(mock_thread.daq_job)], DAQJobStats
+            self.supervisor.daq_job_stats[type(mock_thread.daq_job)], DAQJobStats
         )
 
     @patch("supervisor.restart_daq_job")
@@ -75,7 +74,9 @@ class TestSupervisor(unittest.TestCase):
         self.supervisor.loop()
 
         mock_restart_daq_job.assert_called_once_with(
-            type(mock_thread_dead.daq_job), mock_thread_dead.daq_job.config
+            type(mock_thread_dead.daq_job),
+            mock_thread_dead.daq_job.config,
+            self.supervisor.config,
         )
         mock_get_messages_from_daq_jobs.assert_called_once()
         mock_get_supervisor_messages.assert_called_once()

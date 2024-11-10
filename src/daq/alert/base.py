@@ -4,7 +4,7 @@ from typing import Any
 
 from msgspec import Struct
 
-from daq.base import DAQJob, DAQJobInfo
+from daq.base import DAQJob
 from daq.models import DAQJobMessage
 
 
@@ -20,7 +20,6 @@ class DAQAlertInfo(Struct):
 
 
 class DAQJobMessageAlert(DAQJobMessage):
-    daq_job_info: DAQJobInfo
     date: datetime
     alert_info: DAQAlertInfo
 
@@ -29,8 +28,8 @@ class DAQJobAlert(DAQJob):
     allowed_message_in_types = [DAQJobMessageAlert]
     _alerts: list[DAQJobMessageAlert]
 
-    def __init__(self, config: Any):
-        super().__init__(config)
+    def __init__(self, config: Any, **kwargs):
+        super().__init__(config, **kwargs)
         self._alerts = []
 
     def start(self):
