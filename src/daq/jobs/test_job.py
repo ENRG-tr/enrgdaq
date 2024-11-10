@@ -31,7 +31,7 @@ class DAQJobTest(DAQJob):
         self.message_out.put(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                daq_job_info=self.get_info(),
+                daq_job_info=self.info,
                 keys=["A", "B", "C"],
                 data=[[get_int(), get_int(), get_int()]],
             )

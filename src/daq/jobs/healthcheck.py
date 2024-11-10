@@ -167,7 +167,7 @@ class DAQJobHealthcheck(DAQJob):
     def send_alert(self, item: HealthcheckItem):
         self.message_out.put(
             DAQJobMessageAlert(
-                daq_job_info=self.get_info(),
+                daq_job_info=self.info,
                 date=datetime.now(),
                 alert_info=item.alert_info,
             )

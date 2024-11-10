@@ -23,6 +23,7 @@ class DAQJob:
     restart_offset: timedelta
     _has_been_freed: bool
     _logger: logging.Logger
+    info: "DAQJobInfo"
 
     def __init__(self, config: Any):
         global daq_job_instance_id, daq_job_instance_id_lock
@@ -40,6 +41,7 @@ class DAQJob:
 
         self._has_been_freed = False
         self.unique_id = str(uuid.uuid4())
+        self.info = self._create_info()
 
     def consume(self, nowait=True):
         # consume messages from the queue
@@ -71,7 +73,7 @@ class DAQJob:
     def start(self):
         raise NotImplementedError
 
-    def get_info(self) -> "DAQJobInfo":
+    def _create_info(self) -> "DAQJobInfo":
         return DAQJobInfo(
             daq_job_type=self.config.daq_job_type
             if isinstance(self.config, DAQJobConfig)

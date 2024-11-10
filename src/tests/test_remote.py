@@ -54,7 +54,7 @@ class TestDAQJobRemote(unittest.TestCase):
             ),
             data=[],
             keys=[],
-            daq_job_info=DAQJobTest({"daq_job_type": "test"}).get_info(),
+            daq_job_info=DAQJobTest({"daq_job_type": "test"}).info,
         )
         self.daq_job_remote.message_out = MagicMock()
 
