@@ -125,7 +125,7 @@ class DAQJobRemote(DAQJob):
                 break
             recv_message = self._unpack_message(message)
             self._logger.debug(
-                f"Received {len(message)} bytes for message {type(recv_message).__name__} on topic {topic.decode()}"
+                f"Received {len(message)} bytes for message '{type(recv_message).__name__}' on topic '{topic.decode()}'"
             )
             recv_message.is_remote = True
             # remote message_in -> message_out
