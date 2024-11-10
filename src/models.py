@@ -7,5 +7,4 @@ class SupervisorConfig(Struct):
     supervisor_id: str
 
     def clone(self):
-        print(deepcopy(self))
         return deepcopy(self)
