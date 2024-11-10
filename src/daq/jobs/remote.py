@@ -94,10 +94,15 @@ class DAQJobRemote(DAQJob):
         for remote_url in remote_urls:
             self._logger.debug(f"Connecting to {remote_url}")
             zmq_sub.connect(remote_url)
-            zmq_sub.subscribe(DEFAULT_REMOTE_TOPIC)
-            for topic in self.config.topics:
+            topics_to_subscribe = [DEFAULT_REMOTE_TOPIC]
+            topics_to_subscribe.extend(self.config.topics)
+            # Subscribe to the supervisor id if we have it
+            if self.info.supervisor_config is not None:
+                topics_to_subscribe.append(self.info.supervisor_config.supervisor_id)
+            for topic in topics_to_subscribe:
                 zmq_sub.subscribe(topic)
-                self._logger.info(f"Subscribed to topic '{topic}'")
+
+            self._logger.info(f"Subscribed to topics: {", ".join(topics_to_subscribe)}")
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
