@@ -57,15 +57,24 @@ class DAQJob:
         self.info = self._create_info()
 
     def consume(self, nowait=True):
-        # consume messages from the queue
+        """
+        Consumes messages from the message_in queue.
+        If nowait is True, it will consume the message immediately.
+        Otherwise, it will wait until a message is available.
+        """
+
+        def _process_message(message):
+            if not self.handle_message(message):
+                self.message_in.put(message)
+
+        # Return immediately after consuming the message
+        if not nowait:
+            _process_message(self.message_in.get())
+            return
+
         while True:
             try:
-                if nowait:
-                    message = self.message_in.get_nowait()
-                else:
-                    message = self.message_in.get()
-                if not self.handle_message(message):
-                    self.message_in.put(message)
+                _process_message(self.message_in.get_nowait())
             except Empty:
                 break
 
