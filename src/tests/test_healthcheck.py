@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from daq.alert.base import DAQAlertInfo, DAQAlertSeverity
+from daq.alert.models import DAQAlertInfo, DAQAlertSeverity
 from daq.jobs.healthcheck import (
     AlertCondition,
     DAQJobHealthcheck,

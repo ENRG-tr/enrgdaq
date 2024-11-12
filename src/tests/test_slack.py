@@ -3,7 +3,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from daq.alert.alert_slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
-from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
+from daq.alert.models import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
 from daq.base import DAQJobInfo
 
 

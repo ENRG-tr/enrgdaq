@@ -6,7 +6,8 @@ from typing import Callable, Optional
 import msgspec
 from msgspec import Struct
 
-from daq.alert.base import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
+from daq.alert.base import DAQJobMessageAlert
+from daq.alert.models import DAQAlertInfo, DAQAlertSeverity
 from daq.base import DAQJob
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from daq.models import DAQJobConfig, DAQJobStats

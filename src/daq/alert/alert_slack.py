@@ -1,6 +1,7 @@
 from slack_webhook import Slack
 
-from daq.alert.base import DAQAlertSeverity, DAQJobAlert, DAQJobMessageAlert
+from daq.alert.base import DAQJobAlert
+from daq.alert.models import DAQAlertSeverity, DAQJobMessageAlert
 from daq.models import DAQJobConfig
 
 ALERT_SEVERITY_TO_SLACK_COLOR = {

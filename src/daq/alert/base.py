@@ -1,27 +1,7 @@
-from datetime import datetime
-from enum import Enum
 from typing import Any
 
-from msgspec import Struct
-
+from daq.alert.models import DAQJobMessageAlert
 from daq.base import DAQJob
-from daq.models import DAQJobMessage
-
-
-class DAQAlertSeverity(str, Enum):
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-
-
-class DAQAlertInfo(Struct):
-    message: str
-    severity: DAQAlertSeverity
-
-
-class DAQJobMessageAlert(DAQJobMessage):
-    date: datetime
-    alert_info: DAQAlertInfo
 
 
 class DAQJobAlert(DAQJob):
