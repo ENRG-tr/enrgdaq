@@ -35,7 +35,7 @@ class DAQJobAlertSlack(DAQJobAlert):
             f"Sending alert to Slack: [{alert.alert_info.severity}] {alert.alert_info.message}"
         )
         assert alert.daq_job_info is not None
-        self._slack.post(
+        res = self._slack.post(
             attachments=[
                 {
                     "fallback": alert.alert_info.message,
@@ -62,3 +62,5 @@ class DAQJobAlertSlack(DAQJobAlert):
                 }
             ]
         )
+        if res != "ok":
+            raise Exception("Slack webhook returned error!")
