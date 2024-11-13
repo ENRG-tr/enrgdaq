@@ -75,9 +75,22 @@ class TestDAQJobAlertSlack(unittest.TestCase):
             ),
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
-        self.daq_job._alerts = [alert1, alert2]
-        self.daq_job.alert_loop()
+        self.daq_job.handle_message(alert1)
+        self.daq_job.handle_message(alert2)
         self.assertEqual(self.mock_slack.post.call_count, 2)
+
+    def test_alert_remote_message(self):
+        alert = DAQJobMessageAlert(
+            daq_job_info=DAQJobInfo.mock(),
+            alert_info=DAQAlertInfo(
+                severity=DAQAlertSeverity.ERROR,
+                message="Test error message",
+            ),
+            is_remote=True,
+            date=datetime(2023, 10, 1, 12, 0, 0),
+        )
+        self.daq_job.handle_message(alert)
+        self.assertEqual(self.mock_slack.post.call_count, 1)
 
 
 if __name__ == "__main__":

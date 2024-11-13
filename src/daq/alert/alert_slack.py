@@ -24,9 +24,11 @@ class DAQJobAlertSlack(DAQJobAlert):
         super().__init__(config, **kwargs)
         self._slack = Slack(url=config.slack_webhook_url)
 
-    def alert_loop(self):
-        for alert in self._alerts:
-            self.send_webhook(alert)
+    def handle_message(self, message: DAQJobMessageAlert) -> bool:
+        if not super().handle_message(message):
+            return False
+        self.send_webhook(message)
+        return True
 
     def send_webhook(self, alert: DAQJobMessageAlert):
         self._logger.info(
