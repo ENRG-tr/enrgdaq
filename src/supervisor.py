@@ -39,9 +39,11 @@ class Supervisor:
     _logger: logging.Logger
 
     def init(self):
-        self._logger = logging.getLogger(f"Supervisor({self.config.supervisor_id})")
+        self._logger = logging.getLogger()
         self.config = self._load_supervisor_config()
+
         # Change logging name based on supervisor id
+        self._logger.name = f"Supervisor({self.config.supervisor_id})"
 
         self.restart_schedules = []
         self.daq_job_threads = self.start_daq_job_threads()
