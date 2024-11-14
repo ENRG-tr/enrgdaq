@@ -36,11 +36,12 @@ class Supervisor:
     daq_job_threads: list[DAQJobThread]
     daq_job_stats: DAQJobStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
+    _logger: logging.Logger
 
     def init(self):
+        self._logger = logging.getLogger(f"Supervisor({self.config.supervisor_id})")
         self.config = self._load_supervisor_config()
         # Change logging name based on supervisor id
-        logging.getLogger().name = f"Supervisor({self.config.supervisor_id})"
 
         self.restart_schedules = []
         self.daq_job_threads = self.start_daq_job_threads()
@@ -58,7 +59,7 @@ class Supervisor:
                 self.loop()
                 time.sleep(DAQ_SUPERVISOR_SLEEP_TIME_SECONDS)
             except KeyboardInterrupt:
-                logging.warning("KeyboardInterrupt received, cleaning up")
+                self._logger.warning("KeyboardInterrupt received, cleaning up")
                 for daq_job_thread in self.daq_job_threads:
                     daq_job_thread.daq_job.__del__()
                 break
@@ -93,7 +94,7 @@ class Supervisor:
             if not isinstance(restart_offset, timedelta):
                 restart_offset = timedelta(seconds=0)
             else:
-                logging.info(
+                self._logger.info(
                     f"Scheduling restart of {type(thread.daq_job).__name__} in {restart_offset.total_seconds()} seconds"
                 )
             res.append(
@@ -194,11 +195,11 @@ class Supervisor:
             if not any(
                 x for x in self.daq_job_threads if isinstance(x.daq_job, daq_job_type)
             ):
-                logging.warning(warning_message)
+                self._logger.warning(warning_message)
 
     def _load_supervisor_config(self):
         if not os.path.exists(SUPERVISOR_CONFIG_FILE_PATH):
-            logging.warning(
+            self._logger.warning(
                 f"No supervisor config file found at '{SUPERVISOR_CONFIG_FILE_PATH}', using default config"
             )
             return SupervisorConfig(supervisor_id=platform.node())
