@@ -1,3 +1,4 @@
+import logging
 import sys
 import unittest
 
@@ -5,6 +6,7 @@ from tests.test_csv import TestDAQJobStoreCSV
 from tests.test_handle_alerts import TestDAQJobHandleAlerts
 from tests.test_handle_stats import TestDAQJobHandleStats
 from tests.test_healthcheck import TestDAQJobHealthcheck
+from tests.test_mysql import TestDAQJobStoreMySQL
 from tests.test_n1081b import TestDAQJobN1081B
 from tests.test_remote import TestDAQJobRemote
 from tests.test_slack import TestDAQJobAlertSlack
@@ -23,10 +25,14 @@ def run_tests():
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobHealthcheck))
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobHandleAlerts))
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobRemote))
+    test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobStoreMySQL))
     return test_suite
 
 
 if __name__ == "__main__":
+    # supress all logs but errors globally
+    logging.getLogger().setLevel(logging.ERROR)
+
     test_suite = run_tests()
     runner = unittest.TextTestRunner(verbosity=1)
     result = runner.run(test_suite)

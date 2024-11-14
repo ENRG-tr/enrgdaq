@@ -12,6 +12,7 @@ class DAQJobStoreConfig(Struct, dict=True):
 
     csv: "Optional[DAQJobStoreConfigCSV]" = None
     root: "Optional[DAQJobStoreConfigROOT]" = None
+    mysql: "Optional[DAQJobStoreConfigMySQL]" = None
 
     def has_store_config(self, store_type: Any) -> bool:
         for key in dir(self):
@@ -61,6 +62,10 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool
     overwrite: Optional[bool] = None
+
+
+class DAQJobStoreConfigMySQL(DAQJobStoreConfigBase):
+    table_name: str
 
 
 class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
