@@ -11,6 +11,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
     @patch("daq.alert.alert_slack.Slack")
     def setUp(self, MockSlack):
         self.mock_slack = MockSlack.return_value
+        self.mock_slack.post.return_value = "ok"
         self.config = DAQJobAlertSlackConfig(
             daq_job_type="", slack_webhook_url="http://fake.url"
         )
