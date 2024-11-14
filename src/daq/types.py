@@ -14,7 +14,9 @@ from daq.jobs.store.root import DAQJobStoreROOT
 from daq.jobs.test_job import DAQJobTest
 from utils.subclasses import all_subclasses
 
-ALL_DAQ_JOBS = all_subclasses(DAQJob)
+
+def get_all_daq_job_types():
+    return all_subclasses(DAQJob)
 
 
 DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
@@ -42,7 +44,7 @@ def get_daq_job_class(
                 f"DAQ job type '{daq_job_type}' is deprecated, please use '{daq_job_class.__name__}' instead"
             )
     else:
-        for daq_job in ALL_DAQ_JOBS:
+        for daq_job in get_all_daq_job_types():
             if daq_job.__name__ == daq_job_type:
                 daq_job_class = daq_job
     return daq_job_class

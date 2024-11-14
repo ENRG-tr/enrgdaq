@@ -70,7 +70,7 @@ class DAQJobHealthcheck(DAQJob):
     def __init__(self, config: DAQJobHealthcheckConfig, **kwargs):
         super().__init__(config, **kwargs)
 
-        from daq.types import ALL_DAQ_JOBS, get_daq_job_class
+        from daq.types import get_all_daq_job_types, get_daq_job_class
 
         self._get_daq_job_class = get_daq_job_class
         self._current_stats = {}
@@ -78,7 +78,7 @@ class DAQJobHealthcheck(DAQJob):
         self._healthcheck_stats = []
 
         if config.enable_alerts_on_restart:
-            for daq_job_type_class in ALL_DAQ_JOBS:
+            for daq_job_type_class in get_all_daq_job_types():
                 self._healthcheck_stats.append(
                     HealthcheckStatsItem(
                         alert_info=DAQAlertInfo(
