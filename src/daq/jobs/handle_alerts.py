@@ -18,7 +18,8 @@ class DAQJobHandleAlerts(DAQJob):
             self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessageAlert) -> bool:
-        super().handle_message(message)
+        if not super().handle_message(message):
+            return False
 
         keys = [
             "timestamp",
