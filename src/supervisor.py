@@ -17,7 +17,7 @@ from daq.daq_job import (
     start_daq_jobs,
 )
 from daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
-from daq.models import DAQJobConfig, DAQJobMessage, DAQJobStats
+from daq.models import DAQJobConfig, DAQJobInfo, DAQJobMessage, DAQJobStats
 from daq.store.base import DAQJobStore
 from models import SupervisorConfig
 
@@ -137,7 +137,12 @@ class Supervisor:
         messages = []
 
         # Send stats message
-        messages.append(DAQJobMessageStats(stats=self.daq_job_stats))
+        messages.append(
+            DAQJobMessageStats(
+                stats=self.daq_job_stats,
+                daq_job_info=self._get_supervisor_daq_job_info(),
+            )
+        )
         return messages
 
     def get_daq_job_stats(
@@ -208,3 +213,12 @@ class Supervisor:
 
         with open(SUPERVISOR_CONFIG_FILE_PATH, "rb") as f:
             return msgspec.toml.decode(f.read(), type=SupervisorConfig)
+
+    def _get_supervisor_daq_job_info(self):
+        return DAQJobInfo(
+            daq_job_type="Supervisor",
+            daq_job_class_name="Supervisor",
+            supervisor_config=self.config,
+            unique_id=self.config.supervisor_id,
+            instance_id=0,
+        )
