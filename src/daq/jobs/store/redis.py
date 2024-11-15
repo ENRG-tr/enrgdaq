@@ -23,6 +23,7 @@ class RedisWriteQueueItem:
     redis_key: str
     data: dict[str, list[Any]]
     expiration: Optional[timedelta]
+    prefix: Optional[str]
 
 
 class DAQJobStoreRedis(DAQJobStore):
@@ -72,6 +73,7 @@ class DAQJobStoreRedis(DAQJobStore):
                     store_config.key,
                     data,
                     key_expiration,
+                    message.prefix,
                 )
             )
 
@@ -88,6 +90,8 @@ class DAQJobStoreRedis(DAQJobStore):
             # Append item to key in redis
             for key, values in item.data.items():
                 item_key = f"{item.redis_key}.{key}"
+                if item.prefix is not None:
+                    item_key = f"{item.prefix}.{item_key}"
 
                 # Add date to key if expiration is set
                 if item.expiration is not None:

@@ -70,6 +70,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header2": ["row1_col2", "row2_col2"],
                     },
                     timedelta(days=1),
+                    None,
                 ),
                 RedisWriteQueueItem(
                     "test_key_no_expiration",
@@ -78,6 +79,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header2": ["row1_col2", "row2_col2"],
                     },
                     None,
+                    "prefix",
                 ),
             ]
         )
@@ -94,10 +96,10 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         )
 
         self.store._connection.rpush.assert_any_call(
-            "test_key_no_expiration.header1", "row1_col1", "row2_col1"
+            "prefix.test_key_no_expiration.header1", "row1_col1", "row2_col1"
         )
         self.store._connection.rpush.assert_any_call(
-            "test_key_no_expiration.header2", "row1_col2", "row2_col2"
+            "prefix.test_key_no_expiration.header2", "row1_col2", "row2_col2"
         )
 
         self.store._connection.expire.assert_any_call(
