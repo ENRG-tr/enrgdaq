@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 from random import randint
 
 from N1081B import N1081B
@@ -31,7 +32,9 @@ class DAQJobTest(DAQJob):
         self._put_message_out(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                keys=["A", "B", "C"],
-                data=[[get_int(), get_int(), get_int()]],
+                keys=["timestamp", "A", "B", "C"],
+                data=[
+                    [datetime.now().timestamp() * 1000, get_int(), get_int(), get_int()]
+                ],
             )
         )

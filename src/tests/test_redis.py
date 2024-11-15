@@ -47,7 +47,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
 
         self.assertTrue(result)
         self.assertEqual(len(self.store._write_queue), 2)
-        self.assertEqual(self.store._write_queue[0].redis_key, "test_key")
+        self.assertEqual(self.store._write_queue[0].store_config.key, "test_key")
         self.assertEqual(
             self.store._write_queue[0].data["header1"], ["row1_col1", "row2_col1"]
         )
@@ -60,26 +60,44 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.store._connection.exists = MagicMock(return_value=False)
         self.store._connection.rpush = MagicMock()
         self.store._connection.expire = MagicMock()
+        self.store._ts = MagicMock()
+
+        unix_ms = int(datetime.now().timestamp() * 1000)
 
         self.store._write_queue = deque(
             [
                 RedisWriteQueueItem(
-                    "test_key",
-                    {
+                    store_config=DAQJobStoreConfigRedis(
+                        key="test_key", key_expiration_days=1
+                    ),
+                    data={
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    timedelta(days=1),
-                    None,
+                    prefix=None,
                 ),
                 RedisWriteQueueItem(
-                    "test_key_no_expiration",
-                    {
+                    store_config=DAQJobStoreConfigRedis(
+                        key="test_key_no_expiration", key_expiration_days=None
+                    ),
+                    data={
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    None,
-                    "prefix",
+                    prefix="prefix",
+                ),
+                RedisWriteQueueItem(
+                    store_config=DAQJobStoreConfigRedis(
+                        key="test_key_timeseries",
+                        key_expiration_days=None,
+                        use_timeseries=True,
+                    ),
+                    data={
+                        "timestamp": [unix_ms, unix_ms + 1],
+                        "header1": ["row1_col1", "row2_col1"],
+                        "header2": ["row1_col2", "row2_col2"],
+                    },
+                    prefix="prefix",
                 ),
             ]
         )
@@ -102,6 +120,20 @@ class TestDAQJobStoreRedis(unittest.TestCase):
             "prefix.test_key_no_expiration.header2", "row1_col2", "row2_col2"
         )
 
+        self.store._ts.madd.assert_any_call(
+            [
+                ("prefix.test_key_timeseries.header1", unix_ms, "row1_col1"),
+                ("prefix.test_key_timeseries.header1", unix_ms + 1, "row2_col1"),
+            ]
+        )
+
+        self.store._ts.madd.assert_any_call(
+            [
+                ("prefix.test_key_timeseries.header2", unix_ms, "row1_col2"),
+                ("prefix.test_key_timeseries.header2", unix_ms + 1, "row2_col2"),
+            ]
+        )
+
         self.store._connection.expire.assert_any_call(
             "test_key.header1:" + date, timedelta(days=1)
         )
@@ -122,14 +154,14 @@ class TestDAQJobStoreRedis(unittest.TestCase):
 
         self.assertTrue(result)
         self.assertEqual(len(self.store._write_queue), 2)
-        self.assertEqual(self.store._write_queue[0].redis_key, "test_key")
+        self.assertEqual(self.store._write_queue[0].store_config.key, "test_key")
         self.assertEqual(
             self.store._write_queue[0].data["header1"], ["row1_col1", "row2_col1"]
         )
         self.assertEqual(
             self.store._write_queue[0].data["header2"], ["row1_col2", "row2_col2"]
         )
-        self.assertIsNone(self.store._write_queue[0].expiration)
+        self.assertIsNone(self.store._write_queue[0].store_config.key_expiration_days)
 
     def test_handle_message_empty_data(self):
         message = MagicMock(spec=DAQJobMessageStore)

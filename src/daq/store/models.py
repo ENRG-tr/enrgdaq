@@ -86,6 +86,13 @@ class DAQJobStoreConfigRedis(DAQJobStoreConfigBase):
     If None, keys will not be deleted.
     """
 
+    use_timeseries: Optional[bool] = None
+    """
+    Utilize Redis Timeseries to store data.
+
+    A key called "timestamp" is requires when using timeseries.
+    """
+
 
 class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
     file_path: str
