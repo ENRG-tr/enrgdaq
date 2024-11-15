@@ -44,6 +44,13 @@ class DAQJobAlertSlack(DAQJobAlert):
                     "title": "Alert!",
                     "fields": [
                         {
+                            "title": "Supervisor ID",
+                            "value": alert.daq_job_info.supervisor_config.supervisor_id
+                            if alert.daq_job_info.supervisor_config
+                            else "-",
+                            "short": True,
+                        },
+                        {
                             "title": "Severity",
                             "value": alert.alert_info.severity,
                             "short": True,

@@ -31,6 +31,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
             date=datetime(2023, 10, 1, 12, 0, 0),
         )
         self.daq_job.send_webhook(alert)
+        assert alert.daq_job_info is not None
         self.mock_slack.post.assert_called_once_with(
             attachments=[
                 {
@@ -39,6 +40,11 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                     "author_name": alert.daq_job_info.daq_job_class_name,
                     "title": "Alert!",
                     "fields": [
+                        {
+                            "title": "Supervisor ID",
+                            "value": "mock",
+                            "short": True,
+                        },
                         {
                             "title": "Severity",
                             "value": DAQAlertSeverity.ERROR,
