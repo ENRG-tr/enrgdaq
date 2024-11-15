@@ -89,7 +89,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                 RedisWriteQueueItem(
                     store_config=DAQJobStoreConfigRedis(
                         key="test_key_timeseries",
-                        key_expiration_days=None,
+                        key_expiration_days=1,
                         use_timeseries=True,
                     ),
                     data={
@@ -125,6 +125,12 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                 ("prefix.test_key_timeseries.header1", unix_ms, "row1_col1"),
                 ("prefix.test_key_timeseries.header1", unix_ms + 1, "row2_col1"),
             ]
+        )
+
+        self.store._ts.create.assert_any_call(
+            "prefix.test_key_timeseries.header2",
+            retention_msecs=int(timedelta(days=1).total_seconds() * 1000),
+            labels={"key": "test_key_timeseries", "prefix": "prefix"},
         )
 
         self.store._ts.madd.assert_any_call(

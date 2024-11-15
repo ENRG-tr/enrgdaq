@@ -115,6 +115,8 @@ class DAQJobStoreRedis(DAQJobStore):
                         self._ts.create(
                             item_key,
                             retention_msecs=retention_msecs,
+                            labels={"key": msg.store_config.key}
+                            | ({"prefix": msg.prefix} if msg.prefix else {}),
                         )
                     if "timestamp" not in msg.data:
                         self._logger.warning(
