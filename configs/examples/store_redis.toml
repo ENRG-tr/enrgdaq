@@ -1,0 +1,6 @@
+daq_job_type = "DAQJobStoreRedis"
+
+host = "127.0.0.1"
+# password = "password"
+port = 6379
+db = 0
