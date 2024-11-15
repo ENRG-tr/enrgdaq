@@ -8,6 +8,7 @@ from tests.test_handle_stats import TestDAQJobHandleStats
 from tests.test_healthcheck import TestDAQJobHealthcheck
 from tests.test_mysql import TestDAQJobStoreMySQL
 from tests.test_n1081b import TestDAQJobN1081B
+from tests.test_redis import TestDAQJobStoreRedis
 from tests.test_remote import TestDAQJobRemote
 from tests.test_slack import TestDAQJobAlertSlack
 from tests.test_supervisor import TestSupervisor
@@ -26,6 +27,7 @@ def run_tests():
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobHandleAlerts))
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobRemote))
     test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobStoreMySQL))
+    test_suite.addTests(loader.loadTestsFromTestCase(TestDAQJobStoreRedis))
     return test_suite
 
 

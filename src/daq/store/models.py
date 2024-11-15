@@ -13,6 +13,7 @@ class DAQJobStoreConfig(Struct, dict=True):
     csv: "Optional[DAQJobStoreConfigCSV]" = None
     root: "Optional[DAQJobStoreConfigROOT]" = None
     mysql: "Optional[DAQJobStoreConfigMySQL]" = None
+    redis: "Optional[DAQJobStoreConfigRedis]" = None
 
     def has_store_config(self, store_type: Any) -> bool:
         for key in dir(self):
@@ -66,6 +67,24 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
 
 class DAQJobStoreConfigMySQL(DAQJobStoreConfigBase):
     table_name: str
+
+
+class DAQJobStoreConfigRedis(DAQJobStoreConfigBase):
+    key: str
+    """
+    Redis key to store data in.
+    
+    Data keys will be prefixed with the redis_key, e.g. for the data key "test", the redis key will be "redis_key.test".
+    
+    If the expiration is set, the key will be prefixed with the date, e.g. for the data key "test", the redis key will be "redis_key.test:2023-01-01".
+    """
+
+    key_expiration_days: Optional[int] = None
+    """
+    Delete keys older than this number of days.
+    
+    If None, keys will not be deleted.
+    """
 
 
 class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
