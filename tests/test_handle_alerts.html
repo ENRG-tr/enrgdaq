@@ -78,7 +78,7 @@ not have a method with the specified name.</p></div>
         self.daq_job = DAQJobHandleAlerts(config=self.config)
         self.daq_job.message_out = MagicMock()
 
-    @patch(&#34;utils.time.get_unix_timestamp_ms&#34;, return_value=1234567890)
+    @patch(&#34;enrgdaq.utils.time.get_unix_timestamp_ms&#34;, return_value=1234567890)
     def test_handle_message(self, mock_get_unix_timestamp_ms):
         date = datetime(2022, 1, 1, 0, 0, 0)
 

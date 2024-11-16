@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.1">
-<title>src.tests API documentation</title>
+<title>src.enrgdaq.daq.alert.base API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
@@ -22,60 +22,79 @@ hljs.highlightAll();
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>src.tests</code></h1>
+<h1 class="title">Module <code>src.enrgdaq.daq.alert.base</code></h1>
 </header>
 <section id="section-intro">
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="src.tests.test_csv" href="test_csv.html">src.tests.test_csv</a></code></dt>
+<dt id="src.enrgdaq.daq.alert.base.DAQJobAlert"><code class="flex name class">
+<span>class <span class="ident">DAQJobAlert</span></span>
+<span>(</span><span>config: Any, **kwargs)</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_handle_alerts" href="test_handle_alerts.html">src.tests.test_handle_alerts</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_handle_stats" href="test_handle_stats.html">src.tests.test_handle_stats</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_healthcheck" href="test_healthcheck.html">src.tests.test_healthcheck</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_mysql" href="test_mysql.html">src.tests.test_mysql</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_n1081b" href="test_n1081b.html">src.tests.test_n1081b</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_redis" href="test_redis.html">src.tests.test_redis</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_remote" href="test_remote.html">src.tests.test_remote</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_slack" href="test_slack.html">src.tests.test_slack</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="src.tests.test_supervisor" href="test_supervisor.html">src.tests.test_supervisor</a></code></dt>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobAlert(DAQJob):
+    allowed_message_in_types = [DAQJobMessageAlert]
+
+    def __init__(self, config: Any, **kwargs):
+        super().__init__(config, **kwargs)
+
+    def start(self):
+        while True:
+            self.consume(nowait=False)
+
+    def handle_message(self, message: DAQJobMessageAlert) -&gt; bool:
+        return super().handle_message(message)
+
+    def alert_loop(self):
+        raise NotImplementedError</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enrgdaq.daq.base.DAQJob</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="src.enrgdaq.daq.alert.base.DAQJobAlert.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[enrgdaq.daq.models.DAQJobMessage]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+<h3>Methods</h3>
+<dl>
+<dt id="src.enrgdaq.daq.alert.base.DAQJobAlert.alert_loop"><code class="name flex">
+<span>def <span class="ident">alert_loop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.enrgdaq.daq.alert.base.DAQJobAlert.handle_message"><code class="name flex">
+<span>def <span class="ident">handle_message</span></span>(<span>self, message: enrgdaq.daq.alert.models.DAQJobMessageAlert) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.enrgdaq.daq.alert.base.DAQJobAlert.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -85,21 +104,20 @@ hljs.highlightAll();
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="src" href="../index.html">src</a></code></li>
+<li><code><a title="src.enrgdaq.daq.alert" href="index.html">src.enrgdaq.daq.alert</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
-<li><code><a title="src.tests.test_csv" href="test_csv.html">src.tests.test_csv</a></code></li>
-<li><code><a title="src.tests.test_handle_alerts" href="test_handle_alerts.html">src.tests.test_handle_alerts</a></code></li>
-<li><code><a title="src.tests.test_handle_stats" href="test_handle_stats.html">src.tests.test_handle_stats</a></code></li>
-<li><code><a title="src.tests.test_healthcheck" href="test_healthcheck.html">src.tests.test_healthcheck</a></code></li>
-<li><code><a title="src.tests.test_mysql" href="test_mysql.html">src.tests.test_mysql</a></code></li>
-<li><code><a title="src.tests.test_n1081b" href="test_n1081b.html">src.tests.test_n1081b</a></code></li>
-<li><code><a title="src.tests.test_redis" href="test_redis.html">src.tests.test_redis</a></code></li>
-<li><code><a title="src.tests.test_remote" href="test_remote.html">src.tests.test_remote</a></code></li>
-<li><code><a title="src.tests.test_slack" href="test_slack.html">src.tests.test_slack</a></code></li>
-<li><code><a title="src.tests.test_supervisor" href="test_supervisor.html">src.tests.test_supervisor</a></code></li>
+<li>
+<h4><code><a title="src.enrgdaq.daq.alert.base.DAQJobAlert" href="#src.enrgdaq.daq.alert.base.DAQJobAlert">DAQJobAlert</a></code></h4>
+<ul class="">
+<li><code><a title="src.enrgdaq.daq.alert.base.DAQJobAlert.alert_loop" href="#src.enrgdaq.daq.alert.base.DAQJobAlert.alert_loop">alert_loop</a></code></li>
+<li><code><a title="src.enrgdaq.daq.alert.base.DAQJobAlert.allowed_message_in_types" href="#src.enrgdaq.daq.alert.base.DAQJobAlert.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="src.enrgdaq.daq.alert.base.DAQJobAlert.handle_message" href="#src.enrgdaq.daq.alert.base.DAQJobAlert.handle_message">handle_message</a></code></li>
+<li><code><a title="src.enrgdaq.daq.alert.base.DAQJobAlert.start" href="#src.enrgdaq.daq.alert.base.DAQJobAlert.start">start</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

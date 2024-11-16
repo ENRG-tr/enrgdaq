@@ -73,7 +73,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TestDAQJobAlertSlack(unittest.TestCase):
-    @patch(&#34;daq.alert.alert_slack.Slack&#34;)
+    @patch(&#34;enrgdaq.daq.alert.alert_slack.Slack&#34;)
     def setUp(self, MockSlack):
         self.mock_slack = MockSlack.return_value
         self.mock_slack.post.return_value = &#34;ok&#34;

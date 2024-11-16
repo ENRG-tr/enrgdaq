@@ -74,13 +74,18 @@ not have a method with the specified name.</p></div>
 </summary>
 <pre><code class="python">class TestSupervisor(unittest.TestCase):
     def setUp(self):
+        # Mock logging to avoid printing messages
+        self.patcher = patch(&#34;enrgdaq.supervisor.logging&#34;)
+        self.mock_logging = self.patcher.start()
+        self.addCleanup(self.patcher.stop)
+
         self.supervisor = Supervisor()
         self.supervisor.daq_job_stats = {}
         self.supervisor.daq_job_threads = []
         self.supervisor.config = MagicMock()
 
-    @patch(&#34;supervisor.start_daq_jobs&#34;)
-    @patch(&#34;supervisor.load_daq_jobs&#34;)
+    @patch(&#34;enrgdaq.supervisor.start_daq_jobs&#34;)
+    @patch(&#34;enrgdaq.supervisor.load_daq_jobs&#34;)
     def test_start_daq_job_threads(self, mock_load_daq_jobs, mock_start_daq_jobs):
         mock_load_daq_jobs.return_value = [&#34;job1&#34;, &#34;job2&#34;]
         mock_start_daq_jobs.return_value = [&#34;thread1&#34;, &#34;thread2&#34;]
@@ -111,7 +116,7 @@ not have a method with the specified name.</p></div>
             self.supervisor.daq_job_stats[type(mock_thread.daq_job)], DAQJobStats
         )
 
-    @patch(&#34;supervisor.restart_daq_job&#34;)
+    @patch(&#34;enrgdaq.supervisor.restart_daq_job&#34;)
     @patch.object(Supervisor, &#34;get_messages_from_daq_jobs&#34;)
     @patch.object(Supervisor, &#34;get_supervisor_messages&#34;)
     @patch.object(Supervisor, &#34;send_messages_to_daq_jobs&#34;)

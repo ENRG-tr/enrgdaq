@@ -77,7 +77,7 @@ not have a method with the specified name.</p></div>
         self.config = MagicMock(out_dir=&#34;out/&#34;)
         self.store = DAQJobStoreCSV(self.config)
 
-    @patch(&#34;daq.jobs.store.csv.modify_file_path&#34;, return_value=&#34;test.csv&#34;)
+    @patch(&#34;enrgdaq.daq.jobs.store.csv.modify_file_path&#34;, return_value=&#34;test.csv&#34;)
     @patch(&#34;builtins.open&#34;, new_callable=mock_open)
     @patch(&#34;os.path.exists&#34;, return_value=False)
     @patch(&#34;pathlib.Path.touch&#34;)
@@ -100,7 +100,7 @@ not have a method with the specified name.</p></div>
         file = self.store._open_csv_files[&#34;out/test.csv&#34;]
         self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
 
-    @patch(&#34;daq.jobs.store.csv.modify_file_path&#34;, return_value=&#34;test.csv&#34;)
+    @patch(&#34;enrgdaq.daq.jobs.store.csv.modify_file_path&#34;, return_value=&#34;test.csv&#34;)
     @patch(&#34;builtins.open&#34;, new_callable=mock_open)
     @patch(&#34;os.path.exists&#34;, return_value=True)
     def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):

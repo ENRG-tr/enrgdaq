@@ -73,7 +73,7 @@ not have a method with the specified name.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class TestDAQJobRemote(unittest.TestCase):
-    @patch(&#34;daq.jobs.remote.zmq.Context&#34;)
+    @patch(&#34;enrgdaq.daq.jobs.remote.zmq.Context&#34;)
     def setUp(self, MockZmqContext):
         self.mock_context = MockZmqContext.return_value
         self.mock_sender = self.mock_context.socket.return_value

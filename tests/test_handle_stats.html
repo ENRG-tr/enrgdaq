@@ -119,7 +119,9 @@ not have a method with the specified name.</p></div>
                 )
             }
         )
-        with patch(&#34;daq.jobs.handle_stats.DAQJob.handle_message&#34;, return_value=False):
+        with patch(
+            &#34;enrgdaq.daq.jobs.handle_stats.DAQJob.handle_message&#34;, return_value=False
+        ):
             result = self.daq_job_handle_stats.handle_message(message)
 
         self.assertFalse(result)
