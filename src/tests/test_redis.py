@@ -130,7 +130,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.store._ts.create.assert_any_call(
             "prefix.test_key_timeseries.header2",
             retention_msecs=int(timedelta(days=1).total_seconds() * 1000),
-            labels={"key": "test_key_timeseries", "prefix": "prefix"},
+            labels={"key": "test_key_timeseries", "tag": "prefix"},
         )
 
         self.store._ts.madd.assert_any_call(
