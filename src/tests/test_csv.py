@@ -30,7 +30,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
-        message.prefix = None
+        message.tag = None
 
         self.store.handle_message(message)
 
@@ -50,7 +50,7 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
-        message.prefix = None
+        message.tag = None
 
         self.store.handle_message(message)
 

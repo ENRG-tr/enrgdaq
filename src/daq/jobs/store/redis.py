@@ -23,7 +23,7 @@ class DAQJobStoreRedisConfig(DAQJobConfig):
 class RedisWriteQueueItem:
     store_config: DAQJobStoreConfigRedis
     data: dict[str, list[Any]]
-    prefix: Optional[str]
+    tag: Optional[str]
 
 
 class DAQJobStoreRedis(DAQJobStore):
@@ -72,7 +72,7 @@ class DAQJobStoreRedis(DAQJobStore):
         # Append rows to write_queue
         for row in message.data:
             self._write_queue.append(
-                RedisWriteQueueItem(store_config, data, message.prefix)
+                RedisWriteQueueItem(store_config, data, message.tag)
             )
 
         return True
@@ -95,8 +95,8 @@ class DAQJobStoreRedis(DAQJobStore):
             for i, item in enumerate(msg.data.items()):
                 key, values = item
                 item_key = f"{msg.store_config.key}.{key}"
-                if msg.prefix is not None:
-                    item_key = f"{msg.prefix}.{item_key}"
+                if msg.tag is not None:
+                    item_key = f"{msg.tag}.{item_key}"
 
                 if msg.store_config.use_timeseries:
                     # Use Redis TimeSeries if requested
@@ -116,7 +116,7 @@ class DAQJobStoreRedis(DAQJobStore):
                             item_key,
                             retention_msecs=retention_msecs,
                             labels={"key": msg.store_config.key}
-                            | ({"prefix": msg.prefix} if msg.prefix else {}),
+                            | ({"tag": msg.tag} if msg.tag else {}),
                         )
                     if "timestamp" not in msg.data:
                         self._logger.warning(

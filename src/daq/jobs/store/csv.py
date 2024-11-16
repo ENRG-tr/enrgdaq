@@ -45,7 +45,7 @@ class DAQJobStoreCSV(DAQJobStore):
 
         store_config = cast(DAQJobStoreConfigCSV, message.store_config.csv)
         file_path = modify_file_path(
-            store_config.file_path, store_config.add_date, message.prefix
+            store_config.file_path, store_config.add_date, message.tag
         )
         file_path = os.path.join(self.config.out_dir, file_path)
 

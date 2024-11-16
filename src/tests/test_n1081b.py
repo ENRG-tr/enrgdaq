@@ -93,7 +93,7 @@ class TestDAQJobN1081B(unittest.TestCase):
         self.daq_job.message_out.put.assert_called_once()
         message = self.daq_job.message_out.put.call_args[0][0]
         self.assertIsInstance(message, DAQJobMessageStore)
-        self.assertEqual(message.prefix, "SEC_A")
+        self.assertEqual(message.tag, "SEC_A")
         self.assertIn("timestamp", message.keys)
         self.assertIn("lemo_1", message.keys)
         self.assertIn(100, message.data[0])

@@ -74,7 +74,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    prefix=None,
+                    tag=None,
                 ),
                 RedisWriteQueueItem(
                     store_config=DAQJobStoreConfigRedis(
@@ -84,7 +84,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    prefix="prefix",
+                    tag="prefix",
                 ),
                 RedisWriteQueueItem(
                     store_config=DAQJobStoreConfigRedis(
@@ -97,7 +97,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    prefix="prefix",
+                    tag="prefix",
                 ),
             ]
         )

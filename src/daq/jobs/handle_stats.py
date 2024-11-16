@@ -63,16 +63,16 @@ class DAQJobHandleStats(DAQJob):
             )
 
         if message.daq_job_info and message.daq_job_info.supervisor_config:
-            prefix = message.daq_job_info.supervisor_config.supervisor_id
+            tag = message.daq_job_info.supervisor_config.supervisor_id
         else:
-            prefix = None
+            tag = None
 
         self._put_message_out(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
                 keys=keys,
                 data=data_to_send,
-                prefix=prefix,
+                tag=tag,
             )
         )
 

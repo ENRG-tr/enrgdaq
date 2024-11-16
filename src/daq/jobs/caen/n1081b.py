@@ -104,7 +104,7 @@ class DAQJobN1081B(DAQJob):
         self._put_message_out(
             DAQJobMessageStore(
                 store_config=self.config.store_config,
-                prefix=section,
+                tag=section,
                 keys=keys,
                 data=[values],
             )

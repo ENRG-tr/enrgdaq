@@ -29,7 +29,7 @@ class DAQJobMessageStore(DAQJobMessage):
     store_config: DAQJobStoreConfig
     keys: list[str]
     data: list[list[Any]]
-    prefix: str | None = None
+    tag: str | None = None
 
     def get_remote_config(self) -> Optional[DAQRemoteConfig]:
         for key in dir(self.store_config):

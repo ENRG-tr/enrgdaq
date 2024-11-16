@@ -28,7 +28,7 @@ class DAQJobStoreROOT(DAQJobStore):
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigROOT, message.store_config)
         file_path = modify_file_path(
-            store_config.file_path, store_config.add_date, message.prefix
+            store_config.file_path, store_config.add_date, message.tag
         )
 
         if file_path not in self._open_files:
