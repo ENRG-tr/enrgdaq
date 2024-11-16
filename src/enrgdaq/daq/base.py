@@ -21,6 +21,23 @@ daq_job_instance_id_lock = threading.Lock()
 
 
 class DAQJob:
+    """
+    DAQJob is a base class for data acquisition jobs. It handles the configuration,
+    message queues, and provides methods for consuming and handling messages.
+    Attributes:
+        allowed_message_in_types (list[type[DAQJobMessage]]): List of allowed message types for input.
+        config_type (Any): Type of the configuration.
+        config (Any): Configuration object.
+        message_in (Queue[DAQJobMessage]): Queue for incoming messages.
+        message_out (Queue[DAQJobMessage]): Queue for outgoing messages.
+        instance_id (int): Unique instance identifier.
+        unique_id (str): Unique identifier for the job.
+        restart_offset (timedelta): Offset for restarting the job.
+        info (DAQJobInfo): Information about the job.
+        _has_been_freed (bool): Flag indicating if the job has been freed.
+        _logger (logging.Logger): Logger instance for the job.
+    """
+
     allowed_message_in_types: list[type[DAQJobMessage]] = []
     config_type: Any
     config: Any
@@ -79,6 +96,20 @@ class DAQJob:
                 break
 
     def handle_message(self, message: "DAQJobMessage") -> bool:
+        """
+        Handles a message received from the message queue.
+
+        Args:
+            message (DAQJobMessage): The message to handle.
+
+        Returns:
+            bool: True if the message was handled, False otherwise.
+
+        Raises:
+            DAQJobStopError: If the message is a DAQJobMessageStop.
+            Exception: If the message is not accepted by the job.
+        """
+
         if isinstance(message, DAQJobMessageStop):
             raise DAQJobStopError(message.reason)
         # check if the message is accepted
@@ -96,6 +127,13 @@ class DAQJob:
         raise NotImplementedError
 
     def _create_info(self) -> "DAQJobInfo":
+        """
+        Creates a DAQJobInfo object for the job.
+
+        Returns:
+            DAQJobInfo: The created DAQJobInfo object.
+        """
+
         return DAQJobInfo(
             daq_job_type=self.config.daq_job_type
             if isinstance(self.config, DAQJobConfig)
@@ -107,6 +145,15 @@ class DAQJob:
         )
 
     def _put_message_out(self, message: DAQJobMessage):
+        """
+        Puts a message in the message_out queue.
+
+        Should be called by DAQJob itself.
+
+        Args:
+            message (DAQJobMessage): The message to put in the queue.
+        """
+
         message.daq_job_info = self.info
         message.remote_config = self.config.remote_config
 

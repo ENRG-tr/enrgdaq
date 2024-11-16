@@ -26,12 +26,30 @@ class DAQJobStoreConfig(Struct, dict=True):
 
 
 class DAQJobMessageStore(DAQJobMessage):
+    """
+    DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
+    configuration and data related to a DAQ (Data Acquisition) job.
+    Attributes:
+        store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
+        keys (list[str]): List of keys associated with the data.
+        data (list[list[Any]]): Nested list containing the data.
+        tag (str | None): Optional tag associated with the DAQ job.
+    """
+
     store_config: DAQJobStoreConfig
     keys: list[str]
     data: list[list[Any]]
     tag: str | None = None
 
     def get_remote_config(self) -> Optional[DAQRemoteConfig]:
+        """
+        Retrieves the remote configuration from the store_config.
+        Iterates through the attributes of `self.store_config` to find an instance
+        of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
+        Returns:
+            Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
+        """
+
         for key in dir(self.store_config):
             value = getattr(self.store_config, key)
             if not isinstance(value, DAQJobStoreConfigBase):
@@ -46,16 +64,15 @@ class StorableDAQJobConfig(DAQJobConfig):
     store_config: DAQJobStoreConfig
 
 
-class DAQJobStoreTarget(Struct):
-    instances: Optional[list["DAQJobStoreTargetInstance"]] = None
-
-
-class DAQJobStoreTargetInstance(Struct):
-    supervisor_id: Optional[str] = None
-    is_self: Optional[bool] = None
-
-
 class DAQJobStoreConfigBase(Struct, kw_only=True):
+    """
+    DAQJobStoreConfigBase is a configuration class for DAQ job store,
+    that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.
+
+    Attributes:
+        remote_config (Optional[DAQRemoteConfig]): Configuration for remote DAQ.
+    """
+
     remote_config: Optional[DAQRemoteConfig] = None
 
 

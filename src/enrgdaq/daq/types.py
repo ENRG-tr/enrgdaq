@@ -36,6 +36,17 @@ DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
 def get_daq_job_class(
     daq_job_type: str, warn_deprecated: bool = False
 ) -> Optional[type[DAQJob]]:
+    """
+    Gets the DAQJob class for a given DAQ job type.
+
+    Args:
+        daq_job_type (str): The type of the DAQ job.
+        warn_deprecated (bool): Whether to warn if the DAQ job type is deprecated.
+
+    Returns:
+        Optional[type[DAQJob]]: The DAQJob class for the given DAQ job type, or None if not found.
+    """
+
     daq_job_class = None
     if daq_job_type in DAQ_JOB_TYPE_TO_CLASS:
         daq_job_class = DAQ_JOB_TYPE_TO_CLASS[daq_job_type]

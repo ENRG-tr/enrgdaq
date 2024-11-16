@@ -33,12 +33,28 @@ class RestartDAQJobSchedule:
 
 
 class Supervisor:
+    """
+    Supervisor class responsible for managing DAQ job threads, handling their lifecycle,
+    and facilitating communication between them.
+    Attributes:
+        daq_job_threads (list[DAQJobThread]): List of DAQ job threads managed by the supervisor.
+        daq_job_stats (DAQJobStatsDict): Dictionary holding statistics for each DAQ job type.
+        restart_schedules (list[RestartDAQJobSchedule]): List of schedules for restarting DAQ jobs.
+        _logger (logging.Logger): Logger instance for logging supervisor activities.
+    """
+
     daq_job_threads: list[DAQJobThread]
     daq_job_stats: DAQJobStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
 
     def init(self):
+        """
+        Initializes the supervisor, loads configuration, starts DAQ job threads, and warns for lack of DAQ jobs.
+
+        You should call this method after creating a new instance of the Supervisor class.
+        """
+
         self._logger = logging.getLogger()
         self.config = self._load_supervisor_config()
 
@@ -56,6 +72,9 @@ class Supervisor:
         return start_daq_jobs(load_daq_jobs("configs/", self.config))
 
     def run(self):
+        """
+        Main loop that continuously runs the supervisor, handling job restarts and message passing.
+        """
         while True:
             try:
                 self.loop()
@@ -67,6 +86,10 @@ class Supervisor:
                 break
 
     def loop(self):
+        """
+        A single iteration of the supervisor's main loop.
+        """
+
         # Remove dead threads
         dead_threads = [t for t in self.daq_job_threads if not t.thread.is_alive()]
         # Clean up dead threads
@@ -90,6 +113,16 @@ class Supervisor:
         self.send_messages_to_daq_jobs(daq_messages_out)
 
     def get_restart_schedules(self, dead_threads: list[DAQJobThread]):
+        """
+        Gets the restart schedules for the dead threads.
+
+        Args:
+            dead_threads (list[DAQJobThread]): List of dead threads.
+
+        Returns:
+            list[RestartDAQJobSchedule]: List of restart schedules.
+        """
+
         res = []
         for thread in dead_threads:
             restart_offset = getattr(thread.daq_job, "restart_offset", None)
@@ -110,6 +143,10 @@ class Supervisor:
         return res
 
     def restart_daq_jobs(self):
+        """
+        Restarts the DAQ jobs that have been scheduled for restart.
+        """
+
         schedules_to_remove = []
         for restart_schedule in self.restart_schedules:
             if datetime.now() < restart_schedule.restart_at:
@@ -133,7 +170,14 @@ class Supervisor:
             x for x in self.restart_schedules if x not in schedules_to_remove
         ]
 
-    def get_supervisor_messages(self):
+    def get_supervisor_messages(self) -> list[DAQJobMessage]:
+        """
+        Gets the supervisor messages to be sent to the DAQ jobs.
+
+        Returns:
+            list[DAQJobMessage]: List of supervisor messages.
+        """
+
         messages = []
 
         # Send stats message
@@ -170,6 +214,13 @@ class Supervisor:
         return res
 
     def send_messages_to_daq_jobs(self, daq_messages: list[DAQJobMessage]):
+        """
+        Sends messages to the DAQ jobs.
+
+        Args:
+            daq_messages (list[DAQJobMessage]): List of messages to send.
+        """
+
         for message in daq_messages:
             for daq_job_thread in self.daq_job_threads:
                 daq_job = daq_job_thread.daq_job
