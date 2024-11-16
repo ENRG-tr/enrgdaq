@@ -61,8 +61,24 @@ class DAQJobStoreConfigBase(Struct, kw_only=True):
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
     file_path: str
-    add_date: bool
-    overwrite: Optional[bool] = None
+    """
+    File path to store data in.
+    """
+
+    add_date: bool = False
+    """
+    Include the date in the file path.
+    """
+
+    overwrite: bool = False
+    """
+    Overwrite the file contents always.
+    """
+
+    use_gzip: bool = False
+    """
+    Use gzip compression.
+    """
 
 
 class DAQJobStoreConfigMySQL(DAQJobStoreConfigBase):

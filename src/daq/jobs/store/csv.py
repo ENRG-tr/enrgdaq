@@ -1,11 +1,11 @@
 import csv
+import gzip
 import os
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
-from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, Optional, TextIO, cast
 
 from daq.models import DAQJobConfig
 from daq.store.base import DAQJobStore
@@ -21,7 +21,7 @@ class DAQJobStoreCSVConfig(DAQJobConfig):
 
 @dataclass
 class CSVFile:
-    file: TextIOWrapper
+    file: TextIO
     last_flush_date: datetime
     write_queue: deque[list[Any]]
     overwrite: Optional[bool] = None
@@ -49,7 +49,9 @@ class DAQJobStoreCSV(DAQJobStore):
         )
         file_path = os.path.join(self.config.out_dir, file_path)
 
-        file, new_file = self._open_csv_file(file_path, store_config.overwrite)
+        file, new_file = self._open_csv_file(
+            file_path, store_config.overwrite, store_config.use_gzip
+        )
         if file.overwrite:
             file.write_queue.clear()
 
@@ -64,7 +66,7 @@ class DAQJobStoreCSV(DAQJobStore):
         return True
 
     def _open_csv_file(
-        self, file_path: str, overwrite: Optional[bool]
+        self, file_path: str, overwrite: Optional[bool], use_gzip: Optional[bool]
     ) -> tuple[CSVFile, bool]:
         """
         Opens a file and returns (CSVFile, new_file)
@@ -77,9 +79,16 @@ class DAQJobStoreCSV(DAQJobStore):
                 Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
                 Path(file_path).touch()
 
+            if use_gzip:
+                file_handle = gzip.open(
+                    file_path, "at" if not overwrite else "wt", newline=""
+                )
+            else:
+                file_handle = open(file_path, "a" if not overwrite else "w", newline="")
+
             # Open file
             file = CSVFile(
-                open(file_path, "a" if not overwrite else "w", newline=""),
+                file_handle,
                 datetime.now(),
                 deque(),
                 overwrite,
