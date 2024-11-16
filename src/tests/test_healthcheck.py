@@ -31,7 +31,7 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         )
         self.daq_job_healthcheck = DAQJobHealthcheck(self.config)
 
-    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert")
+    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck._send_alert")
     def test_handle_checks_should_alert(self, mock_send_alert):
         mock_stats = MagicMock()
         mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
@@ -43,7 +43,7 @@ class TestDAQJobHealthcheck(unittest.TestCase):
 
         mock_send_alert.assert_called_once_with(self.healthcheck_item)
 
-    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert")
+    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck._send_alert")
     def test_handle_checks_should_not_alert(self, mock_send_alert):
         mock_stats = MagicMock()
         mock_stats.message_out_stats.last_updated = datetime.now()
@@ -53,7 +53,7 @@ class TestDAQJobHealthcheck(unittest.TestCase):
 
         mock_send_alert.assert_not_called()
 
-    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert")
+    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck._send_alert")
     def test_handle_checks_should_not_alert_twice_in_a_row(self, mock_send_alert):
         mock_stats = MagicMock()
         mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
@@ -72,7 +72,7 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         self.daq_job_healthcheck.handle_checks()
         mock_send_alert.assert_not_called()
 
-    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert")
+    @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck._send_alert")
     def test_handle_checks_should_alert_then_not_alert_then_alert_again(
         self, mock_send_alert
     ):

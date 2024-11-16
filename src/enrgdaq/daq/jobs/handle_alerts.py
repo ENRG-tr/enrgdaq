@@ -5,15 +5,27 @@ from enrgdaq.utils.time import get_unix_timestamp_ms
 
 
 class DAQJobHandleAlertsConfig(StorableDAQJobConfig):
+    """
+    Configuration class for DAQJobHandleAlerts.
+    Inherits from StorableDAQJobConfig.
+    """
+
     pass
 
 
 class DAQJobHandleAlerts(DAQJob):
+    """
+    DAQJobHandleAlerts is a job that stores alert messages (DAQJobMessageAlert).
+    """
+
     allowed_message_in_types = [DAQJobMessageAlert]
     config_type = DAQJobHandleAlertsConfig
     config: DAQJobHandleAlertsConfig
 
     def start(self):
+        """
+        Starts the job, continuously consuming messages from the queue.
+        """
         while True:
             self.consume(nowait=False)
 

@@ -10,14 +10,25 @@ DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
 
 
 class DAQJobHandleStatsConfig(StorableDAQJobConfig):
+    """Configuration class for DAQJobHandleStats."""
+
     pass
 
 
 class DAQJobMessageStats(DAQJobMessage):
+    """Message class containing DAQ job statistics."""
+
     stats: DAQJobStatsDict
 
 
 class DAQJobHandleStats(DAQJob):
+    """
+    Handles statistics for DAQ jobs.
+
+    This class is responsible for consuming and processing DAQ job statistics messages.
+    It extracts relevant statistics from the messages and stores them.
+    """
+
     allowed_message_in_types = [DAQJobMessageStats]
     config_type = DAQJobHandleStatsConfig
     config: DAQJobHandleStatsConfig

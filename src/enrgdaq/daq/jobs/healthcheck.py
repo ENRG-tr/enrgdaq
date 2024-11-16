@@ -16,15 +16,29 @@ HEALTHCHECK_LOOP_INTERVAL_SECONDS = 0.1
 
 
 class AlertCondition(str, Enum):
+    """Enumeration for alert conditions."""
+
     SATISFIED = "satisfied"
     UNSATISFIED = "unsatisfied"
 
 
 class HealthcheckItem(Struct):
+    """Represents a healthcheck item with alert information."""
+
     alert_info: DAQAlertInfo
 
 
 class HealthcheckStatsItem(HealthcheckItem):
+    """
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. "satisfied" means the condition is met, "unsatisfied" means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., '5s' for 5 seconds, '10m' for 10 minutes, '1h' for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    """
+
     daq_job_type: str
     stats_key: str
     alert_if_interval_is: AlertCondition
@@ -32,6 +46,7 @@ class HealthcheckStatsItem(HealthcheckItem):
     amount: Optional[int] = None
 
     def parse_interval(self) -> timedelta:
+        """Parses the interval string into a timedelta object."""
         if self.interval is None:
             raise ValueError("interval is null")
 
@@ -52,11 +67,44 @@ class HealthcheckStatsItem(HealthcheckItem):
 
 
 class DAQJobHealthcheckConfig(DAQJobConfig):
+    """
+    This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.
+
+    Attributes:
+        healthcheck_stats (list[HealthcheckStatsItem]):
+            A list of HealthcheckStatsItem objects that represent various health check statistics.
+            Each item in the list provides detailed information about a specific aspect of the DAQ job's health,
+            such as the interval for checking the job's stats, the key for the stats, and the condition for alerting.
+        enable_alerts_on_restart (bool):
+            A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+            If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+            This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+            The default value is True.
+    """
+
     healthcheck_stats: list[HealthcheckStatsItem]
     enable_alerts_on_restart: bool = True
 
 
 class DAQJobHealthcheck(DAQJob):
+    """Healthcheck job class for monitoring DAQ jobs.
+
+    This class is responsible for performing health checks on various DAQ jobs
+    based on the provided configuration. It monitors the stats of DAQ jobs and
+    sends alerts if certain conditions are met, such as if a job has not been
+    updated within a specified interval or if a job has restarted.
+
+    Attributes:
+        allowed_message_in_types (list): List of allowed message types for this job.
+        config_type (type): The configuration class type for this job.
+        config (DAQJobHealthcheckConfig): The configuration instance for this job.
+        _sent_alert_items (set): Set of alert item hashes that have been sent.
+        _current_stats (DAQJobStatsDict): Dictionary holding the current stats of DAQ jobs.
+        _daq_job_type_to_class (dict): Mapping of DAQ job type names to their class types.
+        _healthcheck_stats (list): List of healthcheck stats items to monitor.
+        _get_daq_job_class (Callable): Function to get the DAQ job class by its type name.
+    """
+
     allowed_message_in_types = [DAQJobMessageStats]
     config_type = DAQJobHealthcheckConfig
     config: DAQJobHealthcheckConfig
@@ -122,6 +170,7 @@ class DAQJobHealthcheck(DAQJob):
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
     def handle_message(self, message: DAQJobMessageStats) -> bool:
+        """Handles incoming messages and updates current stats."""
         if not super().handle_message(message):
             return False
 
@@ -129,6 +178,7 @@ class DAQJobHealthcheck(DAQJob):
         return True
 
     def handle_checks(self):
+        """Performs health checks and sends alerts if necessary."""
         res: list[tuple[HealthcheckItem, bool]] = []
 
         for item in self._healthcheck_stats:
@@ -161,11 +211,11 @@ class DAQJobHealthcheck(DAQJob):
             item_id = hash(msgspec.json.encode(item))
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
-                self.send_alert(item)
+                self._send_alert(item)
             elif not should_alert and item_id in self._sent_alert_items:
                 self._sent_alert_items.remove(item_id)
 
-    def send_alert(self, item: HealthcheckItem):
+    def _send_alert(self, item: HealthcheckItem):
         self._put_message_out(
             DAQJobMessageAlert(
                 date=datetime.now(),

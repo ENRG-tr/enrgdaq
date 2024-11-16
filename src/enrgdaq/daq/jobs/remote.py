@@ -19,6 +19,15 @@ DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 
 
 class DAQJobRemoteConfig(DAQJobConfig):
+    """
+    Configuration for DAQJobRemote.
+
+    Attributes:
+        zmq_local_url (str): Local ZMQ URL.
+        zmq_remote_urls (list[str]): List of remote ZMQ URLs.
+        topics (list[str]): List of topics to subscribe to.
+    """
+
     zmq_local_url: str
     zmq_remote_urls: list[str]
     topics: list[str] = []
@@ -26,13 +35,24 @@ class DAQJobRemoteConfig(DAQJobConfig):
 
 class DAQJobRemote(DAQJob):
     """
-    DAQJobRemote is a DAQJob that connects two seperate ENRGDAQ instances.
-    It sends to and receives from a remote ENRGDAQ, in such that:
+    DAQJobRemote is a DAQJob that connects two separate ENRGDAQ instances.
+    It sends to and receives from a remote ENRGDAQ, such that:
 
     - message_in -> remote message_out
     - remote message_in -> message_out
 
-    TODO: Use zmq CURVE security
+    Attributes:
+        allowed_message_in_types (list): List of allowed message types.
+        config_type (type): Configuration type for the job.
+        config (DAQJobRemoteConfig): Configuration instance.
+        restart_offset (timedelta): Restart offset time.
+        _zmq_pub_ctx (zmq.Context): ZMQ context for publishing.
+        _zmq_sub_ctx (zmq.Context): ZMQ context for subscribing.
+        _zmq_pub (zmq.Socket): ZMQ socket for publishing.
+        _zmq_sub (Optional[zmq.Socket]): ZMQ socket for subscribing.
+        _message_class_cache (dict): Cache for message classes.
+        _remote_message_ids (set): Set of remote message IDs.
+        _receive_thread (threading.Thread): Thread for receiving messages.
     """
 
     allowed_message_in_types = [DAQJobMessage]  # accept all message types
@@ -97,6 +117,15 @@ class DAQJobRemote(DAQJob):
         return True
 
     def _create_zmq_sub(self, remote_urls: list[str]) -> zmq.Socket:
+        """
+        Create a ZMQ subscriber socket.
+
+        Args:
+            remote_urls (list[str]): List of remote URLs to connect to.
+
+        Returns:
+            zmq.Socket: The created ZMQ subscriber socket.
+        """
         self._zmq_sub_ctx = zmq.Context()
         zmq_sub = self._zmq_sub_ctx.socket(zmq.SUB)
         for remote_url in remote_urls:
@@ -114,6 +143,12 @@ class DAQJobRemote(DAQJob):
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
+        """
+        Start the receive thread.
+
+        Args:
+            remote_urls (list[str]): List of remote URLs to connect to.
+        """
         self._zmq_sub = self._create_zmq_sub(remote_urls)
 
         while True:
@@ -130,6 +165,9 @@ class DAQJobRemote(DAQJob):
             self.message_out.put(recv_message)
 
     def start(self):
+        """
+        Start the receive thread and the DAQ job.
+        """
         self._receive_thread.start()
 
         while True:
@@ -140,6 +178,16 @@ class DAQJobRemote(DAQJob):
             time.sleep(0.1)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
+        """
+        Pack a message for sending.
+
+        Args:
+            message (DAQJobMessage): The message to pack.
+            use_pickle (bool): Whether to use pickle for packing, if not, use msgspec.
+
+        Returns:
+            bytes: The packed message.
+        """
         message_type = type(message).__name__
         if use_pickle:
             return pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
@@ -147,6 +195,17 @@ class DAQJobRemote(DAQJob):
         return msgspec.msgpack.encode([message_type, message])
 
     def _unpack_message(self, message: bytes) -> DAQJobMessage:
+        """
+        Unpack a received message.
+
+        It tries to unpack the message using pickle, and if that fails, it uses msgspec.
+
+        Args:
+            message (bytes): The received message.
+
+        Returns:
+            DAQJobMessage: The unpacked message.
+        """
         # TODO: fix unpack without pickle
         try:
             res = pickle.loads(message)
@@ -169,6 +228,9 @@ class DAQJobRemote(DAQJob):
         return res
 
     def __del__(self):
+        """
+        Destructor for DAQJobRemote.
+        """
         if getattr(self, "_zmq_sub_ctx", None) is not None:
             self._zmq_sub_ctx.destroy()
         if self._zmq_pub_ctx is not None:

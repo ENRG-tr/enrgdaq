@@ -13,12 +13,33 @@ except ImportError:
 
 
 class DAQJobServeHTTPConfig(DAQJobConfig):
+    """
+    Configuration class for DAQJobServeHTTP.
+
+    Attributes:
+        serve_path (str): The path to serve files from.
+        host (str): The host address to bind the server to.
+        port (int): The port number to bind the server to.
+    """
+
     serve_path: str
     host: str
     port: int
 
 
 class DAQJobServeHTTP(DAQJob):
+    """
+    DAQ job to serve HTTP requests.
+
+    Can be used to serve files from a specified path, primarily for CSV files.
+
+    Handles placeholders in the path, such as "{TODAY}" and "{YESTERDAY}".
+
+    Attributes:
+        config_type (type): The configuration class type.
+        config (DAQJobServeHTTPConfig): The configuration instance.
+    """
+
     config_type = DAQJobServeHTTPConfig
     config: DAQJobServeHTTPConfig
 
@@ -34,6 +55,9 @@ class DAQJobServeHTTP(DAQJob):
                 super().__init__(*args, directory=serve_path, **kwargs)
 
             def do_GET(self) -> None:
+                """
+                Handle GET requests and replace placeholders in the path.
+                """
                 REPLACE_DICT = {
                     "TODAY": datetime.now().strftime("%Y-%m-%d"),
                     "YESTERDAY": (datetime.now() - timedelta(days=1)).strftime(
@@ -46,9 +70,15 @@ class DAQJobServeHTTP(DAQJob):
                 return super().do_GET()
 
             def log_message(self, format: str, *args) -> None:
+                """
+                Override to suppress logging.
+                """
                 pass
 
         def start_server():
+            """
+            Start the HTTP server and serve requests indefinitely.
+            """
             with ThreadingHTTPServer(
                 (self.config.host, self.config.port), Handler
             ) as httpd:
