@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.1">
+<title>src.tests.test_healthcheck API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>src.tests.test_healthcheck</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck"><code class="flex name class">
+<span>class <span class="ident">TestDAQJobHealthcheck</span></span>
+<span>(</span><span>methodName='runTest')</span>
+</code></dt>
+<dd>
+<div class="desc"><p>A class whose instances are single test cases.</p>
+<p>By default, the test code itself should be placed in a method named
+'runTest'.</p>
+<p>If the fixture may be used for many test cases, create as
+many test methods as are needed. When instantiating such a TestCase
+subclass, specify in the constructor arguments the name of the test method
+that the instance is to execute.</p>
+<p>Test authors should subclass TestCase for their own tests. Construction
+and deconstruction of the test's environment ('fixture') can be
+implemented by overriding the 'setUp' and 'tearDown' methods respectively.</p>
+<p>If it is necessary to override the <strong>init</strong> method, the base class
+<strong>init</strong> method must always be called. It is important that subclasses
+should not change the signature of their <strong>init</strong> method, since instances
+of the classes are instantiated automatically by parts of the framework
+in order to be run.</p>
+<p>When subclassing TestCase, you can set these attributes:
+* failureException: determines which exception will be raised when
+the instance's assertion methods fail; test methods raising this
+exception will be deemed to have 'failed' rather than 'errored'.
+* longMessage: determines whether long messages (including repr of
+objects used in assert methods) will be printed on failure in <em>addition</em>
+to any explicit message passed.
+* maxDiff: sets the maximum length of a diff in failure messages
+by assert methods using difflib. It is looked up as an instance
+attribute so can be configured by individual tests if required.</p>
+<p>Create an instance of the class that will use the named test
+method when executed. Raises a ValueError if the instance does
+not have a method with the specified name.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TestDAQJobHealthcheck(unittest.TestCase):
+    def setUp(self):
+        self.alert_info = DAQAlertInfo(
+            message=&#34;Test Alert&#34;, severity=DAQAlertSeverity.INFO
+        )
+        self.healthcheck_item = HealthcheckStatsItem(
+            alert_info=self.alert_info,
+            daq_job_type=&#34;test&#34;,
+            stats_key=&#34;message_out_stats&#34;,
+            alert_if_interval_is=AlertCondition.UNSATISFIED,
+            interval=&#34;5m&#34;,
+        )
+        self.config = DAQJobHealthcheckConfig(
+            daq_job_type=&#34;test&#34;,
+            healthcheck_stats=[self.healthcheck_item],
+            enable_alerts_on_restart=False,
+        )
+        self.daq_job_healthcheck = DAQJobHealthcheck(self.config)
+
+    @patch(&#34;daq.jobs.healthcheck.DAQJobHealthcheck.send_alert&#34;)
+    def test_handle_checks_should_alert(self, mock_send_alert):
+        mock_stats = MagicMock()
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+
+        self.daq_job_healthcheck.handle_checks()
+
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
+    @patch(&#34;daq.jobs.healthcheck.DAQJobHealthcheck.send_alert&#34;)
+    def test_handle_checks_should_not_alert(self, mock_send_alert):
+        mock_stats = MagicMock()
+        mock_stats.message_out_stats.last_updated = datetime.now()
+        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+
+        self.daq_job_healthcheck.handle_checks()
+
+        mock_send_alert.assert_not_called()
+
+    @patch(&#34;daq.jobs.healthcheck.DAQJobHealthcheck.send_alert&#34;)
+    def test_handle_checks_should_not_alert_twice_in_a_row(self, mock_send_alert):
+        mock_stats = MagicMock()
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+
+        # First check should trigger an alert
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
+        # Reset mock to check for second call
+        mock_send_alert.reset_mock()
+
+        # Second check should not trigger an alert again
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_not_called()
+
+    @patch(&#34;daq.jobs.healthcheck.DAQJobHealthcheck.send_alert&#34;)
+    def test_handle_checks_should_alert_then_not_alert_then_alert_again(
+        self, mock_send_alert
+    ):
+        mock_stats = MagicMock()
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+
+        # First check should trigger an alert
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
+        # Reset mock to check for second call
+        mock_send_alert.reset_mock()
+
+        # Update stats to a recent time, should not trigger an alert
+        mock_stats.message_out_stats.last_updated = datetime.now()
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_not_called()
+
+        # Update stats to an old time again, should trigger an alert
+        mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
+            minutes=10
+        )
+        self.daq_job_healthcheck.handle_checks()
+        mock_send_alert.assert_called_once_with(self.healthcheck_item)
+
+    def test_parse_interval(self):
+        self.assertEqual(self.healthcheck_item.parse_interval(), timedelta(minutes=5))
+
+    def test_parse_interval_invalid_format(self):
+        self.healthcheck_item.interval = &#34;5x&#34;
+        with self.assertRaises(ValueError):
+            self.healthcheck_item.parse_interval()
+
+    def test_parse_interval_null(self):
+        self.healthcheck_item.interval = None
+        with self.assertRaises(ValueError):
+            self.healthcheck_item.parse_interval()
+
+    def test_init_invalid_alert_condition(self):
+        self.healthcheck_item.alert_if_interval_is = &#34;invalid_condition&#34;  # type: ignore
+        with self.assertRaises(ValueError):
+            DAQJobHealthcheck(self.config)
+
+    def test_init_invalid_stats_key(self):
+        self.healthcheck_item.stats_key = &#34;invalid_key&#34;
+        with self.assertRaises(ValueError):
+            DAQJobHealthcheck(self.config)
+
+    def test_init_invalid_daq_job_type(self):
+        self.healthcheck_item.daq_job_type = &#34;invalid_job_type&#34;
+        with self.assertRaises(ValueError):
+            DAQJobHealthcheck(self.config)
+
+    def test_init_interval_and_amount_both_none(self):
+        self.healthcheck_item.interval = None
+        self.healthcheck_item.amount = None
+        with self.assertRaises(ValueError):
+            DAQJobHealthcheck(self.config)
+
+    def test_init_interval_and_amount_both_specified(self):
+        self.healthcheck_item.interval = &#34;5m&#34;
+        self.healthcheck_item.amount = 10
+        with self.assertRaises(ValueError):
+            DAQJobHealthcheck(self.config)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>unittest.case.TestCase</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.setUp"><code class="name flex">
+<span>def <span class="ident">setUp</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Hook method for setting up the test fixture before exercising it.</p></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert"><code class="name flex">
+<span>def <span class="ident">test_handle_checks_should_alert</span></span>(<span>self, mock_send_alert)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert_then_not_alert_then_alert_again"><code class="name flex">
+<span>def <span class="ident">test_handle_checks_should_alert_then_not_alert_then_alert_again</span></span>(<span>self, mock_send_alert)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert"><code class="name flex">
+<span>def <span class="ident">test_handle_checks_should_not_alert</span></span>(<span>self, mock_send_alert)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert_twice_in_a_row"><code class="name flex">
+<span>def <span class="ident">test_handle_checks_should_not_alert_twice_in_a_row</span></span>(<span>self, mock_send_alert)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_none"><code class="name flex">
+<span>def <span class="ident">test_init_interval_and_amount_both_none</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_specified"><code class="name flex">
+<span>def <span class="ident">test_init_interval_and_amount_both_specified</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_alert_condition"><code class="name flex">
+<span>def <span class="ident">test_init_invalid_alert_condition</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_daq_job_type"><code class="name flex">
+<span>def <span class="ident">test_init_invalid_daq_job_type</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_stats_key"><code class="name flex">
+<span>def <span class="ident">test_init_invalid_stats_key</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval"><code class="name flex">
+<span>def <span class="ident">test_parse_interval</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_invalid_format"><code class="name flex">
+<span>def <span class="ident">test_parse_interval_invalid_format</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_null"><code class="name flex">
+<span>def <span class="ident">test_parse_interval_null</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="src.tests" href="index.html">src.tests</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck">TestDAQJobHealthcheck</a></code></h4>
+<ul class="">
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.setUp" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.setUp">setUp</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert">test_handle_checks_should_alert</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert_then_not_alert_then_alert_again" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_alert_then_not_alert_then_alert_again">test_handle_checks_should_alert_then_not_alert_then_alert_again</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert">test_handle_checks_should_not_alert</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert_twice_in_a_row" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_handle_checks_should_not_alert_twice_in_a_row">test_handle_checks_should_not_alert_twice_in_a_row</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_none" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_none">test_init_interval_and_amount_both_none</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_specified" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_interval_and_amount_both_specified">test_init_interval_and_amount_both_specified</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_alert_condition" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_alert_condition">test_init_invalid_alert_condition</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_daq_job_type" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_daq_job_type">test_init_invalid_daq_job_type</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_stats_key" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_init_invalid_stats_key">test_init_invalid_stats_key</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval">test_parse_interval</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_invalid_format" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_invalid_format">test_parse_interval_invalid_format</a></code></li>
+<li><code><a title="src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_null" href="#src.tests.test_healthcheck.TestDAQJobHealthcheck.test_parse_interval_null">test_parse_interval_null</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+</footer>
+</body>
+</html>
