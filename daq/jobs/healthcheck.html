@@ -40,20 +40,14 @@ hljs.highlightAll();
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>str(object='') -&gt; str
-str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
-<p>Create a new string object from the given object. If encoding or
-errors is specified, then the object must expose a data buffer
-that will be decoded using the given encoding and error handler.
-Otherwise, returns the result of object.<strong>str</strong>() (if defined)
-or repr(object).
-encoding defaults to sys.getdefaultencoding().
-errors defaults to 'strict'.</p></div>
+<div class="desc"><p>Enumeration for alert conditions.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AlertCondition(str, Enum):
+    &#34;&#34;&#34;Enumeration for alert conditions.&#34;&#34;&#34;
+
     SATISFIED = &#34;satisfied&#34;
     UNSATISFIED = &#34;unsatisfied&#34;</code></pre>
 </details>
@@ -79,38 +73,53 @@ errors defaults to 'strict'.</p></div>
 <span>(</span><span>config: <a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a>, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
-message queues, and provides methods for consuming and handling messages.</p>
+<div class="desc"><p>Healthcheck job class for monitoring DAQ jobs.</p>
+<p>This class is responsible for performing health checks on various DAQ jobs
+based on the provided configuration. It monitors the stats of DAQ jobs and
+sends alerts if certain conditions are met, such as if a job has not been
+updated within a specified interval or if a job has restarted.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
-<dd>List of allowed message types for input.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Type of the configuration.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Configuration object.</dd>
-<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for incoming messages.</dd>
-<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for outgoing messages.</dd>
-<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>Unique instance identifier.</dd>
-<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique identifier for the job.</dd>
-<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
-<dd>Offset for restarting the job.</dd>
-<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
-<dd>Information about the job.</dd>
-<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Flag indicating if the job has been freed.</dd>
-<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
-<dd>Logger instance for the job.</dd>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of allowed message types for this job.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>The configuration class type for this job.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a></code></dt>
+<dd>The configuration instance for this job.</dd>
+<dt><strong><code>_sent_alert_items</code></strong> :&ensp;<code>set</code></dt>
+<dd>Set of alert item hashes that have been sent.</dd>
+<dt><strong><code>_current_stats</code></strong> :&ensp;<code>DAQJobStatsDict</code></dt>
+<dd>Dictionary holding the current stats of DAQ jobs.</dd>
+<dt><strong><code>_daq_job_type_to_class</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Mapping of DAQ job type names to their class types.</dd>
+<dt><strong><code>_healthcheck_stats</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of healthcheck stats items to monitor.</dd>
+<dt><strong><code>_get_daq_job_class</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>Function to get the DAQ job class by its type name.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobHealthcheck(DAQJob):
+    &#34;&#34;&#34;Healthcheck job class for monitoring DAQ jobs.
+
+    This class is responsible for performing health checks on various DAQ jobs
+    based on the provided configuration. It monitors the stats of DAQ jobs and
+    sends alerts if certain conditions are met, such as if a job has not been
+    updated within a specified interval or if a job has restarted.
+
+    Attributes:
+        allowed_message_in_types (list): List of allowed message types for this job.
+        config_type (type): The configuration class type for this job.
+        config (DAQJobHealthcheckConfig): The configuration instance for this job.
+        _sent_alert_items (set): Set of alert item hashes that have been sent.
+        _current_stats (DAQJobStatsDict): Dictionary holding the current stats of DAQ jobs.
+        _daq_job_type_to_class (dict): Mapping of DAQ job type names to their class types.
+        _healthcheck_stats (list): List of healthcheck stats items to monitor.
+        _get_daq_job_class (Callable): Function to get the DAQ job class by its type name.
+    &#34;&#34;&#34;
+
     allowed_message_in_types = [DAQJobMessageStats]
     config_type = DAQJobHealthcheckConfig
     config: DAQJobHealthcheckConfig
@@ -176,6 +185,7 @@ message queues, and provides methods for consuming and handling messages.</p>
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
     def handle_message(self, message: DAQJobMessageStats) -&gt; bool:
+        &#34;&#34;&#34;Handles incoming messages and updates current stats.&#34;&#34;&#34;
         if not super().handle_message(message):
             return False
 
@@ -183,6 +193,7 @@ message queues, and provides methods for consuming and handling messages.</p>
         return True
 
     def handle_checks(self):
+        &#34;&#34;&#34;Performs health checks and sends alerts if necessary.&#34;&#34;&#34;
         res: list[tuple[HealthcheckItem, bool]] = []
 
         for item in self._healthcheck_stats:
@@ -215,11 +226,11 @@ message queues, and provides methods for consuming and handling messages.</p>
             item_id = hash(msgspec.json.encode(item))
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
-                self.send_alert(item)
+                self._send_alert(item)
             elif not should_alert and item_id in self._sent_alert_items:
                 self._sent_alert_items.remove(item_id)
 
-    def send_alert(self, item: HealthcheckItem):
+    def _send_alert(self, item: HealthcheckItem):
         self._put_message_out(
             DAQJobMessageAlert(
                 date=datetime.now(),
@@ -243,16 +254,17 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.</p>
 <h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
-</dl></div>
+<p>healthcheck_stats (list[HealthcheckStatsItem]):
+A list of HealthcheckStatsItem objects that represent various health check statistics.
+Each item in the list provides detailed information about a specific aspect of the DAQ job's health,
+such as the interval for checking the job's stats, the key for the stats, and the condition for alerting.
+enable_alerts_on_restart (bool):
+A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+The default value is True.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -261,13 +273,13 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>def <span class="ident">handle_checks</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Performs health checks and sends alerts if necessary.</p></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert"><code class="name flex">
-<span>def <span class="ident">send_alert</span></span>(<span>self, item: <a title="enrgdaq.daq.jobs.healthcheck.HealthcheckItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckItem">HealthcheckItem</a>)</span>
+<dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message"><code class="name flex">
+<span>def <span class="ident">handle_message</span></span>(<span>self, message: <a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats" href="handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats">DAQJobMessageStats</a>) ‑> bool</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Handles incoming messages and updates current stats.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
@@ -281,7 +293,6 @@ message queues, and provides methods for consuming and handling messages.</p>
 <li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
 <ul class="hlist">
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 </ul>
 </li>
 </ul>
@@ -291,21 +302,37 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>healthcheck_stats: list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>], enable_alerts_on_restart: bool = True, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.</p>
 <h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
-</dl></div>
+<p>healthcheck_stats (list[HealthcheckStatsItem]):
+A list of HealthcheckStatsItem objects that represent various health check statistics.
+Each item in the list provides detailed information about a specific aspect of the DAQ job's health,
+such as the interval for checking the job's stats, the key for the stats, and the condition for alerting.
+enable_alerts_on_restart (bool):
+A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+The default value is True.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobHealthcheckConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.
+
+    Attributes:
+        healthcheck_stats (list[HealthcheckStatsItem]):
+            A list of HealthcheckStatsItem objects that represent various health check statistics.
+            Each item in the list provides detailed information about a specific aspect of the DAQ job&#39;s health,
+            such as the interval for checking the job&#39;s stats, the key for the stats, and the condition for alerting.
+        enable_alerts_on_restart (bool):
+            A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+            If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+            This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+            The default value is True.
+    &#34;&#34;&#34;
+
     healthcheck_stats: list[HealthcheckStatsItem]
     enable_alerts_on_restart: bool = True</code></pre>
 </details>
@@ -332,110 +359,14 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for defining efficient serializable objects.</p>
-<p>Fields are defined using type annotations. Fields may optionally have
-default values, which result in keyword parameters to the constructor.</p>
-<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
-<code>__copy__</code> methods. Additional methods can be defined on the class as
-needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
-methods can. A tuple of the field names is available on the class via the
-<code>__struct_fields__</code> attribute if needed.</p>
-<p>Additional class options can be enabled by passing keywords to the class
-definition (see example below). These configuration options may also be
-inspected at runtime through the <code>__struct_config__</code> attribute.</p>
-<h2 id="configuration">Configuration</h2>
-<p>frozen: bool, default False
-Whether instances of this type are pseudo-immutable. If true, attribute
-assignment is disabled and a corresponding <code>__hash__</code> is defined.
-order: bool, default False
-If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
-will be generated for this type.
-eq: bool, default True
-If True (the default), an <code>__eq__</code> method will be generated for this
-type. Set to False to compare based on instance identity alone.
-kw_only: bool, default False
-If True, all fields will be treated as keyword-only arguments in the
-generated <code>__init__</code> method. Default is False.
-omit_defaults: bool, default False
-Whether fields should be omitted from encoding if the corresponding value
-is the default for that field. Enabling this may reduce message size, and
-often also improve encoding &amp; decoding performance.
-forbid_unknown_fields: bool, default False
-If True, an error is raised if an unknown field is encountered while
-decoding structs of this type. If False (the default), no error is raised
-and the unknown field is skipped.
-tag: str, int, bool, callable, or None, default None
-Used along with <code>tag_field</code> for configuring tagged union support. If
-either are non-None, then the struct is considered "tagged". In this case,
-an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
-encoded message, which can be used to differentiate message types during
-decoding.</p>
-<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
-is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
-a string (or less commonly int) value directly to be used as the tag
-(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
-takes the class qualname and returns a valid tag value (e.g.
-<code>tag=str.lower</code>). See the docs for more information.
-tag_field: str or None, default None
-The field name to use for tagged union support. If <code>tag</code> is non-None,
-then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
-information.
-rename: str, mapping, callable, or None, default None
-Controls renaming the field names used when encoding/decoding the struct.
-May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
-<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
-or kebab-case respectively. May also be a mapping from field names to the
-renamed names (missing fields are not renamed). Alternatively, may be a
-callable that takes the field name and returns a new name or <code>None</code> to
-not rename that field. Default is <code>None</code> for no field renaming.
-repr_omit_defaults: bool, default False
-Whether fields should be omitted from the generated repr if the
-corresponding value is the default for that field.
-array_like: bool, default False
-If True, this struct type will be treated as an array-like type during
-encoding/decoding, rather than a dict-like type (the default). This may
-improve performance, at the cost of a more inscrutable message encoding.
-gc: bool, default True
-Whether garbage collection is enabled for this type. Disabling this <em>may</em>
-help reduce GC pressure, but will prevent reference cycles composed of only
-<code>gc=False</code> from being collected. It is the user's responsibility to ensure
-that reference cycles don't occur when setting <code>gc=False</code>.
-weakref: bool, default False
-Whether instances of this type support weak references. Defaults to False.
-dict: bool, default False
-Whether instances of this type will include a <code>__dict__</code>. Setting this to
-True will allow adding additional undeclared attributes to a struct instance,
-which may be useful for holding private runtime state. Defaults to False.
-cache_hash: bool, default False
-If enabled, the hash of a frozen struct instance will be computed at most
-once, and then cached on the instance for further reuse. For expensive
-hash values this can improve performance at the cost of a small amount of
-memory usage.</p>
-<h2 id="examples">Examples</h2>
-<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
-two required and one optional.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
-...     name: str
-...     breed: str
-...     is_good_boy: bool = True
-...
-&gt;&gt;&gt; Dog('snickers', breed='corgi')
-Dog(name='snickers', breed='corgi', is_good_boy=True)
-</code></pre>
-<p>Additional struct options can be set as part of the class definition. Here
-we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
-...     x: float
-...     y: float
-...
-&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
-{Point(x=1.5, y=2.0): 1}
-</code></pre></div>
+<div class="desc"><p>Represents a healthcheck item with alert information.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HealthcheckItem(Struct):
+    &#34;&#34;&#34;Represents a healthcheck item with alert information.&#34;&#34;&#34;
+
     alert_info: DAQAlertInfo</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -460,110 +391,35 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>(</span><span>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>, daq_job_type: str, stats_key: str, alert_if_interval_is: <a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a>, interval: Optional[str] = None, amount: Optional[int] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for defining efficient serializable objects.</p>
-<p>Fields are defined using type annotations. Fields may optionally have
-default values, which result in keyword parameters to the constructor.</p>
-<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
-<code>__copy__</code> methods. Additional methods can be defined on the class as
-needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
-methods can. A tuple of the field names is available on the class via the
-<code>__struct_fields__</code> attribute if needed.</p>
-<p>Additional class options can be enabled by passing keywords to the class
-definition (see example below). These configuration options may also be
-inspected at runtime through the <code>__struct_config__</code> attribute.</p>
-<h2 id="configuration">Configuration</h2>
-<p>frozen: bool, default False
-Whether instances of this type are pseudo-immutable. If true, attribute
-assignment is disabled and a corresponding <code>__hash__</code> is defined.
-order: bool, default False
-If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
-will be generated for this type.
-eq: bool, default True
-If True (the default), an <code>__eq__</code> method will be generated for this
-type. Set to False to compare based on instance identity alone.
-kw_only: bool, default False
-If True, all fields will be treated as keyword-only arguments in the
-generated <code>__init__</code> method. Default is False.
-omit_defaults: bool, default False
-Whether fields should be omitted from encoding if the corresponding value
-is the default for that field. Enabling this may reduce message size, and
-often also improve encoding &amp; decoding performance.
-forbid_unknown_fields: bool, default False
-If True, an error is raised if an unknown field is encountered while
-decoding structs of this type. If False (the default), no error is raised
-and the unknown field is skipped.
-tag: str, int, bool, callable, or None, default None
-Used along with <code>tag_field</code> for configuring tagged union support. If
-either are non-None, then the struct is considered "tagged". In this case,
-an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
-encoded message, which can be used to differentiate message types during
-decoding.</p>
-<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
-is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
-a string (or less commonly int) value directly to be used as the tag
-(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
-takes the class qualname and returns a valid tag value (e.g.
-<code>tag=str.lower</code>). See the docs for more information.
-tag_field: str or None, default None
-The field name to use for tagged union support. If <code>tag</code> is non-None,
-then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
-information.
-rename: str, mapping, callable, or None, default None
-Controls renaming the field names used when encoding/decoding the struct.
-May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
-<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
-or kebab-case respectively. May also be a mapping from field names to the
-renamed names (missing fields are not renamed). Alternatively, may be a
-callable that takes the field name and returns a new name or <code>None</code> to
-not rename that field. Default is <code>None</code> for no field renaming.
-repr_omit_defaults: bool, default False
-Whether fields should be omitted from the generated repr if the
-corresponding value is the default for that field.
-array_like: bool, default False
-If True, this struct type will be treated as an array-like type during
-encoding/decoding, rather than a dict-like type (the default). This may
-improve performance, at the cost of a more inscrutable message encoding.
-gc: bool, default True
-Whether garbage collection is enabled for this type. Disabling this <em>may</em>
-help reduce GC pressure, but will prevent reference cycles composed of only
-<code>gc=False</code> from being collected. It is the user's responsibility to ensure
-that reference cycles don't occur when setting <code>gc=False</code>.
-weakref: bool, default False
-Whether instances of this type support weak references. Defaults to False.
-dict: bool, default False
-Whether instances of this type will include a <code>__dict__</code>. Setting this to
-True will allow adding additional undeclared attributes to a struct instance,
-which may be useful for holding private runtime state. Defaults to False.
-cache_hash: bool, default False
-If enabled, the hash of a frozen struct instance will be computed at most
-once, and then cached on the instance for further reuse. For expensive
-hash values this can improve performance at the cost of a small amount of
-memory usage.</p>
-<h2 id="examples">Examples</h2>
-<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
-two required and one optional.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
-...     name: str
-...     breed: str
-...     is_good_boy: bool = True
-...
-&gt;&gt;&gt; Dog('snickers', breed='corgi')
-Dog(name='snickers', breed='corgi', is_good_boy=True)
-</code></pre>
-<p>Additional struct options can be set as part of the class definition. Here
-we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
-...     x: float
-...     y: float
-...
-&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
-{Point(x=1.5, y=2.0): 1}
-</code></pre></div>
+<div class="desc"><p>Represents a healthcheck stats item with additional attributes.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the DAQ (Data Acquisition) job.</dd>
+<dt><strong><code>stats_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>The key associated with the stats item.</dd>
+<dt><strong><code>alert_if_interval_is</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a></code></dt>
+<dd>The condition to alert if the interval meets certain criteria. "satisfied" means the condition is met, "unsatisfied" means the condition is not met.</dd>
+<dt><strong><code>interval</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The interval string representing time duration (e.g., '5s' for 5 seconds, '10m' for 10 minutes, '1h' for 1 hour).</dd>
+<dt><strong><code>amount</code></strong> :&ensp;<code>Optional[int]</code></dt>
+<dd>An optional amount associated with the stats item.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
     daq_job_type: str
     stats_key: str
     alert_if_interval_is: AlertCondition
@@ -571,6 +427,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     amount: Optional[int] = None
 
     def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
         if self.interval is None:
             raise ValueError(&#34;interval is null&#34;)
 
@@ -624,7 +481,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>def <span class="ident">parse_interval</span></span>(<span>self) ‑> datetime.timedelta</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Parses the interval string into a timedelta object.</p></div>
 </dd>
 </dl>
 </dd>
@@ -657,7 +514,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_checks" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_checks">handle_checks</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert">send_alert</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start">start</a></code></li>
 </ul>
 </li>

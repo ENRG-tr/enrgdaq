@@ -40,38 +40,21 @@ hljs.highlightAll();
 <span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
-message queues, and provides methods for consuming and handling messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
-<dd>List of allowed message types for input.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Type of the configuration.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Configuration object.</dd>
-<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for incoming messages.</dd>
-<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for outgoing messages.</dd>
-<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>Unique instance identifier.</dd>
-<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique identifier for the job.</dd>
-<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
-<dd>Offset for restarting the job.</dd>
-<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
-<dd>Information about the job.</dd>
-<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Flag indicating if the job has been freed.</dd>
-<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
-<dd>Logger instance for the job.</dd>
-</dl></div>
+<div class="desc"><p>Handles statistics for DAQ jobs.</p>
+<p>This class is responsible for consuming and processing DAQ job statistics messages.
+It extracts relevant statistics from the messages and stores them.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobHandleStats(DAQJob):
+    &#34;&#34;&#34;
+    Handles statistics for DAQ jobs.
+
+    This class is responsible for consuming and processing DAQ job statistics messages.
+    It extracts relevant statistics from the messages and stores them.
+    &#34;&#34;&#34;
+
     allowed_message_in_types = [DAQJobMessageStats]
     config_type = DAQJobHandleStatsConfig
     config: DAQJobHandleStatsConfig
@@ -148,16 +131,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
-</dl></div>
+<div class="desc"><p>Configuration class for DAQJobHandleStats.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -184,21 +158,14 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
-</dl></div>
+<div class="desc"><p>Configuration class for DAQJobHandleStats.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobHandleStatsConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;Configuration class for DAQJobHandleStats.&#34;&#34;&#34;
+
     pass</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -214,25 +181,14 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>stats: Dict[type[<a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>], <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>], *, id: Optional[str] = &lt;factory&gt;, timestamp: Optional[datetime.datetime] = &lt;factory&gt;, is_remote: bool = False, daq_job_info: Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>] = None, remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
-<dd>The unique identifier for the message. Defaults to a UUID.</dd>
-<dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
-<dd>The timestamp for the message. Defaults to the current datetime.</dd>
-<dt><strong><code>is_remote</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether the message is sent by a remote DAQJob. Defaults to False.</dd>
-<dt><strong><code>daq_job_info</code></strong> :&ensp;<code>Optional[DAQJobInfo]</code></dt>
-<dd>The information about the DAQJob that sent the message. Defaults to None.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>DAQRemoteConfig</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-</dl></div>
+<div class="desc"><p>Message class containing DAQ job statistics.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobMessageStats(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing DAQ job statistics.&#34;&#34;&#34;
+
     stats: DAQJobStatsDict</code></pre>
 </details>
 <h3>Ancestors</h3>

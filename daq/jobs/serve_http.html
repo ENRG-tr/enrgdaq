@@ -40,38 +40,33 @@ hljs.highlightAll();
 <span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
-message queues, and provides methods for consuming and handling messages.</p>
+<div class="desc"><p>DAQ job to serve HTTP requests.</p>
+<p>Can be used to serve files from a specified path, primarily for CSV files.</p>
+<p>Handles placeholders in the path, such as "{TODAY}" and "{YESTERDAY}".</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
-<dd>List of allowed message types for input.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Type of the configuration.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Configuration object.</dd>
-<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for incoming messages.</dd>
-<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for outgoing messages.</dd>
-<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>Unique instance identifier.</dd>
-<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique identifier for the job.</dd>
-<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
-<dd>Offset for restarting the job.</dd>
-<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
-<dd>Information about the job.</dd>
-<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Flag indicating if the job has been freed.</dd>
-<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
-<dd>Logger instance for the job.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>The configuration class type.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.serve_http.DAQJobServeHTTPConfig" href="#enrgdaq.daq.jobs.serve_http.DAQJobServeHTTPConfig">DAQJobServeHTTPConfig</a></code></dt>
+<dd>The configuration instance.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobServeHTTP(DAQJob):
+    &#34;&#34;&#34;
+    DAQ job to serve HTTP requests.
+
+    Can be used to serve files from a specified path, primarily for CSV files.
+
+    Handles placeholders in the path, such as &#34;{TODAY}&#34; and &#34;{YESTERDAY}&#34;.
+
+    Attributes:
+        config_type (type): The configuration class type.
+        config (DAQJobServeHTTPConfig): The configuration instance.
+    &#34;&#34;&#34;
+
     config_type = DAQJobServeHTTPConfig
     config: DAQJobServeHTTPConfig
 
@@ -87,6 +82,9 @@ message queues, and provides methods for consuming and handling messages.</p>
                 super().__init__(*args, directory=serve_path, **kwargs)
 
             def do_GET(self) -&gt; None:
+                &#34;&#34;&#34;
+                Handle GET requests and replace placeholders in the path.
+                &#34;&#34;&#34;
                 REPLACE_DICT = {
                     &#34;TODAY&#34;: datetime.now().strftime(&#34;%Y-%m-%d&#34;),
                     &#34;YESTERDAY&#34;: (datetime.now() - timedelta(days=1)).strftime(
@@ -99,9 +97,15 @@ message queues, and provides methods for consuming and handling messages.</p>
                 return super().do_GET()
 
             def log_message(self, format: str, *args) -&gt; None:
+                &#34;&#34;&#34;
+                Override to suppress logging.
+                &#34;&#34;&#34;
                 pass
 
         def start_server():
+            &#34;&#34;&#34;
+            Start the HTTP server and serve requests indefinitely.
+            &#34;&#34;&#34;
             with ThreadingHTTPServer(
                 (self.config.host, self.config.port), Handler
             ) as httpd:
@@ -126,15 +130,15 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.serve_http.DAQJobServeHTTP.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration class for DAQJobServeHTTP.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>serve_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>The path to serve files from.</dd>
+<dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
+<dd>The host address to bind the server to.</dd>
+<dt><strong><code>port</code></strong> :&ensp;<code>int</code></dt>
+<dd>The port number to bind the server to.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -162,21 +166,30 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>serve_path: str, host: str, port: int, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration class for DAQJobServeHTTP.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>serve_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>The path to serve files from.</dd>
+<dt><strong><code>host</code></strong> :&ensp;<code>str</code></dt>
+<dd>The host address to bind the server to.</dd>
+<dt><strong><code>port</code></strong> :&ensp;<code>int</code></dt>
+<dd>The port number to bind the server to.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobServeHTTPConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobServeHTTP.
+
+    Attributes:
+        serve_path (str): The path to serve files from.
+        host (str): The host address to bind the server to.
+        port (int): The port number to bind the server to.
+    &#34;&#34;&#34;
+
     serve_path: str
     host: str
     port: int</code></pre>

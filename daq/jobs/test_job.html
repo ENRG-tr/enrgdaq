@@ -40,43 +40,38 @@ hljs.highlightAll();
 <span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
-message queues, and provides methods for consuming and handling messages.</p>
+<div class="desc"><p>A test job for the DAQ system that generates random data.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
-<dd>List of allowed message types for input.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Type of the configuration.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Configuration object.</dd>
-<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for incoming messages.</dd>
-<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for outgoing messages.</dd>
-<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>Unique instance identifier.</dd>
-<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique identifier for the job.</dd>
-<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
-<dd>Offset for restarting the job.</dd>
-<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
-<dd>Information about the job.</dd>
-<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Flag indicating if the job has been freed.</dd>
-<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
-<dd>Logger instance for the job.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>The configuration class type.</dd>
+<dt><strong><code>device</code></strong> :&ensp;<code>N1081B</code></dt>
+<dd>The device used for data acquisition.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></code></dt>
+<dd>The configuration instance.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobTest(DAQJob):
+    &#34;&#34;&#34;
+    A test job for the DAQ system that generates random data.
+
+    Attributes:
+        config_type (type): The configuration class type.
+        device (N1081B): The device used for data acquisition.
+        config (DAQJobTestConfig): The configuration instance.
+    &#34;&#34;&#34;
+
     config_type = DAQJobTestConfig
     device: N1081B
     config: DAQJobTestConfig
 
     def start(self):
+        &#34;&#34;&#34;
+        Start the DAQ job, continuously consuming data and sending store messages.
+        &#34;&#34;&#34;
         while True:
             self.consume()
             self._send_store_message()
@@ -84,7 +79,17 @@ message queues, and provides methods for consuming and handling messages.</p>
             time.sleep(1)
 
     def _send_store_message(self):
+        &#34;&#34;&#34;
+        Send a store message with random data.
+        &#34;&#34;&#34;
+
         def get_int():
+            &#34;&#34;&#34;
+            Generate a random integer within the configured range.
+
+            Returns:
+                int: A random integer.
+            &#34;&#34;&#34;
             return randint(self.config.rand_min, self.config.rand_max)
 
         self._put_message_out(
@@ -109,15 +114,13 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration class for DAQJobTest.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>rand_min</code></strong> :&ensp;<code>int</code></dt>
+<dd>Minimum random integer value.</dd>
+<dt><strong><code>rand_max</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum random integer value.</dd>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.device"><code class="name">var <span class="ident">device</span> : N1081B.N1081B</code></dt>
@@ -131,7 +134,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Start the DAQ job, continuously consuming data and sending store messages.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -149,21 +152,27 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>, rand_min: int, rand_max: int, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration class for DAQJobTest.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>rand_min</code></strong> :&ensp;<code>int</code></dt>
+<dd>Minimum random integer value.</dd>
+<dt><strong><code>rand_max</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum random integer value.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobTestConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobTest.
+
+    Attributes:
+        rand_min (int): Minimum random integer value.
+        rand_max (int): Maximum random integer value.
+    &#34;&#34;&#34;
+
     rand_min: int
     rand_max: int</code></pre>
 </details>

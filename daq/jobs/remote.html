@@ -40,26 +40,61 @@ hljs.highlightAll();
 <span>(</span><span>config: <a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig">DAQJobRemoteConfig</a>, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobRemote is a DAQJob that connects two seperate ENRGDAQ instances.
-It sends to and receives from a remote ENRGDAQ, in such that:</p>
+<div class="desc"><p>DAQJobRemote is a DAQJob that connects two separate ENRGDAQ instances.
+It sends to and receives from a remote ENRGDAQ, such that:</p>
 <ul>
 <li>message_in -&gt; remote message_out</li>
 <li>remote message_in -&gt; message_out</li>
 </ul>
-<p>TODO: Use zmq CURVE security</p></div>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of allowed message types.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>Configuration type for the job.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig">DAQJobRemoteConfig</a></code></dt>
+<dd>Configuration instance.</dd>
+<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>Restart offset time.</dd>
+<dt><strong><code>_zmq_pub_ctx</code></strong> :&ensp;<code>zmq.Context</code></dt>
+<dd>ZMQ context for publishing.</dd>
+<dt><strong><code>_zmq_sub_ctx</code></strong> :&ensp;<code>zmq.Context</code></dt>
+<dd>ZMQ context for subscribing.</dd>
+<dt><strong><code>_zmq_pub</code></strong> :&ensp;<code>zmq.Socket</code></dt>
+<dd>ZMQ socket for publishing.</dd>
+<dt><strong><code>_zmq_sub</code></strong> :&ensp;<code>Optional[zmq.Socket]</code></dt>
+<dd>ZMQ socket for subscribing.</dd>
+<dt><strong><code>_message_class_cache</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Cache for message classes.</dd>
+<dt><strong><code>_remote_message_ids</code></strong> :&ensp;<code>set</code></dt>
+<dd>Set of remote message IDs.</dd>
+<dt><strong><code>_receive_thread</code></strong> :&ensp;<code>threading.Thread</code></dt>
+<dd>Thread for receiving messages.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobRemote(DAQJob):
     &#34;&#34;&#34;
-    DAQJobRemote is a DAQJob that connects two seperate ENRGDAQ instances.
-    It sends to and receives from a remote ENRGDAQ, in such that:
+    DAQJobRemote is a DAQJob that connects two separate ENRGDAQ instances.
+    It sends to and receives from a remote ENRGDAQ, such that:
 
     - message_in -&gt; remote message_out
     - remote message_in -&gt; message_out
 
-    TODO: Use zmq CURVE security
+    Attributes:
+        allowed_message_in_types (list): List of allowed message types.
+        config_type (type): Configuration type for the job.
+        config (DAQJobRemoteConfig): Configuration instance.
+        restart_offset (timedelta): Restart offset time.
+        _zmq_pub_ctx (zmq.Context): ZMQ context for publishing.
+        _zmq_sub_ctx (zmq.Context): ZMQ context for subscribing.
+        _zmq_pub (zmq.Socket): ZMQ socket for publishing.
+        _zmq_sub (Optional[zmq.Socket]): ZMQ socket for subscribing.
+        _message_class_cache (dict): Cache for message classes.
+        _remote_message_ids (set): Set of remote message IDs.
+        _receive_thread (threading.Thread): Thread for receiving messages.
     &#34;&#34;&#34;
 
     allowed_message_in_types = [DAQJobMessage]  # accept all message types
@@ -124,6 +159,15 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
         return True
 
     def _create_zmq_sub(self, remote_urls: list[str]) -&gt; zmq.Socket:
+        &#34;&#34;&#34;
+        Create a ZMQ subscriber socket.
+
+        Args:
+            remote_urls (list[str]): List of remote URLs to connect to.
+
+        Returns:
+            zmq.Socket: The created ZMQ subscriber socket.
+        &#34;&#34;&#34;
         self._zmq_sub_ctx = zmq.Context()
         zmq_sub = self._zmq_sub_ctx.socket(zmq.SUB)
         for remote_url in remote_urls:
@@ -141,6 +185,12 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
+        &#34;&#34;&#34;
+        Start the receive thread.
+
+        Args:
+            remote_urls (list[str]): List of remote URLs to connect to.
+        &#34;&#34;&#34;
         self._zmq_sub = self._create_zmq_sub(remote_urls)
 
         while True:
@@ -157,6 +207,9 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
             self.message_out.put(recv_message)
 
     def start(self):
+        &#34;&#34;&#34;
+        Start the receive thread and the DAQ job.
+        &#34;&#34;&#34;
         self._receive_thread.start()
 
         while True:
@@ -167,6 +220,16 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
             time.sleep(0.1)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -&gt; bytes:
+        &#34;&#34;&#34;
+        Pack a message for sending.
+
+        Args:
+            message (DAQJobMessage): The message to pack.
+            use_pickle (bool): Whether to use pickle for packing, if not, use msgspec.
+
+        Returns:
+            bytes: The packed message.
+        &#34;&#34;&#34;
         message_type = type(message).__name__
         if use_pickle:
             return pickle.dumps(message, protocol=pickle.HIGHEST_PROTOCOL)
@@ -174,6 +237,17 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
         return msgspec.msgpack.encode([message_type, message])
 
     def _unpack_message(self, message: bytes) -&gt; DAQJobMessage:
+        &#34;&#34;&#34;
+        Unpack a received message.
+
+        It tries to unpack the message using pickle, and if that fails, it uses msgspec.
+
+        Args:
+            message (bytes): The received message.
+
+        Returns:
+            DAQJobMessage: The unpacked message.
+        &#34;&#34;&#34;
         # TODO: fix unpack without pickle
         try:
             res = pickle.loads(message)
@@ -196,6 +270,9 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
         return res
 
     def __del__(self):
+        &#34;&#34;&#34;
+        Destructor for DAQJobRemote.
+        &#34;&#34;&#34;
         if getattr(self, &#34;_zmq_sub_ctx&#34;, None) is not None:
             self._zmq_sub_ctx.destroy()
         if self._zmq_pub_ctx is not None:
@@ -219,15 +296,15 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration for DAQJobRemote.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>zmq_local_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>Local ZMQ URL.</dd>
+<dt><strong><code>zmq_remote_urls</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of remote ZMQ URLs.</dd>
+<dt><strong><code>topics</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to.</dd>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset"><code class="name">var <span class="ident">restart_offset</span> : datetime.timedelta</code></dt>
@@ -241,7 +318,7 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Start the receive thread and the DAQ job.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -259,21 +336,30 @@ It sends to and receives from a remote ENRGDAQ, in such that:</p>
 <span>(</span><span>zmq_local_url: str, zmq_remote_urls: list[str], topics: list[str] = &lt;factory&gt;, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<div class="desc"><p>Configuration for DAQJobRemote.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
+<dt><strong><code>zmq_local_url</code></strong> :&ensp;<code>str</code></dt>
+<dd>Local ZMQ URL.</dd>
+<dt><strong><code>zmq_remote_urls</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of remote ZMQ URLs.</dd>
+<dt><strong><code>topics</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to.</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobRemoteConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration for DAQJobRemote.
+
+    Attributes:
+        zmq_local_url (str): Local ZMQ URL.
+        zmq_remote_urls (list[str]): List of remote ZMQ URLs.
+        topics (list[str]): List of topics to subscribe to.
+    &#34;&#34;&#34;
+
     zmq_local_url: str
     zmq_remote_urls: list[str]
     topics: list[str] = []</code></pre>
