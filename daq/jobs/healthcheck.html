@@ -79,7 +79,33 @@ errors defaults to 'strict'.</p></div>
 <span>(</span><span>config: <a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a>, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
+message queues, and provides methods for consuming and handling messages.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
+<dd>List of allowed message types for input.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Type of the configuration.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Configuration object.</dd>
+<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for incoming messages.</dd>
+<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for outgoing messages.</dd>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>Unique instance identifier.</dd>
+<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Unique identifier for the job.</dd>
+<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>Offset for restarting the job.</dd>
+<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
+<dd>Information about the job.</dd>
+<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag indicating if the job has been freed.</dd>
+<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
+<dd>Logger instance for the job.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -217,117 +243,22 @@ errors defaults to 'strict'.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
-<div class="desc"><p>A base class for defining efficient serializable objects.</p>
-<p>Fields are defined using type annotations. Fields may optionally have
-default values, which result in keyword parameters to the constructor.</p>
-<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
-<code>__copy__</code> methods. Additional methods can be defined on the class as
-needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
-methods can. A tuple of the field names is available on the class via the
-<code>__struct_fields__</code> attribute if needed.</p>
-<p>Additional class options can be enabled by passing keywords to the class
-definition (see example below). These configuration options may also be
-inspected at runtime through the <code>__struct_config__</code> attribute.</p>
-<h2 id="configuration">Configuration</h2>
-<p>frozen: bool, default False
-Whether instances of this type are pseudo-immutable. If true, attribute
-assignment is disabled and a corresponding <code>__hash__</code> is defined.
-order: bool, default False
-If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
-will be generated for this type.
-eq: bool, default True
-If True (the default), an <code>__eq__</code> method will be generated for this
-type. Set to False to compare based on instance identity alone.
-kw_only: bool, default False
-If True, all fields will be treated as keyword-only arguments in the
-generated <code>__init__</code> method. Default is False.
-omit_defaults: bool, default False
-Whether fields should be omitted from encoding if the corresponding value
-is the default for that field. Enabling this may reduce message size, and
-often also improve encoding &amp; decoding performance.
-forbid_unknown_fields: bool, default False
-If True, an error is raised if an unknown field is encountered while
-decoding structs of this type. If False (the default), no error is raised
-and the unknown field is skipped.
-tag: str, int, bool, callable, or None, default None
-Used along with <code>tag_field</code> for configuring tagged union support. If
-either are non-None, then the struct is considered "tagged". In this case,
-an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
-encoded message, which can be used to differentiate message types during
-decoding.</p>
-<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
-is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
-a string (or less commonly int) value directly to be used as the tag
-(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
-takes the class qualname and returns a valid tag value (e.g.
-<code>tag=str.lower</code>). See the docs for more information.
-tag_field: str or None, default None
-The field name to use for tagged union support. If <code>tag</code> is non-None,
-then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
-information.
-rename: str, mapping, callable, or None, default None
-Controls renaming the field names used when encoding/decoding the struct.
-May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
-<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
-or kebab-case respectively. May also be a mapping from field names to the
-renamed names (missing fields are not renamed). Alternatively, may be a
-callable that takes the field name and returns a new name or <code>None</code> to
-not rename that field. Default is <code>None</code> for no field renaming.
-repr_omit_defaults: bool, default False
-Whether fields should be omitted from the generated repr if the
-corresponding value is the default for that field.
-array_like: bool, default False
-If True, this struct type will be treated as an array-like type during
-encoding/decoding, rather than a dict-like type (the default). This may
-improve performance, at the cost of a more inscrutable message encoding.
-gc: bool, default True
-Whether garbage collection is enabled for this type. Disabling this <em>may</em>
-help reduce GC pressure, but will prevent reference cycles composed of only
-<code>gc=False</code> from being collected. It is the user's responsibility to ensure
-that reference cycles don't occur when setting <code>gc=False</code>.
-weakref: bool, default False
-Whether instances of this type support weak references. Defaults to False.
-dict: bool, default False
-Whether instances of this type will include a <code>__dict__</code>. Setting this to
-True will allow adding additional undeclared attributes to a struct instance,
-which may be useful for holding private runtime state. Defaults to False.
-cache_hash: bool, default False
-If enabled, the hash of a frozen struct instance will be computed at most
-once, and then cached on the instance for further reuse. For expensive
-hash values this can improve performance at the cost of a small amount of
-memory usage.</p>
-<h2 id="examples">Examples</h2>
-<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
-two required and one optional.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
-...     name: str
-...     breed: str
-...     is_good_boy: bool = True
-...
-&gt;&gt;&gt; Dog('snickers', breed='corgi')
-Dog(name='snickers', breed='corgi', is_good_boy=True)
-</code></pre>
-<p>Additional struct options can be set as part of the class definition. Here
-we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
-...     x: float
-...     y: float
-...
-&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
-{Point(x=1.5, y=2.0): 1}
-</code></pre></div>
+<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
+<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
+<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
+<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
+<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the DAQ job.</dd>
+</dl></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_checks"><code class="name flex">
 <span>def <span class="ident">handle_checks</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message"><code class="name flex">
-<span>def <span class="ident">handle_message</span></span>(<span>self, message: <a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats" href="handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats">DAQJobMessageStats</a>) ‑> bool</span>
 </code></dt>
 <dd>
 <div class="desc"></div>
@@ -350,6 +281,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
 <ul class="hlist">
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 </ul>
 </li>
 </ul>
@@ -359,105 +291,16 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>(</span><span>healthcheck_stats: list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>], enable_alerts_on_restart: bool = True, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A base class for defining efficient serializable objects.</p>
-<p>Fields are defined using type annotations. Fields may optionally have
-default values, which result in keyword parameters to the constructor.</p>
-<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
-<code>__copy__</code> methods. Additional methods can be defined on the class as
-needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
-methods can. A tuple of the field names is available on the class via the
-<code>__struct_fields__</code> attribute if needed.</p>
-<p>Additional class options can be enabled by passing keywords to the class
-definition (see example below). These configuration options may also be
-inspected at runtime through the <code>__struct_config__</code> attribute.</p>
-<h2 id="configuration">Configuration</h2>
-<p>frozen: bool, default False
-Whether instances of this type are pseudo-immutable. If true, attribute
-assignment is disabled and a corresponding <code>__hash__</code> is defined.
-order: bool, default False
-If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
-will be generated for this type.
-eq: bool, default True
-If True (the default), an <code>__eq__</code> method will be generated for this
-type. Set to False to compare based on instance identity alone.
-kw_only: bool, default False
-If True, all fields will be treated as keyword-only arguments in the
-generated <code>__init__</code> method. Default is False.
-omit_defaults: bool, default False
-Whether fields should be omitted from encoding if the corresponding value
-is the default for that field. Enabling this may reduce message size, and
-often also improve encoding &amp; decoding performance.
-forbid_unknown_fields: bool, default False
-If True, an error is raised if an unknown field is encountered while
-decoding structs of this type. If False (the default), no error is raised
-and the unknown field is skipped.
-tag: str, int, bool, callable, or None, default None
-Used along with <code>tag_field</code> for configuring tagged union support. If
-either are non-None, then the struct is considered "tagged". In this case,
-an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
-encoded message, which can be used to differentiate message types during
-decoding.</p>
-<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
-is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
-a string (or less commonly int) value directly to be used as the tag
-(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
-takes the class qualname and returns a valid tag value (e.g.
-<code>tag=str.lower</code>). See the docs for more information.
-tag_field: str or None, default None
-The field name to use for tagged union support. If <code>tag</code> is non-None,
-then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
-information.
-rename: str, mapping, callable, or None, default None
-Controls renaming the field names used when encoding/decoding the struct.
-May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
-<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
-or kebab-case respectively. May also be a mapping from field names to the
-renamed names (missing fields are not renamed). Alternatively, may be a
-callable that takes the field name and returns a new name or <code>None</code> to
-not rename that field. Default is <code>None</code> for no field renaming.
-repr_omit_defaults: bool, default False
-Whether fields should be omitted from the generated repr if the
-corresponding value is the default for that field.
-array_like: bool, default False
-If True, this struct type will be treated as an array-like type during
-encoding/decoding, rather than a dict-like type (the default). This may
-improve performance, at the cost of a more inscrutable message encoding.
-gc: bool, default True
-Whether garbage collection is enabled for this type. Disabling this <em>may</em>
-help reduce GC pressure, but will prevent reference cycles composed of only
-<code>gc=False</code> from being collected. It is the user's responsibility to ensure
-that reference cycles don't occur when setting <code>gc=False</code>.
-weakref: bool, default False
-Whether instances of this type support weak references. Defaults to False.
-dict: bool, default False
-Whether instances of this type will include a <code>__dict__</code>. Setting this to
-True will allow adding additional undeclared attributes to a struct instance,
-which may be useful for holding private runtime state. Defaults to False.
-cache_hash: bool, default False
-If enabled, the hash of a frozen struct instance will be computed at most
-once, and then cached on the instance for further reuse. For expensive
-hash values this can improve performance at the cost of a small amount of
-memory usage.</p>
-<h2 id="examples">Examples</h2>
-<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
-two required and one optional.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
-...     name: str
-...     breed: str
-...     is_good_boy: bool = True
-...
-&gt;&gt;&gt; Dog('snickers', breed='corgi')
-Dog(name='snickers', breed='corgi', is_good_boy=True)
-</code></pre>
-<p>Additional struct options can be set as part of the class definition. Here
-we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
-<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
-...     x: float
-...     y: float
-...
-&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
-{Point(x=1.5, y=2.0): 1}
-</code></pre></div>
+<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
+<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
+<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
+<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
+<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the DAQ job.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -814,7 +657,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_checks" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_checks">handle_checks</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.send_alert">send_alert</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start">start</a></code></li>
 </ul>

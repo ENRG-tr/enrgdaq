@@ -40,12 +40,55 @@ hljs.highlightAll();
 <span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
+message queues, and provides methods for consuming and handling messages.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
+<dd>List of allowed message types for input.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Type of the configuration.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Configuration object.</dd>
+<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for incoming messages.</dd>
+<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for outgoing messages.</dd>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>Unique instance identifier.</dd>
+<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Unique identifier for the job.</dd>
+<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>Offset for restarting the job.</dd>
+<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
+<dd>Information about the job.</dd>
+<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag indicating if the job has been freed.</dd>
+<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
+<dd>Logger instance for the job.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJob:
+    &#34;&#34;&#34;
+    DAQJob is a base class for data acquisition jobs. It handles the configuration,
+    message queues, and provides methods for consuming and handling messages.
+    Attributes:
+        allowed_message_in_types (list[type[DAQJobMessage]]): List of allowed message types for input.
+        config_type (Any): Type of the configuration.
+        config (Any): Configuration object.
+        message_in (Queue[DAQJobMessage]): Queue for incoming messages.
+        message_out (Queue[DAQJobMessage]): Queue for outgoing messages.
+        instance_id (int): Unique instance identifier.
+        unique_id (str): Unique identifier for the job.
+        restart_offset (timedelta): Offset for restarting the job.
+        info (DAQJobInfo): Information about the job.
+        _has_been_freed (bool): Flag indicating if the job has been freed.
+        _logger (logging.Logger): Logger instance for the job.
+    &#34;&#34;&#34;
+
     allowed_message_in_types: list[type[DAQJobMessage]] = []
     config_type: Any
     config: Any
@@ -104,6 +147,20 @@ hljs.highlightAll();
                 break
 
     def handle_message(self, message: &#34;DAQJobMessage&#34;) -&gt; bool:
+        &#34;&#34;&#34;
+        Handles a message received from the message queue.
+
+        Args:
+            message (DAQJobMessage): The message to handle.
+
+        Returns:
+            bool: True if the message was handled, False otherwise.
+
+        Raises:
+            DAQJobStopError: If the message is a DAQJobMessageStop.
+            Exception: If the message is not accepted by the job.
+        &#34;&#34;&#34;
+
         if isinstance(message, DAQJobMessageStop):
             raise DAQJobStopError(message.reason)
         # check if the message is accepted
@@ -121,6 +178,13 @@ hljs.highlightAll();
         raise NotImplementedError
 
     def _create_info(self) -&gt; &#34;DAQJobInfo&#34;:
+        &#34;&#34;&#34;
+        Creates a DAQJobInfo object for the job.
+
+        Returns:
+            DAQJobInfo: The created DAQJobInfo object.
+        &#34;&#34;&#34;
+
         return DAQJobInfo(
             daq_job_type=self.config.daq_job_type
             if isinstance(self.config, DAQJobConfig)
@@ -132,6 +196,15 @@ hljs.highlightAll();
         )
 
     def _put_message_out(self, message: DAQJobMessage):
+        &#34;&#34;&#34;
+        Puts a message in the message_out queue.
+
+        Should be called by DAQJob itself.
+
+        Args:
+            message (DAQJobMessage): The message to put in the queue.
+        &#34;&#34;&#34;
+
         message.daq_job_info = self.info
         message.remote_config = self.config.remote_config
 
@@ -224,7 +297,24 @@ Otherwise, it will wait until a message is available.</p></div>
 <span>def <span class="ident">handle_message</span></span>(<span>self, message: DAQJobMessage) ‑> bool</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Handles a message received from the message queue.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>DAQJobMessage</code></dt>
+<dd>The message to handle.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True if the message was handled, False otherwise.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>DAQJobStopError</code></dt>
+<dd>If the message is a DAQJobMessageStop.</dd>
+<dt><code>Exception</code></dt>
+<dd>If the message is not accepted by the job.</dd>
+</dl></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
