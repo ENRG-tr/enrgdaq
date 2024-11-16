@@ -26,11 +26,11 @@ jobs:
 
       - name: Generate documentation
         run: |
-          cd src && pdoc3 --html --output-dir ../docs .
+          pdoc3 --html ./src/enrgdaq/ --output-dir docs/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/src
+          publish_dir: ./docs/enrgdaq
           publish_branch: gh-pages
