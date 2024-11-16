@@ -2,21 +2,26 @@ import unittest
 from queue import Queue
 from unittest.mock import MagicMock, patch
 
-from daq.base import DAQJobInfo
-from daq.models import DAQJobMessage, DAQJobStats
-from daq.store.models import DAQJobMessageStore
-from supervisor import DAQ_JOB_QUEUE_ACTION_TIMEOUT, Supervisor
+from enrgdaq.daq.base import DAQJobInfo
+from enrgdaq.daq.models import DAQJobMessage, DAQJobStats
+from enrgdaq.daq.store.models import DAQJobMessageStore
+from enrgdaq.supervisor import DAQ_JOB_QUEUE_ACTION_TIMEOUT, Supervisor
 
 
 class TestSupervisor(unittest.TestCase):
     def setUp(self):
+        # Mock logging to avoid printing messages
+        self.patcher = patch("enrgdaq.supervisor.logging")
+        self.mock_logging = self.patcher.start()
+        self.addCleanup(self.patcher.stop)
+
         self.supervisor = Supervisor()
         self.supervisor.daq_job_stats = {}
         self.supervisor.daq_job_threads = []
         self.supervisor.config = MagicMock()
 
-    @patch("supervisor.start_daq_jobs")
-    @patch("supervisor.load_daq_jobs")
+    @patch("enrgdaq.supervisor.start_daq_jobs")
+    @patch("enrgdaq.supervisor.load_daq_jobs")
     def test_start_daq_job_threads(self, mock_load_daq_jobs, mock_start_daq_jobs):
         mock_load_daq_jobs.return_value = ["job1", "job2"]
         mock_start_daq_jobs.return_value = ["thread1", "thread2"]
@@ -47,7 +52,7 @@ class TestSupervisor(unittest.TestCase):
             self.supervisor.daq_job_stats[type(mock_thread.daq_job)], DAQJobStats
         )
 
-    @patch("supervisor.restart_daq_job")
+    @patch("enrgdaq.supervisor.restart_daq_job")
     @patch.object(Supervisor, "get_messages_from_daq_jobs")
     @patch.object(Supervisor, "get_supervisor_messages")
     @patch.object(Supervisor, "send_messages_to_daq_jobs")

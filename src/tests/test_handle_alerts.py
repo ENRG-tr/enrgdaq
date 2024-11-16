@@ -2,10 +2,10 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from daq.alert.base import DAQJobMessageAlert
-from daq.jobs.handle_alerts import DAQJobHandleAlerts, DAQJobHandleAlertsConfig
-from daq.store.models import DAQJobMessageStore
-from utils.time import get_unix_timestamp_ms
+from enrgdaq.daq.alert.base import DAQJobMessageAlert
+from enrgdaq.daq.jobs.handle_alerts import DAQJobHandleAlerts, DAQJobHandleAlertsConfig
+from enrgdaq.daq.store.models import DAQJobMessageStore
+from enrgdaq.utils.time import get_unix_timestamp_ms
 
 
 class TestDAQJobHandleAlerts(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
         self.daq_job = DAQJobHandleAlerts(config=self.config)
         self.daq_job.message_out = MagicMock()
 
-    @patch("utils.time.get_unix_timestamp_ms", return_value=1234567890)
+    @patch("enrgdaq.utils.time.get_unix_timestamp_ms", return_value=1234567890)
     def test_handle_message(self, mock_get_unix_timestamp_ms):
         date = datetime(2022, 1, 1, 0, 0, 0)
 

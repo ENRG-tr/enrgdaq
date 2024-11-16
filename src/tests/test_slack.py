@@ -2,13 +2,13 @@ import unittest
 from datetime import datetime
 from unittest.mock import patch
 
-from daq.alert.alert_slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
-from daq.alert.models import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
-from daq.base import DAQJobInfo
+from enrgdaq.daq.alert.alert_slack import DAQJobAlertSlack, DAQJobAlertSlackConfig
+from enrgdaq.daq.alert.models import DAQAlertInfo, DAQAlertSeverity, DAQJobMessageAlert
+from enrgdaq.daq.base import DAQJobInfo
 
 
 class TestDAQJobAlertSlack(unittest.TestCase):
-    @patch("daq.alert.alert_slack.Slack")
+    @patch("enrgdaq.daq.alert.alert_slack.Slack")
     def setUp(self, MockSlack):
         self.mock_slack = MockSlack.return_value
         self.mock_slack.post.return_value = "ok"

@@ -3,8 +3,8 @@ from unittest.mock import MagicMock, patch
 
 from websocket import WebSocket
 
-from daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig, N1081BPatched
-from daq.store.models import DAQJobMessageStore
+from enrgdaq.daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig, N1081BPatched
+from enrgdaq.daq.store.models import DAQJobMessageStore
 
 
 class TestDAQJobN1081B(unittest.TestCase):

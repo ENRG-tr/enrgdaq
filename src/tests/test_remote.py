@@ -3,15 +3,15 @@ import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-from daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
-from daq.jobs.store.csv import DAQJobStoreConfigCSV
-from daq.jobs.test_job import DAQJobTest
-from daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage, DAQRemoteConfig
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
+from enrgdaq.daq.jobs.store.csv import DAQJobStoreConfigCSV
+from enrgdaq.daq.jobs.test_job import DAQJobTest
+from enrgdaq.daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage, DAQRemoteConfig
+from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
 
 
 class TestDAQJobRemote(unittest.TestCase):
-    @patch("daq.jobs.remote.zmq.Context")
+    @patch("enrgdaq.daq.jobs.remote.zmq.Context")
     def setUp(self, MockZmqContext):
         self.mock_context = MockZmqContext.return_value
         self.mock_sender = self.mock_context.socket.return_value

@@ -3,12 +3,12 @@ from collections import deque
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from daq.jobs.store.redis import (
+from enrgdaq.daq.jobs.store.redis import (
     DAQJobStoreRedis,
     DAQJobStoreRedisConfig,
     RedisWriteQueueItem,
 )
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfigRedis
+from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigRedis
 
 
 class TestDAQJobStoreRedis(unittest.TestCase):

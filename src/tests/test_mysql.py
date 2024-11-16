@@ -3,13 +3,13 @@ from collections import deque
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
-from daq.jobs.store.mysql import (
+from enrgdaq.daq.jobs.store.mysql import (
     DAQ_JOB_STORE_MYSQL_FLUSH_INTERVAL_SECONDS,
     DAQJobStoreMySQL,
     DAQJobStoreMySQLConfig,
     MySQLWriteQueueItem,
 )
-from daq.store.models import DAQJobMessageStore, DAQJobStoreConfigMySQL
+from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigMySQL
 
 
 class TestDAQJobStoreMySQL(unittest.TestCase):

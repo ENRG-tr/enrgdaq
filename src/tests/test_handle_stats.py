@@ -2,14 +2,14 @@ import unittest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from daq.jobs.handle_stats import (
+from enrgdaq.daq.jobs.handle_stats import (
     DAQJobHandleStats,
     DAQJobHandleStatsConfig,
     DAQJobMessageStats,
     DAQJobStatsRecord,
 )
-from daq.jobs.test_job import DAQJobTest
-from daq.models import DAQJobStats
+from enrgdaq.daq.jobs.test_job import DAQJobTest
+from enrgdaq.daq.models import DAQJobStats
 
 
 class TestDAQJobHandleStats(unittest.TestCase):
@@ -59,7 +59,9 @@ class TestDAQJobHandleStats(unittest.TestCase):
                 )
             }
         )
-        with patch("daq.jobs.handle_stats.DAQJob.handle_message", return_value=False):
+        with patch(
+            "enrgdaq.daq.jobs.handle_stats.DAQJob.handle_message", return_value=False
+        ):
             result = self.daq_job_handle_stats.handle_message(message)
 
         self.assertFalse(result)
