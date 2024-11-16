@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.1">
-<title>enrgdaq API documentation</title>
+<title>enrgdaq.daq.store.base API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
@@ -22,36 +22,112 @@ hljs.highlightAll();
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>enrgdaq</code></h1>
+<h1 class="title">Module <code>enrgdaq.daq.store.base</code></h1>
 </header>
 <section id="section-intro">
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt><code class="name"><a title="enrgdaq.daq" href="daq/index.html">enrgdaq.daq</a></code></dt>
+<dt id="enrgdaq.daq.store.base.DAQJobStore"><code class="flex name class">
+<span>class <span class="ident">DAQJobStore</span></span>
+<span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.models" href="models.html">enrgdaq.models</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.supervisor" href="supervisor.html">enrgdaq.supervisor</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.utils" href="utils/index.html">enrgdaq.utils</a></code></dt>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStore(DAQJob):
+    allowed_store_config_types: list
+
+    def start(self):
+        while True:
+            self.consume()
+            self.store_loop()
+            time.sleep(STORE_LOOP_INTERVAL_SECONDS)
+
+    def store_loop(self):
+        raise NotImplementedError
+
+    def handle_message(self, message: DAQJobMessage) -&gt; bool:
+        if not self.can_store(message):
+            raise Exception(
+                f&#34;Invalid message type &#39;{type(message)}&#39; for DAQJob &#39;{type(self).__name__}&#39;&#34;
+            )
+        return super().handle_message(message)
+
+    def can_store(self, message: DAQJobMessage) -&gt; bool:
+        if not isinstance(message, DAQJobMessageStore):
+            return False
+        is_message_allowed = False
+        for allowed_config_type in self.allowed_store_config_types:
+            if message.store_config.has_store_config(allowed_config_type):
+                is_message_allowed = True
+        return is_message_allowed</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV" href="../jobs/store/csv.html#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV">DAQJobStoreCSV</a></li>
+<li><a title="enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL" href="../jobs/store/mysql.html#enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL">DAQJobStoreMySQL</a></li>
+<li><a title="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis" href="../jobs/store/redis.html#enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis">DAQJobStoreRedis</a></li>
+<li><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT" href="../jobs/store/root.html#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT">DAQJobStoreROOT</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types"><code class="name">var <span class="ident">allowed_store_config_types</span> : list</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.can_store"><code class="name flex">
+<span>def <span class="ident">can_store</span></span>(<span>self, message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.handle_message"><code class="name flex">
+<span>def <span class="ident">handle_message</span></span>(<span>self, message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.store_loop"><code class="name flex">
+<span>def <span class="ident">store_loop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
+<ul class="hlist">
+<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -59,12 +135,23 @@ hljs.highlightAll();
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<li><h3>Super-module</h3>
 <ul>
-<li><code><a title="enrgdaq.daq" href="daq/index.html">enrgdaq.daq</a></code></li>
-<li><code><a title="enrgdaq.models" href="models.html">enrgdaq.models</a></code></li>
-<li><code><a title="enrgdaq.supervisor" href="supervisor.html">enrgdaq.supervisor</a></code></li>
-<li><code><a title="enrgdaq.utils" href="utils/index.html">enrgdaq.utils</a></code></li>
+<li><code><a title="enrgdaq.daq.store" href="index.html">enrgdaq.daq.store</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.daq.store.base.DAQJobStore" href="#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types" href="#enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types">allowed_store_config_types</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="#enrgdaq.daq.store.base.DAQJobStore.handle_message">handle_message</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.store_loop" href="#enrgdaq.daq.store.base.DAQJobStore.store_loop">store_loop</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
