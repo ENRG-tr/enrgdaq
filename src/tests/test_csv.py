@@ -1,3 +1,4 @@
+import os
 import unittest
 from collections import deque
 from datetime import datetime, timedelta
@@ -10,12 +11,23 @@ from enrgdaq.daq.jobs.store.csv import (
     DAQJobStoreCSV,
 )
 from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from enrgdaq.utils.file import modify_file_path
 
 
 class TestDAQJobStoreCSV(unittest.TestCase):
     def setUp(self):
         self.config = MagicMock(out_dir="out/")
         self.store = DAQJobStoreCSV(self.config)
+
+    def test_modify_file_path(self):
+        file_path = "test.csv"
+        add_date = True
+        tag = "tag"
+        sep = os.path.sep
+        expected_file_path = f"{datetime.now().year}{sep}{datetime.now().month}{sep}{datetime.now().day}{sep}test_tag.csv"
+        actual_file_path = modify_file_path(file_path, add_date, tag)
+
+        self.assertEqual(expected_file_path, actual_file_path)
 
     @patch("enrgdaq.daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
