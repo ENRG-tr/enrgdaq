@@ -5,7 +5,10 @@ from random import randint
 from N1081B import N1081B
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    StorableDAQJobConfig,
+)
 
 
 class DAQJobTestConfig(StorableDAQJobConfig):
@@ -60,7 +63,7 @@ class DAQJobTest(DAQJob):
             return randint(self.config.rand_min, self.config.rand_max)
 
         self._put_message_out(
-            DAQJobMessageStore(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 keys=["timestamp", "A", "B", "C"],
                 data=[

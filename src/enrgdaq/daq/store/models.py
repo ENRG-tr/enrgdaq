@@ -14,6 +14,7 @@ class DAQJobStoreConfig(Struct, dict=True):
     root: "Optional[DAQJobStoreConfigROOT]" = None
     mysql: "Optional[DAQJobStoreConfigMySQL]" = None
     redis: "Optional[DAQJobStoreConfigRedis]" = None
+    raw: "Optional[DAQJobStoreConfigRaw]" = None
 
     def has_store_config(self, store_type: Any) -> bool:
         for key in dir(self):
@@ -31,14 +32,10 @@ class DAQJobMessageStore(DAQJobMessage):
     configuration and data related to a DAQ (Data Acquisition) job.
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
-        keys (list[str]): List of keys associated with the data.
-        data (list[list[Any]]): Nested list containing the data.
-        tag (str | None): Optional tag associated with the DAQ job.
+        tag (str | None): Optional tag associated with the message.
     """
 
     store_config: DAQJobStoreConfig
-    keys: list[str]
-    data: list[list[Any]]
     tag: str | None = None
 
     def get_remote_config(self) -> Optional[DAQRemoteConfig]:
@@ -58,6 +55,29 @@ class DAQJobMessageStore(DAQJobMessage):
                 continue
             return value.remote_config
         return None
+
+
+class DAQJobMessageStoreTabular(DAQJobMessageStore, kw_only=True):
+    """
+    DAQJobMessageStoreTabular is a class that inherits from DAQJobMessageStore and represents a tabular data store for DAQ job messages.
+    Attributes:
+        keys (list[str]): A list of strings representing the keys or column names of the tabular data.
+        data (list[list[str | float | int]]): A list of lists where each inner list represents a row of data..
+    """
+
+    keys: list[str]
+    data: list[list[str | float | int]]
+
+
+class DAQJobMessageStoreRaw(DAQJobMessageStore, kw_only=True):
+    """
+    DAQJobMessageStoreRaw is a class that inherits from DAQJobMessageStore and represents
+    a raw data message store for DAQ jobs.
+    Attributes:
+        data (bytes): The raw data associated with the DAQ job message.
+    """
+
+    data: bytes
 
 
 class StorableDAQJobConfig(DAQJobConfig):
@@ -89,12 +109,29 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
 
     overwrite: bool = False
     """
-    Overwrite the file contents always.
+    Overwrite the file contents.
     """
 
     use_gzip: bool = False
     """
     Use gzip compression.
+    """
+
+
+class DAQJobStoreConfigRaw(DAQJobStoreConfigBase):
+    file_path: str
+    """
+    File path to store data in.
+    """
+
+    add_date: bool = False
+    """
+    Overwrite the file contents always.
+    """
+
+    overwrite: bool = True
+    """
+    Overwrite the file contents.
     """
 
 

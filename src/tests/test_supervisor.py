@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from enrgdaq.daq.base import DAQJobInfo
 from enrgdaq.daq.models import DAQJobMessage, DAQJobStats
-from enrgdaq.daq.store.models import DAQJobMessageStore
+from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobMessageStoreTabular
 from enrgdaq.supervisor import DAQ_JOB_QUEUE_ACTION_TIMEOUT, Supervisor
 
 
@@ -108,7 +108,7 @@ class TestSupervisor(unittest.TestCase):
         mock_thread = MagicMock()
         mock_thread.daq_job.allowed_message_in_types = [DAQJobMessageStore]
         mock_thread.daq_job.message_in = Queue()
-        mock_message = DAQJobMessageStore(
+        mock_message = DAQJobMessageStoreTabular(
             store_config=MagicMock(), keys=[], data=[], daq_job_info=DAQJobInfo.mock()
         )
         self.supervisor.daq_job_threads = [mock_thread]

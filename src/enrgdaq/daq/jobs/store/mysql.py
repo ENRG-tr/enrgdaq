@@ -8,7 +8,11 @@ import pymysql
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigMySQL
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStore,
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfigMySQL,
+)
 
 DAQ_JOB_STORE_MYSQL_FLUSH_INTERVAL_SECONDS = 15
 
@@ -54,7 +58,7 @@ class DAQJobStoreMySQL(DAQJobStore):
         )
         super().start()
 
-    def handle_message(self, message: DAQJobMessageStore) -> bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         if not super().handle_message(message):
             return False
 

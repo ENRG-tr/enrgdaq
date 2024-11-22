@@ -5,7 +5,10 @@ import uproot
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigROOT
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfigROOT,
+)
 from enrgdaq.utils.file import modify_file_path
 
 
@@ -16,7 +19,7 @@ class DAQJobStoreROOTConfig(DAQJobConfig):
 class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
-    allowed_message_in_types = [DAQJobMessageStore]
+    allowed_message_in_types = [DAQJobMessageStoreTabular]
     _open_files: dict[str, Any]
 
     def __init__(self, config: Any, **kwargs):
@@ -24,7 +27,7 @@ class DAQJobStoreROOT(DAQJobStore):
 
         self._open_files = {}
 
-    def handle_message(self, message: DAQJobMessageStore) -> bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigROOT, message.store_config)
         file_path = modify_file_path(

@@ -1,0 +1,7 @@
+daq_job_type = "DAQJobCamera"
+
+# camera_device_index = 0  # Camera index to be selected by opencv
+# store_interval_seconds = 5  # Store interval in seconds
+
+[store_config.raw]
+file_path = "camera.jpg"

@@ -1,6 +1,9 @@
 from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    StorableDAQJobConfig,
+)
 from enrgdaq.utils.time import get_unix_timestamp_ms
 
 
@@ -51,7 +54,7 @@ class DAQJobHandleAlerts(DAQJob):
         ]
 
         self._put_message_out(
-            DAQJobMessageStore(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 keys=keys,
                 data=data_to_send,

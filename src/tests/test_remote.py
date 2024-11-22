@@ -7,7 +7,10 @@ from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreConfigCSV
 from enrgdaq.daq.jobs.test_job import DAQJobTest
 from enrgdaq.daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage, DAQRemoteConfig
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfig,
+)
 
 
 class TestDAQJobRemote(unittest.TestCase):
@@ -47,7 +50,7 @@ class TestDAQJobRemote(unittest.TestCase):
             self.daq_job_remote.start()
 
     def test_receive_thread(self):
-        message = DAQJobMessageStore(
+        message = DAQJobMessageStoreTabular(
             id="testmsg",
             store_config=DAQJobStoreConfig(
                 csv=DAQJobStoreConfigCSV(file_path="test", add_date=True)

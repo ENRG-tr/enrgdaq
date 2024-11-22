@@ -9,7 +9,11 @@ from typing import Any, Optional, TextIO, cast
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigCSV
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStore,
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfigCSV,
+)
 from enrgdaq.utils.file import modify_file_path
 
 DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 15
@@ -39,7 +43,7 @@ class DAQJobStoreCSV(DAQJobStore):
 
         self._open_csv_files = {}
 
-    def handle_message(self, message: DAQJobMessageStore) -> bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         if not super().handle_message(message):
             return False
 

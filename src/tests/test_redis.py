@@ -8,7 +8,10 @@ from enrgdaq.daq.jobs.store.redis import (
     DAQJobStoreRedisConfig,
     RedisWriteQueueItem,
 )
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigRedis
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfigRedis,
+)
 
 
 class TestDAQJobStoreRedis(unittest.TestCase):
@@ -36,7 +39,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertIsNotNone(self.store._connection)
 
     def test_handle_message(self):
-        message = MagicMock(spec=DAQJobMessageStore)
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = MagicMock(
             redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
         )
@@ -149,7 +152,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertEqual(len(self.store._write_queue), 0)
 
     def test_handle_message_no_expiration(self):
-        message = MagicMock(spec=DAQJobMessageStore)
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = MagicMock(
             redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=None)
         )
@@ -170,7 +173,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertIsNone(self.store._write_queue[0].store_config.key_expiration_days)
 
     def test_handle_message_empty_data(self):
-        message = MagicMock(spec=DAQJobMessageStore)
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = MagicMock(
             redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
         )

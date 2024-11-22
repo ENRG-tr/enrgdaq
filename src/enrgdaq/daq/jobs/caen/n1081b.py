@@ -5,7 +5,10 @@ from websocket import WebSocket, create_connection
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
-from enrgdaq.daq.store.models import DAQJobMessageStore, StorableDAQJobConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    StorableDAQJobConfig,
+)
 from enrgdaq.utils.time import get_now_unix_timestamp_ms
 
 N1081B_QUERY_INTERVAL_SECONDS = 1
@@ -102,7 +105,7 @@ class DAQJobN1081B(DAQJob):
             *[x["value"] for x in data["counters"]],
         ]
         self._put_message_out(
-            DAQJobMessageStore(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 tag=section,
                 keys=keys,

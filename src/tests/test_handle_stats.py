@@ -16,7 +16,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
     def setUp(self):
         self.config = DAQJobHandleStatsConfig(
             daq_job_type="",
-            store_config={},
+            store_config=MagicMock(),
         )
         self.daq_job_handle_stats = DAQJobHandleStats(config=self.config)
         self.daq_job_handle_stats.message_out = MagicMock()

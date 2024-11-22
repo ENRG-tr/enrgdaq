@@ -9,7 +9,10 @@ from redis.commands.timeseries import TimeSeries
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigRedis
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfigRedis,
+)
 
 
 class DAQJobStoreRedisConfig(DAQJobConfig):
@@ -29,7 +32,7 @@ class RedisWriteQueueItem:
 class DAQJobStoreRedis(DAQJobStore):
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
-    allowed_message_in_types = [DAQJobMessageStore]
+    allowed_message_in_types = [DAQJobMessageStoreTabular]
 
     _write_queue: deque[RedisWriteQueueItem]
     _last_flush_date: datetime
@@ -58,7 +61,7 @@ class DAQJobStoreRedis(DAQJobStore):
 
         super().start()
 
-    def handle_message(self, message: DAQJobMessageStore) -> bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         if not super().handle_message(message):
             return False
 

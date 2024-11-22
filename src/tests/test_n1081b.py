@@ -15,7 +15,7 @@ class TestDAQJobN1081B(unittest.TestCase):
             port="1234",
             password="password",
             sections_to_store=["SEC_A", "SEC_B"],
-            store_config={},
+            store_config=MagicMock(),
         )
         self.daq_job = DAQJobN1081B(self.config)
 
@@ -105,7 +105,7 @@ class TestDAQJobN1081B(unittest.TestCase):
             port="1234",
             password="password",
             sections_to_store=["INVALID_SECTION"],
-            store_config={},
+            store_config=MagicMock(),
         )
         with self.assertRaises(Exception) as context:
             DAQJobN1081B(invalid_config)
