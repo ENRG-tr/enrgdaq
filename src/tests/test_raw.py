@@ -37,7 +37,7 @@ class TestDAQJobStoreRaw(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.raw", True, None)
-        mock_open.assert_called_once_with("out/test.raw", "ab")
+        mock_open.assert_called_once_with("out/test.raw", "wb")
         self.assertIn("out/test.raw", self.store._open_raw_files)
         file = self.store._open_raw_files["out/test.raw"]
         self.assertEqual(len(file.write_queue), 1)  # 1 raw data
@@ -56,7 +56,7 @@ class TestDAQJobStoreRaw(unittest.TestCase):
         self.store.handle_message(message)
 
         mock_add_date.assert_called_once_with("test.raw", True, None)
-        mock_open.assert_called_once_with("out/test.raw", "ab")
+        mock_open.assert_called_once_with("out/test.raw", "wb")
         self.assertIn("out/test.raw", self.store._open_raw_files)
         file = self.store._open_raw_files["out/test.raw"]
         self.assertEqual(len(file.write_queue), 1)  # 1 raw data
