@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.1">
-<title>enrgdaq.daq.jobs.test_job API documentation</title>
+<title>enrgdaq.daq.jobs.camera API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
@@ -22,7 +22,7 @@ hljs.highlightAll();
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>enrgdaq.daq.jobs.test_job</code></h1>
+<h1 class="title">Module <code>enrgdaq.daq.jobs.camera</code></h1>
 </header>
 <section id="section-intro">
 </section>
@@ -35,72 +35,52 @@ hljs.highlightAll();
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest"><code class="flex name class">
-<span>class <span class="ident">DAQJobTest</span></span>
-<span>(</span><span>config: Any, supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera"><code class="flex name class">
+<span>class <span class="ident">DAQJobCamera</span></span>
+<span>(</span><span>config: <a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig">DAQJobCameraConfig</a>, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A test job for the DAQ system that generates random data.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
-<dd>The configuration class type.</dd>
-<dt><strong><code>device</code></strong> :&ensp;<code>N1081B</code></dt>
-<dd>The device used for data acquisition.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></code></dt>
-<dd>The configuration instance.</dd>
-</dl></div>
+<div class="desc"><p>DAQ job for capturing images from a camera using PIL and pygrabber.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobTest(DAQJob):
+<pre><code class="python">class DAQJobCamera(DAQJob):
     &#34;&#34;&#34;
-    A test job for the DAQ system that generates random data.
-
-    Attributes:
-        config_type (type): The configuration class type.
-        device (N1081B): The device used for data acquisition.
-        config (DAQJobTestConfig): The configuration instance.
+    DAQ job for capturing images from a camera using PIL and pygrabber.
     &#34;&#34;&#34;
 
-    config_type = DAQJobTestConfig
-    device: N1081B
-    config: DAQJobTestConfig
+    allowed_message_in_types = []
+    config_type = DAQJobCameraConfig
+    config: DAQJobCameraConfig
+    _cam: cv2.VideoCapture
+
+    def __init__(self, config: DAQJobCameraConfig, **kwargs):
+        super().__init__(config, **kwargs)
+        self._cam = cv2.VideoCapture(self.config.camera_device_index)
 
     def start(self):
-        &#34;&#34;&#34;
-        Start the DAQ job, continuously consuming data and sending store messages.
-        &#34;&#34;&#34;
         while True:
-            self.consume()
-            self._send_store_message()
+            start_time = datetime.now()
+            self.capture_image()
+            sleep_for(self.config.store_interval_seconds, start_time)
 
-            time.sleep(1)
-
-    def _send_store_message(self):
-        &#34;&#34;&#34;
-        Send a store message with random data.
-        &#34;&#34;&#34;
-
-        def get_int():
-            &#34;&#34;&#34;
-            Generate a random integer within the configured range.
-
-            Returns:
-                int: A random integer.
-            &#34;&#34;&#34;
-            return randint(self.config.rand_min, self.config.rand_max)
+    def capture_image(self):
+        self._logger.debug(&#34;Capturing image...&#34;)
+        res, frame = self._cam.read()
+        assert res
+        # get bytes from frame
+        res, buffer = cv2.imencode(&#34;.jpg&#34;, frame)
+        assert res
+        image_data = buffer.tobytes()
 
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStoreRaw(
+                data=image_data,
                 store_config=self.config.store_config,
-                keys=[&#34;timestamp&#34;, &#34;A&#34;, &#34;B&#34;, &#34;C&#34;],
-                data=[
-                    [datetime.now().timestamp() * 1000, get_int(), get_int(), get_int()]
-                ],
             )
-        )</code></pre>
+        )
+        self._logger.debug(&#34;Image captured and sent&#34;)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -108,33 +88,32 @@ hljs.highlightAll();
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
-<dd>
-<div class="desc"><p>Configuration class for DAQJobTest.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>rand_min</code></strong> :&ensp;<code>int</code></dt>
-<dd>Minimum random integer value.</dd>
-<dt><strong><code>rand_max</code></strong> :&ensp;<code>int</code></dt>
-<dd>Maximum random integer value.</dd>
-</dl></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.device"><code class="name">var <span class="ident">device</span> : N1081B.N1081B</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig">DAQJobCameraConfig</a></code></dt>
 <dd>
 <div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dd>
+<div class="desc"><p>Configuration class for DAQJobCamera.</p></div>
 </dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.start"><code class="name flex">
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image"><code class="name flex">
+<span>def <span class="ident">capture_image</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Start the DAQ job, continuously consuming data and sending store messages.</p></div>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -147,34 +126,21 @@ hljs.highlightAll();
 </li>
 </ul>
 </dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTestConfig"><code class="flex name class">
-<span>class <span class="ident">DAQJobTestConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>, rand_min: int, rand_max: int, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig"><code class="flex name class">
+<span>class <span class="ident">DAQJobCameraConfig</span></span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>, camera_device_index: int = 0, store_interval_seconds: int = 5, *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration class for DAQJobTest.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>rand_min</code></strong> :&ensp;<code>int</code></dt>
-<dd>Minimum random integer value.</dd>
-<dt><strong><code>rand_max</code></strong> :&ensp;<code>int</code></dt>
-<dd>Maximum random integer value.</dd>
-</dl></div>
+<div class="desc"><p>Configuration class for DAQJobCamera.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobTestConfig(StorableDAQJobConfig):
-    &#34;&#34;&#34;
-    Configuration class for DAQJobTest.
+<pre><code class="python">class DAQJobCameraConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;Configuration class for DAQJobCamera.&#34;&#34;&#34;
 
-    Attributes:
-        rand_min (int): Minimum random integer value.
-        rand_max (int): Maximum random integer value.
-    &#34;&#34;&#34;
-
-    rand_min: int
-    rand_max: int</code></pre>
+    camera_device_index: int = 0
+    store_interval_seconds: int = 5</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -185,11 +151,11 @@ hljs.highlightAll();
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_max"><code class="name">var <span class="ident">rand_max</span> : int</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index"><code class="name">var <span class="ident">camera_device_index</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_min"><code class="name">var <span class="ident">rand_min</span> : int</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds"><code class="name">var <span class="ident">store_interval_seconds</span> : int</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -211,19 +177,20 @@ hljs.highlightAll();
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest" href="#enrgdaq.daq.jobs.test_job.DAQJobTest">DAQJobTest</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera" href="#enrgdaq.daq.jobs.camera.DAQJobCamera">DAQJobCamera</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.config" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.config">config</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.config_type">config_type</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.device" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.device">device</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.start" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.start">start</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.allowed_message_in_types" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image">capture_image</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.config" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.config">config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.config_type" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.start" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.start">start</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig">DAQJobCameraConfig</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_max" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_max">rand_max</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_min" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig.rand_min">rand_min</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index">camera_device_index</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds">store_interval_seconds</a></code></li>
 </ul>
 </li>
 </ul>

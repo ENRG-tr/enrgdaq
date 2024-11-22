@@ -143,7 +143,7 @@ message queues, and provides methods for consuming and handling messages.</p>
             *[x[&#34;value&#34;] for x in data[&#34;counters&#34;]],
         ]
         self._put_message_out(
-            DAQJobMessageStore(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 tag=section,
                 keys=keys,

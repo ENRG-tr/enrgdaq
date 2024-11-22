@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.1">
-<title>enrgdaq.daq.jobs.store.csv API documentation</title>
+<title>enrgdaq.daq.jobs.store.raw API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
@@ -22,7 +22,7 @@ hljs.highlightAll();
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>enrgdaq.daq.jobs.store.csv</code></h1>
+<h1 class="title">Module <code>enrgdaq.daq.jobs.store.raw</code></h1>
 </header>
 <section id="section-intro">
 </section>
@@ -35,46 +35,9 @@ hljs.highlightAll();
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.csv.CSVFile"><code class="flex name class">
-<span>class <span class="ident">CSVFile</span></span>
-<span>(</span><span>file: <class 'TextIO'>, last_flush_date: datetime.datetime, write_queue: collections.deque[list[typing.Any]], overwrite: Optional[bool] = None)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>CSVFile(file: <class 'TextIO'>, last_flush_date: datetime.datetime, write_queue: collections.deque[list[typing.Any]], overwrite: Optional[bool] = None)</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@dataclass
-class CSVFile:
-    file: TextIO
-    last_flush_date: datetime
-    write_queue: deque[list[Any]]
-    overwrite: Optional[bool] = None</code></pre>
-</details>
-<h3>Class variables</h3>
-<dl>
-<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.file"><code class="name">var <span class="ident">file</span> : <class 'TextIO'></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.last_flush_date"><code class="name">var <span class="ident">last_flush_date</span> : datetime.datetime</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.overwrite"><code class="name">var <span class="ident">overwrite</span> : Optional[bool]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.write_queue"><code class="name">var <span class="ident">write_queue</span> : collections.deque[list[typing.Any]]</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-</dd>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV"><code class="flex name class">
-<span>class <span class="ident">DAQJobStoreCSV</span></span>
-<span>(</span><span>config: <a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig">DAQJobStoreCSVConfig</a>, **kwargs)</span>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw"><code class="flex name class">
+<span>class <span class="ident">DAQJobStoreRaw</span></span>
+<span>(</span><span>config: <a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig">DAQJobStoreRawConfig</a>, **kwargs)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
@@ -88,51 +51,44 @@ and provides additional functionality for handling and storing messages.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobStoreCSV(DAQJobStore):
-    config_type = DAQJobStoreCSVConfig
-    allowed_store_config_types = [DAQJobStoreConfigCSV]
-    allowed_message_in_types = [DAQJobMessageStore]
+<pre><code class="python">class DAQJobStoreRaw(DAQJobStore):
+    config_type = DAQJobStoreRawConfig
+    allowed_store_config_types = [DAQJobStoreConfigRaw]
+    allowed_message_in_types = [DAQJobMessageStoreRaw]
 
-    _open_csv_files: dict[str, CSVFile]
+    _open_raw_files: dict[str, RawFile]
 
-    def __init__(self, config: DAQJobStoreCSVConfig, **kwargs):
+    def __init__(self, config: DAQJobStoreRawConfig, **kwargs):
         super().__init__(config, **kwargs)
 
-        self._open_csv_files = {}
+        self._open_raw_files = {}
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
+    def handle_message(self, message: DAQJobMessageStoreRaw) -&gt; bool:
         if not super().handle_message(message):
             return False
 
-        store_config = cast(DAQJobStoreConfigCSV, message.store_config.csv)
+        store_config = cast(DAQJobStoreConfigRaw, message.store_config.raw)
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
         file_path = os.path.join(self.config.out_dir, file_path)
 
-        file, new_file = self._open_csv_file(
-            file_path, store_config.overwrite, store_config.use_gzip
-        )
+        file, new_file = self._open_raw_file(file_path, store_config.overwrite)
         if file.overwrite:
             file.write_queue.clear()
 
-        # Write headers if the file is new
-        if new_file or file.overwrite:
-            file.write_queue.append(message.keys)
-
-        # Append rows to write_queue
-        for row in message.data:
-            file.write_queue.append(row)
+        # Append raw data to write_queue
+        file.write_queue.append(message.data)
 
         return True
 
-    def _open_csv_file(
-        self, file_path: str, overwrite: Optional[bool], use_gzip: Optional[bool]
-    ) -&gt; tuple[CSVFile, bool]:
+    def _open_raw_file(
+        self, file_path: str, overwrite: Optional[bool]
+    ) -&gt; tuple[RawFile, bool]:
         &#34;&#34;&#34;
-        Opens a file and returns (CSVFile, new_file)
+        Opens a file and returns (RawFile, new_file)
         &#34;&#34;&#34;
-        if file_path not in self._open_csv_files:
+        if file_path not in self._open_raw_files:
             file_exists = os.path.exists(file_path)
             # Create the file if it doesn&#39;t exist
             if not file_exists:
@@ -140,30 +96,25 @@ and provides additional functionality for handling and storing messages.</p>
                 Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
                 Path(file_path).touch()
 
-            if use_gzip:
-                file_handle = gzip.open(
-                    file_path, &#34;at&#34; if not overwrite else &#34;wt&#34;, newline=&#34;&#34;
-                )
-            else:
-                file_handle = open(file_path, &#34;a&#34; if not overwrite else &#34;w&#34;, newline=&#34;&#34;)
+            file_handle = open(file_path, &#34;ab&#34; if not overwrite else &#34;wb&#34;)
 
             # Open file
-            file = CSVFile(
+            file = RawFile(
                 file_handle,
                 datetime.now(),
                 deque(),
                 overwrite,
             )
-            self._open_csv_files[file_path] = file
+            self._open_raw_files[file_path] = file
         else:
             file_exists = True
-            file = self._open_csv_files[file_path]
+            file = self._open_raw_files[file_path]
         return file, not file_exists
 
-    def _flush(self, file: CSVFile) -&gt; bool:
+    def _flush(self, file: RawFile) -&gt; bool:
         if (
             datetime.now() - file.last_flush_date
-        ).total_seconds() &lt; DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS:
+        ).total_seconds() &lt; DAQ_JOB_STORE_RAW_FLUSH_INTERVAL_SECONDS:
             return False
 
         file.file.flush()
@@ -172,16 +123,13 @@ and provides additional functionality for handling and storing messages.</p>
 
     def store_loop(self):
         files_to_delete = []
-        for file_path, file in self._open_csv_files.items():
+        for file_path, file in self._open_raw_files.items():
             if file.file.closed:
                 files_to_delete.append(file_path)
                 continue
-            writer = csv.writer(file.file)
 
-            row_size = len(file.write_queue)
-            if row_size &gt; 0:
-                writer.writerows(list(file.write_queue))
-            file.write_queue.clear()
+            while file.write_queue:
+                file.file.write(file.write_queue.popleft())
 
             if file.overwrite:
                 file.file.close()
@@ -192,13 +140,13 @@ and provides additional functionality for handling and storing messages.</p>
             self._flush(file)
 
         for file_path in files_to_delete:
-            del self._open_csv_files[file_path]
+            del self._open_raw_files[file_path]
 
     def __del__(self):
         self.store_loop()
 
         # Close all open files
-        for file in self._open_csv_files.values():
+        for file in self._open_raw_files.values():
             if file.file.closed:
                 continue
             file.file.close()
@@ -212,15 +160,15 @@ and provides additional functionality for handling and storing messages.</p>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_store_config_types"><code class="name">var <span class="ident">allowed_store_config_types</span> : list</code></dt>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_store_config_types"><code class="name">var <span class="ident">allowed_store_config_types</span> : list</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -236,7 +184,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.store_loop"><code class="name flex">
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.store_loop"><code class="name flex">
 <span>def <span class="ident">store_loop</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -255,8 +203,8 @@ and provides additional functionality for handling and storing messages.</p>
 </li>
 </ul>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig"><code class="flex name class">
-<span>class <span class="ident">DAQJobStoreCSVConfig</span></span>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig"><code class="flex name class">
+<span>class <span class="ident">DAQJobStoreRawConfig</span></span>
 <span>(</span><span>out_dir: str = 'out/', *, verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO, remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;, daq_job_type: str)</span>
 </code></dt>
 <dd>
@@ -274,7 +222,7 @@ and provides additional functionality for handling and storing messages.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobStoreCSVConfig(DAQJobConfig):
+<pre><code class="python">class DAQJobStoreRawConfig(DAQJobConfig):
     out_dir: str = &#34;out/&#34;</code></pre>
 </details>
 <h3>Ancestors</h3>
@@ -285,7 +233,44 @@ and provides additional functionality for handling and storing messages.</p>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig.out_dir"><code class="name">var <span class="ident">out_dir</span> : str</code></dt>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig.out_dir"><code class="name">var <span class="ident">out_dir</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.raw.RawFile"><code class="flex name class">
+<span>class <span class="ident">RawFile</span></span>
+<span>(</span><span>file: Any, last_flush_date: datetime.datetime, write_queue: collections.deque[bytes], overwrite: Optional[bool] = None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>RawFile(file: Any, last_flush_date: datetime.datetime, write_queue: collections.deque[bytes], overwrite: Optional[bool] = None)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class RawFile:
+    file: Any
+    last_flush_date: datetime
+    write_queue: deque[bytes]
+    overwrite: Optional[bool] = None</code></pre>
+</details>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.store.raw.RawFile.file"><code class="name">var <span class="ident">file</span> : Any</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.raw.RawFile.last_flush_date"><code class="name">var <span class="ident">last_flush_date</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.raw.RawFile.overwrite"><code class="name">var <span class="ident">overwrite</span> : Optional[bool]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.raw.RawFile.write_queue"><code class="name">var <span class="ident">write_queue</span> : collections.deque[bytes]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -307,27 +292,27 @@ and provides additional functionality for handling and storing messages.</p>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile" href="#enrgdaq.daq.jobs.store.csv.CSVFile">CSVFile</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw">DAQJobStoreRaw</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.file" href="#enrgdaq.daq.jobs.store.csv.CSVFile.file">file</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.last_flush_date" href="#enrgdaq.daq.jobs.store.csv.CSVFile.last_flush_date">last_flush_date</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.overwrite" href="#enrgdaq.daq.jobs.store.csv.CSVFile.overwrite">overwrite</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.write_queue" href="#enrgdaq.daq.jobs.store.csv.CSVFile.write_queue">write_queue</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_message_in_types" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_store_config_types" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.allowed_store_config_types">allowed_store_config_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.config_type" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.store_loop" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.store_loop">store_loop</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV">DAQJobStoreCSV</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig">DAQJobStoreRawConfig</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_message_in_types" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_message_in_types">allowed_message_in_types</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_store_config_types" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.allowed_store_config_types">allowed_store_config_types</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.config_type" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.config_type">config_type</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.store_loop" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.store_loop">store_loop</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig.out_dir" href="#enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig.out_dir">out_dir</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig">DAQJobStoreCSVConfig</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.store.raw.RawFile" href="#enrgdaq.daq.jobs.store.raw.RawFile">RawFile</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig.out_dir" href="#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig.out_dir">out_dir</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.RawFile.file" href="#enrgdaq.daq.jobs.store.raw.RawFile.file">file</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.RawFile.last_flush_date" href="#enrgdaq.daq.jobs.store.raw.RawFile.last_flush_date">last_flush_date</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.RawFile.overwrite" href="#enrgdaq.daq.jobs.store.raw.RawFile.overwrite">overwrite</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.raw.RawFile.write_queue" href="#enrgdaq.daq.jobs.store.raw.RawFile.write_queue">write_queue</a></code></li>
 </ul>
 </li>
 </ul>

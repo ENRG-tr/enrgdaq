@@ -54,7 +54,7 @@ and provides additional functionality for handling and storing messages.</p>
 <pre><code class="python">class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
-    allowed_message_in_types = [DAQJobMessageStore]
+    allowed_message_in_types = [DAQJobMessageStoreTabular]
     _open_files: dict[str, Any]
 
     def __init__(self, config: Any, **kwargs):
@@ -62,7 +62,7 @@ and provides additional functionality for handling and storing messages.</p>
 
         self._open_files = {}
 
-    def handle_message(self, message: DAQJobMessageStore) -&gt; bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
         super().handle_message(message)
         store_config = cast(DAQJobStoreConfigROOT, message.store_config)
         file_path = modify_file_path(

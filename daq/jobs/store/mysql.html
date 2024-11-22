@@ -77,7 +77,7 @@ and provides additional functionality for handling and storing messages.</p>
         )
         super().start()
 
-    def handle_message(self, message: DAQJobMessageStore) -&gt; bool:
+    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
         if not super().handle_message(message):
             return False
 

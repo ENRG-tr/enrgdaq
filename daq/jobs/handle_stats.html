@@ -105,7 +105,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
             tag = None
 
         self._put_message_out(
-            DAQJobMessageStore(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 keys=keys,
                 data=data_to_send,
