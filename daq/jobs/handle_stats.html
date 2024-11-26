@@ -68,6 +68,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
             return False
 
         keys = [
+            &#34;supervisor&#34;,
             &#34;daq_job&#34;,
             &#34;is_alive&#34;,
             &#34;last_message_in_date&#34;,
@@ -89,10 +90,15 @@ It extracts relevant statistics from the messages and stores them.</p></div>
                 record.count,
             ]
 
+        if message.daq_job_info and message.daq_job_info.supervisor_config:
+            supervisor_id = message.daq_job_info.supervisor_config.supervisor_id
+        else:
+            supervisor_id = &#34;N/A&#34;
         data_to_send = []
         for daq_job_type, msg in message.stats.items():
             data_to_send.append(
                 [
+                    supervisor_id,
                     daq_job_type.__name__,
                     str(msg.is_alive).lower(),
                     *unpack_record(msg.message_in_stats),
