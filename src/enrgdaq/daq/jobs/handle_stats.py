@@ -45,6 +45,7 @@ class DAQJobHandleStats(DAQJob):
             return False
 
         keys = [
+            "supervisor",
             "daq_job",
             "is_alive",
             "last_message_in_date",
@@ -66,10 +67,15 @@ class DAQJobHandleStats(DAQJob):
                 record.count,
             ]
 
+        if message.daq_job_info and message.daq_job_info.supervisor_config:
+            supervisor_id = message.daq_job_info.supervisor_config.supervisor_id
+        else:
+            supervisor_id = "N/A"
         data_to_send = []
         for daq_job_type, msg in message.stats.items():
             data_to_send.append(
                 [
+                    supervisor_id,
                     daq_job_type.__name__,
                     str(msg.is_alive).lower(),
                     *unpack_record(msg.message_in_stats),
