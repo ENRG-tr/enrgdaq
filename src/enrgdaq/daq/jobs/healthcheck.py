@@ -22,10 +22,16 @@ class AlertCondition(str, Enum):
     UNSATISFIED = "unsatisfied"
 
 
-class HealthcheckItem(Struct):
-    """Represents a healthcheck item with alert information."""
+class HealthcheckItem(Struct, kw_only=True):
+    """Represents a healthcheck item with alert information.
+
+    Attributes:
+        alert_info (DAQAlertInfo): The alert information.
+        alive_alert_info (Optional[DAQAlertInfo]): The alert information for when the item gets back alive (after being down).
+    """
 
     alert_info: DAQAlertInfo
+    alive_alert_info: Optional[DAQAlertInfo] = None
 
 
 class HealthcheckStatsItem(HealthcheckItem):
@@ -211,14 +217,16 @@ class DAQJobHealthcheck(DAQJob):
             item_id = hash(msgspec.json.encode(item))
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
-                self._send_alert(item)
+                self._send_alert(item.alert_info)
             elif not should_alert and item_id in self._sent_alert_items:
                 self._sent_alert_items.remove(item_id)
+                if item.alive_alert_info:
+                    self._send_alert(item.alive_alert_info)
 
-    def _send_alert(self, item: HealthcheckItem):
+    def _send_alert(self, alert_info: DAQAlertInfo):
         self._put_message_out(
             DAQJobMessageAlert(
                 date=datetime.now(),
-                alert_info=item.alert_info,
+                alert_info=alert_info,
             )
         )
