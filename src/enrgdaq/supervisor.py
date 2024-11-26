@@ -22,7 +22,16 @@ from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.models import SupervisorConfig
 
 DAQ_SUPERVISOR_SLEEP_TIME_SECONDS = 0.2
+"""Time in seconds to sleep between iterations of the supervisor's main loop."""
+
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
+"""Time in seconds to wait for a DAQ job to process a message."""
+
+DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS = 5
+"""Time in seconds to mark a DAQ job as alive after it has been running for that long."""
+
+DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS = 1
+"""Time in seconds between sending supervisor stats messages."""
 
 
 @dataclass
@@ -41,12 +50,15 @@ class Supervisor:
         daq_job_stats (DAQJobStatsDict): Dictionary holding statistics for each DAQ job type.
         restart_schedules (list[RestartDAQJobSchedule]): List of schedules for restarting DAQ jobs.
         _logger (logging.Logger): Logger instance for logging supervisor activities.
+        _last_stats_message_time (datetime): Last time a stats message was sent.
     """
 
     daq_job_threads: list[DAQJobThread]
     daq_job_stats: DAQJobStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
+
+    _last_stats_message_time: datetime
 
     def init(self):
         """
@@ -67,6 +79,10 @@ class Supervisor:
             type(thread.daq_job): DAQJobStats() for thread in self.daq_job_threads
         }
         self.warn_for_lack_of_daq_jobs()
+
+        self._last_stats_message_time = datetime.now() - timedelta(
+            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
+        )
 
     def start_daq_job_threads(self) -> list[DAQJobThread]:
         return start_daq_jobs(load_daq_jobs("configs/", self.config))
@@ -103,7 +119,10 @@ class Supervisor:
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
 
-        # Get messages from enrgdaq.daq. Jobs
+        # Handle thread alive stats for dead & alive threads
+        self.handle_thread_alive_stats(dead_threads)
+
+        # Get messages from DAQ Jobs
         daq_messages_out = self.get_messages_from_daq_jobs()
 
         # Add supervisor messages
@@ -111,6 +130,28 @@ class Supervisor:
 
         # Send messages to appropriate DAQ Jobs
         self.send_messages_to_daq_jobs(daq_messages_out)
+
+    def handle_thread_alive_stats(self, dead_threads: list[DAQJobThread]):
+        """
+        Handles the alive stats for the dead threads.
+
+        Args:
+            dead_threads (list[DAQJobThread]): List of dead threads.
+        """
+
+        for thread in self.daq_job_threads:
+            if (
+                datetime.now() + timedelta(seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS)
+                < thread.start_time
+            ):
+                self.get_daq_job_stats(
+                    self.daq_job_stats, type(thread.daq_job)
+                ).is_alive = True
+
+        for thread in dead_threads:
+            self.get_daq_job_stats(
+                self.daq_job_stats, type(thread.daq_job)
+            ).is_alive = False
 
     def get_restart_schedules(self, dead_threads: list[DAQJobThread]):
         """
@@ -181,12 +222,16 @@ class Supervisor:
         messages = []
 
         # Send stats message
-        messages.append(
-            DAQJobMessageStats(
-                stats=self.daq_job_stats,
-                daq_job_info=self._get_supervisor_daq_job_info(),
+        if datetime.now() > self._last_stats_message_time + timedelta(
+            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
+        ):
+            self._last_stats_message_time = datetime.now()
+            messages.append(
+                DAQJobMessageStats(
+                    stats=self.daq_job_stats,
+                    daq_job_info=self._get_supervisor_daq_job_info(),
+                )
             )
-        )
         return messages
 
     def get_daq_job_stats(

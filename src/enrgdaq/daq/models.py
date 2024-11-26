@@ -73,11 +73,13 @@ class DAQRemoteConfig(Struct, kw_only=True):
 
     Attributes:
         remote_topic (Optional[str]): The topic to send the message to for remote communication.
-        remote_disable (Optional[bool]): Whether to disable remote communication.
+        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
+        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
     """
 
     remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
     remote_disable: Optional[bool] = False
+    drop_remote_messages: Optional[bool] = False
 
 
 class DAQJobConfig(Struct, kw_only=True):
@@ -141,11 +143,13 @@ class DAQJobStats(Struct):
         message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
         message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
         restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
     """
 
     message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True
 
 
 class DAQJobStopError(Exception):

@@ -1,8 +1,8 @@
 import logging
 import threading
 import uuid
-from dataclasses import dataclass
-from datetime import timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from queue import Empty, Queue
 from typing import Any, Optional
 
@@ -121,6 +121,18 @@ class DAQJob:
             raise Exception(
                 f"Message type '{type(message)}' is not accepted by '{type(self).__name__}'"
             )
+        # Drop remote messages silently if configured to do so
+        if self.config.remote_config.drop_remote_messages:
+            if message.daq_job_info and message.daq_job_info.supervisor_config:
+                remote_supervisor_id = (
+                    message.daq_job_info.supervisor_config.supervisor_id
+                )
+            else:
+                remote_supervisor_id = "unknown"
+            self._logger.debug(
+                f"Dropping remote message '{type(message)}' from '{remote_supervisor_id}' because drop_remote_messages is True"
+            )
+            return True
         return True
 
     def start(self):
@@ -180,3 +192,4 @@ class DAQJob:
 class DAQJobThread:
     daq_job: DAQJob
     thread: threading.Thread
+    start_time: datetime = field(default_factory=datetime.now)

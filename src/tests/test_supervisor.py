@@ -1,4 +1,5 @@
 import unittest
+from datetime import datetime, timedelta
 from queue import Queue
 from unittest.mock import MagicMock, patch
 
@@ -65,8 +66,10 @@ class TestSupervisor(unittest.TestCase):
     ):
         mock_thread_alive = MagicMock()
         mock_thread_alive.thread.is_alive.return_value = True
+        mock_thread_alive.start_time = datetime.now() - timedelta(seconds=5)
         mock_thread_dead = MagicMock()
         mock_thread_dead.thread.is_alive.return_value = False
+        mock_thread_dead.start_time = datetime.now() - timedelta(seconds=10)
         mock_restart_daq_job.return_value = mock_thread_alive
 
         self.supervisor.daq_job_threads = [mock_thread_alive, mock_thread_dead]

@@ -46,6 +46,7 @@ class DAQJobHandleStats(DAQJob):
 
         keys = [
             "daq_job",
+            "is_alive",
             "last_message_in_date",
             "message_in_count",
             "last_message_out_date",
@@ -70,6 +71,7 @@ class DAQJobHandleStats(DAQJob):
             data_to_send.append(
                 [
                     daq_job_type.__name__,
+                    str(msg.is_alive).lower(),
                     *unpack_record(msg.message_in_stats),
                     *unpack_record(msg.message_out_stats),
                     *unpack_record(msg.restart_stats),
