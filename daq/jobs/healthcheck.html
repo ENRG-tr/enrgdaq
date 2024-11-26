@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.2">
+<meta name="generator" content="pdoc3 0.11.3">
 <title>enrgdaq.daq.jobs.healthcheck API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -301,7 +301,7 @@ The default value is True.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobHealthcheckConfig</span></span>
-<span>(</span><span>healthcheck_stats: list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>],<br>enable_alerts_on_restart: bool = True,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>healthcheck_stats: list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>],<br>enable_alerts_on_restart: bool = True,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.</p>
@@ -358,7 +358,7 @@ The default value is True.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckItem"><code class="flex name class">
 <span>class <span class="ident">HealthcheckItem</span></span>
-<span>(</span><span>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: Optional[<a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>] = None)</span>
+<span>(</span><span>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Represents a healthcheck item with alert information.</p>
@@ -399,7 +399,7 @@ The default value is True.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckItem.alive_alert_info"><code class="name">var <span class="ident">alive_alert_info</span> : Optional[<a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>]</code></dt>
+<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckItem.alive_alert_info"><code class="name">var <span class="ident">alive_alert_info</span> : <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -407,7 +407,7 @@ The default value is True.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem"><code class="flex name class">
 <span>class <span class="ident">HealthcheckStatsItem</span></span>
-<span>(</span><span>daq_job_type: str,<br>stats_key: str,<br>alert_if_interval_is: <a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a>,<br>interval: Optional[str] = None,<br>amount: Optional[int] = None,<br>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: Optional[<a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>] = None)</span>
+<span>(</span><span>daq_job_type: str,<br>stats_key: str,<br>alert_if_interval_is: <a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a>,<br>interval: str | None = None,<br>amount: int | None = None,<br>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Represents a healthcheck stats item with additional attributes.</p>
@@ -477,7 +477,7 @@ The default value is True.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.amount"><code class="name">var <span class="ident">amount</span> : Optional[int]</code></dt>
+<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.amount"><code class="name">var <span class="ident">amount</span> : int | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -485,7 +485,7 @@ The default value is True.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.interval"><code class="name">var <span class="ident">interval</span> : Optional[str]</code></dt>
+<dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.interval"><code class="name">var <span class="ident">interval</span> : str | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -568,7 +568,7 @@ The default value is True.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
 </footer>
 </body>
 </html>

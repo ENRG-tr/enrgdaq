@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.2">
+<meta name="generator" content="pdoc3 0.11.3">
 <title>enrgdaq.daq.jobs.handle_stats API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -37,7 +37,7 @@ hljs.highlightAll();
 <dl>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleStats</span></span>
-<span>(</span><span>config: Any,<br>supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
+<span>(</span><span>config: Any,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Handles statistics for DAQ jobs.</p>
@@ -69,6 +69,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 
         keys = [
             &#34;daq_job&#34;,
+            &#34;is_alive&#34;,
             &#34;last_message_in_date&#34;,
             &#34;message_in_count&#34;,
             &#34;last_message_out_date&#34;,
@@ -93,6 +94,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
             data_to_send.append(
                 [
                     daq_job_type.__name__,
+                    str(msg.is_alive).lower(),
                     *unpack_record(msg.message_in_stats),
                     *unpack_record(msg.message_out_stats),
                     *unpack_record(msg.restart_stats),
@@ -155,7 +157,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleStatsConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Configuration class for DAQJobHandleStats.</p></div>
@@ -178,7 +180,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStats</span></span>
-<span>(</span><span>stats: Dict[type[<a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>], <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>*,<br>id: Optional[str] = &lt;factory&gt;,<br>timestamp: Optional[datetime.datetime] = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>] = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>stats: Dict[type[<a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>], <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Message class containing DAQ job statistics.</p></div>
@@ -244,7 +246,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
 </footer>
 </body>
 </html>

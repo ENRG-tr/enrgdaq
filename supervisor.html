@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.2">
+<meta name="generator" content="pdoc3 0.11.3">
 <title>enrgdaq.supervisor API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -29,6 +29,25 @@ hljs.highlightAll();
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="enrgdaq.supervisor.DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS"><code class="name">var <span class="ident">DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS</span></code></dt>
+<dd>
+<div class="desc"><p>Time in seconds to mark a DAQ job as alive after it has been running for that long.</p></div>
+</dd>
+<dt id="enrgdaq.supervisor.DAQ_JOB_QUEUE_ACTION_TIMEOUT"><code class="name">var <span class="ident">DAQ_JOB_QUEUE_ACTION_TIMEOUT</span></code></dt>
+<dd>
+<div class="desc"><p>Time in seconds to wait for a DAQ job to process a message.</p></div>
+</dd>
+<dt id="enrgdaq.supervisor.DAQ_SUPERVISOR_SLEEP_TIME_SECONDS"><code class="name">var <span class="ident">DAQ_SUPERVISOR_SLEEP_TIME_SECONDS</span></code></dt>
+<dd>
+<div class="desc"><p>Time in seconds to sleep between iterations of the supervisor's main loop.</p></div>
+</dd>
+<dt id="enrgdaq.supervisor.DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS"><code class="name">var <span class="ident">DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS</span></code></dt>
+<dd>
+<div class="desc"><p>Time in seconds between sending supervisor stats messages.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -83,6 +102,8 @@ and facilitating communication between them.</p>
 <dd>List of schedules for restarting DAQ jobs.</dd>
 <dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
 <dd>Logger instance for logging supervisor activities.</dd>
+<dt><strong><code>_last_stats_message_time</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>Last time a stats message was sent.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -97,12 +118,15 @@ and facilitating communication between them.</p>
         daq_job_stats (DAQJobStatsDict): Dictionary holding statistics for each DAQ job type.
         restart_schedules (list[RestartDAQJobSchedule]): List of schedules for restarting DAQ jobs.
         _logger (logging.Logger): Logger instance for logging supervisor activities.
+        _last_stats_message_time (datetime): Last time a stats message was sent.
     &#34;&#34;&#34;
 
     daq_job_threads: list[DAQJobThread]
     daq_job_stats: DAQJobStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
+
+    _last_stats_message_time: datetime
 
     def init(self):
         &#34;&#34;&#34;
@@ -123,6 +147,10 @@ and facilitating communication between them.</p>
             type(thread.daq_job): DAQJobStats() for thread in self.daq_job_threads
         }
         self.warn_for_lack_of_daq_jobs()
+
+        self._last_stats_message_time = datetime.now() - timedelta(
+            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
+        )
 
     def start_daq_job_threads(self) -&gt; list[DAQJobThread]:
         return start_daq_jobs(load_daq_jobs(&#34;configs/&#34;, self.config))
@@ -159,7 +187,10 @@ and facilitating communication between them.</p>
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
 
-        # Get messages from enrgdaq.daq. Jobs
+        # Handle thread alive stats for dead &amp; alive threads
+        self.handle_thread_alive_stats(dead_threads)
+
+        # Get messages from DAQ Jobs
         daq_messages_out = self.get_messages_from_daq_jobs()
 
         # Add supervisor messages
@@ -167,6 +198,28 @@ and facilitating communication between them.</p>
 
         # Send messages to appropriate DAQ Jobs
         self.send_messages_to_daq_jobs(daq_messages_out)
+
+    def handle_thread_alive_stats(self, dead_threads: list[DAQJobThread]):
+        &#34;&#34;&#34;
+        Handles the alive stats for the dead threads.
+
+        Args:
+            dead_threads (list[DAQJobThread]): List of dead threads.
+        &#34;&#34;&#34;
+
+        for thread in self.daq_job_threads:
+            if (
+                datetime.now() + timedelta(seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS)
+                &lt; thread.start_time
+            ):
+                self.get_daq_job_stats(
+                    self.daq_job_stats, type(thread.daq_job)
+                ).is_alive = True
+
+        for thread in dead_threads:
+            self.get_daq_job_stats(
+                self.daq_job_stats, type(thread.daq_job)
+            ).is_alive = False
 
     def get_restart_schedules(self, dead_threads: list[DAQJobThread]):
         &#34;&#34;&#34;
@@ -237,12 +290,16 @@ and facilitating communication between them.</p>
         messages = []
 
         # Send stats message
-        messages.append(
-            DAQJobMessageStats(
-                stats=self.daq_job_stats,
-                daq_job_info=self._get_supervisor_daq_job_info(),
+        if datetime.now() &gt; self._last_stats_message_time + timedelta(
+            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
+        ):
+            self._last_stats_message_time = datetime.now()
+            messages.append(
+                DAQJobMessageStats(
+                    stats=self.daq_job_stats,
+                    daq_job_info=self._get_supervisor_daq_job_info(),
+                )
             )
-        )
         return messages
 
     def get_daq_job_stats(
@@ -386,6 +443,17 @@ and facilitating communication between them.</p>
 <dd>List of supervisor messages.</dd>
 </dl></div>
 </dd>
+<dt id="enrgdaq.supervisor.Supervisor.handle_thread_alive_stats"><code class="name flex">
+<span>def <span class="ident">handle_thread_alive_stats</span></span>(<span>self,<br>dead_threads: list[<a title="enrgdaq.daq.base.DAQJobThread" href="daq/base.html#enrgdaq.daq.base.DAQJobThread">DAQJobThread</a>])</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Handles the alive stats for the dead threads.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>dead_threads</code></strong> :&ensp;<code>list[DAQJobThread]</code></dt>
+<dd>List of dead threads.</dd>
+</dl></div>
+</dd>
 <dt id="enrgdaq.supervisor.Supervisor.init"><code class="name flex">
 <span>def <span class="ident">init</span></span>(<span>self)</span>
 </code></dt>
@@ -449,6 +517,14 @@ and facilitating communication between them.</p>
 <li><code><a title="enrgdaq" href="index.html">enrgdaq</a></code></li>
 </ul>
 </li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.supervisor.DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS" href="#enrgdaq.supervisor.DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS">DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS</a></code></li>
+<li><code><a title="enrgdaq.supervisor.DAQ_JOB_QUEUE_ACTION_TIMEOUT" href="#enrgdaq.supervisor.DAQ_JOB_QUEUE_ACTION_TIMEOUT">DAQ_JOB_QUEUE_ACTION_TIMEOUT</a></code></li>
+<li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_SLEEP_TIME_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_SLEEP_TIME_SECONDS">DAQ_SUPERVISOR_SLEEP_TIME_SECONDS</a></code></li>
+<li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS">DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS</a></code></li>
+</ul>
+</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
@@ -468,6 +544,7 @@ and facilitating communication between them.</p>
 <li><code><a title="enrgdaq.supervisor.Supervisor.get_messages_from_daq_jobs" href="#enrgdaq.supervisor.Supervisor.get_messages_from_daq_jobs">get_messages_from_daq_jobs</a></code></li>
 <li><code><a title="enrgdaq.supervisor.Supervisor.get_restart_schedules" href="#enrgdaq.supervisor.Supervisor.get_restart_schedules">get_restart_schedules</a></code></li>
 <li><code><a title="enrgdaq.supervisor.Supervisor.get_supervisor_messages" href="#enrgdaq.supervisor.Supervisor.get_supervisor_messages">get_supervisor_messages</a></code></li>
+<li><code><a title="enrgdaq.supervisor.Supervisor.handle_thread_alive_stats" href="#enrgdaq.supervisor.Supervisor.handle_thread_alive_stats">handle_thread_alive_stats</a></code></li>
 <li><code><a title="enrgdaq.supervisor.Supervisor.init" href="#enrgdaq.supervisor.Supervisor.init">init</a></code></li>
 <li><code><a title="enrgdaq.supervisor.Supervisor.loop" href="#enrgdaq.supervisor.Supervisor.loop">loop</a></code></li>
 <li><code><a title="enrgdaq.supervisor.Supervisor.restart_daq_jobs" href="#enrgdaq.supervisor.Supervisor.restart_daq_jobs">restart_daq_jobs</a></code></li>
@@ -484,7 +561,7 @@ and facilitating communication between them.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
 </footer>
 </body>
 </html>

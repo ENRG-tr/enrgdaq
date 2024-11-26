@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.2">
+<meta name="generator" content="pdoc3 0.11.3">
 <title>enrgdaq.daq.models API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -37,7 +37,7 @@ hljs.highlightAll();
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobConfig</span></span>
-<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>] = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
@@ -91,7 +91,7 @@ hljs.highlightAll();
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQJobConfig.remote_config"><code class="name">var <span class="ident">remote_config</span> : Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobConfig.remote_config"><code class="name">var <span class="ident">remote_config</span> : <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -103,7 +103,7 @@ hljs.highlightAll();
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobInfo"><code class="flex name class">
 <span>class <span class="ident">DAQJobInfo</span></span>
-<span>(</span><span>daq_job_type: str,<br>daq_job_class_name: str,<br>unique_id: str,<br>instance_id: int,<br>supervisor_config: Optional[<a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>] = None)</span>
+<span>(</span><span>daq_job_type: str,<br>daq_job_class_name: str,<br>unique_id: str,<br>instance_id: int,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A class to represent the information of a DAQJob.</p>
@@ -169,7 +169,7 @@ class DAQJobInfo:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQJobInfo.supervisor_config"><code class="name">var <span class="ident">supervisor_config</span> : Optional[<a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobInfo.supervisor_config"><code class="name">var <span class="ident">supervisor_config</span> : <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -190,7 +190,7 @@ class DAQJobInfo:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessage</span></span>
-<span>(</span><span>*,<br>id: Optional[str] = &lt;factory&gt;,<br>timestamp: Optional[datetime.datetime] = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>] = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
@@ -242,11 +242,11 @@ class DAQJobInfo:
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.models.DAQJobMessage.daq_job_info"><code class="name">var <span class="ident">daq_job_info</span> : Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobMessage.daq_job_info"><code class="name">var <span class="ident">daq_job_info</span> : <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQJobMessage.id"><code class="name">var <span class="ident">id</span> : Optional[str]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobMessage.id"><code class="name">var <span class="ident">id</span> : str | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -258,7 +258,7 @@ class DAQJobInfo:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQJobMessage.timestamp"><code class="name">var <span class="ident">timestamp</span> : Optional[datetime.datetime]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobMessage.timestamp"><code class="name">var <span class="ident">timestamp</span> : datetime.datetime | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -266,7 +266,7 @@ class DAQJobInfo:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageStop"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStop</span></span>
-<span>(</span><span>reason: str,<br>*,<br>id: Optional[str] = &lt;factory&gt;,<br>timestamp: Optional[datetime.datetime] = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>] = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>reason: str,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
@@ -306,7 +306,7 @@ class DAQJobInfo:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobStats</span></span>
-<span>(</span><span>message_in_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>message_out_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>restart_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;)</span>
+<span>(</span><span>message_in_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>message_out_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>restart_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>is_alive: bool = True)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.</p>
@@ -318,6 +318,8 @@ class DAQJobInfo:
 <dd>The statistics for outgoing messages.</dd>
 <dt><strong><code>restart_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>The statistics for restarts.</dd>
+<dt><strong><code>is_alive</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the DAQJob is alive.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -331,11 +333,13 @@ class DAQJobInfo:
         message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
         message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
         restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
     &#34;&#34;&#34;
 
     message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
-    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)</code></pre>
+    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -344,6 +348,10 @@ class DAQJobInfo:
 </ul>
 <h3>Instance variables</h3>
 <dl>
+<dt id="enrgdaq.daq.models.DAQJobStats.is_alive"><code class="name">var <span class="ident">is_alive</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.models.DAQJobStats.message_in_stats"><code class="name">var <span class="ident">message_in_stats</span> : <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>
 <div class="desc"></div>
@@ -360,7 +368,7 @@ class DAQJobInfo:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStatsRecord"><code class="flex name class">
 <span>class <span class="ident">DAQJobStatsRecord</span></span>
-<span>(</span><span>count: int = 0, last_updated: Optional[datetime.datetime] = None)</span>
+<span>(</span><span>count: int = 0, last_updated: datetime.datetime | None = None)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>A class to represent a record of statistics for a DAQJob.</p>
@@ -402,7 +410,7 @@ class DAQJobInfo:
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQJobStatsRecord.last_updated"><code class="name">var <span class="ident">last_updated</span> : Optional[datetime.datetime]</code></dt>
+<dt id="enrgdaq.daq.models.DAQJobStatsRecord.last_updated"><code class="name">var <span class="ident">last_updated</span> : datetime.datetime | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -439,7 +447,7 @@ class DAQJobInfo:
 </dd>
 <dt id="enrgdaq.daq.models.DAQRemoteConfig"><code class="flex name class">
 <span>class <span class="ident">DAQRemoteConfig</span></span>
-<span>(</span><span>*, remote_topic: Optional[str] = 'DAQ', remote_disable: Optional[bool] = False)</span>
+<span>(</span><span>*,<br>remote_topic: str | None = 'DAQ',<br>remote_disable: bool | None = False,<br>drop_remote_messages: bool | None = False)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Configuration for remote communication of DAQJobMessages.</p>
@@ -449,7 +457,9 @@ class DAQJobInfo:
 <dt><strong><code>remote_topic</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The topic to send the message to for remote communication.</dd>
 <dt><strong><code>remote_disable</code></strong> :&ensp;<code>Optional[bool]</code></dt>
-<dd>Whether to disable remote communication.</dd>
+<dd>Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.</dd>
+<dt><strong><code>drop_remote_messages</code></strong> :&ensp;<code>Optional[bool]</code></dt>
+<dd>Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -463,11 +473,13 @@ class DAQJobInfo:
 
     Attributes:
         remote_topic (Optional[str]): The topic to send the message to for remote communication.
-        remote_disable (Optional[bool]): Whether to disable remote communication.
+        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
+        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
     &#34;&#34;&#34;
 
     remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
-    remote_disable: Optional[bool] = False</code></pre>
+    remote_disable: Optional[bool] = False
+    drop_remote_messages: Optional[bool] = False</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -476,11 +488,15 @@ class DAQJobInfo:
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_disable"><code class="name">var <span class="ident">remote_disable</span> : Optional[bool]</code></dt>
+<dt id="enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages"><code class="name">var <span class="ident">drop_remote_messages</span> : bool | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_topic"><code class="name">var <span class="ident">remote_topic</span> : Optional[str]</code></dt>
+<dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_disable"><code class="name">var <span class="ident">remote_disable</span> : bool | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_topic"><code class="name">var <span class="ident">remote_topic</span> : str | None</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -599,6 +615,7 @@ class DAQJobInfo:
 <li>
 <h4><code><a title="enrgdaq.daq.models.DAQJobStats" href="#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.models.DAQJobStats.is_alive" href="#enrgdaq.daq.models.DAQJobStats.is_alive">is_alive</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobStats.message_in_stats" href="#enrgdaq.daq.models.DAQJobStats.message_in_stats">message_in_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobStats.message_out_stats" href="#enrgdaq.daq.models.DAQJobStats.message_out_stats">message_out_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobStats.restart_stats" href="#enrgdaq.daq.models.DAQJobStats.restart_stats">restart_stats</a></code></li>
@@ -618,6 +635,7 @@ class DAQJobInfo:
 <li>
 <h4><code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages" href="#enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages">drop_remote_messages</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.remote_disable" href="#enrgdaq.daq.models.DAQRemoteConfig.remote_disable">remote_disable</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.remote_topic" href="#enrgdaq.daq.models.DAQRemoteConfig.remote_topic">remote_topic</a></code></li>
 </ul>
@@ -638,7 +656,7 @@ class DAQJobInfo:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.2</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
 </footer>
 </body>
 </html>
