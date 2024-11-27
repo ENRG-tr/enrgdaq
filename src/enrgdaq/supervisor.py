@@ -140,9 +140,8 @@ class Supervisor:
         """
 
         for thread in self.daq_job_threads:
-            if (
-                datetime.now() + timedelta(seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS)
-                < thread.start_time
+            if datetime.now() - thread.start_time > timedelta(
+                seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS
             ):
                 self.get_daq_job_stats(
                     self.daq_job_stats, type(thread.daq_job)
