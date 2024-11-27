@@ -208,9 +208,8 @@ and facilitating communication between them.</p>
         &#34;&#34;&#34;
 
         for thread in self.daq_job_threads:
-            if (
-                datetime.now() + timedelta(seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS)
-                &lt; thread.start_time
+            if datetime.now() - thread.start_time &gt; timedelta(
+                seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS
             ):
                 self.get_daq_job_stats(
                     self.daq_job_stats, type(thread.daq_job)
