@@ -1,0 +1,4 @@
+daq_job_type = "DAQJobRemoteProxy"
+
+zmq_xsub_url = "tcp://0.0.0.0:10001"
+zmq_xpub_url = "tcp://0.0.0.0:10002"
