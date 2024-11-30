@@ -28,9 +28,10 @@ class DAQJobRemoteConfig(DAQJobConfig):
         topics (list[str]): List of topics to subscribe to.
     """
 
-    zmq_local_url: str
-    zmq_remote_urls: list[str]
+    zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
+    use_xsub: bool = False
+    zmq_proxy_pub_url: Optional[str] = None
 
 
 class DAQJobRemote(DAQJob):
@@ -46,10 +47,6 @@ class DAQJobRemote(DAQJob):
         config_type (type): Configuration type for the job.
         config (DAQJobRemoteConfig): Configuration instance.
         restart_offset (timedelta): Restart offset time.
-        _zmq_pub_ctx (zmq.Context): ZMQ context for publishing.
-        _zmq_sub_ctx (zmq.Context): ZMQ context for subscribing.
-        _zmq_pub (zmq.Socket): ZMQ socket for publishing.
-        _zmq_sub (Optional[zmq.Socket]): ZMQ socket for subscribing.
         _message_class_cache (dict): Cache for message classes.
         _remote_message_ids (set): Set of remote message IDs.
         _receive_thread (threading.Thread): Thread for receiving messages.
@@ -60,11 +57,6 @@ class DAQJobRemote(DAQJob):
     config: DAQJobRemoteConfig
     restart_offset = timedelta(seconds=5)
 
-    _zmq_pub_ctx: zmq.Context
-    _zmq_sub_ctx: zmq.Context
-
-    _zmq_pub: zmq.Socket
-    _zmq_sub: Optional[zmq.Socket]
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
@@ -72,15 +64,18 @@ class DAQJobRemote(DAQJob):
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
 
-        self._zmq_pub_ctx = zmq.Context()
-        self._logger.debug(f"Listening on {config.zmq_local_url}")
-        self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
-        self._zmq_pub.bind(config.zmq_local_url)
+        if config.zmq_proxy_pub_url is not None:
+            self._zmq_pub_ctx = zmq.Context()
+            self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
+            self._zmq_pub.connect(config.zmq_proxy_pub_url)
+        else:
+            self._zmq_pub_ctx = None
+            self._zmq_pub = None
         self._zmq_sub = None
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
-            args=(config.zmq_remote_urls,),
+            args=(config.zmq_proxy_sub_urls,),
             daemon=True,
         )
         self._message_class_cache = {}
@@ -100,6 +95,8 @@ class DAQJobRemote(DAQJob):
             or not super().handle_message(message)
             # Ignore if the message is remote, meaning it was sent by another Supervisor
             or message.is_remote
+            # Ignore if we are not connected to the proxy
+            or self._zmq_pub is None
         ):
             return True  # Silently ignore
 
@@ -120,7 +117,7 @@ class DAQJobRemote(DAQJob):
         """
         Create a ZMQ subscriber socket.
 
-        Args:
+        Args:g
             remote_urls (list[str]): List of remote URLs to connect to.
 
         Returns:
@@ -157,6 +154,17 @@ class DAQJobRemote(DAQJob):
             except zmq.ContextTerminated:
                 break
             recv_message = self._unpack_message(message)
+            if (
+                recv_message.daq_job_info is not None
+                and recv_message.daq_job_info.supervisor_config is not None
+                and self.info.supervisor_config is not None
+                and recv_message.daq_job_info.supervisor_config.supervisor_id
+                == self.info.supervisor_config.supervisor_id
+            ):
+                self._logger.warning(
+                    f"Received own message '{type(recv_message).__name__}' on topic '{topic.decode()}', ignoring message. This should NOT happen. Check the config."
+                )
+                continue
             self._logger.debug(
                 f"Received {len(message)} bytes for message '{type(recv_message).__name__}' on topic '{topic.decode()}'"
             )
