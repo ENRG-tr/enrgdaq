@@ -299,7 +299,6 @@ class DAQJobRemote(DAQJob):
     def _send_remote_stats_message(self):
         msg = DAQJobMessageStatsRemote(dict(self._remote_stats))
         self._put_message_out(msg)
-        self.message_in.put(msg)
 
     def __del__(self):
         """
