@@ -71,6 +71,8 @@ class DAQJob:
 
         if supervisor_config is not None:
             self._supervisor_config = supervisor_config
+        else:
+            self._supervisor_config = None
         self.info = self._create_info()
 
     def consume(self, nowait=True):

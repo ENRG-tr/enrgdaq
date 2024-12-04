@@ -1,11 +1,12 @@
 import pickle
 import threading
-import time
-from datetime import timedelta
+from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import Optional
 
 import msgspec
 import zmq
+from msgspec import Struct, field
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import (
@@ -13,8 +14,41 @@ from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobMessage,
 )
+from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
+DAQ_JOB_REMOTE_SLEEP_INTERVAL = 1
+
+
+class SupervisorRemoteStats(Struct):
+    """Statistics for a remote supervisor."""
+
+    message_in_count: int = 0
+    message_in_bytes: int = 0
+
+    message_out_count: int = 0
+    message_out_bytes: int = 0
+
+    last_active: datetime = field(default_factory=datetime.now)
+
+    def update_message_in_stats(self, message_in_bytes: int):
+        self.message_in_count += 1
+        self.message_in_bytes += message_in_bytes
+        self.last_active = datetime.now()
+
+    def update_message_out_stats(self, message_out_bytes: int):
+        self.message_out_count += 1
+        self.message_out_bytes += message_out_bytes
+        self.last_active = datetime.now()
+
+
+class DAQJobMessageStatsRemote(DAQJobMessage):
+    """Message class containing remote statistics."""
+
+    stats: "DAQJobMessageStatsRemoteDict"
+
+
+DAQJobMessageStatsRemoteDict = defaultdict[str, SupervisorRemoteStats]
 
 
 class DAQJobRemoteConfig(DAQJobConfig):
@@ -59,6 +93,7 @@ class DAQJobRemote(DAQJob):
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
+    _remote_stats: DAQJobMessageStatsRemoteDict
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -83,6 +118,7 @@ class DAQJobRemote(DAQJob):
             x.__name__: x for x in DAQJobMessage.__subclasses__()
         }
         self._remote_message_ids = set()
+        self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
@@ -101,10 +137,16 @@ class DAQJobRemote(DAQJob):
             return True
 
         remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
+        remote_topic = remote_topic.encode()
+        packed_message = self._pack_message(message)
+        self._zmq_pub.send_multipart([remote_topic, packed_message])
 
-        self._zmq_pub.send_multipart(
-            [remote_topic.encode(), self._pack_message(message)]
-        )
+        # Update remote stats
+        if self._supervisor_config:
+            self._remote_stats[
+                self._supervisor_config.supervisor_id
+            ].update_message_out_stats(len(packed_message) + len(remote_topic))
+
         self._logger.debug(
             f"Sent message '{type(message).__name__}' to topic '{remote_topic}'"
         )
@@ -169,6 +211,19 @@ class DAQJobRemote(DAQJob):
             # remote message_in -> message_out
             self.message_out.put(recv_message)
 
+            # Update remote stats
+            if self._supervisor_config:
+                self._remote_stats[
+                    self._supervisor_config.supervisor_id
+                ].update_message_in_stats(len(message))
+            if (
+                recv_message.daq_job_info
+                and recv_message.daq_job_info.supervisor_config
+            ):
+                self._remote_stats[
+                    recv_message.daq_job_info.supervisor_config.supervisor_id
+                ].update_message_out_stats(len(message))
+
     def start(self):
         """
         Start the receive thread and the DAQ job.
@@ -176,11 +231,13 @@ class DAQJobRemote(DAQJob):
         self._receive_thread.start()
 
         while True:
+            start_time = datetime.now()
             if not self._receive_thread.is_alive():
                 raise RuntimeError("Receive thread died")
             # message_in -> remote message_out
             self.consume()
-            time.sleep(0.1)
+            self._send_remote_stats_message()
+            sleep_for(DAQ_JOB_REMOTE_SLEEP_INTERVAL, start_time)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         """
@@ -231,6 +288,9 @@ class DAQJobRemote(DAQJob):
         if len(self._remote_message_ids) > DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
         return res
+
+    def _send_remote_stats_message(self):
+        self._put_message_out(DAQJobMessageStatsRemote(self._remote_stats))
 
     def __del__(self):
         """
