@@ -7,9 +7,11 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     StorableDAQJobConfig,
 )
-from enrgdaq.utils.time import get_unix_timestamp_ms
+from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
 
 DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
+
+DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS = 1
 
 
 class DAQJobHandleStatsConfig(StorableDAQJobConfig):
@@ -36,14 +38,33 @@ class DAQJobHandleStats(DAQJob):
     config_type = DAQJobHandleStatsConfig
     config: DAQJobHandleStatsConfig
 
+    _stats: dict[str, DAQJobStatsDict]
+
+    def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
+        super().__init__(config, **kwargs)
+        self._stats = {}
+
     def start(self):
         while True:
-            self.consume(nowait=False)
+            start_time = datetime.now()
+            self.consume()
+            self._save_stats()
+            sleep_for(DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS, start_time)
 
     def handle_message(self, message: DAQJobMessageStats) -> bool:
         if not super().handle_message(message):
             return False
 
+        # Ignore if the message has no supervisor info
+        if not message.daq_job_info or not message.daq_job_info.supervisor_config:
+            return True
+
+        self._stats[message.daq_job_info.supervisor_config.supervisor_id] = (
+            message.stats
+        )
+        return True
+
+    def _save_stats(self):
         keys = [
             "supervisor",
             "daq_job",
@@ -67,35 +88,24 @@ class DAQJobHandleStats(DAQJob):
                 record.count,
             ]
 
-        if message.daq_job_info and message.daq_job_info.supervisor_config:
-            supervisor_id = message.daq_job_info.supervisor_config.supervisor_id
-        else:
-            supervisor_id = "N/A"
-        data_to_send = []
-        for daq_job_type, msg in message.stats.items():
-            data_to_send.append(
-                [
-                    supervisor_id,
-                    daq_job_type.__name__,
-                    str(msg.is_alive).lower(),
-                    *unpack_record(msg.message_in_stats),
-                    *unpack_record(msg.message_out_stats),
-                    *unpack_record(msg.restart_stats),
-                ]
+        for supervisor_id, stats in self._stats.items():
+            data_to_send = []
+            for daq_job_type, msg in stats.items():
+                data_to_send.append(
+                    [
+                        supervisor_id,
+                        daq_job_type.__name__,
+                        str(msg.is_alive).lower(),
+                        *unpack_record(msg.message_in_stats),
+                        *unpack_record(msg.message_out_stats),
+                        *unpack_record(msg.restart_stats),
+                    ]
+                )
+
+            self._put_message_out(
+                DAQJobMessageStoreTabular(
+                    store_config=self.config.store_config,
+                    keys=keys,
+                    data=data_to_send,
+                )
             )
-
-        if message.daq_job_info and message.daq_job_info.supervisor_config:
-            tag = message.daq_job_info.supervisor_config.supervisor_id
-        else:
-            tag = None
-
-        self._put_message_out(
-            DAQJobMessageStoreTabular(
-                store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
-                tag=tag,
-            )
-        )
-
-        return True

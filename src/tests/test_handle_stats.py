@@ -9,7 +9,7 @@ from enrgdaq.daq.jobs.handle_stats import (
     DAQJobStatsRecord,
 )
 from enrgdaq.daq.jobs.test_job import DAQJobTest
-from enrgdaq.daq.models import DAQJobStats
+from enrgdaq.daq.models import DAQJobInfo, DAQJobStats
 
 
 class TestDAQJobHandleStats(unittest.TestCase):
@@ -23,6 +23,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
 
     def test_handle_message_success(self):
         message = DAQJobMessageStats(
+            daq_job_info=DAQJobInfo.mock(),
             stats={
                 DAQJobTest: DAQJobStats(
                     message_in_stats=DAQJobStatsRecord(
@@ -35,12 +36,13 @@ class TestDAQJobHandleStats(unittest.TestCase):
                         last_updated=datetime.now(), count=1
                     ),
                 )
-            }
+            },
         )
 
         result = self.daq_job_handle_stats.handle_message(message)
 
         self.assertTrue(result)
+        self.daq_job_handle_stats._save_stats()
         self.daq_job_handle_stats.message_out.put.assert_called_once()
 
     def test_handle_message_failure(self):
