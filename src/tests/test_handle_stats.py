@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 from enrgdaq.daq.jobs.handle_stats import (
@@ -8,6 +8,7 @@ from enrgdaq.daq.jobs.handle_stats import (
     DAQJobMessageStats,
     DAQJobStatsRecord,
 )
+from enrgdaq.daq.jobs.remote import SupervisorRemoteStats
 from enrgdaq.daq.jobs.test_job import DAQJobTest
 from enrgdaq.daq.models import DAQJobInfo, DAQJobStats
 
@@ -68,6 +69,49 @@ class TestDAQJobHandleStats(unittest.TestCase):
 
         self.assertFalse(result)
         self.daq_job_handle_stats.message_out.put.assert_not_called()
+
+    def test_save_remote_stats(self):
+        self.daq_job_handle_stats._remote_stats = {
+            "supervisor_1": {
+                "remote_1": SupervisorRemoteStats(
+                    last_active=datetime.now() - timedelta(seconds=10),
+                    message_in_count=10,
+                    message_in_bytes=1000,
+                    message_out_count=5,
+                    message_out_bytes=500,
+                )
+            },
+            "supervisor_2": {
+                "remote_2": SupervisorRemoteStats(
+                    last_active=datetime.now() - timedelta(seconds=40),
+                    message_in_count=20,
+                    message_in_bytes=2000,
+                    message_out_count=10,
+                    message_out_bytes=1000,
+                )
+            },
+        }
+
+        self.daq_job_handle_stats._save_remote_stats()
+        self.daq_job_handle_stats.message_out.put.assert_called_once()
+        args, kwargs = self.daq_job_handle_stats.message_out.put.call_args
+        data = args[0].data
+
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0][0], "remote_1")
+        self.assertEqual(data[0][1], "true")
+        self.assertEqual(data[1][0], "remote_2")
+        self.assertEqual(data[1][1], "false")
+
+    def test_save_remote_stats_empty(self):
+        self.daq_job_handle_stats._remote_stats = {}
+
+        self.daq_job_handle_stats._save_remote_stats()
+        self.daq_job_handle_stats.message_out.put.assert_called_once()
+        args, kwargs = self.daq_job_handle_stats.message_out.put.call_args
+        data = args[0].data
+
+        self.assertEqual(len(data), 0)
 
 
 if __name__ == "__main__":

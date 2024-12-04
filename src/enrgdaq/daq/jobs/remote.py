@@ -136,16 +136,23 @@ class DAQJobRemote(DAQJob):
         if message.remote_config.remote_disable:
             return True
 
+        self._send_remote_message(message)
+        return True
+
+    def _send_remote_message(self, message: DAQJobMessage):
+        if self._zmq_pub is None:
+            return
+
         remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
-        remote_topic = remote_topic.encode()
+        remote_topic_bytes = remote_topic.encode()
         packed_message = self._pack_message(message)
-        self._zmq_pub.send_multipart([remote_topic, packed_message])
+        self._zmq_pub.send_multipart([remote_topic_bytes, packed_message])
 
         # Update remote stats
         if self._supervisor_config:
             self._remote_stats[
                 self._supervisor_config.supervisor_id
-            ].update_message_out_stats(len(packed_message) + len(remote_topic))
+            ].update_message_out_stats(len(packed_message) + len(remote_topic_bytes))
 
         self._logger.debug(
             f"Sent message '{type(message).__name__}' to topic '{remote_topic}'"
@@ -290,7 +297,9 @@ class DAQJobRemote(DAQJob):
         return res
 
     def _send_remote_stats_message(self):
-        self._put_message_out(DAQJobMessageStatsRemote(dict(self._remote_stats)))
+        msg = DAQJobMessageStatsRemote(dict(self._remote_stats))
+        self._send_remote_message(msg)
+        self._put_message_out(msg)
 
     def __del__(self):
         """

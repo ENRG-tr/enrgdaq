@@ -143,7 +143,16 @@ class DAQJobHandleStats(DAQJob):
 
         # Combine remote stats from all supervisors
         remote_stats_combined = defaultdict(lambda: SupervisorRemoteStats())
-        for _, remote_stats_dict in self._remote_stats.items():
+        if (
+            self._supervisor_config
+            and self._supervisor_config.supervisor_id in self._remote_stats
+        ):
+            for supervisor_id, remote_stats in self._remote_stats[
+                self._supervisor_config.supervisor_id
+            ].items():
+                remote_stats_combined[supervisor_id] = remote_stats
+
+        for remote_stats_dict in self._remote_stats.values():
             # For each remote stats dict, combine the values
             for (
                 supervisor_id,
@@ -153,7 +162,10 @@ class DAQJobHandleStats(DAQJob):
                 remote_stats_dict_serialized = msgspec.structs.asdict(
                     remote_stats_dict_serialized_item
                 )
+                # Set each value
                 for item, value in remote_stats_dict_serialized.items():
+                    if value == 0 or not value:
+                        continue
                     setattr(remote_stats_combined[supervisor_id], item, value)
 
         for supervisor_id, remote_stats in remote_stats_combined.items():
