@@ -120,10 +120,8 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if (
-            # Do not send stats messages to the remote
-            isinstance(message, DAQJobMessageStats)
             # Ignore if we already received the message
-            or message.id in self._remote_message_ids
+            message.id in self._remote_message_ids
             # Ignore if the message is not allowed by the DAQ Job
             or not super().handle_message(message)
             # Ignore if the message is remote, meaning it was sent by another Supervisor
