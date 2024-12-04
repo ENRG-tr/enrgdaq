@@ -122,6 +122,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 
         if supervisor_config is not None:
             self._supervisor_config = supervisor_config
+        else:
+            self._supervisor_config = None
         self.info = self._create_info()
 
     def consume(self, nowait=True):

@@ -35,6 +35,35 @@ hljs.highlightAll();
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageStatsRemote</span></span>
+<span>(</span><span>stats: collections.defaultdict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Message class containing remote statistics.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStatsRemote(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing remote statistics.&#34;&#34;&#34;
+
+    stats: &#34;DAQJobMessageStatsRemoteDict&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote.stats"><code class="name">var <span class="ident">stats</span> : collections.defaultdict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemote"><code class="flex name class">
 <span>class <span class="ident">DAQJobRemote</span></span>
 <span>(</span><span>config: <a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig">DAQJobRemoteConfig</a>,<br>**kwargs)</span>
@@ -93,6 +122,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
+    _remote_stats: DAQJobMessageStatsRemoteDict
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -117,6 +147,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
             x.__name__: x for x in DAQJobMessage.__subclasses__()
         }
         self._remote_message_ids = set()
+        self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if (
@@ -135,10 +166,16 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
             return True
 
         remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
+        remote_topic = remote_topic.encode()
+        packed_message = self._pack_message(message)
+        self._zmq_pub.send_multipart([remote_topic, packed_message])
 
-        self._zmq_pub.send_multipart(
-            [remote_topic.encode(), self._pack_message(message)]
-        )
+        # Update remote stats
+        if self._supervisor_config:
+            self._remote_stats[
+                self._supervisor_config.supervisor_id
+            ].update_message_out_stats(len(packed_message) + len(remote_topic))
+
         self._logger.debug(
             f&#34;Sent message &#39;{type(message).__name__}&#39; to topic &#39;{remote_topic}&#39;&#34;
         )
@@ -203,6 +240,19 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
             # remote message_in -&gt; message_out
             self.message_out.put(recv_message)
 
+            # Update remote stats
+            if self._supervisor_config:
+                self._remote_stats[
+                    self._supervisor_config.supervisor_id
+                ].update_message_in_stats(len(message))
+            if (
+                recv_message.daq_job_info
+                and recv_message.daq_job_info.supervisor_config
+            ):
+                self._remote_stats[
+                    recv_message.daq_job_info.supervisor_config.supervisor_id
+                ].update_message_out_stats(len(message))
+
     def start(self):
         &#34;&#34;&#34;
         Start the receive thread and the DAQ job.
@@ -210,11 +260,13 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
         self._receive_thread.start()
 
         while True:
+            start_time = datetime.now()
             if not self._receive_thread.is_alive():
                 raise RuntimeError(&#34;Receive thread died&#34;)
             # message_in -&gt; remote message_out
             self.consume()
-            time.sleep(0.1)
+            self._send_remote_stats_message()
+            sleep_for(DAQ_JOB_REMOTE_SLEEP_INTERVAL, start_time)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -&gt; bytes:
         &#34;&#34;&#34;
@@ -265,6 +317,9 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
         if len(self._remote_message_ids) &gt; DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT:
             self._remote_message_ids.pop()
         return res
+
+    def _send_remote_stats_message(self):
+        self._put_message_out(DAQJobMessageStatsRemote(self._remote_stats))
 
     def __del__(self):
         &#34;&#34;&#34;
@@ -388,6 +443,81 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </dd>
 </dl>
 </dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats"><code class="flex name class">
+<span>class <span class="ident">SupervisorRemoteStats</span></span>
+<span>(</span><span>message_in_count: int = 0,<br>message_in_bytes: int = 0,<br>message_out_count: int = 0,<br>message_out_bytes: int = 0,<br>last_active: datetime.datetime = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Statistics for a remote supervisor.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorRemoteStats(Struct):
+    &#34;&#34;&#34;Statistics for a remote supervisor.&#34;&#34;&#34;
+
+    message_in_count: int = 0
+    message_in_bytes: int = 0
+
+    message_out_count: int = 0
+    message_out_bytes: int = 0
+
+    last_active: datetime = field(default_factory=datetime.now)
+
+    def update_message_in_stats(self, message_in_bytes: int):
+        self.message_in_count += 1
+        self.message_in_bytes += message_in_bytes
+        self.last_active = datetime.now()
+
+    def update_message_out_stats(self, message_out_bytes: int):
+        self.message_out_count += 1
+        self.message_out_bytes += message_out_bytes
+        self.last_active = datetime.now()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.last_active"><code class="name">var <span class="ident">last_active</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_bytes"><code class="name">var <span class="ident">message_in_bytes</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_count"><code class="name">var <span class="ident">message_in_count</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_bytes"><code class="name">var <span class="ident">message_out_bytes</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_count"><code class="name">var <span class="ident">message_out_count</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_in_stats"><code class="name flex">
+<span>def <span class="ident">update_message_in_stats</span></span>(<span>self, message_in_bytes: int)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_out_stats"><code class="name flex">
+<span>def <span class="ident">update_message_out_stats</span></span>(<span>self, message_out_bytes: int)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -403,6 +533,12 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote" href="#enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote">DAQJobMessageStatsRemote</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote.stats" href="#enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote.stats">stats</a></code></li>
+</ul>
+</li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote" href="#enrgdaq.daq.jobs.remote.DAQJobRemote">DAQJobRemote</a></code></h4>
 <ul class="">
@@ -420,6 +556,18 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.use_xsub" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.use_xsub">use_xsub</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_pub_url" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_pub_url">zmq_proxy_pub_url</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_sub_urls" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_sub_urls">zmq_proxy_sub_urls</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.last_active" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.last_active">last_active</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_bytes" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_bytes">message_in_bytes</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_count" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_in_count">message_in_count</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_bytes" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_bytes">message_out_bytes</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_count" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.message_out_count">message_out_count</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_in_stats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_in_stats">update_message_in_stats</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_out_stats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats.update_message_out_stats">update_message_out_stats</a></code></li>
 </ul>
 </li>
 </ul>
