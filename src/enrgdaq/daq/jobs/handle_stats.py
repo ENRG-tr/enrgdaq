@@ -65,18 +65,6 @@ class DAQJobHandleStats(DAQJob):
         return True
 
     def _save_stats(self):
-        keys = [
-            "supervisor",
-            "daq_job",
-            "is_alive",
-            "last_message_in_date",
-            "message_in_count",
-            "last_message_out_date",
-            "message_out_count",
-            "last_restart_date",
-            "restart_count",
-        ]
-
         def datetime_to_str(dt: Optional[datetime]):
             if dt is None:
                 return "N/A"
@@ -88,8 +76,20 @@ class DAQJobHandleStats(DAQJob):
                 record.count,
             ]
 
+        keys = [
+            "supervisor",
+            "daq_job",
+            "is_alive",
+            "last_message_in_date",
+            "message_in_count",
+            "last_message_out_date",
+            "message_out_count",
+            "last_restart_date",
+            "restart_count",
+        ]
+        data_to_send = []
+
         for supervisor_id, stats in self._stats.items():
-            data_to_send = []
             for daq_job_type, msg in stats.items():
                 data_to_send.append(
                     [
@@ -102,10 +102,10 @@ class DAQJobHandleStats(DAQJob):
                     ]
                 )
 
-            self._put_message_out(
-                DAQJobMessageStoreTabular(
-                    store_config=self.config.store_config,
-                    keys=keys,
-                    data=data_to_send,
-                )
+        self._put_message_out(
+            DAQJobMessageStoreTabular(
+                store_config=self.config.store_config,
+                keys=keys,
+                data=data_to_send,
             )
+        )
