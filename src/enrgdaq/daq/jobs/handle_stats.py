@@ -74,13 +74,9 @@ class DAQJobHandleStats(DAQJob):
             return True
 
         if isinstance(message, DAQJobMessageStats):
-            self._stats[message.daq_job_info.supervisor_config.supervisor_id] = (
-                message.stats
-            )
+            self._stats[message.supervisor_id] = message.stats
         elif isinstance(message, DAQJobMessageStatsRemote):
-            self._remote_stats[message.daq_job_info.supervisor_config.supervisor_id] = (
-                message.stats
-            )
+            self._remote_stats[message.supervisor_id] = message.stats
         return True
 
     def _save_stats(self):
@@ -135,9 +131,9 @@ class DAQJobHandleStats(DAQJob):
             "is_alive",
             "last_active",
             "message_in_count",
-            "message_in_bytes",
+            "message_in_megabytes",
             "message_out_count",
-            "message_out_bytes",
+            "message_out_megabytes",
         ]
         data_to_send = []
 
@@ -152,12 +148,19 @@ class DAQJobHandleStats(DAQJob):
             ].items():
                 remote_stats_combined[supervisor_id] = remote_stats
 
-        for remote_stats_dict in self._remote_stats.values():
+        for remote_supervisor_id, remote_stats_dict in self._remote_stats.items():
             # For each remote stats dict, combine the values
             for (
                 supervisor_id,
                 remote_stats_dict_serialized_item,
             ) in remote_stats_dict.items():
+                # Skip if the remote supervisor id is the same as the local supervisor id or
+                # other supervisors try to overwrite other supervisors
+                if supervisor_id != remote_supervisor_id or (
+                    self._supervisor_config
+                    and self._supervisor_config.supervisor_id == remote_supervisor_id
+                ):
+                    continue
                 # Convert the supervisor remote stats to a dict
                 remote_stats_dict_serialized = msgspec.structs.asdict(
                     remote_stats_dict_serialized_item
@@ -167,20 +170,23 @@ class DAQJobHandleStats(DAQJob):
                     if value == 0 or not value:
                         continue
                     setattr(remote_stats_combined[supervisor_id], item, value)
-
         for supervisor_id, remote_stats in remote_stats_combined.items():
             is_remote_alive = datetime.now() - remote_stats.last_active <= timedelta(
                 seconds=DAQ_JOB_HANDLE_STATS_REMOTE_ALIVE_SECONDS
             )
+
+            def _byte_to_mb(x):
+                return "{:.3f}".format(x / 1024 / 1024)
+
             data_to_send.append(
                 [
                     supervisor_id,
                     str(is_remote_alive).lower(),
                     remote_stats.last_active,
                     remote_stats.message_in_count,
-                    remote_stats.message_in_bytes,
+                    _byte_to_mb(remote_stats.message_in_bytes),
                     remote_stats.message_out_count,
-                    remote_stats.message_out_bytes,
+                    _byte_to_mb(remote_stats.message_out_bytes),
                 ]
             )
         self._put_message_out(

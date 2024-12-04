@@ -113,6 +113,13 @@ class DAQJobMessage(Struct, kw_only=True):
     daq_job_info: Optional["DAQJobInfo"] = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
 
+    @property
+    def supervisor_id(self) -> str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return "unknown"
+
+        return self.daq_job_info.supervisor_config.supervisor_id
+
 
 class DAQJobMessageStop(DAQJobMessage):
     reason: str
