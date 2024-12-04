@@ -37,7 +37,7 @@ hljs.highlightAll();
 <dl>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsRemote</span></span>
-<span>(</span><span>stats: collections.defaultdict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Message class containing remote statistics.</p></div>
@@ -58,7 +58,7 @@ hljs.highlightAll();
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote.stats"><code class="name">var <span class="ident">stats</span> : collections.defaultdict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>]</code></dt>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote.stats"><code class="name">var <span class="ident">stats</span> : dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -319,7 +319,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
         return res
 
     def _send_remote_stats_message(self):
-        self._put_message_out(DAQJobMessageStatsRemote(self._remote_stats))
+        self._put_message_out(DAQJobMessageStatsRemote(dict(self._remote_stats)))
 
     def __del__(self):
         &#34;&#34;&#34;
