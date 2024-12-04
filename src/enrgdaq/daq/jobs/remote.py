@@ -48,7 +48,7 @@ class DAQJobMessageStatsRemote(DAQJobMessage):
     stats: "DAQJobMessageStatsRemoteDict"
 
 
-DAQJobMessageStatsRemoteDict = defaultdict[str, SupervisorRemoteStats]
+DAQJobMessageStatsRemoteDict = dict[str, SupervisorRemoteStats]
 
 
 class DAQJobRemoteConfig(DAQJobConfig):
@@ -290,7 +290,7 @@ class DAQJobRemote(DAQJob):
         return res
 
     def _send_remote_stats_message(self):
-        self._put_message_out(DAQJobMessageStatsRemote(self._remote_stats))
+        self._put_message_out(DAQJobMessageStatsRemote(dict(self._remote_stats)))
 
     def __del__(self):
         """
