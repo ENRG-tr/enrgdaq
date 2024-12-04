@@ -8,7 +8,6 @@ import msgspec
 import zmq
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats
 from enrgdaq.daq.models import (
     DEFAULT_REMOTE_TOPIC,
     DAQJobConfig,
@@ -87,10 +86,8 @@ class DAQJobRemote(DAQJob):
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
-            # Do not send stats messages to the remote
-            isinstance(message, DAQJobMessageStats)
             # Ignore if we already received the message
-            or message.id in self._remote_message_ids
+            message.id in self._remote_message_ids
             # Ignore if the message is not allowed by the DAQ Job
             or not super().handle_message(message)
             # Ignore if the message is remote, meaning it was sent by another Supervisor
