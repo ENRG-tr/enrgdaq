@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 import cv2
 
@@ -25,19 +26,23 @@ class DAQJobCamera(DAQJob):
     allowed_message_in_types = []
     config_type = DAQJobCameraConfig
     config: DAQJobCameraConfig
-    _cam: cv2.VideoCapture
+    _cam: Optional[cv2.VideoCapture]
 
     def __init__(self, config: DAQJobCameraConfig, **kwargs):
         super().__init__(config, **kwargs)
-        self._cam = cv2.VideoCapture(self.config.camera_device_index)
+        self._cam = None
 
     def start(self):
+        self._cam = cv2.VideoCapture(self.config.camera_device_index)
+
         while True:
             start_time = datetime.now()
             self.capture_image()
             sleep_for(self.config.store_interval_seconds, start_time)
 
     def capture_image(self):
+        assert self._cam is not None
+
         self._logger.debug("Capturing image...")
         res, frame = self._cam.read()
         assert res
