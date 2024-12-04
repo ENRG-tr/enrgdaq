@@ -86,18 +86,6 @@ It extracts relevant statistics from the messages and stores them.</p></div>
         return True
 
     def _save_stats(self):
-        keys = [
-            &#34;supervisor&#34;,
-            &#34;daq_job&#34;,
-            &#34;is_alive&#34;,
-            &#34;last_message_in_date&#34;,
-            &#34;message_in_count&#34;,
-            &#34;last_message_out_date&#34;,
-            &#34;message_out_count&#34;,
-            &#34;last_restart_date&#34;,
-            &#34;restart_count&#34;,
-        ]
-
         def datetime_to_str(dt: Optional[datetime]):
             if dt is None:
                 return &#34;N/A&#34;
@@ -109,8 +97,20 @@ It extracts relevant statistics from the messages and stores them.</p></div>
                 record.count,
             ]
 
+        keys = [
+            &#34;supervisor&#34;,
+            &#34;daq_job&#34;,
+            &#34;is_alive&#34;,
+            &#34;last_message_in_date&#34;,
+            &#34;message_in_count&#34;,
+            &#34;last_message_out_date&#34;,
+            &#34;message_out_count&#34;,
+            &#34;last_restart_date&#34;,
+            &#34;restart_count&#34;,
+        ]
+        data_to_send = []
+
         for supervisor_id, stats in self._stats.items():
-            data_to_send = []
             for daq_job_type, msg in stats.items():
                 data_to_send.append(
                     [
@@ -123,13 +123,13 @@ It extracts relevant statistics from the messages and stores them.</p></div>
                     ]
                 )
 
-            self._put_message_out(
-                DAQJobMessageStoreTabular(
-                    store_config=self.config.store_config,
-                    keys=keys,
-                    data=data_to_send,
-                )
-            )</code></pre>
+        self._put_message_out(
+            DAQJobMessageStoreTabular(
+                store_config=self.config.store_config,
+                keys=keys,
+                data=data_to_send,
+            )
+        )</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
