@@ -124,7 +124,7 @@ updated within a specified interval or if a job has restarted.</p>
     config_type = DAQJobHealthcheckConfig
     config: DAQJobHealthcheckConfig
     _sent_alert_items: set[int]
-    _current_stats: DAQJobStatsDict
+    _current_stats: dict[str, DAQJobStatsDict]
     _daq_job_type_to_class: dict[str, type[DAQJob]]
 
     _healthcheck_stats: list[HealthcheckStatsItem]
@@ -189,54 +189,58 @@ updated within a specified interval or if a job has restarted.</p>
         if not super().handle_message(message):
             return False
 
-        self._current_stats = message.stats
+        self._current_stats[message.supervisor_id] = message.stats
         return True
 
     def handle_checks(self):
         &#34;&#34;&#34;Performs health checks and sends alerts if necessary.&#34;&#34;&#34;
-        res: list[tuple[HealthcheckItem, bool]] = []
+        res: list[tuple[HealthcheckItem, str, bool]] = []
 
         for item in self._healthcheck_stats:
             # Get the current DAQJobStats by daq_job_type of item
             item_daq_job_type = self._get_daq_job_class(item.daq_job_type)
-            if item_daq_job_type not in self._current_stats:
-                continue
-
-            daq_job_stats = self._current_stats[item_daq_job_type]
-            should_alert = False
-            if item.interval is not None:
-                interval_from_now = datetime.now() - item.parse_interval()
-                daq_job_stats_date = getattr(daq_job_stats, item.stats_key).last_updated
-
-                if daq_job_stats_date is None:
+            for supervisor_id, daq_job_stats in self._current_stats.items():
+                if item_daq_job_type not in daq_job_stats:
                     continue
 
-                if item.alert_if_interval_is == AlertCondition.UNSATISFIED:
-                    should_alert = interval_from_now &gt; daq_job_stats_date
-                else:
-                    should_alert = interval_from_now &lt; daq_job_stats_date
+                daq_job_stats = daq_job_stats[item_daq_job_type]
+                should_alert = False
+                if item.interval is not None:
+                    interval_from_now = datetime.now() - item.parse_interval()
+                    daq_job_stats_date = getattr(
+                        daq_job_stats, item.stats_key
+                    ).last_updated
 
-            if item.amount is not None:
-                raise NotImplementedError
+                    if daq_job_stats_date is None:
+                        continue
 
-            res.append((item, should_alert))
+                    if item.alert_if_interval_is == AlertCondition.UNSATISFIED:
+                        should_alert = interval_from_now &gt; daq_job_stats_date
+                    else:
+                        should_alert = interval_from_now &lt; daq_job_stats_date
+
+                if item.amount is not None:
+                    raise NotImplementedError
+
+                res.append((item, supervisor_id, should_alert))
 
         # Alert if it&#39;s new
-        for item, should_alert in res:
+        for item, supervisor_id, should_alert in res:
             item_id = hash(msgspec.json.encode(item))
             if should_alert and item_id not in self._sent_alert_items:
                 self._sent_alert_items.add(item_id)
-                self._send_alert(item.alert_info)
+                self._send_alert(item.alert_info, supervisor_id)
             elif not should_alert and item_id in self._sent_alert_items:
                 self._sent_alert_items.remove(item_id)
                 if item.alive_alert_info:
-                    self._send_alert(item.alive_alert_info)
+                    self._send_alert(item.alive_alert_info, supervisor_id)
 
-    def _send_alert(self, alert_info: DAQAlertInfo):
+    def _send_alert(self, alert_info: DAQAlertInfo, originated_supervisor_id: str):
         self._put_message_out(
             DAQJobMessageAlert(
                 date=datetime.now(),
                 alert_info=alert_info,
+                originated_supervisor_id=originated_supervisor_id,
             )
         )</code></pre>
 </details>

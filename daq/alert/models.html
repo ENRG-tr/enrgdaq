@@ -210,7 +210,7 @@ errors defaults to 'strict'.</p></div>
 </dd>
 <dt id="enrgdaq.daq.alert.models.DAQJobMessageAlert"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageAlert</span></span>
-<span>(</span><span>date: datetime.datetime,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>date: datetime.datetime,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>originated_supervisor_id: str,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
@@ -233,7 +233,8 @@ errors defaults to 'strict'.</p></div>
 </summary>
 <pre><code class="python">class DAQJobMessageAlert(DAQJobMessage):
     date: datetime
-    alert_info: DAQAlertInfo</code></pre>
+    alert_info: DAQAlertInfo
+    originated_supervisor_id: str</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -248,6 +249,10 @@ errors defaults to 'strict'.</p></div>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.alert.models.DAQJobMessageAlert.date"><code class="name">var <span class="ident">date</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.alert.models.DAQJobMessageAlert.originated_supervisor_id"><code class="name">var <span class="ident">originated_supervisor_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -288,6 +293,7 @@ errors defaults to 'strict'.</p></div>
 <ul class="">
 <li><code><a title="enrgdaq.daq.alert.models.DAQJobMessageAlert.alert_info" href="#enrgdaq.daq.alert.models.DAQJobMessageAlert.alert_info">alert_info</a></code></li>
 <li><code><a title="enrgdaq.daq.alert.models.DAQJobMessageAlert.date" href="#enrgdaq.daq.alert.models.DAQJobMessageAlert.date">date</a></code></li>
+<li><code><a title="enrgdaq.daq.alert.models.DAQJobMessageAlert.originated_supervisor_id" href="#enrgdaq.daq.alert.models.DAQJobMessageAlert.originated_supervisor_id">originated_supervisor_id</a></code></li>
 </ul>
 </li>
 </ul>
