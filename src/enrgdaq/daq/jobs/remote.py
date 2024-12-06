@@ -17,7 +17,7 @@ from enrgdaq.daq.models import (
 from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
-DAQ_JOB_REMOTE_SLEEP_INTERVAL = 1
+DAQ_JOB_REMOTE_SLEEP_INTERVAL = 0.2
 
 
 class SupervisorRemoteStats(Struct):
