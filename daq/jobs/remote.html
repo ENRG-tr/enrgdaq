@@ -144,7 +144,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
         self._message_class_cache = {}
 
         self._message_class_cache = {
-            x.__name__: x for x in DAQJobMessage.__subclasses__()
+            x.__name__: x for x in all_subclasses(DAQJobMessage)
         }
         self._remote_message_ids = set()
         self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
