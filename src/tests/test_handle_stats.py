@@ -11,6 +11,7 @@ from enrgdaq.daq.jobs.handle_stats import (
 from enrgdaq.daq.jobs.remote import SupervisorRemoteStats
 from enrgdaq.daq.jobs.test_job import DAQJobTest
 from enrgdaq.daq.models import DAQJobInfo, DAQJobStats
+from enrgdaq.models import SupervisorConfig
 
 
 class TestDAQJobHandleStats(unittest.TestCase):
@@ -72,7 +73,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
 
     def test_save_remote_stats(self):
         self.daq_job_handle_stats._remote_stats = {
-            "supervisor_1": {
+            "remote_1": {
                 "remote_1": SupervisorRemoteStats(
                     last_active=datetime.now() - timedelta(seconds=10),
                     message_in_count=10,
@@ -81,7 +82,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
                     message_out_bytes=500,
                 )
             },
-            "supervisor_2": {
+            "remote_2": {
                 "remote_2": SupervisorRemoteStats(
                     last_active=datetime.now() - timedelta(seconds=40),
                     message_in_count=20,
@@ -92,6 +93,9 @@ class TestDAQJobHandleStats(unittest.TestCase):
             },
         }
 
+        self.daq_job_handle_stats._supervisor_config = SupervisorConfig(
+            supervisor_id="remote_1"
+        )
         self.daq_job_handle_stats._save_remote_stats()
         self.daq_job_handle_stats.message_out.put.assert_called_once()
         args, kwargs = self.daq_job_handle_stats.message_out.put.call_args
