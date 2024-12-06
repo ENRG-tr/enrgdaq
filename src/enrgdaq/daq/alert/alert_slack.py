@@ -51,6 +51,11 @@ class DAQJobAlertSlack(DAQJobAlert):
                             "short": True,
                         },
                         {
+                            "title": "Originated Supervisor ID",
+                            "value": alert.originated_supervisor_id,
+                            "short": True,
+                        },
+                        {
                             "title": "Severity",
                             "value": alert.alert_info.severity,
                             "short": True,

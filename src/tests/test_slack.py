@@ -29,7 +29,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 message="Test error message",
             ),
             date=datetime(2023, 10, 1, 12, 0, 0),
-            originated_supervisor_id="mock",
+            originated_supervisor_id="mock2",
         )
         self.daq_job.send_webhook(alert)
         assert alert.daq_job_info is not None
@@ -44,6 +44,11 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                         {
                             "title": "Supervisor ID",
                             "value": "mock",
+                            "short": True,
+                        },
+                        {
+                            "title": "Originated Supervisor ID",
+                            "value": "mock2",
                             "short": True,
                         },
                         {
