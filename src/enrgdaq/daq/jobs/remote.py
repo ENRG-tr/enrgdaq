@@ -14,6 +14,7 @@ from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobMessage,
 )
+from enrgdaq.utils.subclasses import all_subclasses
 from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
@@ -115,7 +116,7 @@ class DAQJobRemote(DAQJob):
         self._message_class_cache = {}
 
         self._message_class_cache = {
-            x.__name__: x for x in DAQJobMessage.__subclasses__()
+            x.__name__: x for x in all_subclasses(DAQJobMessage)
         }
         self._remote_message_ids = set()
         self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
