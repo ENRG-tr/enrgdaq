@@ -37,17 +37,19 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
             minutes=10
         )
-        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+        self.daq_job_healthcheck._current_stats = {"mock": {DAQJobTest: mock_stats}}
 
         self.daq_job_healthcheck.handle_checks()
 
-        mock_send_alert.assert_called_once_with(self.healthcheck_item.alert_info)
+        mock_send_alert.assert_called_once_with(
+            self.healthcheck_item.alert_info, "mock"
+        )
 
     @patch("enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck._send_alert")
     def test_handle_checks_should_not_alert(self, mock_send_alert):
         mock_stats = MagicMock()
         mock_stats.message_out_stats.last_updated = datetime.now()
-        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+        self.daq_job_healthcheck._current_stats = {"mock": {DAQJobTest: mock_stats}}
 
         self.daq_job_healthcheck.handle_checks()
 
@@ -59,11 +61,13 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
             minutes=10
         )
-        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+        self.daq_job_healthcheck._current_stats = {"mock": {DAQJobTest: mock_stats}}
 
         # First check should trigger an alert
         self.daq_job_healthcheck.handle_checks()
-        mock_send_alert.assert_called_once_with(self.healthcheck_item.alert_info)
+        mock_send_alert.assert_called_once_with(
+            self.healthcheck_item.alert_info, "mock"
+        )
 
         # Reset mock to check for second call
         mock_send_alert.reset_mock()
@@ -80,11 +84,13 @@ class TestDAQJobHealthcheck(unittest.TestCase):
         mock_stats.message_out_stats.last_updated = datetime.now() - timedelta(
             minutes=10
         )
-        self.daq_job_healthcheck._current_stats = {DAQJobTest: mock_stats}
+        self.daq_job_healthcheck._current_stats = {"mock": {DAQJobTest: mock_stats}}
 
         # First check should trigger an alert
         self.daq_job_healthcheck.handle_checks()
-        mock_send_alert.assert_called_once_with(self.healthcheck_item.alert_info)
+        mock_send_alert.assert_called_once_with(
+            self.healthcheck_item.alert_info, "mock"
+        )
 
         # Reset mock to check for second call
         mock_send_alert.reset_mock()
@@ -99,7 +105,9 @@ class TestDAQJobHealthcheck(unittest.TestCase):
             minutes=10
         )
         self.daq_job_healthcheck.handle_checks()
-        mock_send_alert.assert_called_once_with(self.healthcheck_item.alert_info)
+        mock_send_alert.assert_called_once_with(
+            self.healthcheck_item.alert_info, "mock"
+        )
 
     def test_parse_interval(self):
         self.assertEqual(self.healthcheck_item.parse_interval(), timedelta(minutes=5))

@@ -20,3 +20,4 @@ class DAQAlertInfo(Struct):
 class DAQJobMessageAlert(DAQJobMessage):
     date: datetime
     alert_info: DAQAlertInfo
+    originated_supervisor_id: str

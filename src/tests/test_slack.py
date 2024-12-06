@@ -29,6 +29,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 message="Test error message",
             ),
             date=datetime(2023, 10, 1, 12, 0, 0),
+            originated_supervisor_id="mock",
         )
         self.daq_job.send_webhook(alert)
         assert alert.daq_job_info is not None
@@ -73,6 +74,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 message="Test info message",
             ),
             date=datetime(2023, 10, 1, 12, 0, 0),
+            originated_supervisor_id="mock",
         )
         alert2 = DAQJobMessageAlert(
             daq_job_info=DAQJobInfo.mock(),
@@ -81,6 +83,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 message="Test warning message",
             ),
             date=datetime(2023, 10, 1, 12, 0, 0),
+            originated_supervisor_id="mock",
         )
         self.daq_job.handle_message(alert1)
         self.daq_job.handle_message(alert2)
@@ -95,6 +98,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
             ),
             is_remote=True,
             date=datetime(2023, 10, 1, 12, 0, 0),
+            originated_supervisor_id="mock",
         )
         self.daq_job.handle_message(alert)
         self.assertEqual(self.mock_slack.post.call_count, 1)
