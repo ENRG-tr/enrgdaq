@@ -7,7 +7,7 @@ import msgspec
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.jobs.remote import (
     DAQJobMessageStatsRemote,
-    DAQJobMessageStatsRemoteDict,
+    DAQJobRemoteStatsDict,
     SupervisorRemoteStats,
 )
 from enrgdaq.daq.models import DAQJobMessage, DAQJobStats, DAQJobStatsRecord
@@ -48,7 +48,7 @@ class DAQJobHandleStats(DAQJob):
     config: DAQJobHandleStatsConfig
 
     _stats: dict[str, DAQJobStatsDict]
-    _remote_stats: dict[str, DAQJobMessageStatsRemoteDict]
+    _remote_stats: dict[str, DAQJobRemoteStatsDict]
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
         super().__init__(config, **kwargs)

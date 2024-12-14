@@ -46,10 +46,10 @@ class SupervisorRemoteStats(Struct):
 class DAQJobMessageStatsRemote(DAQJobMessage):
     """Message class containing remote statistics."""
 
-    stats: "DAQJobMessageStatsRemoteDict"
+    stats: "DAQJobRemoteStatsDict"
 
 
-DAQJobMessageStatsRemoteDict = dict[str, SupervisorRemoteStats]
+DAQJobRemoteStatsDict = dict[str, SupervisorRemoteStats]
 
 
 class DAQJobRemoteConfig(DAQJobConfig):
@@ -94,7 +94,7 @@ class DAQJobRemote(DAQJob):
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
-    _remote_stats: DAQJobMessageStatsRemoteDict
+    _remote_stats: DAQJobRemoteStatsDict
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
