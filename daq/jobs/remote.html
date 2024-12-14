@@ -58,7 +58,7 @@ el.replaceWith(d);
 <pre><code class="python">class DAQJobMessageStatsRemote(DAQJobMessage):
     &#34;&#34;&#34;Message class containing remote statistics.&#34;&#34;&#34;
 
-    stats: &#34;DAQJobStatsRemoteDict&#34;</code></pre>
+    stats: &#34;DAQJobRemoteStatsDict&#34;</code></pre>
 </details>
 <div class="desc"><p>Message class containing remote statistics.</p></div>
 <h3>Ancestors</h3>
@@ -78,7 +78,7 @@ el.replaceWith(d);
 <pre><code class="python">class DAQJobMessageStatsRemote(DAQJobMessage):
     &#34;&#34;&#34;Message class containing remote statistics.&#34;&#34;&#34;
 
-    stats: &#34;DAQJobStatsRemoteDict&#34;</code></pre>
+    stats: &#34;DAQJobRemoteStatsDict&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -119,7 +119,7 @@ el.replaceWith(d);
     _message_class_cache: dict[str, type[DAQJobMessage]]
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
-    _remote_stats: DAQJobStatsRemoteDict
+    _remote_stats: DAQJobRemoteStatsDict
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)

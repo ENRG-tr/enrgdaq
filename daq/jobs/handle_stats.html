@@ -68,7 +68,7 @@ el.replaceWith(d);
     config: DAQJobHandleStatsConfig
 
     _stats: dict[str, DAQJobStatsDict]
-    _remote_stats: dict[str, DAQJobStatsRemoteDict]
+    _remote_stats: dict[str, DAQJobRemoteStatsDict]
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
         super().__init__(config, **kwargs)
