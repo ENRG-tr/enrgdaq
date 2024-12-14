@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.3">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>enrgdaq.daq.base API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -40,33 +51,6 @@ hljs.highlightAll();
 <span>(</span><span>config: Any,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
-message queues, and provides methods for consuming and handling messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
-<dd>List of allowed message types for input.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Type of the configuration.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
-<dd>Configuration object.</dd>
-<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for incoming messages.</dd>
-<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
-<dd>Queue for outgoing messages.</dd>
-<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
-<dd>Unique instance identifier.</dd>
-<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>Unique identifier for the job.</dd>
-<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
-<dd>Offset for restarting the job.</dd>
-<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
-<dd>Information about the job.</dd>
-<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Flag indicating if the job has been freed.</dd>
-<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
-<dd>Logger instance for the job.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -240,6 +224,33 @@ message queues, and provides methods for consuming and handling messages.</p>
         self._has_been_freed = True
         self.__del__()</code></pre>
 </details>
+<div class="desc"><p>DAQJob is a base class for data acquisition jobs. It handles the configuration,
+message queues, and provides methods for consuming and handling messages.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
+<dd>List of allowed message types for input.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Type of the configuration.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
+<dd>Configuration object.</dd>
+<dt><strong><code>message_in</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for incoming messages.</dd>
+<dt><strong><code>message_out</code></strong> :&ensp;<code>Queue[DAQJobMessage]</code></dt>
+<dd>Queue for outgoing messages.</dd>
+<dt><strong><code>instance_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>Unique instance identifier.</dd>
+<dt><strong><code>unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>Unique identifier for the job.</dd>
+<dt><strong><code>restart_offset</code></strong> :&ensp;<code>timedelta</code></dt>
+<dd>Offset for restarting the job.</dd>
+<dt><strong><code>info</code></strong> :&ensp;<code>DAQJobInfo</code></dt>
+<dd>Information about the job.</dd>
+<dt><strong><code>_has_been_freed</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag indicating if the job has been freed.</dd>
+<dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
+<dd>Logger instance for the job.</dd>
+</dl></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.alert.base.DAQJobAlert" href="alert/base.html#enrgdaq.daq.alert.base.DAQJobAlert">DAQJobAlert</a></li>
@@ -299,6 +310,32 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>def <span class="ident">consume</span></span>(<span>self, nowait=True)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def consume(self, nowait=True):
+    &#34;&#34;&#34;
+    Consumes messages from the message_in queue.
+    If nowait is True, it will consume the message immediately.
+    Otherwise, it will wait until a message is available.
+    &#34;&#34;&#34;
+
+    def _process_message(message):
+        if not self.handle_message(message):
+            self.message_in.put(message)
+
+    # Return immediately after consuming the message
+    if not nowait:
+        _process_message(self.message_in.get())
+        return
+
+    while True:
+        try:
+            _process_message(self.message_in.get_nowait())
+        except Empty:
+            break</code></pre>
+</details>
 <div class="desc"><p>Consumes messages from the message_in queue.
 If nowait is True, it will consume the message immediately.
 Otherwise, it will wait until a message is available.</p></div>
@@ -307,12 +344,66 @@ Otherwise, it will wait until a message is available.</p></div>
 <span>def <span class="ident">free</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def free(self):
+    if self._has_been_freed:
+        return
+    self._has_been_freed = True
+    self.__del__()</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.handle_message"><code class="name flex">
 <span>def <span class="ident">handle_message</span></span>(<span>self, message: DAQJobMessage) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_message(self, message: &#34;DAQJobMessage&#34;) -&gt; bool:
+    &#34;&#34;&#34;
+    Handles a message received from the message queue.
+
+    Args:
+        message (DAQJobMessage): The message to handle.
+
+    Returns:
+        bool: True if the message was handled, False otherwise.
+
+    Raises:
+        DAQJobStopError: If the message is a DAQJobMessageStop.
+        Exception: If the message is not accepted by the job.
+    &#34;&#34;&#34;
+
+    if isinstance(message, DAQJobMessageStop):
+        raise DAQJobStopError(message.reason)
+    # check if the message is accepted
+    is_message_type_accepted = False
+    for accepted_message_type in self.allowed_message_in_types:
+        if isinstance(message, accepted_message_type):
+            is_message_type_accepted = True
+    if not is_message_type_accepted:
+        raise Exception(
+            f&#34;Message type &#39;{type(message)}&#39; is not accepted by &#39;{type(self).__name__}&#39;&#34;
+        )
+    # Drop remote messages silently if configured to do so
+    if self.config.remote_config.drop_remote_messages:
+        if message.daq_job_info and message.daq_job_info.supervisor_config:
+            remote_supervisor_id = (
+                message.daq_job_info.supervisor_config.supervisor_id
+            )
+        else:
+            remote_supervisor_id = &#34;unknown&#34;
+        self._logger.debug(
+            f&#34;Dropping remote message &#39;{type(message)}&#39; from &#39;{remote_supervisor_id}&#39; because drop_remote_messages is True&#34;
+        )
+        return True
+    return True</code></pre>
+</details>
 <div class="desc"><p>Handles a message received from the message queue.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -336,6 +427,13 @@ Otherwise, it will wait until a message is available.</p></div>
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    raise NotImplementedError</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -345,7 +443,6 @@ Otherwise, it will wait until a message is available.</p></div>
 <span>(</span><span>daq_job: <a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>,<br>thread: threading.Thread,<br>start_time: datetime.datetime = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobThread(daq_job: enrgdaq.daq.base.DAQJob, thread: threading.Thread, start_time: datetime.datetime = <factory>)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -356,6 +453,7 @@ class DAQJobThread:
     thread: threading.Thread
     start_time: datetime = field(default_factory=datetime.now)</code></pre>
 </details>
+<div class="desc"><p>DAQJobThread(daq_job: enrgdaq.daq.base.DAQJob, thread: threading.Thread, start_time: datetime.datetime = <factory>)</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="enrgdaq.daq.base.DAQJobThread.daq_job"><code class="name">var <span class="ident">daq_job</span> : <a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a></code></dt>
@@ -419,7 +517,7 @@ class DAQJobThread:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

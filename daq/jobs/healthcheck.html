@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.3">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>enrgdaq.daq.jobs.healthcheck API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -40,7 +51,6 @@ hljs.highlightAll();
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Enumeration for alert conditions.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -51,6 +61,7 @@ hljs.highlightAll();
     SATISFIED = &#34;satisfied&#34;
     UNSATISFIED = &#34;unsatisfied&#34;</code></pre>
 </details>
+<div class="desc"><p>Enumeration for alert conditions.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.str</li>
@@ -73,30 +84,6 @@ hljs.highlightAll();
 <span>(</span><span>config: <a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a>,<br>**kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Healthcheck job class for monitoring DAQ jobs.</p>
-<p>This class is responsible for performing health checks on various DAQ jobs
-based on the provided configuration. It monitors the stats of DAQ jobs and
-sends alerts if certain conditions are met, such as if a job has not been
-updated within a specified interval or if a job has restarted.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of allowed message types for this job.</dd>
-<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
-<dd>The configuration class type for this job.</dd>
-<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a></code></dt>
-<dd>The configuration instance for this job.</dd>
-<dt><strong><code>_sent_alert_items</code></strong> :&ensp;<code>set</code></dt>
-<dd>Set of alert item hashes that have been sent.</dd>
-<dt><strong><code>_current_stats</code></strong> :&ensp;<code>DAQJobStatsDict</code></dt>
-<dd>Dictionary holding the current stats of DAQ jobs.</dd>
-<dt><strong><code>_daq_job_type_to_class</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Mapping of DAQ job type names to their class types.</dd>
-<dt><strong><code>_healthcheck_stats</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of healthcheck stats items to monitor.</dd>
-<dt><strong><code>_get_daq_job_class</code></strong> :&ensp;<code>Callable</code></dt>
-<dd>Function to get the DAQ job class by its type name.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -244,6 +231,30 @@ updated within a specified interval or if a job has restarted.</p>
             )
         )</code></pre>
 </details>
+<div class="desc"><p>Healthcheck job class for monitoring DAQ jobs.</p>
+<p>This class is responsible for performing health checks on various DAQ jobs
+based on the provided configuration. It monitors the stats of DAQ jobs and
+sends alerts if certain conditions are met, such as if a job has not been
+updated within a specified interval or if a job has restarted.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of allowed message types for this job.</dd>
+<dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
+<dd>The configuration class type for this job.</dd>
+<dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig" href="#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig">DAQJobHealthcheckConfig</a></code></dt>
+<dd>The configuration instance for this job.</dd>
+<dt><strong><code>_sent_alert_items</code></strong> :&ensp;<code>set</code></dt>
+<dd>Set of alert item hashes that have been sent.</dd>
+<dt><strong><code>_current_stats</code></strong> :&ensp;<code>DAQJobStatsDict</code></dt>
+<dd>Dictionary holding the current stats of DAQ jobs.</dd>
+<dt><strong><code>_daq_job_type_to_class</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Mapping of DAQ job type names to their class types.</dd>
+<dt><strong><code>_healthcheck_stats</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of healthcheck stats items to monitor.</dd>
+<dt><strong><code>_get_daq_job_class</code></strong> :&ensp;<code>Callable</code></dt>
+<dd>Function to get the DAQ job class by its type name.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></li>
@@ -279,18 +290,87 @@ The default value is True.</p></div>
 <span>def <span class="ident">handle_checks</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_checks(self):
+    &#34;&#34;&#34;Performs health checks and sends alerts if necessary.&#34;&#34;&#34;
+    res: list[tuple[HealthcheckItem, str, bool]] = []
+
+    for item in self._healthcheck_stats:
+        # Get the current DAQJobStats by daq_job_type of item
+        item_daq_job_type = self._get_daq_job_class(item.daq_job_type)
+        for supervisor_id, daq_job_stats in self._current_stats.items():
+            if item_daq_job_type not in daq_job_stats:
+                continue
+
+            daq_job_stats = daq_job_stats[item_daq_job_type]
+            should_alert = False
+            if item.interval is not None:
+                interval_from_now = datetime.now() - item.parse_interval()
+                daq_job_stats_date = getattr(
+                    daq_job_stats, item.stats_key
+                ).last_updated
+
+                if daq_job_stats_date is None:
+                    continue
+
+                if item.alert_if_interval_is == AlertCondition.UNSATISFIED:
+                    should_alert = interval_from_now &gt; daq_job_stats_date
+                else:
+                    should_alert = interval_from_now &lt; daq_job_stats_date
+
+            if item.amount is not None:
+                raise NotImplementedError
+
+            res.append((item, supervisor_id, should_alert))
+
+    # Alert if it&#39;s new
+    for item, supervisor_id, should_alert in res:
+        item_id = hash(msgspec.json.encode(item))
+        if should_alert and item_id not in self._sent_alert_items:
+            self._sent_alert_items.add(item_id)
+            self._send_alert(item.alert_info, supervisor_id)
+        elif not should_alert and item_id in self._sent_alert_items:
+            self._sent_alert_items.remove(item_id)
+            if item.alive_alert_info:
+                self._send_alert(item.alive_alert_info, supervisor_id)</code></pre>
+</details>
 <div class="desc"><p>Performs health checks and sends alerts if necessary.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.handle_message"><code class="name flex">
 <span>def <span class="ident">handle_message</span></span>(<span>self,<br>message: <a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats" href="handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats">DAQJobMessageStats</a>) ‑> bool</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_message(self, message: DAQJobMessageStats) -&gt; bool:
+    &#34;&#34;&#34;Handles incoming messages and updates current stats.&#34;&#34;&#34;
+    if not super().handle_message(message):
+        return False
+
+    self._current_stats[message.supervisor_id] = message.stats
+    return True</code></pre>
+</details>
 <div class="desc"><p>Handles incoming messages and updates current stats.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    while True:
+        self.consume()
+        self.handle_checks()
+        time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -308,17 +388,6 @@ The default value is True.</p></div>
 <span>(</span><span>healthcheck_stats: list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>],<br>enable_alerts_on_restart: bool = True,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.</p>
-<h2 id="attributes">Attributes</h2>
-<p>healthcheck_stats (list[HealthcheckStatsItem]):
-A list of HealthcheckStatsItem objects that represent various health check statistics.
-Each item in the list provides detailed information about a specific aspect of the DAQ job's health,
-such as the interval for checking the job's stats, the key for the stats, and the condition for alerting.
-enable_alerts_on_restart (bool):
-A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
-If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
-This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
-The default value is True.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -342,6 +411,17 @@ The default value is True.</p></div>
     healthcheck_stats: list[HealthcheckStatsItem]
     enable_alerts_on_restart: bool = True</code></pre>
 </details>
+<div class="desc"><p>This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.</p>
+<h2 id="attributes">Attributes</h2>
+<p>healthcheck_stats (list[HealthcheckStatsItem]):
+A list of HealthcheckStatsItem objects that represent various health check statistics.
+Each item in the list provides detailed information about a specific aspect of the DAQ job's health,
+such as the interval for checking the job's stats, the key for the stats, and the condition for alerting.
+enable_alerts_on_restart (bool):
+A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+The default value is True.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a></li>
@@ -352,10 +432,56 @@ The default value is True.</p></div>
 <dl>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig.enable_alerts_on_restart"><code class="name">var <span class="ident">enable_alerts_on_restart</span> : bool</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobHealthcheckConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.
+
+    Attributes:
+        healthcheck_stats (list[HealthcheckStatsItem]):
+            A list of HealthcheckStatsItem objects that represent various health check statistics.
+            Each item in the list provides detailed information about a specific aspect of the DAQ job&#39;s health,
+            such as the interval for checking the job&#39;s stats, the key for the stats, and the condition for alerting.
+        enable_alerts_on_restart (bool):
+            A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+            If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+            This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+            The default value is True.
+    &#34;&#34;&#34;
+
+    healthcheck_stats: list[HealthcheckStatsItem]
+    enable_alerts_on_restart: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig.healthcheck_stats"><code class="name">var <span class="ident">healthcheck_stats</span> : list[<a title="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem">HealthcheckStatsItem</a>]</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobHealthcheckConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    This class holds the configuration settings for the DAQJobHealthcheck, which is responsible for monitoring the health of the DAQ (Data Acquisition) jobs.
+
+    Attributes:
+        healthcheck_stats (list[HealthcheckStatsItem]):
+            A list of HealthcheckStatsItem objects that represent various health check statistics.
+            Each item in the list provides detailed information about a specific aspect of the DAQ job&#39;s health,
+            such as the interval for checking the job&#39;s stats, the key for the stats, and the condition for alerting.
+        enable_alerts_on_restart (bool):
+            A boolean flag indicating whether alerts should be enabled when the DAQ job is restarted.
+            If set to True, alerts will be generated and sent to the appropriate channels whenever the job is restarted.
+            This can be useful for monitoring and ensuring that the restart process does not introduce any issues.
+            The default value is True.
+    &#34;&#34;&#34;
+
+    healthcheck_stats: list[HealthcheckStatsItem]
+    enable_alerts_on_restart: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -365,14 +491,6 @@ The default value is True.</p></div>
 <span>(</span><span>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Represents a healthcheck item with alert information.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>alert_info</code></strong> :&ensp;<code>DAQAlertInfo</code></dt>
-<dd>The alert information.</dd>
-<dt><strong><code>alive_alert_info</code></strong> :&ensp;<code>Optional[DAQAlertInfo]</code></dt>
-<dd>The alert information for when the item gets back alive (after being down).</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -388,6 +506,14 @@ The default value is True.</p></div>
     alert_info: DAQAlertInfo
     alive_alert_info: Optional[DAQAlertInfo] = None</code></pre>
 </details>
+<div class="desc"><p>Represents a healthcheck item with alert information.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>alert_info</code></strong> :&ensp;<code>DAQAlertInfo</code></dt>
+<dd>The alert information.</dd>
+<dt><strong><code>alive_alert_info</code></strong> :&ensp;<code>Optional[DAQAlertInfo]</code></dt>
+<dd>The alert information for when the item gets back alive (after being down).</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -401,10 +527,40 @@ The default value is True.</p></div>
 <dl>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckItem.alert_info"><code class="name">var <span class="ident">alert_info</span> : <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckItem(Struct, kw_only=True):
+    &#34;&#34;&#34;Represents a healthcheck item with alert information.
+
+    Attributes:
+        alert_info (DAQAlertInfo): The alert information.
+        alive_alert_info (Optional[DAQAlertInfo]): The alert information for when the item gets back alive (after being down).
+    &#34;&#34;&#34;
+
+    alert_info: DAQAlertInfo
+    alive_alert_info: Optional[DAQAlertInfo] = None</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckItem.alive_alert_info"><code class="name">var <span class="ident">alive_alert_info</span> : <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckItem(Struct, kw_only=True):
+    &#34;&#34;&#34;Represents a healthcheck item with alert information.
+
+    Attributes:
+        alert_info (DAQAlertInfo): The alert information.
+        alive_alert_info (Optional[DAQAlertInfo]): The alert information for when the item gets back alive (after being down).
+    &#34;&#34;&#34;
+
+    alert_info: DAQAlertInfo
+    alive_alert_info: Optional[DAQAlertInfo] = None</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -414,20 +570,6 @@ The default value is True.</p></div>
 <span>(</span><span>daq_job_type: str,<br>stats_key: str,<br>alert_if_interval_is: <a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a>,<br>interval: str | None = None,<br>amount: int | None = None,<br>*,<br>alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a>,<br>alive_alert_info: <a title="enrgdaq.daq.alert.models.DAQAlertInfo" href="../alert/models.html#enrgdaq.daq.alert.models.DAQAlertInfo">DAQAlertInfo</a> | None = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Represents a healthcheck stats item with additional attributes.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ (Data Acquisition) job.</dd>
-<dt><strong><code>stats_key</code></strong> :&ensp;<code>str</code></dt>
-<dd>The key associated with the stats item.</dd>
-<dt><strong><code>alert_if_interval_is</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a></code></dt>
-<dd>The condition to alert if the interval meets certain criteria. "satisfied" means the condition is met, "unsatisfied" means the condition is not met.</dd>
-<dt><strong><code>interval</code></strong> :&ensp;<code>Optional[str]</code></dt>
-<dd>The interval string representing time duration (e.g., '5s' for 5 seconds, '10m' for 10 minutes, '1h' for 1 hour).</dd>
-<dt><strong><code>amount</code></strong> :&ensp;<code>Optional[int]</code></dt>
-<dd>An optional amount associated with the stats item.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -469,6 +611,20 @@ The default value is True.</p></div>
         else:
             raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
 </details>
+<div class="desc"><p>Represents a healthcheck stats item with additional attributes.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the DAQ (Data Acquisition) job.</dd>
+<dt><strong><code>stats_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>The key associated with the stats item.</dd>
+<dt><strong><code>alert_if_interval_is</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a></code></dt>
+<dd>The condition to alert if the interval meets certain criteria. "satisfied" means the condition is met, "unsatisfied" means the condition is not met.</dd>
+<dt><strong><code>interval</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The interval string representing time duration (e.g., '5s' for 5 seconds, '10m' for 10 minutes, '1h' for 1 hour).</dd>
+<dt><strong><code>amount</code></strong> :&ensp;<code>Optional[int]</code></dt>
+<dd>An optional amount associated with the stats item.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.jobs.healthcheck.HealthcheckItem" href="#enrgdaq.daq.jobs.healthcheck.HealthcheckItem">HealthcheckItem</a></li>
@@ -479,22 +635,227 @@ The default value is True.</p></div>
 <dl>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.alert_if_interval_is"><code class="name">var <span class="ident">alert_if_interval_is</span> : <a title="enrgdaq.daq.jobs.healthcheck.AlertCondition" href="#enrgdaq.daq.jobs.healthcheck.AlertCondition">AlertCondition</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    stats_key: str
+    alert_if_interval_is: AlertCondition
+    interval: Optional[str] = None
+    amount: Optional[int] = None
+
+    def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+        if self.interval is None:
+            raise ValueError(&#34;interval is null&#34;)
+
+        if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+            raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+        unit = self.interval[-1]
+        value = int(self.interval[:-1])
+
+        if unit == &#34;s&#34;:
+            return timedelta(seconds=value)
+        elif unit == &#34;m&#34;:
+            return timedelta(minutes=value)
+        elif unit == &#34;h&#34;:
+            return timedelta(hours=value)
+        else:
+            raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.amount"><code class="name">var <span class="ident">amount</span> : int | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    stats_key: str
+    alert_if_interval_is: AlertCondition
+    interval: Optional[str] = None
+    amount: Optional[int] = None
+
+    def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+        if self.interval is None:
+            raise ValueError(&#34;interval is null&#34;)
+
+        if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+            raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+        unit = self.interval[-1]
+        value = int(self.interval[:-1])
+
+        if unit == &#34;s&#34;:
+            return timedelta(seconds=value)
+        elif unit == &#34;m&#34;:
+            return timedelta(minutes=value)
+        elif unit == &#34;h&#34;:
+            return timedelta(hours=value)
+        else:
+            raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.daq_job_type"><code class="name">var <span class="ident">daq_job_type</span> : str</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    stats_key: str
+    alert_if_interval_is: AlertCondition
+    interval: Optional[str] = None
+    amount: Optional[int] = None
+
+    def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+        if self.interval is None:
+            raise ValueError(&#34;interval is null&#34;)
+
+        if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+            raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+        unit = self.interval[-1]
+        value = int(self.interval[:-1])
+
+        if unit == &#34;s&#34;:
+            return timedelta(seconds=value)
+        elif unit == &#34;m&#34;:
+            return timedelta(minutes=value)
+        elif unit == &#34;h&#34;:
+            return timedelta(hours=value)
+        else:
+            raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.interval"><code class="name">var <span class="ident">interval</span> : str | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    stats_key: str
+    alert_if_interval_is: AlertCondition
+    interval: Optional[str] = None
+    amount: Optional[int] = None
+
+    def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+        if self.interval is None:
+            raise ValueError(&#34;interval is null&#34;)
+
+        if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+            raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+        unit = self.interval[-1]
+        value = int(self.interval[:-1])
+
+        if unit == &#34;s&#34;:
+            return timedelta(seconds=value)
+        elif unit == &#34;m&#34;:
+            return timedelta(minutes=value)
+        elif unit == &#34;h&#34;:
+            return timedelta(hours=value)
+        else:
+            raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.HealthcheckStatsItem.stats_key"><code class="name">var <span class="ident">stats_key</span> : str</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HealthcheckStatsItem(HealthcheckItem):
+    &#34;&#34;&#34;
+    Represents a healthcheck stats item with additional attributes.
+    Attributes:
+        daq_job_type (str): The type of the DAQ (Data Acquisition) job.
+        stats_key (str): The key associated with the stats item.
+        alert_if_interval_is (AlertCondition): The condition to alert if the interval meets certain criteria. &#34;satisfied&#34; means the condition is met, &#34;unsatisfied&#34; means the condition is not met.
+        interval (Optional[str]): The interval string representing time duration (e.g., &#39;5s&#39; for 5 seconds, &#39;10m&#39; for 10 minutes, &#39;1h&#39; for 1 hour).
+        amount (Optional[int]): An optional amount associated with the stats item.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    stats_key: str
+    alert_if_interval_is: AlertCondition
+    interval: Optional[str] = None
+    amount: Optional[int] = None
+
+    def parse_interval(self) -&gt; timedelta:
+        &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+        if self.interval is None:
+            raise ValueError(&#34;interval is null&#34;)
+
+        if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+            raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+        unit = self.interval[-1]
+        value = int(self.interval[:-1])
+
+        if unit == &#34;s&#34;:
+            return timedelta(seconds=value)
+        elif unit == &#34;m&#34;:
+            return timedelta(minutes=value)
+        elif unit == &#34;h&#34;:
+            return timedelta(hours=value)
+        else:
+            raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -504,6 +865,30 @@ The default value is True.</p></div>
 <span>def <span class="ident">parse_interval</span></span>(<span>self) ‑> datetime.timedelta</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def parse_interval(self) -&gt; timedelta:
+    &#34;&#34;&#34;Parses the interval string into a timedelta object.&#34;&#34;&#34;
+    if self.interval is None:
+        raise ValueError(&#34;interval is null&#34;)
+
+    if not self.interval[:-1].isdigit() or self.interval[-1] not in &#34;smh&#34;:
+        raise ValueError(f&#34;Invalid interval format: {self.interval}&#34;)
+
+    unit = self.interval[-1]
+    value = int(self.interval[:-1])
+
+    if unit == &#34;s&#34;:
+        return timedelta(seconds=value)
+    elif unit == &#34;m&#34;:
+        return timedelta(minutes=value)
+    elif unit == &#34;h&#34;:
+        return timedelta(hours=value)
+    else:
+        raise ValueError(f&#34;Invalid interval unit: {unit}&#34;)</code></pre>
+</details>
 <div class="desc"><p>Parses the interval string into a timedelta object.</p></div>
 </dd>
 </dl>
@@ -572,7 +957,7 @@ The default value is True.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>

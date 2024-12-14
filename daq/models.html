@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.3">
+<meta name="generator" content="pdoc3 0.11.5">
 <title>enrgdaq.daq.models API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -40,16 +51,6 @@ hljs.highlightAll();
 <span>(</span><span>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>verbosity</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a></code></dt>
-<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
-<dd>The type of the DAQ job.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -67,6 +68,16 @@ hljs.highlightAll();
     remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
     daq_job_type: str</code></pre>
 </details>
+<div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a></code></dt>
+<dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
+<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a>]</code></dt>
+<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
+<dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
+<dd>The type of the DAQ job.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -90,14 +101,65 @@ hljs.highlightAll();
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobConfig.daq_job_type"><code class="name">var <span class="ident">daq_job_type</span> : str</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobConfig is the base configuration class for DAQJobs.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
+        remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+        daq_job_type (str): The type of the DAQ job.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
+    daq_job_type: str</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobConfig.remote_config"><code class="name">var <span class="ident">remote_config</span> : <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobConfig is the base configuration class for DAQJobs.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
+        remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+        daq_job_type (str): The type of the DAQ job.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
+    daq_job_type: str</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobConfig.verbosity"><code class="name">var <span class="ident">verbosity</span> : <a title="enrgdaq.daq.models.LogVerbosity" href="#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobConfig is the base configuration class for DAQJobs.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
+        remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+        daq_job_type (str): The type of the DAQ job.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
+    daq_job_type: str</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -107,18 +169,6 @@ hljs.highlightAll();
 <span>(</span><span>daq_job_type: str,<br>daq_job_class_name: str,<br>unique_id: str,<br>instance_id: int,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class to represent the information of a DAQJob.</p>
-<h2 id="attributes">Attributes</h2>
-<p>daq_job_type : str
-The type of the DAQ job.
-daq_job_class_name : str
-The class name of the DAQ job, typically the name of the class itself.
-unique_id : str
-A unique identifier for the DAQ job.
-instance_id : int
-An instance identifier for the DAQ job.
-supervisor_config : Optional[SupervisorConfig]
-Configuration for the supervisor, if any.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -156,6 +206,18 @@ class DAQJobInfo:
             supervisor_config=SupervisorConfig(supervisor_id=&#34;mock&#34;),
         )</code></pre>
 </details>
+<div class="desc"><p>A class to represent the information of a DAQJob.</p>
+<h2 id="attributes">Attributes</h2>
+<p>daq_job_type : str
+The type of the DAQ job.
+daq_job_class_name : str
+The class name of the DAQ job, typically the name of the class itself.
+unique_id : str
+A unique identifier for the DAQ job.
+instance_id : int
+An instance identifier for the DAQ job.
+supervisor_config : Optional[SupervisorConfig]
+Configuration for the supervisor, if any.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobInfo.daq_job_class_name"><code class="name">var <span class="ident">daq_job_class_name</span> : str</code></dt>
@@ -185,6 +247,20 @@ class DAQJobInfo:
 <span>def <span class="ident">mock</span></span>(<span>) ‑> <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a></span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def mock() -&gt; &#34;DAQJobInfo&#34;:
+    return DAQJobInfo(
+        daq_job_type=&#34;mock&#34;,
+        daq_job_class_name=&#34;mock&#34;,
+        unique_id=&#34;mock&#34;,
+        instance_id=0,
+        supervisor_config=SupervisorConfig(supervisor_id=&#34;mock&#34;),
+    )</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -194,20 +270,6 @@ class DAQJobInfo:
 <span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
-<dd>The unique identifier for the message. Defaults to a UUID.</dd>
-<dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
-<dd>The timestamp for the message. Defaults to the current datetime.</dd>
-<dt><strong><code>is_remote</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether the message is sent by a remote DAQJob. Defaults to False.</dd>
-<dt><strong><code>daq_job_info</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
-<dd>The information about the DAQJob that sent the message. Defaults to None.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -236,6 +298,20 @@ class DAQJobInfo:
 
         return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
 </details>
+<div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The unique identifier for the message. Defaults to a UUID.</dd>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
+<dd>The timestamp for the message. Defaults to the current datetime.</dd>
+<dt><strong><code>is_remote</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the message is sent by a remote DAQJob. Defaults to False.</dd>
+<dt><strong><code>daq_job_info</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
+<dd>The information about the DAQJob that sent the message. Defaults to None.</dd>
+<dt><strong><code>remote_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
+<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -253,23 +329,134 @@ class DAQJobInfo:
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobMessage.daq_job_info"><code class="name">var <span class="ident">daq_job_info</span> : <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: Optional[&#34;DAQJobInfo&#34;] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage.id"><code class="name">var <span class="ident">id</span> : str | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: Optional[&#34;DAQJobInfo&#34;] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage.is_remote"><code class="name">var <span class="ident">is_remote</span> : bool</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: Optional[&#34;DAQJobInfo&#34;] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage.remote_config"><code class="name">var <span class="ident">remote_config</span> : <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: Optional[&#34;DAQJobInfo&#34;] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage.supervisor_id"><code class="name">prop <span class="ident">supervisor_id</span> : str</code></dt>
 <dd>
-<div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -281,9 +468,38 @@ def supervisor_id(self) -&gt; str:
 
     return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
 </details>
+<div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage.timestamp"><code class="name">var <span class="ident">timestamp</span> : datetime.datetime | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: Optional[&#34;DAQJobInfo&#34;] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -293,6 +509,13 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>reason: str,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStop(DAQJobMessage):
+    reason: str</code></pre>
+</details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
@@ -307,13 +530,6 @@ def supervisor_id(self) -&gt; str:
 <dt><strong><code>remote_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
 <dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 </dl></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobMessageStop(DAQJobMessage):
-    reason: str</code></pre>
-</details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
@@ -324,6 +540,13 @@ def supervisor_id(self) -&gt; str:
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobMessageStop.reason"><code class="name">var <span class="ident">reason</span> : str</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStop(DAQJobMessage):
+    reason: str</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -333,18 +556,6 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>message_in_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>message_out_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>restart_stats: <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a> = &lt;factory&gt;,<br>is_alive: bool = True)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>message_in_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
-<dd>The statistics for incoming messages.</dd>
-<dt><strong><code>message_out_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
-<dd>The statistics for outgoing messages.</dd>
-<dt><strong><code>restart_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
-<dd>The statistics for restarts.</dd>
-<dt><strong><code>is_alive</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether the DAQJob is alive.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -365,6 +576,18 @@ def supervisor_id(self) -&gt; str:
     restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     is_alive: bool = True</code></pre>
 </details>
+<div class="desc"><p>A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>message_in_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
+<dd>The statistics for incoming messages.</dd>
+<dt><strong><code>message_out_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
+<dd>The statistics for outgoing messages.</dd>
+<dt><strong><code>restart_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
+<dd>The statistics for restarts.</dd>
+<dt><strong><code>is_alive</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the DAQJob is alive.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -374,18 +597,98 @@ def supervisor_id(self) -&gt; str:
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobStats.is_alive"><code class="name">var <span class="ident">is_alive</span> : bool</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStats(Struct):
+    &#34;&#34;&#34;
+    A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.
+
+    Attributes:
+        message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
+        message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
+        restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
+    &#34;&#34;&#34;
+
+    message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStats.message_in_stats"><code class="name">var <span class="ident">message_in_stats</span> : <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStats(Struct):
+    &#34;&#34;&#34;
+    A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.
+
+    Attributes:
+        message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
+        message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
+        restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
+    &#34;&#34;&#34;
+
+    message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStats.message_out_stats"><code class="name">var <span class="ident">message_out_stats</span> : <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStats(Struct):
+    &#34;&#34;&#34;
+    A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.
+
+    Attributes:
+        message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
+        message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
+        restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
+    &#34;&#34;&#34;
+
+    message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStats.restart_stats"><code class="name">var <span class="ident">restart_stats</span> : <a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStats(Struct):
+    &#34;&#34;&#34;
+    A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.
+
+    Attributes:
+        message_in_stats (DAQJobStatsRecord): The statistics for incoming messages.
+        message_out_stats (DAQJobStatsRecord): The statistics for outgoing messages.
+        restart_stats (DAQJobStatsRecord): The statistics for restarts.
+        is_alive (bool): Whether the DAQJob is alive.
+    &#34;&#34;&#34;
+
+    message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    is_alive: bool = True</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -395,14 +698,6 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>count: int = 0, last_updated: datetime.datetime | None = None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A class to represent a record of statistics for a DAQJob.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>count</code></strong> :&ensp;<code>int</code></dt>
-<dd>The number of times the DAQJob has been called.</dd>
-<dt><strong><code>last_updated</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
-<dd>The last time the DAQJob was called.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -423,6 +718,14 @@ def supervisor_id(self) -&gt; str:
         self.count += amount
         self.last_updated = datetime.now()</code></pre>
 </details>
+<div class="desc"><p>A class to represent a record of statistics for a DAQJob.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>count</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of times the DAQJob has been called.</dd>
+<dt><strong><code>last_updated</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
+<dd>The last time the DAQJob was called.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -432,10 +735,50 @@ def supervisor_id(self) -&gt; str:
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobStatsRecord.count"><code class="name">var <span class="ident">count</span> : int</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStatsRecord(Struct):
+    &#34;&#34;&#34;
+    A class to represent a record of statistics for a DAQJob.
+
+    Attributes:
+        count (int): The number of times the DAQJob has been called.
+        last_updated (Optional[datetime]): The last time the DAQJob was called.
+    &#34;&#34;&#34;
+
+    count: int = 0
+    last_updated: Optional[datetime] = None
+
+    def increase(self, amount: int = 1):
+        self.count += amount
+        self.last_updated = datetime.now()</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobStatsRecord.last_updated"><code class="name">var <span class="ident">last_updated</span> : datetime.datetime | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStatsRecord(Struct):
+    &#34;&#34;&#34;
+    A class to represent a record of statistics for a DAQJob.
+
+    Attributes:
+        count (int): The number of times the DAQJob has been called.
+        last_updated (Optional[datetime]): The last time the DAQJob was called.
+    &#34;&#34;&#34;
+
+    count: int = 0
+    last_updated: Optional[datetime] = None
+
+    def increase(self, amount: int = 1):
+        self.count += amount
+        self.last_updated = datetime.now()</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -445,6 +788,14 @@ def supervisor_id(self) -&gt; str:
 <span>def <span class="ident">increase</span></span>(<span>self, amount: int = 1)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def increase(self, amount: int = 1):
+    self.count += amount
+    self.last_updated = datetime.now()</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -454,7 +805,6 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>reason: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -463,6 +813,7 @@ def supervisor_id(self) -&gt; str:
     def __init__(self, reason: str):
         self.reason = reason</code></pre>
 </details>
+<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.Exception</li>
@@ -474,17 +825,6 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>*,<br>remote_topic: str | None = 'DAQ',<br>remote_disable: bool | None = False,<br>drop_remote_messages: bool | None = False)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Configuration for remote communication of DAQJobMessages.</p>
-<p>Used both in DAQJobConfig and in DAQJobMessageStore.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_topic</code></strong> :&ensp;<code>Optional[str]</code></dt>
-<dd>The topic to send the message to for remote communication.</dd>
-<dt><strong><code>remote_disable</code></strong> :&ensp;<code>Optional[bool]</code></dt>
-<dd>Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.</dd>
-<dt><strong><code>drop_remote_messages</code></strong> :&ensp;<code>Optional[bool]</code></dt>
-<dd>Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.</dd>
-</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -505,6 +845,17 @@ def supervisor_id(self) -&gt; str:
     remote_disable: Optional[bool] = False
     drop_remote_messages: Optional[bool] = False</code></pre>
 </details>
+<div class="desc"><p>Configuration for remote communication of DAQJobMessages.</p>
+<p>Used both in DAQJobConfig and in DAQJobMessageStore.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>remote_topic</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The topic to send the message to for remote communication.</dd>
+<dt><strong><code>remote_disable</code></strong> :&ensp;<code>Optional[bool]</code></dt>
+<dd>Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.</dd>
+<dt><strong><code>drop_remote_messages</code></strong> :&ensp;<code>Optional[bool]</code></dt>
+<dd>Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -514,14 +865,74 @@ def supervisor_id(self) -&gt; str:
 <dl>
 <dt id="enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages"><code class="name">var <span class="ident">drop_remote_messages</span> : bool | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQRemoteConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for remote communication of DAQJobMessages.
+
+    Used both in DAQJobConfig and in DAQJobMessageStore.
+
+    Attributes:
+        remote_topic (Optional[str]): The topic to send the message to for remote communication.
+        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
+        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
+    &#34;&#34;&#34;
+
+    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
+    remote_disable: Optional[bool] = False
+    drop_remote_messages: Optional[bool] = False</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_disable"><code class="name">var <span class="ident">remote_disable</span> : bool | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQRemoteConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for remote communication of DAQJobMessages.
+
+    Used both in DAQJobConfig and in DAQJobMessageStore.
+
+    Attributes:
+        remote_topic (Optional[str]): The topic to send the message to for remote communication.
+        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
+        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
+    &#34;&#34;&#34;
+
+    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
+    remote_disable: Optional[bool] = False
+    drop_remote_messages: Optional[bool] = False</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQRemoteConfig.remote_topic"><code class="name">var <span class="ident">remote_topic</span> : str | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQRemoteConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for remote communication of DAQJobMessages.
+
+    Used both in DAQJobConfig and in DAQJobMessageStore.
+
+    Attributes:
+        remote_topic (Optional[str]): The topic to send the message to for remote communication.
+        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
+        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
+    &#34;&#34;&#34;
+
+    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
+    remote_disable: Optional[bool] = False
+    drop_remote_messages: Optional[bool] = False</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -531,8 +942,6 @@ def supervisor_id(self) -&gt; str:
 <span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Enum representing the verbosity levels for logging.</p>
-<p>Used in DAQJobConfig.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -552,6 +961,8 @@ def supervisor_id(self) -&gt; str:
     def to_logging_level(self) -&gt; int:
         return logging._nameToLevel[self.value]</code></pre>
 </details>
+<div class="desc"><p>Enum representing the verbosity levels for logging.</p>
+<p>Used in DAQJobConfig.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.str</li>
@@ -582,6 +993,13 @@ def supervisor_id(self) -&gt; str:
 <span>def <span class="ident">to_logging_level</span></span>(<span>self) ‑> int</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_logging_level(self) -&gt; int:
+    return logging._nameToLevel[self.value]</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -681,7 +1099,7 @@ def supervisor_id(self) -&gt; str:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.3</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
 </footer>
 </body>
 </html>
