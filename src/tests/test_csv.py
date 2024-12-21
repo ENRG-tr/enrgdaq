@@ -23,11 +23,16 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         file_path = "test.csv"
         add_date = True
         tag = "tag"
-        sep = os.path.sep
-        expected_file_path = f"{datetime.now().year}{sep}{datetime.now().month}{sep}{datetime.now().day}{sep}test_tag.csv"
-        actual_file_path = modify_file_path(file_path, add_date, tag)
-
-        self.assertEqual(expected_file_path, actual_file_path)
+        now = datetime.now()
+        test_dates = [
+            (datetime(2023, 10, 20), "2023/10/20/test_tag.csv"),
+            (datetime(2023, 1, 2), "2023/01/02/test_tag.csv"),
+            (None, f"{now.year}/{now.month:02d}/{now.day:02d}/test_tag.csv"),
+        ]
+        for date, expected_file_path in test_dates:
+            expected_file_path = expected_file_path.replace("/", os.path.sep)
+            actual_file_path = modify_file_path(file_path, add_date, tag, date)
+            self.assertEqual(expected_file_path, actual_file_path)
 
     @patch("enrgdaq.daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)

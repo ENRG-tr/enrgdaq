@@ -2,7 +2,9 @@ import os
 from datetime import datetime
 
 
-def modify_file_path(file_path: str, add_date: bool, tag: str | None) -> str:
+def modify_file_path(
+    file_path: str, add_date: bool, tag: str | None, date: datetime | None = None
+) -> str:
     """
     Modifies a file path by adding a date and/or a tag.
 
@@ -20,9 +22,10 @@ def modify_file_path(file_path: str, add_date: bool, tag: str | None) -> str:
     """
 
     if add_date:
-        now = datetime.now()
+        if date is None:
+            date = datetime.now()
         sep = os.path.sep
-        file_dir = f"{now.year}{sep}{now.month}{sep}{now.day}"
+        file_dir = f"{date.year}{sep}{date.month:02d}{sep}{date.day:02d}"
         file_path = os.path.join(file_dir, file_path)
     if tag is not None:
         head, tail = os.path.splitext(file_path)
