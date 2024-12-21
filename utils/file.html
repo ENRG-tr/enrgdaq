@@ -45,14 +45,16 @@ el.replaceWith(d);
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="enrgdaq.utils.file.modify_file_path"><code class="name flex">
-<span>def <span class="ident">modify_file_path</span></span>(<span>file_path: str, add_date: bool, tag: str | None) ‑> str</span>
+<span>def <span class="ident">modify_file_path</span></span>(<span>file_path: str,<br>add_date: bool,<br>tag: str | None,<br>date: datetime.datetime | None = None) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def modify_file_path(file_path: str, add_date: bool, tag: str | None) -&gt; str:
+<pre><code class="python">def modify_file_path(
+    file_path: str, add_date: bool, tag: str | None, date: datetime | None = None
+) -&gt; str:
     &#34;&#34;&#34;
     Modifies a file path by adding a date and/or a tag.
 
@@ -70,9 +72,10 @@ el.replaceWith(d);
     &#34;&#34;&#34;
 
     if add_date:
-        now = datetime.now()
+        if date is None:
+            date = datetime.now()
         sep = os.path.sep
-        file_dir = f&#34;{now.year}{sep}{now.month}{sep}{now.day}&#34;
+        file_dir = f&#34;{date.year}{sep}{date.month:02d}{sep}{date.day:02d}&#34;
         file_path = os.path.join(file_dir, file_path)
     if tag is not None:
         head, tail = os.path.splitext(file_path)
