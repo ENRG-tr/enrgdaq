@@ -97,9 +97,8 @@ class DAQJobStoreRedis(DAQJobStore):
             # Append item to key in redis
             for i, item in enumerate(msg.data.items()):
                 key, values = item
-                item_key = f"{msg.store_config.key}.{key}"
-                if msg.tag is not None:
-                    item_key = f"{msg.tag}.{item_key}"
+                tag = "" if msg.tag is None else f".{msg.tag}"
+                item_key = f"{msg.store_config.key}{tag}.{key}"
 
                 if msg.store_config.use_timeseries:
                     # Use Redis TimeSeries if requested

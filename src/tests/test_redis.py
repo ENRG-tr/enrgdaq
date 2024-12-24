@@ -87,7 +87,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    tag="prefix",
+                    tag="tag",
                 ),
                 RedisWriteQueueItem(
                     store_config=DAQJobStoreConfigRedis(
@@ -100,7 +100,7 @@ class TestDAQJobStoreRedis(unittest.TestCase):
                         "header1": ["row1_col1", "row2_col1"],
                         "header2": ["row1_col2", "row2_col2"],
                     },
-                    tag="prefix",
+                    tag="tag",
                 ),
             ]
         )
@@ -117,29 +117,29 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         )
 
         self.store._connection.rpush.assert_any_call(
-            "prefix.test_key_no_expiration.header1", "row1_col1", "row2_col1"
+            "test_key_no_expiration.tag.header1", "row1_col1", "row2_col1"
         )
         self.store._connection.rpush.assert_any_call(
-            "prefix.test_key_no_expiration.header2", "row1_col2", "row2_col2"
+            "test_key_no_expiration.tag.header2", "row1_col2", "row2_col2"
         )
 
         self.store._ts.madd.assert_any_call(
             [
-                ("prefix.test_key_timeseries.header1", unix_ms, "row1_col1"),
-                ("prefix.test_key_timeseries.header1", unix_ms + 1, "row2_col1"),
+                ("test_key_timeseries.tag.header1", unix_ms, "row1_col1"),
+                ("test_key_timeseries.tag.header1", unix_ms + 1, "row2_col1"),
             ]
         )
 
         self.store._ts.create.assert_any_call(
-            "prefix.test_key_timeseries.header2",
+            "test_key_timeseries.tag.header2",
             retention_msecs=int(timedelta(days=1).total_seconds() * 1000),
-            labels={"key": "test_key_timeseries", "tag": "prefix"},
+            labels={"key": "test_key_timeseries", "tag": "tag"},
         )
 
         self.store._ts.madd.assert_any_call(
             [
-                ("prefix.test_key_timeseries.header2", unix_ms, "row1_col2"),
-                ("prefix.test_key_timeseries.header2", unix_ms + 1, "row2_col2"),
+                ("test_key_timeseries.tag.header2", unix_ms, "row1_col2"),
+                ("test_key_timeseries.tag.header2", unix_ms + 1, "row2_col2"),
             ]
         )
 
