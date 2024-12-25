@@ -111,7 +111,7 @@ el.replaceWith(d);
                 DAQJobMessageStoreTabular(
                     store_config=self.config.store_config,
                     tag=&#34;caen-toolbox&#34;,
-                    keys=[&#34;timestamp&#34;, *[f&#34;caen_{x}&#34; for x in registers]],
+                    keys=[&#34;timestamp&#34;, *[x for x in registers]],
                     data=[
                         [
                             get_now_unix_timestamp_ms(),
@@ -172,7 +172,7 @@ el.replaceWith(d);
             DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
                 tag=&#34;caen-toolbox&#34;,
-                keys=[&#34;timestamp&#34;, *[f&#34;caen_{x}&#34; for x in registers]],
+                keys=[&#34;timestamp&#34;, *[x for x in registers]],
                 data=[
                     [
                         get_now_unix_timestamp_ms(),
