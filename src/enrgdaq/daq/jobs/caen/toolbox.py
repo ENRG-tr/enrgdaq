@@ -4,6 +4,8 @@ import tempfile
 from datetime import datetime
 from shutil import which
 
+from msgspec import Struct
+
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
@@ -12,6 +14,11 @@ from enrgdaq.daq.store.models import (
 from enrgdaq.utils.time import get_now_unix_timestamp_ms, sleep_for
 
 DAQ_JOB_CAEN_TOOLBOX_SLEEP_INTERVAL = 1
+
+
+class RegisterLabel(Struct):
+    register: str
+    label: str
 
 
 class DAQJobCAENToolboxConfig(StorableDAQJobConfig):
@@ -25,7 +32,7 @@ class DAQJobCAENToolboxConfig(StorableDAQJobConfig):
 
     digitizer_type: str
     connection_string: str
-    register_labels: dict[str, str]
+    register_labels: list[RegisterLabel]
 
 
 class DAQJobCAENToolbox(DAQJob):
@@ -70,7 +77,8 @@ class DAQJobCAENToolbox(DAQJob):
             parts = line.split(",")
             raw_registers[parts[0]] = int(parts[1], 16)
         registers = {}
-        for key, label in self.config.register_labels.items():
+        for reg_label in self.config.register_labels:
+            key, label = reg_label.register, reg_label.label
             registers[label] = raw_registers[key]
         return registers
 

@@ -1,7 +1,11 @@
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
 
-from enrgdaq.daq.jobs.caen.toolbox import DAQJobCAENToolbox, DAQJobCAENToolboxConfig
+from enrgdaq.daq.jobs.caen.toolbox import (
+    DAQJobCAENToolbox,
+    DAQJobCAENToolboxConfig,
+    RegisterLabel,
+)
 
 
 class TestDAQJobCAENToolbox(unittest.TestCase):
@@ -12,7 +16,10 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
             digitizer_type="dig1",
             connection_string="-c OPTICAL_LINK -l 0",
             store_config=MagicMock(),
-            register_labels={"reg1": "caen_reg1", "reg2": "caen_reg2"},
+            register_labels=[
+                RegisterLabel(register="reg1", label="caen_reg1"),
+                RegisterLabel(register="reg2", label="caen_reg2"),
+            ],
         )
         self.daq_job = DAQJobCAENToolbox(self.config)
 

@@ -1,0 +1,14 @@
+daq_job_type = "DAQJobCAENToolbox"
+
+# Digitizer type from caen-toolbox cli
+digitizer_type = "dig1"
+# Through optical link, with link number 0. See CAEN docs for more info
+connection_string = "-c OPTICAL_LINK -l 0"
+
+[[register_labels]]
+register = "0x11a8"
+label = "ADC_ch_1_Temperature"
+
+[store_config.csv]
+file_path = "digitizer_registers.csv"
+add_date = true
