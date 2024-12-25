@@ -212,6 +212,9 @@ el.replaceWith(d);
             if store_remote_config is not None:
                 message.remote_config = store_remote_config
 
+        if self.config.verbosity == LogVerbosity.DEBUG:
+            msg_json = msgspec.json.encode(message)
+            self._logger.debug(f&#34;Message out: {msg_json}&#34;)
         self.message_out.put(message)
 
     def __del__(self):
