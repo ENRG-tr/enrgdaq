@@ -1,9 +1,7 @@
 import unittest
-from datetime import datetime
 from unittest.mock import MagicMock, mock_open, patch
 
 from enrgdaq.daq.jobs.caen.toolbox import DAQJobCAENToolbox, DAQJobCAENToolboxConfig
-from enrgdaq.daq.store.models import DAQJobMessageStoreTabular
 
 
 class TestDAQJobCAENToolbox(unittest.TestCase):
