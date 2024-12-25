@@ -73,15 +73,16 @@ el.replaceWith(d);
             raise Exception(&#34;caen-toolbox cli not found&#34;)
 
     def _dump_digitizer(self) -&gt; dict[str, int]:
-        temp_file = os.path.join(tempfile.mkdtemp(), &#34;reg-dump.csv&#34;)
-        # dump registers
+        temp_file = os.path.join(tempfile.gettempdir(), &#34;reg-dump.csv&#34;)
+        # Dump registers. Might not be the best way of constructing a shell command
+        # but we don&#39;t need to worry about injection attacks here
         res = subprocess.run(
             [
-                &#34;caen-toolbox&#34;,
-                self.config.digitizer_type,
-                &#34;dump&#34;,
-                self.config.connection_string,
-            ]
+                f&#34;caen-toolbox {self.config.digitizer_type} dump {self.config.connection_string} {temp_file}&#34;
+            ],
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
         )
         if res.returncode != 0:
             raise Exception(f&#34;caen-toolbox dump failed: {res.stderr}&#34;)
