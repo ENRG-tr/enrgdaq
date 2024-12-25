@@ -53,15 +53,16 @@ class DAQJobCAENToolbox(DAQJob):
             raise Exception("caen-toolbox cli not found")
 
     def _dump_digitizer(self) -> dict[str, int]:
-        temp_file = os.path.join(tempfile.mkdtemp(), "reg-dump.csv")
-        # dump registers
+        temp_file = os.path.join(tempfile.gettempdir(), "reg-dump.csv")
+        # Dump registers. Might not be the best way of constructing a shell command
+        # but we don't need to worry about injection attacks here
         res = subprocess.run(
             [
-                "caen-toolbox",
-                self.config.digitizer_type,
-                "dump",
-                self.config.connection_string,
-            ]
+                f"caen-toolbox {self.config.digitizer_type} dump {self.config.connection_string} {temp_file}"
+            ],
+            shell=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT,
         )
         if res.returncode != 0:
             raise Exception(f"caen-toolbox dump failed: {res.stderr}")
