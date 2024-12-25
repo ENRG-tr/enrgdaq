@@ -6,12 +6,15 @@ from datetime import datetime, timedelta
 from queue import Empty, Queue
 from typing import Any, Optional
 
+import msgspec
+
 from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobInfo,
     DAQJobMessage,
     DAQJobMessageStop,
     DAQJobStopError,
+    LogVerbosity,
 )
 from enrgdaq.daq.store.models import DAQJobMessageStore
 from enrgdaq.models import SupervisorConfig
@@ -177,6 +180,9 @@ class DAQJob:
             if store_remote_config is not None:
                 message.remote_config = store_remote_config
 
+        if self.config.verbosity == LogVerbosity.DEBUG:
+            msg_json = msgspec.json.encode(message)
+            self._logger.debug(f"Message out: {msg_json}")
         self.message_out.put(message)
 
     def __del__(self):
