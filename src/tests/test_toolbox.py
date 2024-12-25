@@ -17,8 +17,8 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
             connection_string="-c OPTICAL_LINK -l 0",
             store_config=MagicMock(),
             register_labels=[
-                RegisterLabel(register="reg1", label="caen_reg1"),
-                RegisterLabel(register="reg2", label="caen_reg2"),
+                RegisterLabel(register="reg1", label="reg1"),
+                RegisterLabel(register="reg2", label="reg2"),
             ],
         )
         self.daq_job = DAQJobCAENToolbox(self.config)
@@ -46,7 +46,7 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
     def test_dump_digitizer(self, mock_open, mock_exists, mock_run):
         mock_run.return_value.returncode = 0
         registers = self.daq_job._dump_digitizer()
-        self.assertEqual(registers, {"caen_reg1": 1, "caen_reg2": 2})
+        self.assertEqual(registers, {"reg1": 1, "reg2": 2})
 
     @patch("enrgdaq.daq.jobs.caen.toolbox.subprocess.run")
     @patch("enrgdaq.daq.jobs.caen.toolbox.os.path.exists", return_value=False)
@@ -92,7 +92,7 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
         message = self.daq_job._put_message_out.call_args[0][0]
         self.assertEqual(message.store_config, self.config.store_config)
         self.assertEqual(message.tag, "caen-toolbox")
-        self.assertEqual(message.keys, ["timestamp", "caen_reg1", "caen_reg2"])
+        self.assertEqual(message.keys, ["timestamp", "reg1", "reg2"])
         self.assertEqual(message.data, [[1234567890, 1, 2]])
 
 

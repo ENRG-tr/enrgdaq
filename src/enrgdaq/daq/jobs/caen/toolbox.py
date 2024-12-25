@@ -91,7 +91,7 @@ class DAQJobCAENToolbox(DAQJob):
                 DAQJobMessageStoreTabular(
                     store_config=self.config.store_config,
                     tag="caen-toolbox",
-                    keys=["timestamp", *[f"caen_{x}" for x in registers]],
+                    keys=["timestamp", *[x for x in registers]],
                     data=[
                         [
                             get_now_unix_timestamp_ms(),
