@@ -90,7 +90,6 @@ class DAQJobCAENToolbox(DAQJob):
             self._put_message_out(
                 DAQJobMessageStoreTabular(
                     store_config=self.config.store_config,
-                    tag="caen-toolbox",
                     keys=["timestamp", *[x for x in registers]],
                     data=[
                         [

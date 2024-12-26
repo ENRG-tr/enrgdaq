@@ -91,7 +91,6 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
             self.daq_job.start()
         message = self.daq_job._put_message_out.call_args[0][0]
         self.assertEqual(message.store_config, self.config.store_config)
-        self.assertEqual(message.tag, "caen-toolbox")
         self.assertEqual(message.keys, ["timestamp", "reg1", "reg2"])
         self.assertEqual(message.data, [[1234567890, 1, 2]])
 
