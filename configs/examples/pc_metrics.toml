@@ -1,0 +1,13 @@
+daq_job_type = "DAQJobPCMetrics"
+
+# You can specify which metrics to store here
+# If not uncommented, all metrics will be stored
+# metrics_to_store = ["cpu", "memory", "disk"]
+
+# If not uncommented, the default poll interval will be used
+# poll_interval_seconds = 1
+
+[store_config.csv]
+file_path = "pc_metrics.csv"
+add_date = false
+overwrite = true
