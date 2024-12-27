@@ -65,6 +65,7 @@ class DAQJobPCMetrics(DAQJob):
         if PCMetric.DISK in self.config.metrics_to_store:
             data[PCMetric.DISK] = psutil.disk_usage("/").percent
 
+        data = {k.value: v for k, v in data.items()}
         self._send_store_message(data)
 
     def _send_store_message(self, data: dict):
@@ -73,6 +74,7 @@ class DAQJobPCMetrics(DAQJob):
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
+                tag=self._supervisor_config.supervisor_id,
                 keys=keys,
                 data=[values],
             )

@@ -189,6 +189,10 @@ class DAQJob:
         self._logger.info("DAQ job is being deleted")
         self._has_been_freed = True
 
+    @property
+    def supervisor_id(self):
+        return self.info.supervisor_config.supervisor_id
+
     def free(self):
         if self._has_been_freed:
             return
