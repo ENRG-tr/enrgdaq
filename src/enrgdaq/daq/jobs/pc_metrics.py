@@ -2,6 +2,7 @@ from datetime import datetime
 from enum import Enum
 
 import psutil
+from msgspec import field
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
@@ -26,7 +27,7 @@ class DAQJobPCMetricsConfig(StorableDAQJobConfig):
         poll_interval_seconds (int): Polling interval in seconds. If not specified, the default polling interval will be used.
     """
 
-    metrics_to_store: list[PCMetric] = list(PCMetric.__members__.keys())
+    metrics_to_store: list[PCMetric] = field(default_factory=lambda: list(PCMetric))
     poll_interval_seconds: int = DAQ_JOB_PC_METRICS_QUERY_INTERVAL_SECONDS
 
 
