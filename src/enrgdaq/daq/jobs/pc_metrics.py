@@ -26,7 +26,7 @@ class DAQJobPCMetricsConfig(StorableDAQJobConfig):
         poll_interval_seconds (int): Polling interval in seconds. If not specified, the default polling interval will be used.
     """
 
-    metrics_to_store: list[PCMetric] = PCMetric.__members__.keys()
+    metrics_to_store: list[PCMetric] = list(PCMetric.__members__.keys())
     poll_interval_seconds: int = DAQ_JOB_PC_METRICS_QUERY_INTERVAL_SECONDS
 
 
