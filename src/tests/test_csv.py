@@ -25,9 +25,9 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         tag = "tag"
         now = datetime.now()
         test_dates = [
-            (datetime(2023, 10, 20), "2023/10/20/test_tag.csv"),
-            (datetime(2023, 1, 2), "2023/01/02/test_tag.csv"),
-            (None, f"{now.year}/{now.month:02d}/{now.day:02d}/test_tag.csv"),
+            (datetime(2023, 10, 20), "2023-10-20_test_tag.csv"),
+            (datetime(2023, 1, 2), "2023-01-02_test_tag.csv"),
+            (None, f"{now.year}-{now.month:02d}-{now.day:02d}_test_tag.csv"),
         ]
         for date, expected_file_path in test_dates:
             expected_file_path = expected_file_path.replace("/", os.path.sep)
