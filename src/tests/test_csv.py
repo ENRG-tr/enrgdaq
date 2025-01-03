@@ -34,6 +34,16 @@ class TestDAQJobStoreCSV(unittest.TestCase):
             actual_file_path = modify_file_path(file_path, add_date, tag, date)
             self.assertEqual(expected_file_path, actual_file_path)
 
+        # Test with date + folder
+        file_path = "boo/test.csv"
+        add_date = True
+        tag = "tag"
+        expected_file_path = (
+            f"boo/{now.year}-{now.month:02d}-{now.day:02d}_test_tag.csv"
+        )
+        actual_file_path = modify_file_path(file_path, add_date, tag)
+        self.assertEqual(expected_file_path, actual_file_path)
+
     @patch("enrgdaq.daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=False)
