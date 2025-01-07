@@ -21,6 +21,7 @@ opencv-python==4.10.0.84
 packaging==24.1
 platformdirs==4.3.6
 pre-commit==4.0.1
+psutil==6.1.1
 pycparser==2.22 ; implementation_name == 'pypy'
 pymysql==1.1.1
 pyreadline3==3.5.4 ; sys_platform == 'win32'
