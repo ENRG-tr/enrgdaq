@@ -62,31 +62,60 @@ class DAQJobCamera(DAQJob):
         self._logger.debug("Image captured and sent")
 
     def _insert_date_and_time(self, frame):
-        # insert date and time into image
-        height, width, _ = frame.shape
-        # Constants for font scale and thickness calculation
-        FONT_SCALE_MULTIPLIER = 0.002
-        THICKNESS_MULTIPLIER = 0.004
+        """
+        Inserts the current date and time as a text overlay on the given frame.
+        The text color adjusts based on the brightness of the background.
+        """
+        # Get frame dimensions
+        frame_height, frame_width, _ = frame.shape
 
-        font_scale = min(width, height) * FONT_SCALE_MULTIPLIER
-        thickness = max(1, int(min(width, height) * THICKNESS_MULTIPLIER))
+        # Constants for font properties
+        FONT_SCALE_FACTOR = 0.0015
+        THICKNESS_FACTOR = 0.004
 
-        # Calculate the average color of the background
-        avg_color_per_row = frame.mean(axis=0)
-        avg_color = avg_color_per_row.mean(axis=0)
-        avg_brightness = avg_color.mean()
+        # Calculate font scale and thickness dynamically based on frame size
+        font_scale = min(frame_width, frame_height) * FONT_SCALE_FACTOR
+        thickness = max(1, int(min(frame_width, frame_height) * THICKNESS_FACTOR))
 
-        # Set text color based on background brightness
-        text_color = (0, 0, 0) if avg_brightness > 127 else (255, 255, 255)
+        # Generate the text to overlay
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        frame = cv2.putText(
-            frame,
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            (10, int(30 * font_scale)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            font_scale,
-            text_color,
-            thickness,
-        )
+        # Initial coordinates for text placement
+        x_offset = 10
+        y_offset = int(30 * font_scale)
+
+        # Iterate through each character in the text
+        for char in current_time:
+            # Measure the size of the character
+            (char_width, char_height), _ = cv2.getTextSize(
+                char, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness
+            )
+
+            # Extract the region of the frame where the character will be placed
+            char_region = frame[
+                y_offset : y_offset + char_height, x_offset : x_offset + char_width
+            ]
+
+            # Calculate the average brightness of the region
+            avg_color_per_row = char_region.mean(axis=0)
+            avg_color = avg_color_per_row.mean(axis=0)
+            avg_brightness = avg_color.mean()
+
+            # Choose text color based on brightness (white text for dark backgrounds, black for light backgrounds)
+            text_color = (0, 0, 0) if avg_brightness > 80 else (255, 255, 255)
+
+            # Overlay the character on the frame
+            frame = cv2.putText(
+                frame,
+                char,
+                (x_offset, y_offset),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                font_scale,
+                text_color,
+                thickness,
+            )
+
+            # Move the x_offset to position the next character
+            x_offset += char_width
 
         return frame
