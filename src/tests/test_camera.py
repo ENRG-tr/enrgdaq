@@ -18,6 +18,7 @@ class TestDAQJobCamera(unittest.TestCase):
         self.daq_job_camera = DAQJobCamera(self.config)
         self.daq_job_camera._cam = MagicMock()
         self.daq_job_camera._cam.read.return_value = (True, b"test_bytes")
+        self.daq_job_camera._insert_date_and_time = MagicMock()
 
     @patch("time.sleep", return_value=None, side_effect=StopIteration)
     @patch("cv2.VideoCapture")

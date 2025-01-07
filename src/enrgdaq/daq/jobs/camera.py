@@ -46,6 +46,8 @@ class DAQJobCamera(DAQJob):
         self._logger.debug("Capturing image...")
         res, frame = self._cam.read()
         assert res
+        # insert date & time
+        frame = self._insert_date_and_time(frame)
         # get bytes from frame
         res, buffer = cv2.imencode(".jpg", frame)
         assert res
@@ -58,3 +60,33 @@ class DAQJobCamera(DAQJob):
             )
         )
         self._logger.debug("Image captured and sent")
+
+    def _insert_date_and_time(self, frame):
+        # insert date and time into image
+        height, width, _ = frame.shape
+        # Constants for font scale and thickness calculation
+        FONT_SCALE_MULTIPLIER = 0.002
+        THICKNESS_MULTIPLIER = 0.004
+
+        font_scale = min(width, height) * FONT_SCALE_MULTIPLIER
+        thickness = max(1, int(min(width, height) * THICKNESS_MULTIPLIER))
+
+        # Calculate the average color of the background
+        avg_color_per_row = frame.mean(axis=0)
+        avg_color = avg_color_per_row.mean(axis=0)
+        avg_brightness = avg_color.mean()
+
+        # Set text color based on background brightness
+        text_color = (0, 0, 0) if avg_brightness > 127 else (255, 255, 255)
+
+        frame = cv2.putText(
+            frame,
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            (10, int(30 * font_scale)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale,
+            text_color,
+            thickness,
+        )
+
+        return frame
