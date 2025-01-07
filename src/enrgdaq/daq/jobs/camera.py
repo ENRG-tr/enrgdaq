@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 import cv2
@@ -11,12 +12,31 @@ from enrgdaq.daq.store.models import (
 from enrgdaq.utils.time import sleep_for
 
 
+class TimeTextPosition(str, Enum):
+    """Position of the time text on the image."""
+
+    TOP_LEFT = "top_left"
+    TOP_RIGHT = "top_right"
+    BOTTOM_LEFT = "bottom_left"
+    BOTTOM_RIGHT = "bottom_right"
+
+
 class DAQJobCameraConfig(StorableDAQJobConfig):
-    """Configuration class for DAQJobCamera."""
+    """
+    Configuration class for DAQJobCamera.
+    Attributes:
+        camera_device_index: The index of the camera device to use.
+        store_interval_seconds: The interval in seconds to store images.
+        enable_time_text: Whether to enable the time text overlay.
+        time_text_position: The position of the time text on the image.
+        time_text_background_opacity: The opacity of the time text background.
+    """
 
     camera_device_index: int = 0
     store_interval_seconds: int = 5
-    add_date_and_time: bool = True
+    enable_time_text: bool = True
+    time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    time_text_background_opacity = 0.7
 
 
 class DAQJobCamera(DAQJob):
@@ -47,7 +67,7 @@ class DAQJobCamera(DAQJob):
         self._logger.debug("Capturing image...")
         res, frame = self._cam.read()
         assert res
-        if self.config.add_date_and_time:
+        if self.config.enable_time_text:
             # insert date & time
             frame = self._insert_date_and_time(frame)
         # get bytes from frame
@@ -82,14 +102,25 @@ class DAQJobCamera(DAQJob):
         # Generate the text to overlay
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Initial coordinates for text placement
-        x_offset = 10
-        y_offset = int(30 * font_scale)
-
         # Draw the background rectangle
         (text_width, text_height), baseline = cv2.getTextSize(
             current_time, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness
         )
+
+        # Determine the position of the text based on the configuration
+        if self.config.time_text_position == TimeTextPosition.TOP_LEFT:
+            x_offset = 0
+            y_offset = int(30 * font_scale)
+        elif self.config.time_text_position == TimeTextPosition.TOP_RIGHT:
+            x_offset = frame_width - text_width
+            y_offset = int(30 * font_scale)
+        elif self.config.time_text_position == TimeTextPosition.BOTTOM_LEFT:
+            x_offset = 0
+            y_offset = frame_height - 10
+        elif self.config.time_text_position == TimeTextPosition.BOTTOM_RIGHT:
+            x_offset = frame_width - text_width
+            y_offset = frame_height - 10
+
         # Create a transparent overlay
         overlay = frame.copy()
 
@@ -103,7 +134,7 @@ class DAQJobCamera(DAQJob):
         )
 
         # Blend the overlay with the frame to achieve the desired opacity
-        alpha = 0.75  # Transparency factor
+        alpha = self.config.time_text_background_opacity
         cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
         # Put the text on the frame
