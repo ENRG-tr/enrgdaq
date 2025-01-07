@@ -16,6 +16,7 @@ class DAQJobCameraConfig(StorableDAQJobConfig):
 
     camera_device_index: int = 0
     store_interval_seconds: int = 5
+    add_date_and_time: bool = True
 
 
 class DAQJobCamera(DAQJob):
@@ -46,8 +47,9 @@ class DAQJobCamera(DAQJob):
         self._logger.debug("Capturing image...")
         res, frame = self._cam.read()
         assert res
-        # insert date & time
-        frame = self._insert_date_and_time(frame)
+        if self.config.add_date_and_time:
+            # insert date & time
+            frame = self._insert_date_and_time(frame)
         # get bytes from frame
         res, buffer = cv2.imencode(".jpg", frame)
         assert res
@@ -70,8 +72,8 @@ class DAQJobCamera(DAQJob):
         frame_height, frame_width, _ = frame.shape
 
         # Constants for font properties
-        FONT_SCALE_FACTOR = 0.0015
-        THICKNESS_FACTOR = 0.004
+        FONT_SCALE_FACTOR = 2e-3
+        THICKNESS_FACTOR = 5e-3
 
         # Calculate font scale and thickness dynamically based on frame size
         font_scale = min(frame_width, frame_height) * FONT_SCALE_FACTOR
@@ -102,7 +104,7 @@ class DAQJobCamera(DAQJob):
             avg_brightness = avg_color.mean()
 
             # Choose text color based on brightness (white text for dark backgrounds, black for light backgrounds)
-            text_color = (0, 0, 0) if avg_brightness > 80 else (255, 255, 255)
+            text_color = (0, 0, 0) if avg_brightness > 140 else (255, 255, 255)
 
             # Overlay the character on the frame
             frame = cv2.putText(
