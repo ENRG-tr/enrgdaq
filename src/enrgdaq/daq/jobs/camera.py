@@ -72,7 +72,7 @@ class DAQJobCamera(DAQJob):
         frame_height, frame_width, _ = frame.shape
 
         # Constants for font properties
-        FONT_SCALE_FACTOR = 2e-3
+        FONT_SCALE_FACTOR = 1.8e-3
         THICKNESS_FACTOR = 5e-3
 
         # Calculate font scale and thickness dynamically based on frame size
@@ -86,38 +86,35 @@ class DAQJobCamera(DAQJob):
         x_offset = 10
         y_offset = int(30 * font_scale)
 
-        # Iterate through each character in the text
-        for char in current_time:
-            # Measure the size of the character
-            (char_width, char_height), _ = cv2.getTextSize(
-                char, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness
-            )
+        # Draw the background rectangle
+        (text_width, text_height), baseline = cv2.getTextSize(
+            current_time, cv2.FONT_HERSHEY_SIMPLEX, font_scale, thickness
+        )
+        # Create a transparent overlay
+        overlay = frame.copy()
 
-            # Extract the region of the frame where the character will be placed
-            char_region = frame[
-                y_offset : y_offset + char_height, x_offset : x_offset + char_width
-            ]
+        # Draw the rectangle on the overlay
+        cv2.rectangle(
+            overlay,
+            (x_offset, y_offset - text_height - baseline),
+            (x_offset + text_width, y_offset + baseline),
+            (0, 0, 0),
+            cv2.FILLED,
+        )
 
-            # Calculate the average brightness of the region
-            avg_color_per_row = char_region.mean(axis=0)
-            avg_color = avg_color_per_row.mean(axis=0)
-            avg_brightness = avg_color.mean()
+        # Blend the overlay with the frame to achieve the desired opacity
+        alpha = 0.75  # Transparency factor
+        cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
-            # Choose text color based on brightness (white text for dark backgrounds, black for light backgrounds)
-            text_color = (0, 0, 0) if avg_brightness > 140 else (255, 255, 255)
-
-            # Overlay the character on the frame
-            frame = cv2.putText(
-                frame,
-                char,
-                (x_offset, y_offset),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                font_scale,
-                text_color,
-                thickness,
-            )
-
-            # Move the x_offset to position the next character
-            x_offset += char_width
+        # Put the text on the frame
+        cv2.putText(
+            frame,
+            current_time,
+            (x_offset, y_offset),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            font_scale,
+            (255, 255, 255),
+            thickness,
+        )
 
         return frame
