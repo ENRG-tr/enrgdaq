@@ -221,6 +221,10 @@ el.replaceWith(d);
         self._logger.info(&#34;DAQ job is being deleted&#34;)
         self._has_been_freed = True
 
+    @property
+    def supervisor_id(self):
+        return self.info.supervisor_config.supervisor_id
+
     def free(self):
         if self._has_been_freed:
             return
@@ -263,6 +267,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <li><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts" href="jobs/handle_alerts.html#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts">DAQJobHandleAlerts</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats">DAQJobHandleStats</a></li>
 <li><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck" href="jobs/healthcheck.html#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck">DAQJobHealthcheck</a></li>
+<li><a title="enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics" href="jobs/pc_metrics.html#enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics">DAQJobPCMetrics</a></li>
 <li><a title="enrgdaq.daq.jobs.remote.DAQJobRemote" href="jobs/remote.html#enrgdaq.daq.jobs.remote.DAQJobRemote">DAQJobRemote</a></li>
 <li><a title="enrgdaq.daq.jobs.remote_proxy.DAQJobRemoteProxy" href="jobs/remote_proxy.html#enrgdaq.daq.jobs.remote_proxy.DAQJobRemoteProxy">DAQJobRemoteProxy</a></li>
 <li><a title="enrgdaq.daq.jobs.serve_http.DAQJobServeHTTP" href="jobs/serve_http.html#enrgdaq.daq.jobs.serve_http.DAQJobServeHTTP">DAQJobServeHTTP</a></li>
@@ -305,6 +310,21 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.unique_id"><code class="name">var <span class="ident">unique_id</span> : str</code></dt>
 <dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.base.DAQJob.supervisor_id"><code class="name">prop <span class="ident">supervisor_id</span></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def supervisor_id(self):
+    return self.info.supervisor_config.supervisor_id</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -504,6 +524,7 @@ class DAQJobThread:
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_out" href="#enrgdaq.daq.base.DAQJob.message_out">message_out</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.restart_offset" href="#enrgdaq.daq.base.DAQJob.restart_offset">restart_offset</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.start" href="#enrgdaq.daq.base.DAQJob.start">start</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.supervisor_id" href="#enrgdaq.daq.base.DAQJob.supervisor_id">supervisor_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.unique_id" href="#enrgdaq.daq.base.DAQJob.unique_id">unique_id</a></code></li>
 </ul>
 </li>

@@ -67,16 +67,22 @@ el.replaceWith(d);
         str: The modified file path.
 
     Example:
-        &gt;&gt;&gt; modify_file_path(&#34;test.csv&#34;, True, &#34;tag&#34;)
-        &#39;2023/01/01/test_tag.csv&#39;
+        &gt;&gt;&gt; modify_file_path(&#34;test.csv&#34;, True, &#34;tag1&#34;)
+        &#39;2023-01-01_test_tag1.csv&#39;
+        &gt;&gt;&gt; modify_file_path(&#34;boo/test.csv&#34;, True, &#34;tag2&#34;)
+        &#39;boo/2023-01-01_test_tag2.csv&#39;
     &#34;&#34;&#34;
 
     if add_date:
         if date is None:
             date = datetime.now()
-        sep = os.path.sep
-        file_dir = f&#34;{date.year}{sep}{date.month:02d}{sep}{date.day:02d}&#34;
-        file_path = os.path.join(file_dir, file_path)
+        sep = &#34;-&#34;
+        file_prefix = f&#34;{date.year}{sep}{date.month:02d}{sep}{date.day:02d}&#34;
+        # Add prefix to only the file name
+        filename = os.path.basename(file_path)
+        file_path = os.path.join(
+            os.path.dirname(file_path), f&#34;{file_prefix}_{filename}&#34;
+        )
     if tag is not None:
         head, tail = os.path.splitext(file_path)
         file_path = f&#34;{head}_{tag}{tail}&#34;
@@ -99,8 +105,10 @@ el.replaceWith(d);
 <dd>The modified file path.</dd>
 </dl>
 <h2 id="example">Example</h2>
-<pre><code class="language-python-repl">&gt;&gt;&gt; modify_file_path(&quot;test.csv&quot;, True, &quot;tag&quot;)
-'2023/01/01/test_tag.csv'
+<pre><code class="language-python-repl">&gt;&gt;&gt; modify_file_path(&quot;test.csv&quot;, True, &quot;tag1&quot;)
+'2023-01-01_test_tag1.csv'
+&gt;&gt;&gt; modify_file_path(&quot;boo/test.csv&quot;, True, &quot;tag2&quot;)
+'boo/2023-01-01_test_tag2.csv'
 </code></pre></div>
 </dd>
 </dl>
