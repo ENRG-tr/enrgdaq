@@ -1,5 +1,4 @@
 import time
-from typing import Any, Optional
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
@@ -33,35 +32,29 @@ class DAQXiaomiMijiaConfig(StorableDAQJobConfig):
 class DAQJobXiaomiMijia(DAQJob):
     config_type = DAQXiaomiMijiaConfig
     config: DAQXiaomiMijiaConfig
-    _client: Optional[Any]
 
     def __init__(self, config: DAQXiaomiMijiaConfig, **kwargs):
         super().__init__(config, **kwargs)
         self._client = None
 
     def start(self):
-        self._connect_with_retries()
         while True:
             self.consume()
             try:
-                data = self._client.data
-                self._send_store_message(data)
+                self._send_store_message(self._get_data())
             except Exception as e:
                 self._logger.warning(f"Failed to get data: {e}. Reconnecting...")
-                self._connect_with_retries()
             time.sleep(self.config.poll_interval_seconds)
 
-    def _connect_with_retries(self):
+    def _get_data(self):
         for attempt in range(1, self.config.connect_retries + 1):
             try:
-                self._logger.info(
+                self._logger.debug(
                     f"Connecting to {self.config.mac_address} (attempt {attempt})..."
                 )
-                self._client = Lywsd03mmcClient(self.config.mac_address)
-                # Try to access data to ensure connection
-                _ = self._client.data
-                self._logger.info("Connected to sensor.")
-                return
+                _client = Lywsd03mmcClient(self.config.mac_address)
+                self._logger.debug("Connected to sensor.")
+                return _client.data
             except Exception as e:
                 self._logger.warning(f"Connection attempt {attempt} failed: {e}")
                 if attempt < self.config.connect_retries:
@@ -79,6 +72,7 @@ class DAQJobXiaomiMijia(DAQJob):
             data.battery,
             getattr(self._client, "units", None),
         ]
+        self._logger.debug(f"Sending data to store: {dict(zip(keys, values))}")
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,

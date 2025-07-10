@@ -34,7 +34,7 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         mock_client.data = DummyData()
         mock_client_cls.return_value = mock_client
 
-        self.job._connect_with_retries()
+        self.job._get_data()
         self.assertIs(self.job._client, mock_client)
         self.job._logger.info.assert_any_call("Connected to sensor.")
 
@@ -50,7 +50,7 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
 
         mock_client_cls.side_effect = side_effect
 
-        self.job._connect_with_retries()
+        self.job._get_data()
         self.assertTrue(self.job._logger.warning.called)
         self.assertTrue(self.job._logger.info.called)
 
@@ -59,7 +59,7 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
     def test_connect_with_retries_all_fail(self, mock_sleep, mock_client_cls):
         mock_client_cls.side_effect = Exception("fail")
         with self.assertRaises(Exception):
-            self.job._connect_with_retries()
+            self.job._get_data()
         self.assertTrue(self.job._logger.error.called)
 
     @patch(
