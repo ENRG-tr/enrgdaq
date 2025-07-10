@@ -1,0 +1,10 @@
+daq_job_type = "DAQJobXiaomiMijia"
+
+mac_address = "AA:BB:CC:DD:EE:FF" # Replace with your sensor's MAC address
+poll_interval_seconds = 10
+connect_retries = 5
+connect_retry_delay = 2.0
+
+[store_config.csv]
+file_path = "xiaomi_mijia.csv"
+add_date = true

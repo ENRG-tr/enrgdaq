@@ -8,6 +8,7 @@ dependencies = [
     "caen-libs>=1.1.0",
     "coloredlogs>=15.0.1",
     "coverage>=7.6.10",
+    "lywsd03mmc>=0.1.0 ; sys_platform == 'linux'",
     "msgspec>=0.18.6",
     "n1081b-sdk",
     "opencv-python>=4.10.0.84",

@@ -2,6 +2,7 @@
 #    uv export --no-hashes --output-file=requirements.txt
 awkward==2.6.9
 awkward-cpp==39
+bluepy==1.3.0 ; sys_platform == 'linux'
 caen-libs==1.1.0
 cffi==1.17.1 ; implementation_name == 'pypy'
 cfgv==3.4.0
@@ -14,6 +15,8 @@ fsspec==2024.9.0
 hiredis==3.0.0
 humanfriendly==10.0
 identify==2.6.1
+lywsd02==0.0.9 ; sys_platform == 'linux'
+lywsd03mmc==0.1.0 ; sys_platform == 'linux'
 msgspec==0.18.6
 n1081b-sdk @ git+https://github.com/ENRG-tr/N1081B-SDK-Python.git@3217fb0fdb5e5997116c687b1d15bed174fc0400
 nodeenv==1.9.1

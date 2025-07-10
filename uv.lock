@@ -53,6 +53,12 @@ wheels = [
 ]
 
 [[package]]
+name = "bluepy"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/91/6cfca10bee9862f93015413cf9e6a52c3081a71f1518963396a055128f8e/bluepy-1.3.0.tar.gz", hash = "sha256:2a71edafe103565fb990256ff3624c1653036a837dfc90e1e32b839f83971cec", size = 217933 }
+
+[[package]]
 name = "caen-libs"
 version = "1.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -206,6 +212,7 @@ dependencies = [
     { name = "caen-libs" },
     { name = "coloredlogs" },
     { name = "coverage" },
+    { name = "lywsd03mmc", marker = "sys_platform == 'linux'" },
     { name = "msgspec" },
     { name = "n1081b-sdk" },
     { name = "opencv-python" },
@@ -228,6 +235,7 @@ requires-dist = [
     { name = "caen-libs", specifier = ">=1.1.0" },
     { name = "coloredlogs", specifier = ">=15.0.1" },
     { name = "coverage", specifier = ">=7.6.10" },
+    { name = "lywsd03mmc", marker = "sys_platform == 'linux'", specifier = ">=0.1.0" },
     { name = "msgspec", specifier = ">=0.18.6" },
     { name = "n1081b-sdk", git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" },
     { name = "opencv-python", specifier = ">=4.10.0.84" },
@@ -305,6 +313,30 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/29/bb/25024dbcc93516c492b75919e76f389bac754a3e4248682fba32b250c880/identify-2.6.1.tar.gz", hash = "sha256:91478c5fb7c3aac5ff7bf9b4344f803843dc586832d5f110d672b19aa1984c98", size = 99097 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7d/0c/4ef72754c050979fdcc06c744715ae70ea37e734816bb6514f79df77a42f/identify-2.6.1-py2.py3-none-any.whl", hash = "sha256:53863bcac7caf8d2ed85bd20312ea5dcfc22226800f6d6881f232d861db5a8f0", size = 98972 },
+]
+
+[[package]]
+name = "lywsd02"
+version = "0.0.9"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "bluepy", marker = "sys_platform != 'darwin'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b8/3d/9a08bcb22acefb2f0dbea958cd7594dce3ded4f8860f05320320d9d9e1f7/lywsd02-0.0.9.tar.gz", hash = "sha256:0de9b5c29213e81dac257c87e96162f46f2942239016b85075b68eae70735c6b", size = 2656 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/76/28/3521519c84c726ad03bdb6aefe11cdaa4421afa2b9684c44f09aee4eda2e/lywsd02-0.0.9-py3-none-any.whl", hash = "sha256:052971ab5e54087426602a1f5537ad7755009a32388e913bbd68a69c3708a30b", size = 4280 },
+]
+
+[[package]]
+name = "lywsd03mmc"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lywsd02", marker = "sys_platform != 'darwin'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fd/b6/4fa827239a54be8223727e3ca0ba1e6d21021175a6c1c142b745df64ad2c/lywsd03mmc-0.1.0.tar.gz", hash = "sha256:db8fa3a05142da547deec99d3d61573cc30d7999834cbb0983af91bf6261eacd", size = 4870 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/a0/6ba677481c71f5858c84ab5e03c727a5cec28132824ccac3925306aaaf49/lywsd03mmc-0.1.0-py3-none-any.whl", hash = "sha256:1e512ffc7d48408dae7ec0055a71312c8dca60dcc9ffd8a1aafed789fb6eb6d2", size = 6425 },
 ]
 
 [[package]]
