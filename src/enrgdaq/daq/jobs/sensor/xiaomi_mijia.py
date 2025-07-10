@@ -82,7 +82,6 @@ class DAQJobXiaomiMijia(DAQJob):
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
-                tag="lywsd03mmc",
                 keys=keys,
                 data=[values],
             )
