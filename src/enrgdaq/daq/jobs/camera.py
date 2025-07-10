@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -32,7 +33,8 @@ class DAQJobCameraConfig(StorableDAQJobConfig):
         time_text_background_opacity: The opacity of the time text background.
     """
 
-    camera_device_index: int = 0
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
     store_interval_seconds: int = 5
     enable_time_text: bool = True
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
@@ -52,9 +54,30 @@ class DAQJobCamera(DAQJob):
     def __init__(self, config: DAQJobCameraConfig, **kwargs):
         super().__init__(config, **kwargs)
         self._cam = None
+        if (
+            self.config.camera_device_index is None
+            and self.config.camera_device_name is None
+        ):
+            raise ValueError(
+                "Either camera_device_index or camera_device_name must be set in the configuration."
+            )
 
     def start(self):
-        self._cam = cv2.VideoCapture(self.config.camera_device_index)
+        camera_index = self.config.camera_device_index
+        if self.config.camera_device_name is not None:
+            # We search for: /dev/v4l/by-id/usb-CAMERA_NAME-video-index0
+            dev_path = (
+                f"/dev/v4l/by-id/usb-{self.config.camera_device_name}-video-index0"
+            )
+            if not os.path.exists(dev_path):
+                raise ValueError(
+                    f"Camera device with name {self.config.camera_device_name} not found."
+                )
+            # Get symbolic link to the camera device
+            camera_device_path = os.readlink(dev_path)
+            # Extract from: ../../video0, get index 0
+            camera_index = int(camera_device_path.split("video")[-1])
+        self._cam = cv2.VideoCapture(camera_index)
 
         while True:
             start_time = datetime.now()
