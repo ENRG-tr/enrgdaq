@@ -64,7 +64,6 @@ class DAQJobRemoteConfig(DAQJobConfig):
 
     zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
-    use_xsub: bool = False
     zmq_proxy_pub_url: Optional[str] = None
 
 
