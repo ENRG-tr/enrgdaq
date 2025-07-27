@@ -1,7 +1,6 @@
 import logging
 import os
 import platform
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty
@@ -22,10 +21,7 @@ from enrgdaq.daq.models import DAQJobConfig, DAQJobInfo, DAQJobMessage, DAQJobSt
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.models import SupervisorConfig
 
-DAQ_SUPERVISOR_SLEEP_TIME_SECONDS = 0.2
-"""Time in seconds to sleep between iterations of the supervisor's main loop."""
-
-DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.1
+DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
 
 DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS = 5
@@ -111,7 +107,6 @@ class Supervisor:
         while True:
             try:
                 self.loop()
-                time.sleep(DAQ_SUPERVISOR_SLEEP_TIME_SECONDS)
             except KeyboardInterrupt:
                 self._logger.warning("KeyboardInterrupt received, cleaning up")
                 for daq_job_thread in self.daq_job_threads:
@@ -262,7 +257,9 @@ class Supervisor:
         for thread in self.daq_job_threads:
             try:
                 while True:
-                    msg = thread.daq_job.message_out.get_nowait()
+                    msg = thread.daq_job.message_out.get(
+                        timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
+                    )
                     if msg.daq_job_info is None:
                         msg.daq_job_info = thread.daq_job.info
                     res.append(msg)
