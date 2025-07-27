@@ -92,8 +92,9 @@ class Supervisor:
         )
 
     def start_daq_job_threads(
-        self, daq_jobs_to_load: Optional[DAQJob] = None
+        self, daq_jobs_to_load: Optional[list[DAQJob]] = None
     ) -> list[DAQJobThread]:
+        assert self.config is not None
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
         return start_daq_jobs(
@@ -198,6 +199,7 @@ class Supervisor:
         """
         Restarts the DAQ jobs that have been scheduled for restart.
         """
+        assert self.config is not None
 
         schedules_to_remove = []
         for restart_schedule in self.restart_schedules:
@@ -324,6 +326,7 @@ class Supervisor:
             return msgspec.toml.decode(f.read(), type=SupervisorConfig)
 
     def _get_supervisor_daq_job_info(self):
+        assert self.config is not None
         return DAQJobInfo(
             daq_job_type="Supervisor",
             daq_job_class_name="Supervisor",
