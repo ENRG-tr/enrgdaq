@@ -18,6 +18,7 @@ from enrgdaq.daq.store.models import (
 from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
 
 DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
+DAQJobRemoteStatsDict = Dict[str, DAQJobRemoteStatsDict]
 
 DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS = 1
 DAQ_JOB_HANDLE_STATS_REMOTE_ALIVE_SECONDS = 30
@@ -48,7 +49,7 @@ class DAQJobHandleStats(DAQJob):
     config: DAQJobHandleStatsConfig
 
     _stats: dict[str, DAQJobStatsDict]
-    _remote_stats: dict[str, DAQJobRemoteStatsDict]
+    _remote_stats: DAQJobRemoteStatsDict  # type:ignore
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -99,6 +100,8 @@ class DAQJobHandleStats(DAQJob):
             "message_in_count",
             "last_message_out_date",
             "message_out_count",
+            "message_in_queue_size",
+            "message_out_queue_size",
             "last_restart_date",
             "restart_count",
         ]
@@ -113,6 +116,8 @@ class DAQJobHandleStats(DAQJob):
                         str(msg.is_alive).lower(),
                         *unpack_record(msg.message_in_stats),
                         *unpack_record(msg.message_out_stats),
+                        msg.message_in_queue_stats.count,
+                        msg.message_out_queue_stats.count,
                         *unpack_record(msg.restart_stats),
                     ]
                 )

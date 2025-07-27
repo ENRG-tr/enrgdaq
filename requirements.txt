@@ -34,6 +34,8 @@ pyzmq==26.2.0
 redis==5.2.0
 ruff==0.6.9
 slack-webhook==1.0.7
+snakeviz==2.2.2
+tornado==6.5.1
 uproot==5.4.1
 virtualenv==20.26.6
 websocket-client==1.8.0

@@ -138,7 +138,10 @@ class DAQJobStatsRecord(Struct):
     last_updated: Optional[datetime] = None
 
     def increase(self, amount: int = 1):
-        self.count += amount
+        self.set(self.count + amount)
+
+    def set(self, amount: int):
+        self.count = amount
         self.last_updated = datetime.now()
 
 
@@ -155,6 +158,10 @@ class DAQJobStats(Struct):
 
     message_in_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     message_out_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_in_queue_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    message_out_queue_stats: DAQJobStatsRecord = field(
+        default_factory=DAQJobStatsRecord
+    )
     restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
     is_alive: bool = True
 

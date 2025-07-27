@@ -17,6 +17,7 @@ from enrgdaq.daq.daq_job import (
     start_daq_jobs,
 )
 from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
+from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote, DAQJobRemoteStatsDict
 from enrgdaq.daq.models import DAQJobConfig, DAQJobInfo, DAQJobMessage, DAQJobStats
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.models import SupervisorConfig
@@ -52,6 +53,7 @@ class Supervisor:
 
     daq_job_threads: list[DAQJobThread]
     daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
 
@@ -64,6 +66,7 @@ class Supervisor:
     ):
         self.config = config
         self._daq_jobs_to_load = daq_jobs
+        self.daq_job_remote_stats = {}
         pass
 
     def init(self):
@@ -255,16 +258,22 @@ class Supervisor:
         return daq_job_stats[daq_job_type]
 
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
+        assert self.config is not None
         res = []
         for thread in self.daq_job_threads:
             try:
                 while True:
-                    msg = thread.daq_job.message_out.get(
-                        timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
-                    )
+                    msg = thread.daq_job.message_out.get_nowait()
                     if msg.daq_job_info is None:
                         msg.daq_job_info = thread.daq_job.info
                     res.append(msg)
+                    # Catch remote stats message
+                    # TODO: These should be in a different class
+                    if (
+                        isinstance(msg, DAQJobMessageStatsRemote)
+                        and msg.supervisor_id == self.config.supervisor_id
+                    ):
+                        self.daq_job_remote_stats = msg.stats
                     # Update stats
                     self.get_daq_job_stats(
                         self.daq_job_stats, type(thread.daq_job)
@@ -294,14 +303,15 @@ class Supervisor:
                         message
                     ):
                         continue
-                    daq_job.message_in.put(
-                        message, timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
+                    daq_job.message_in.put_nowait(
+                        message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
                     )
 
                     # Update stats
-                    self.get_daq_job_stats(
-                        self.daq_job_stats, type(daq_job)
-                    ).message_in_stats.increase()
+                    stats = self.get_daq_job_stats(self.daq_job_stats, type(daq_job))
+                    stats.message_in_stats.increase()
+                    stats.message_in_queue_stats.set(daq_job.message_in.qsize())
+                    stats.message_out_queue_stats.set(daq_job.message_out.qsize())
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
