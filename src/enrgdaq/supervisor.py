@@ -5,6 +5,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty
+from typing import Optional
 
 import msgspec
 
@@ -60,6 +61,15 @@ class Supervisor:
 
     _last_stats_message_time: datetime
 
+    def __init__(
+        self,
+        config: Optional[SupervisorConfig] = None,
+        daq_jobs: Optional[list[DAQJob]] = None,
+    ):
+        self.config = config
+        self._daq_jobs_to_load = daq_jobs
+        pass
+
     def init(self):
         """
         Initializes the supervisor, loads configuration, starts DAQ job threads, and warns for lack of DAQ jobs.
@@ -68,13 +78,14 @@ class Supervisor:
         """
 
         self._logger = logging.getLogger()
-        self.config = self._load_supervisor_config()
+        if not self.config:
+            self.config = self._load_supervisor_config()
 
         # Change logging name based on supervisor id
         self._logger.name = f"Supervisor({self.config.supervisor_id})"
 
         self.restart_schedules = []
-        self.daq_job_threads = self.start_daq_job_threads()
+        self.daq_job_threads = self.start_daq_job_threads(self._daq_jobs_to_load)
         self.daq_job_stats: DAQJobStatsDict = {
             type(thread.daq_job): DAQJobStats() for thread in self.daq_job_threads
         }
@@ -84,8 +95,14 @@ class Supervisor:
             seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
         )
 
-    def start_daq_job_threads(self) -> list[DAQJobThread]:
-        return start_daq_jobs(load_daq_jobs("configs/", self.config))
+    def start_daq_job_threads(
+        self, daq_jobs_to_load: Optional[DAQJob] = None
+    ) -> list[DAQJobThread]:
+        # Start threads from user-provided daq jobs, or by
+        # reading the config files like usual
+        return start_daq_jobs(
+            daq_jobs_to_load or load_daq_jobs("configs/", self.config)
+        )
 
     def run(self):
         """

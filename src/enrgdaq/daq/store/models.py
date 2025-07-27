@@ -15,6 +15,7 @@ class DAQJobStoreConfig(Struct, dict=True):
     mysql: "Optional[DAQJobStoreConfigMySQL]" = None
     redis: "Optional[DAQJobStoreConfigRedis]" = None
     raw: "Optional[DAQJobStoreConfigRaw]" = None
+    memory: "Optional[DAQJobStoreConfigMemory]" = None
 
     def has_store_config(self, store_type: Any) -> bool:
         for key in dir(self):
@@ -167,3 +168,11 @@ class DAQJobStoreConfigRedis(DAQJobStoreConfigBase):
 class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool
+
+
+class DAQJobStoreConfigMemory(DAQJobStoreConfigBase):
+    """
+    Configuration for in-memory DAQ job store.
+    """
+
+    pass
