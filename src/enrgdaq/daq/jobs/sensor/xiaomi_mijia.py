@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
@@ -10,7 +11,7 @@ from enrgdaq.utils.time import get_now_unix_timestamp_ms
 try:
     from lywsd03mmc import Lywsd03mmcClient  # type: ignore
 except ImportError:
-    Lywsd03mmcClient = None
+    Lywsd03mmcClient = None  # type: ignore
 
 
 class DAQXiaomiMijiaConfig(StorableDAQJobConfig):
@@ -32,6 +33,7 @@ class DAQXiaomiMijiaConfig(StorableDAQJobConfig):
 class DAQJobXiaomiMijia(DAQJob):
     config_type = DAQXiaomiMijiaConfig
     config: DAQXiaomiMijiaConfig
+    _client: Optional[object]
 
     def __init__(self, config: DAQXiaomiMijiaConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -47,6 +49,7 @@ class DAQJobXiaomiMijia(DAQJob):
             time.sleep(self.config.poll_interval_seconds)
 
     def _get_data(self):
+        assert Lywsd03mmcClient is not None
         for attempt in range(1, self.config.connect_retries + 1):
             try:
                 self._logger.debug(

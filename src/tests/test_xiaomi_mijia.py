@@ -42,9 +42,12 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
     @patch("time.sleep", return_value=None)
     def test_connect_with_retries_fail_then_success(self, mock_sleep, mock_client_cls):
         # First attempt fails, second succeeds
+        fail_once = False
+
         def side_effect(*args, **kwargs):
+            nonlocal fail_once
             if not hasattr(self, "_fail_once"):
-                self._fail_once = True
+                fail_once = True
                 raise Exception("fail")
             return MagicMock(data=DummyData())
 
@@ -84,11 +87,13 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         self.job._client = MagicMock()
         self.job._client.data = DummyData()
         self.job.consume = MagicMock()
+        called = False
 
         # Stop after 2 iterations
         def side_effect():
-            if not hasattr(self, "_called"):
-                self._called = 1
+            nonlocal called
+            if not called:
+                called = True
             else:
                 raise KeyboardInterrupt()
 

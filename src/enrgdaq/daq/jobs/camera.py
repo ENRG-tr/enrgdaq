@@ -77,6 +77,7 @@ class DAQJobCamera(DAQJob):
             camera_device_path = os.readlink(dev_path)
             # Extract from: ../../video0, get index 0
             camera_index = int(camera_device_path.split("video")[-1])
+        assert camera_index is not None, "Camera not found"
         self._cam = cv2.VideoCapture(camera_index)
 
         while True:
