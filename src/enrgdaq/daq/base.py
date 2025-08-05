@@ -191,6 +191,7 @@ class DAQJob:
 
     @property
     def supervisor_id(self):
+        assert self.info.supervisor_config is not None
         return self.info.supervisor_config.supervisor_id
 
     def free(self):

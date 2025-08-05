@@ -4,7 +4,7 @@ from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
 from enrgdaq.daq.store.models import DAQJobMessageStore
 
-STORE_LOOP_INTERVAL_SECONDS = 0.001
+STORE_LOOP_INTERVAL_SECONDS = 0.01
 
 
 class DAQJobStore(DAQJob):

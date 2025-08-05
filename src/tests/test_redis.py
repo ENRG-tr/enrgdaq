@@ -125,22 +125,19 @@ class TestDAQJobStoreRedis(unittest.TestCase):
 
         self.store._ts.madd.assert_any_call(
             [
+                ("test_key_timeseries.tag.timestamp", unix_ms, unix_ms),
+                ("test_key_timeseries.tag.timestamp", unix_ms + 1, unix_ms + 1),
                 ("test_key_timeseries.tag.header1", unix_ms, "row1_col1"),
                 ("test_key_timeseries.tag.header1", unix_ms + 1, "row2_col1"),
-            ]
+                ("test_key_timeseries.tag.header2", unix_ms, "row1_col2"),
+                ("test_key_timeseries.tag.header2", unix_ms + 1, "row2_col2"),
+            ],
         )
 
         self.store._ts.create.assert_any_call(
             "test_key_timeseries.tag.header2",
             retention_msecs=int(timedelta(days=1).total_seconds() * 1000),
             labels={"key": "test_key_timeseries", "tag": "tag"},
-        )
-
-        self.store._ts.madd.assert_any_call(
-            [
-                ("test_key_timeseries.tag.header2", unix_ms, "row1_col2"),
-                ("test_key_timeseries.tag.header2", unix_ms + 1, "row2_col2"),
-            ]
         )
 
         self.store._connection.expire.assert_any_call(

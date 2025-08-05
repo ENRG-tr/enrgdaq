@@ -94,45 +94,14 @@ class DAQJobStoreRedis(DAQJobStore):
             if msg.store_config.key_expiration_days is not None:
                 key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
+            batched_adds = []
             # Append item to key in redis
-            for i, item in enumerate(msg.data.items()):
+            for item in msg.data.items():
                 key, values = item
                 tag = "" if msg.tag is None else f".{msg.tag}"
                 item_key = f"{msg.store_config.key}{tag}.{key}"
 
-                if msg.store_config.use_timeseries:
-                    # Use Redis TimeSeries if requested
-                    assert self._ts is not None
-
-                    # Create TimeSeries key if it doesn't exist
-                    if not self._connection.exists(item_key) and key != "timestamp":
-                        retention_msecs = None
-                        if msg.store_config.key_expiration_days is not None:
-                            retention_msecs = int(
-                                timedelta(
-                                    days=msg.store_config.key_expiration_days
-                                ).total_seconds()
-                                * 1000
-                            )
-                        self._ts.create(
-                            item_key,
-                            retention_msecs=retention_msecs,
-                            labels={"key": msg.store_config.key}
-                            | ({"tag": msg.tag} if msg.tag else {}),
-                        )
-                    if "timestamp" not in msg.data:
-                        self._logger.warning(
-                            "Message data does not contain a timestamp, skipping"
-                        )
-                        return
-
-                    self._ts.madd(
-                        [
-                            (item_key, msg.data["timestamp"][i], value)
-                            for i, value in enumerate(values)
-                        ]
-                    )
-                else:
+                if not msg.store_config.use_timeseries:
                     # Add date to key if expiration is set
                     if key_expiration is not None:
                         item_key += ":" + datetime.now().strftime("%Y-%m-%d")
@@ -143,6 +112,42 @@ class DAQJobStoreRedis(DAQJobStore):
                     # Set expiration if it was newly created
                     if not item_exists and key_expiration is not None:
                         self._connection.expire(item_key, key_expiration)
+                    continue
+
+                # Save it via Redis TimeSeries
+                assert self._ts is not None
+
+                # Create TimeSeries key if it doesn't exist
+                if not self._connection.exists(item_key) and key != "timestamp":
+                    retention_msecs = None
+                    if msg.store_config.key_expiration_days is not None:
+                        retention_msecs = int(
+                            timedelta(
+                                days=msg.store_config.key_expiration_days
+                            ).total_seconds()
+                            * 1000
+                        )
+                    self._ts.create(
+                        item_key,
+                        retention_msecs=retention_msecs,
+                        labels={"key": msg.store_config.key}
+                        | ({"tag": msg.tag} if msg.tag else {}),
+                    )
+                if "timestamp" not in msg.data:
+                    self._logger.warning(
+                        "Message data does not contain a timestamp, skipping"
+                    )
+                    return
+
+                batched_adds.extend(
+                    [
+                        (item_key, msg.data["timestamp"][i], value)
+                        for i, value in enumerate(values)
+                    ]
+                )
+
+            if self._ts is not None and len(batched_adds) > 0:
+                self._ts.madd(batched_adds)
 
     def __del__(self):
         try:
