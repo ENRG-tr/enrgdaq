@@ -85,18 +85,18 @@ class DAQJob:
         Otherwise, it will wait until a message is available.
         """
 
-        def _process_message(message):
-            if not self.handle_message(message):
-                self.message_in.put(message)
-
         # Return immediately after consuming the message
         if not nowait:
-            _process_message(self.message_in.get())
+            msg = self.message_in.get()
+            if not self.handle_message(msg):
+                self.message_in.put(msg)
             return
 
         while True:
             try:
-                _process_message(self.message_in.get_nowait())
+                msg = self.message_in.get_nowait()
+                if not self.handle_message(msg):
+                    self.message_in.put(msg)
             except Empty:
                 break
 

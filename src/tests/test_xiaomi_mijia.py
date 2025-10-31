@@ -31,31 +31,32 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.Lywsd03mmcClient")
     def test_connect_with_retries_success(self, mock_client_cls):
         mock_client = MagicMock()
-        mock_client.data = DummyData()
+        mock_data = DummyData()
+        mock_client.data = mock_data
         mock_client_cls.return_value = mock_client
 
-        self.job._get_data()
-        self.assertIs(self.job._client, mock_client)
-        self.job._logger.info.assert_any_call("Connected to sensor.")
+        result = self.job._get_data()
+        self.assertIs(result, mock_data)
+        self.job._logger.debug.assert_any_call("Connected to sensor.")
 
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.Lywsd03mmcClient")
     @patch("time.sleep", return_value=None)
     def test_connect_with_retries_fail_then_success(self, mock_sleep, mock_client_cls):
         # First attempt fails, second succeeds
-        fail_once = False
+        self._fail_once = False
 
         def side_effect(*args, **kwargs):
-            nonlocal fail_once
-            if not hasattr(self, "_fail_once"):
-                fail_once = True
+            if not self._fail_once:
+                self._fail_once = True
                 raise Exception("fail")
             return MagicMock(data=DummyData())
 
         mock_client_cls.side_effect = side_effect
 
-        self.job._get_data()
+        result = self.job._get_data()
+        self.assertIsNotNone(result)
         self.assertTrue(self.job._logger.warning.called)
-        self.assertTrue(self.job._logger.info.called)
+        self.assertTrue(self.job._logger.debug.called)
 
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.Lywsd03mmcClient")
     @patch("time.sleep", return_value=None)
@@ -78,14 +79,11 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         self.assertEqual(msg.keys, ["timestamp", "temperature", "humidity", "battery"])
         self.assertEqual(msg.data[0][:4], [123456789, 23.1, 60.2, 88])
 
-    @patch(
-        "enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._connect_with_retries"
-    )
+    @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._get_data")
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._send_store_message")
     @patch("time.sleep", return_value=None)
-    def test_start_successful_loop(self, mock_sleep, mock_send_store, mock_connect):
-        self.job._client = MagicMock()
-        self.job._client.data = DummyData()
+    def test_start_successful_loop(self, mock_sleep, mock_send_store, mock_get_data):
+        mock_get_data.return_value = DummyData()
         self.job.consume = MagicMock()
         called = False
 
@@ -101,22 +99,25 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
 
         with self.assertRaises(KeyboardInterrupt):
             self.job.start()
-        self.assertTrue(mock_connect.called)
+        self.assertTrue(mock_get_data.called)
         self.assertTrue(mock_send_store.called)
 
-    @patch(
-        "enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._connect_with_retries"
-    )
+    @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._get_data")
     @patch("time.sleep", return_value=None)
-    def test_start_handles_data_exception(self, mock_sleep, mock_connect):
-        self.job._client = MagicMock()
-        self.job._client.data = MagicMock(side_effect=Exception("fail"))
+    def test_start_handles_data_exception(self, mock_sleep, mock_get_data):
+        mock_get_data.side_effect = Exception("fail")
         self.job.consume = MagicMock(side_effect=Exception)
+
+        def fail_on_second_call(method):
+            if method.call_count == 2:
+                raise Exception("fail")
+
+        self.job.consume.side_effect = lambda: fail_on_second_call(self.job.consume)
         self.job._send_store_message = MagicMock()
 
         with self.assertRaises(Exception):
             self.job.start()
-        self.assertTrue(mock_connect.called)
+        self.assertTrue(mock_get_data.called)
 
 
 if __name__ == "__main__":

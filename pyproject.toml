@@ -5,7 +5,7 @@ description = "DAQ for ENRG neutrino experiments"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "caen-libs>=1.1.0",
+    "caen-libs>=3.0.1",
     "coloredlogs>=15.0.1",
     "coverage>=7.6.10",
     "lywsd03mmc>=0.1.0 ; sys_platform == 'linux'",
@@ -14,6 +14,7 @@ dependencies = [
     "n1081b-sdk",
     "opencv-python>=4.10.0.84",
     "psutil>=6.1.1",
+    "py-spy>=0.4.1",
     "pymysql>=1.1.1",
     "pyzmq>=26.2.0",
     "redis[hiredis]>=5.2.0",
