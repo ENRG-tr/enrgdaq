@@ -6,16 +6,14 @@ link_number = "0" # Link number, PID or hostname depending on connection_type
 
 # Acquisition settings
 record_length = 4096
-channel_enable_mask = 1
-channel_trigger_threshold = 32768
-channel_self_trigger_channel = 0
-# See caen_libs.caendigitizer.TriggerMode for options
+channel_enable_mask = 0b11111111
+channel_trigger_threshold = 1
+channel_self_trigger_channel_mask = 0b0000100
 channel_self_trigger_mode = "ACQ_ONLY"
 sw_trigger_mode = "ACQ_ONLY"
 max_num_events_blt = 1
-# See caen_libs.caendigitizer.AcqMode for options
+
 acquisition_mode = "SW_CONTROLLED"
-acquisition_interval_seconds = 1
 
 # Optional: Peak detection settings. Uncomment to enable.
 # peak_detection_threshold = 35000
