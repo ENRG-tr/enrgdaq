@@ -3,7 +3,8 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from queue import Empty, Queue
+from multiprocessing import Process, Queue
+from queue import Empty
 from typing import Any, Optional
 
 import msgspec
@@ -44,8 +45,8 @@ class DAQJob:
     allowed_message_in_types: list[type[DAQJobMessage]] = []
     config_type: Any
     config: Any
-    message_in: Queue[DAQJobMessage]
-    message_out: Queue[DAQJobMessage]
+    message_in: "Queue[DAQJobMessage]"
+    message_out: "Queue[DAQJobMessage]"
     instance_id: int
     unique_id: str
     restart_offset: timedelta
@@ -182,7 +183,11 @@ class DAQJob:
 
         if self.config.verbosity == LogVerbosity.DEBUG:
             msg_json = msgspec.json.encode(message)
-            self._logger.debug(f"Message out: {msg_json}")
+            if self.config.verbosity == LogVerbosity.DEBUG and len(msg_json) < 1024:
+                if len(msg_json) > 1024:
+                    self._logger.debug("Message out")
+                else:
+                    self._logger.debug(f"Message out: {msg_json}")
         self.message_out.put(message)
 
     def __del__(self):
@@ -202,7 +207,7 @@ class DAQJob:
 
 
 @dataclass
-class DAQJobThread:
+class DAQJobProcess:
     daq_job: DAQJob
-    thread: threading.Thread
+    thread: Process
     start_time: datetime = field(default_factory=datetime.now)

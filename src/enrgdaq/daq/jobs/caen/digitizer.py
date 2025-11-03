@@ -1,5 +1,8 @@
 # pyright: reportPrivateImportUsage=false
+import ctypes as ct
 import time
+from datetime import datetime, timedelta
+from io import BytesIO
 from typing import Literal, Optional, cast
 
 import msgspec
@@ -8,13 +11,16 @@ from caen_libs import caendigitizer as dgtz
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage
+from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage, LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreRaw,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms
+
+DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB = 1
+UINT16_SIZE = ct.sizeof(ct.c_uint16)
 
 
 class DAQJobCAENDigitizerConfig(DAQJobConfig):
@@ -45,12 +51,23 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     waveform_store_config: Optional[DAQJobStoreConfig] = None
 
 
-class WaveformData(Struct, kw_only=True):
-    class Channel(Struct):
-        channel_id: int
-        waveform: bytes
+class DigitizerEvent(Struct, kw_only=True):
+    class EventInfo(Struct):
+        event_size: int
+        board_id: int
+        pattern: int
+        channel_mask: int
+        event_counter: int
+        trigger_time_tag: int
 
-    waveforms: list[Channel]
+    class ChannelWaveform(Struct):
+        channel_id: int
+        waveform_bytes: bytes
+        waveform_dtype: str
+        waveform_shape: tuple[int, ...]
+
+    event_info: EventInfo
+    waveforms: list[ChannelWaveform]
 
 
 class DAQJobCAENDigitizer(DAQJob):
@@ -61,9 +78,12 @@ class DAQJobCAENDigitizer(DAQJob):
     config_type = DAQJobCAENDigitizerConfig
     config: DAQJobCAENDigitizerConfig
     board_info: Optional[dgtz.BoardInfo] = None
+    _msg_buffer: bytearray
 
     def __init__(self, config: DAQJobCAENDigitizerConfig, **kwargs):
         super().__init__(config, **kwargs)
+        self._msg_buffer = bytearray()
+        self._encoder = msgspec.msgpack.Encoder()
         self._logger.info(
             f"CAEN Digitizer binding loaded (lib version {dgtz.lib.sw_release()})"
         )
@@ -104,32 +124,32 @@ class DAQJobCAENDigitizer(DAQJob):
         device.allocate_event()
 
         device.sw_start_acquisition()
-        last_event_counter = 0
+        last_event_counter = -1
+        acq_events, missed_events, last_log_time = 0, 0, datetime.now()
         while True:
+            if (
+                datetime.now() - last_log_time > timedelta(seconds=1)
+                and self.config.verbosity == LogVerbosity.DEBUG
+            ):
+                self._logger.debug(f"Acquired {acq_events} events.")
+                self._logger.debug(f"Missed events: {missed_events}")
+                acq_events, missed_events, last_log_time = 0, 0, datetime.now()
+
             device.read_data(
                 dgtz.ReadMode.SLAVE_TERMINATED_READOUT_MBLT,
             )
 
             num_events = device.get_num_events()
-            self._logger.info(f"Acquired {num_events} events.")
+            acq_events += num_events
 
-            start_time = time.time()
             for i in range(num_events):
                 event_info, buffer = device.get_event_info(i)
-                event = cast(dgtz.Uint16Event, device.decode_event(buffer))
-                self._send_store_message(event, event_info)
                 if i == 0:
-                    print(
-                        "missed",
-                        str(event_info.event_counter - last_event_counter),
-                        "events",
-                    )
+                    missed_events += event_info.event_counter - last_event_counter - 1
                     last_event_counter = event_info.event_counter
 
-                # for ch in range(self.board_info.channels):
-                #    self._process_signal(event.data_channel[ch], ch, i)
-            end_time = time.time()
-            # print("took " + (end_time - start_time).__str__() + " seconds")
+                event = cast(dgtz.Uint16Event, device.decode_event(buffer))
+                self._send_store_message(event, event_info)
 
     def _configure_device(self, device: dgtz.Device, info: dgtz.BoardInfo):
         """
@@ -185,33 +205,55 @@ class DAQJobCAENDigitizer(DAQJob):
             )
         )
 
-    def _pack_waveforms(self, event: dgtz.Uint16Event, event_info: dgtz.EventInfo):
+    def _create_event_object(self, event: dgtz.Uint16Event, event_info: dgtz.EventInfo):
         assert self.board_info is not None
 
-        waveform_data = WaveformData(
-            waveforms=[
-                WaveformData.Channel(
-                    channel_id=ch, waveform=event.data_channel[ch].tolist()
+        waveforms_to_send = []
+        raw_event = event.raw
+
+        for ch in range(self.board_info.channels):
+            num_samples = raw_event.ChSize[ch]
+            data_ptr = raw_event.DataChannel[ch]
+            raw_data_bytes = ct.string_at(data_ptr, num_samples * UINT16_SIZE)
+
+            waveforms_to_send.append(
+                DigitizerEvent.ChannelWaveform(
+                    channel_id=ch,
+                    waveform_bytes=raw_data_bytes,
+                    waveform_dtype="<u2",
+                    waveform_shape=(num_samples,),
                 )
-                for ch in range(self.board_info.channels)
-            ]
+            )
+
+        waveform_data = DigitizerEvent(
+            event_info=DigitizerEvent.EventInfo(
+                event_size=event_info.event_size,
+                board_id=event_info.board_id,
+                pattern=event_info.pattern,
+                channel_mask=event_info.channel_mask,
+                event_counter=event_info.event_counter,
+                trigger_time_tag=event_info.trigger_time_tag,
+            ),
+            waveforms=waveforms_to_send,
         )
-        return msgspec.msgpack.encode(waveform_data)
+        return waveform_data
 
     def _send_store_message(self, event: dgtz.Uint16Event, event_info: dgtz.EventInfo):
         """
         Sends the acquired data to the store.
         """
         assert self.config.waveform_store_config is not None
-        start_time = time.time()
-        data = self._pack_waveforms(event, event_info)
-        # print("packing took " + (time.time() - start_time).__str__() + " seconds")
-        start_time = time.time()
-        self._put_message_out(
-            DAQJobMessageStoreRaw(
-                store_config=self.config.waveform_store_config,
-                tag="waveform",
-                data=data,
+
+        packed_waveforms = self._create_event_object(event, event_info)
+        self._encoder.encode_into(packed_waveforms, self._msg_buffer)
+
+        if len(self._msg_buffer) > DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB * 1000 * 1000:
+            self._put_message_out(
+                DAQJobMessageStoreRaw(
+                    store_config=self.config.waveform_store_config,
+                    tag="waveform",
+                    data=self._msg_buffer,
+                )
             )
-        )
-        # print("sending took " + (time.time() - start_time).__str__() + " seconds")
+            self._msg_buffer.clear()
+            self._msg_buffer_size = 0

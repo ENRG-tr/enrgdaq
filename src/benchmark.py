@@ -40,7 +40,7 @@ def _run_supervisor(supervisor: Supervisor, stats=True):
         "avg_queue_size": lambda _: fmean(
             [
                 x.daq_job.message_out.qsize() + x.daq_job.message_in.qsize()
-                for x in supervisor.daq_job_threads
+                for x in supervisor.daq_job_processes
             ]
         ),
     }

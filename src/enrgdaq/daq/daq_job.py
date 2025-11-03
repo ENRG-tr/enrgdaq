@@ -1,12 +1,12 @@
 import glob
 import logging
 import os
-import threading
+from multiprocessing import Process
 from pathlib import Path
 
 import msgspec
 
-from enrgdaq.daq.base import DAQJob, DAQJobThread
+from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorConfig
@@ -50,29 +50,29 @@ def load_daq_jobs(
     return jobs
 
 
-def start_daq_job(daq_job: DAQJob) -> DAQJobThread:
+def start_daq_job(daq_job: DAQJob) -> DAQJobProcess:
     logging.info(f"Starting {type(daq_job).__name__}")
-    thread = threading.Thread(target=daq_job.start, daemon=True)
-    thread.start()
+    process = Process(target=daq_job.start, daemon=True)
+    process.start()
 
-    return DAQJobThread(daq_job, thread)
+    return DAQJobProcess(daq_job, process)
 
 
 def restart_daq_job(
     daq_job_type: type[DAQJob],
     daq_job_config: DAQJobConfig,
     supervisor_config: SupervisorConfig,
-) -> DAQJobThread:
+) -> DAQJobProcess:
     logging.info(f"Restarting {daq_job_type.__name__}")
     new_daq_job = daq_job_type(
         daq_job_config, supervisor_config=supervisor_config.clone()
     )
-    thread = threading.Thread(target=new_daq_job.start, daemon=True)
+    thread = Process(target=new_daq_job.start, daemon=True)
     thread.start()
-    return DAQJobThread(new_daq_job, thread)
+    return DAQJobProcess(new_daq_job, thread)
 
 
-def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobThread]:
+def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobProcess]:
     threads = []
     for daq_job in daq_jobs:
         threads.append(start_daq_job(daq_job))

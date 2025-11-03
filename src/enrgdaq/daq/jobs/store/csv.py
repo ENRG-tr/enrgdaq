@@ -16,7 +16,7 @@ from enrgdaq.daq.store.models import (
 )
 from enrgdaq.utils.file import modify_file_path
 
-DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 15
+DAQ_JOB_STORE_CSV_FLUSH_INTERVAL_SECONDS = 1
 
 
 class DAQJobStoreCSVConfig(DAQJobConfig):

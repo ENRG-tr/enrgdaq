@@ -13,7 +13,7 @@ from enrgdaq.daq.store.models import (
 )
 from enrgdaq.utils.file import modify_file_path
 
-DAQ_JOB_STORE_RAW_FLUSH_INTERVAL_SECONDS = 15
+DAQ_JOB_STORE_RAW_FLUSH_INTERVAL_SECONDS = 1
 
 
 class DAQJobStoreRawConfig(DAQJobConfig):
@@ -94,6 +94,7 @@ class DAQJobStoreRaw(DAQJobStore):
         ).total_seconds() < DAQ_JOB_STORE_RAW_FLUSH_INTERVAL_SECONDS:
             return False
 
+        self._logger.debug("Flushing raw file")
         file.file.flush()
         file.last_flush_date = datetime.now()
         return True
@@ -106,7 +107,9 @@ class DAQJobStoreRaw(DAQJobStore):
                 continue
 
             while file.write_queue:
-                file.file.write(file.write_queue.popleft())
+                item = file.write_queue.popleft()
+                self._logger.debug("Writing raw file " + str(len(item)))
+                file.file.write(item)
 
             if file.overwrite:
                 file.file.close()
