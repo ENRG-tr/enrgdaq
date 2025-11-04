@@ -68,7 +68,7 @@ class DigitizerEvent(Struct, kw_only=True):
 lib = ct.CDLL("./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so")
 
 
-CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.POINTER(_types.EventInfoRaw), ct.c_char_p)
+CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_uint32)
 dgtz_lib = dgtz.lib
 
 
@@ -151,7 +151,10 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_io_level(dgtz.IOLevel.NIM)
         device.set_post_trigger_size(85)
 
-    def _event_callback(self, event_info_ptr, event_data_ptr):
+    def _event_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
+        event_data_ptr = ct.cast(buffer_ptr, ct.POINTER(ct.c_uint16))
+        event_data_bytes = ct.string_at(event_data_ptr, buffer_len)
+
         pass
         """
         event_info_c = event_info_ptr.contents
