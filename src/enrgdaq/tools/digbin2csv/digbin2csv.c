@@ -4,28 +4,30 @@
 #include <string.h>
 
 // From the new digitizer code
-typedef struct {
-    uint32_t total_size;        // Total size in bytes
-    uint32_t board_id;
+typedef struct
+{
+    uint32_t total_size; // Total size in bytes
+    uint8_t board_id;
     uint32_t pattern;
-    uint32_t channel_mask;
+    uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
 } EventHeader_t;
 
-typedef struct {
-    uint16_t channel;
+typedef struct
+{
+    uint8_t channel;
     uint16_t sample_index;
-    uint16_t value;
+    uint16_t value_lsb;
+    int16_t value_mv;
 } WaveformSample_t;
-
 
 // Structure for a single event
 typedef struct
 {
-    uint32_t board_id;
+    uint8_t board_id;
     uint32_t pattern;
-    uint32_t channel_mask;
+    uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
     WaveformSample_t *event_data;
@@ -129,7 +131,7 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
             event_list_free(events);
             return NULL;
         }
-        
+
         // Copy waveform data
         size_t event_data_offset = offset + sizeof(EventHeader_t);
         memcpy(event_data, buffer_bytes + event_data_offset, data_bytes);
@@ -142,8 +144,7 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
             .event_counter = header->event_counter,
             .trigger_time_tag = header->trigger_time_tag,
             .event_data = event_data,
-            .num_samples = num_samples
-        };
+            .num_samples = num_samples};
 
         // Add to list
         if (event_list_add(events, &event) != 0)
@@ -189,7 +190,7 @@ int write_events_to_csv(const EventList_t *events, const char *output_filename)
                     event->trigger_time_tag,
                     event->event_data[j].channel,
                     event->event_data[j].sample_index,
-                    event->event_data[j].value);
+                    event->event_data[j].value_mv);
         }
     }
 

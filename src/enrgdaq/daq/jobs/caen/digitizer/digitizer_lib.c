@@ -12,6 +12,7 @@ static int g_running = 0;
 static int g_is_debug_verbosity = 0;
 
 #define ACQ_BUFFER_SIZE 1024 * 512
+#define FILTER_BUFFER_SIZE 1024 * 64
 #define HEADER_SIZE 6
 
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
@@ -38,18 +39,19 @@ void check_c_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
 typedef struct
 {
     uint32_t total_size; // Total size in bytes
-    uint32_t board_id;
+    uint8_t board_id;
     uint32_t pattern;
-    uint32_t channel_mask;
+    uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
 } EventHeader_t;
 
 typedef struct
 {
-    uint16_t channel;
+    uint8_t channel;
     uint16_t sample_index;
-    uint16_t value;
+    uint16_t value_lsb;
+    int16_t value_mv;
 } WaveformSample_t;
 
 size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold,
@@ -73,7 +75,8 @@ size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold,
 
             out_buffer[sample_count].channel = (uint16_t)ch;
             out_buffer[sample_count].sample_index = (uint16_t)i;
-            out_buffer[sample_count].value = event_copy->Waveforms[ch][i];
+            out_buffer[sample_count].value_lsb = event_copy->Waveforms[ch][i];
+            out_buffer[sample_count].value_mv = (int16_t)(event_copy->Waveforms[ch][i]) - 1024;
             sample_count++;
         }
     }

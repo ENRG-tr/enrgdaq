@@ -72,7 +72,7 @@ class DAQJobCAENDigitizer(DAQJob):
         self.ctr = 0
 
         # Compile if .so does not exist
-        if not os.path.exists(DIGITIZER_C_DLL_PATH):
+        if True or not os.path.exists(DIGITIZER_C_DLL_PATH):
             self._logger.info("Compiling C library...")
             ret = subprocess.run(
                 ["make", "-C", os.path.dirname(DIGITIZER_C_DLL_PATH)],
@@ -159,6 +159,7 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_acquisition_mode(self.config.acquisition_mode)
         device.set_io_level(dgtz.IOLevel.NIM)
         device.set_post_trigger_size(85)
+        device.calibrate()
 
     def _event_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
         assert self.config.store_config is not None
