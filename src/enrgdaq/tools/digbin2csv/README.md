@@ -15,7 +15,7 @@ Which in turn will create `digbin2csv` executable.
 
 Simply run:
 ```
-$ ./digbin2csv <input_file> <output_file>`
+$ ./digbin2csv <input_file> <output_file>
   <input_file>  - Binary file containing acquisition data
   <output_file> - CSV file to write parsed data
 ```
