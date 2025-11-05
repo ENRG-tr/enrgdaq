@@ -6,16 +6,12 @@ import threading
 from datetime import timedelta
 from typing import Literal, Optional
 
-import caen_libs._caendigitizertypes as _types
-import msgspec
 from caen_libs import caendigitizer as dgtz
-from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import DAQJobConfig, LogVerbosity
+from enrgdaq.daq.models import LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreRaw,
-    DAQJobStoreConfig,
     StorableDAQJobConfig,
 )
 
@@ -38,13 +34,11 @@ class DAQJobCAENDigitizerConfig(StorableDAQJobConfig):
     channel_enable_mask: int = 1
     channel_self_trigger_threshold: int = 32768
     channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    acquisition_timeout: int = 5
-    acquisition_interval_seconds: int = 1
-    peak_detection_threshold: Optional[int] = None
-    millivolts_per_adc: float = 1.0
+    peak_threshold: int = 750
 
 
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
@@ -93,7 +87,12 @@ class DAQJobCAENDigitizer(DAQJob):
                 self._logger.error(f"stdout: {ret.stdout}")
                 self._logger.error(f"stderr: {ret.stderr}")
         self._lib = ct.CDLL(DIGITIZER_C_DLL_PATH)
-        self._lib.run_acquisition.argtypes = [ct.c_int, ct.c_int, CALLBACK_FUNC]
+        self._lib.run_acquisition.argtypes = [
+            ct.c_int,
+            ct.c_int,
+            ct.c_int,
+            CALLBACK_FUNC,
+        ]
         self._lib.stop_acquisition.argtypes = []
 
         self.callback_delegate = CALLBACK_FUNC(self._event_callback)
@@ -121,6 +120,7 @@ class DAQJobCAENDigitizer(DAQJob):
             self._lib.run_acquisition(
                 device.handle,
                 self.config.verbosity == LogVerbosity.DEBUG,
+                self.config.peak_threshold,
                 self.callback_delegate,
             )
         except Exception as e:
@@ -150,6 +150,10 @@ class DAQJobCAENDigitizer(DAQJob):
                 else dgtz.TriggerMode.DISABLED,
                 (1 << channel),
             )
+            if channel in self.config.channel_dc_offsets:
+                device.set_channel_dc_offset(
+                    channel, self.config.channel_dc_offsets[channel]
+                )
         device.set_sw_trigger_mode(self.config.sw_trigger_mode)
         device.set_max_num_events_blt(self.config.max_num_events_blt)
         device.set_acquisition_mode(self.config.acquisition_mode)

@@ -12,6 +12,7 @@ static int g_running = 0;
 static int g_is_debug_verbosity = 0;
 
 #define ACQ_BUFFER_SIZE 1024 * 512
+#define HEADER_SIZE 6
 
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
 
@@ -20,15 +21,9 @@ ThreadSafeQueue_t g_work_queue;
 
 typedef struct
 {
-    uint16_t *buffer;
-    size_t buffer_len;
-} FilterResult_t;
-
-typedef struct
-{
-    uint16_t *data;
-    size_t len;
-} AcquisitionBuffer_t;
+    python_callback_t callback;
+    int filter_threshold;
+} ProcessingThreadArgs_t;
 
 void check_c_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
 {
@@ -39,9 +34,29 @@ void check_c_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
     }
 }
 
-size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold, uint16_t *out_buffer, size_t out_buffer_max_len)
+// Add to your header file
+typedef struct
 {
-    size_t buffer_len = 0;
+    uint32_t total_size; // Total size in bytes
+    uint32_t board_id;
+    uint32_t pattern;
+    uint32_t channel_mask;
+    uint32_t event_counter;
+    uint32_t trigger_time_tag;
+} EventHeader_t;
+
+typedef struct
+{
+    uint16_t channel;
+    uint16_t sample_index;
+    uint16_t value;
+} WaveformSample_t;
+
+size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold,
+                                WaveformSample_t *out_buffer, size_t out_buffer_max_samples)
+{
+    size_t sample_count = 0;
+
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
         for (int i = 0; i < event_copy->ChSize[ch]; i++)
@@ -49,32 +64,32 @@ size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold, uint
             if (event_copy->Waveforms[ch][i] < threshold)
                 continue;
 
-            if (buffer_len + 3 > out_buffer_max_len)
+            if (sample_count >= out_buffer_max_samples)
             {
-                fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!", ch);
+                fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!\n", ch);
                 fflush(stderr);
-                return buffer_len;
+                return sample_count;
             }
 
-            out_buffer[buffer_len++] = ch;
-            out_buffer[buffer_len++] = i;
-            // Use the data from our copied struct
-            out_buffer[buffer_len++] = event_copy->Waveforms[ch][i];
+            out_buffer[sample_count].channel = (uint16_t)ch;
+            out_buffer[sample_count].sample_index = (uint16_t)i;
+            out_buffer[sample_count].value = event_copy->Waveforms[ch][i];
+            sample_count++;
         }
     }
-    return buffer_len;
+
+    return sample_count;
 }
 
+// Updated processing thread
 void *processing_thread_func(void *arg)
 {
-    python_callback_t callback = (python_callback_t)arg;
+    ProcessingThreadArgs_t *args = (ProcessingThreadArgs_t *)arg;
 
-    AcquisitionBuffer_t acq_buffer = {
-        .data = (uint16_t *)malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
-        .len = 0};
+    uint8_t *acq_buffer = (uint8_t *)malloc(ACQ_BUFFER_SIZE);
+    size_t acq_buffer_len = 0;
 
-    uint16_t temp_filter_buffer[2048];
-
+    WaveformSample_t temp_filter_buffer[2048];
     long last_event_counter = -1;
     long acq_events = 0;
     long missed_events = 0;
@@ -86,42 +101,49 @@ void *processing_thread_func(void *arg)
     while (1)
     {
         EventDataCopy_t *item = queue_pop_ptr(&g_work_queue);
-
         if (item == NULL) // Shutdown
-        {
             break;
-        }
 
         acq_events++;
-
         if (item->is_first_in_block && last_event_counter != -1)
             missed_events += item->event_info.EventCounter - last_event_counter - 1;
         last_event_counter = item->event_info.EventCounter;
 
-        uint32_t header_data[6];
-        header_data[1] = item->event_info.BoardId;
-        header_data[2] = item->event_info.Pattern;
-        header_data[3] = item->event_info.ChannelMask;
-        header_data[4] = item->event_info.EventCounter;
-        header_data[5] = item->event_info.TriggerTimeTag;
+        // Build header struct
+        EventHeader_t header = {
+            .board_id = item->event_info.BoardId,
+            .pattern = item->event_info.Pattern,
+            .channel_mask = item->event_info.ChannelMask,
+            .event_counter = item->event_info.EventCounter,
+            .trigger_time_tag = item->event_info.TriggerTimeTag};
 
-        size_t filtered_len = filter_channel_waveforms(item, 750, temp_filter_buffer, 2048);
-        header_data[0] = filtered_len + 6 * sizeof(*header_data);
+        // Filter waveforms into structured buffer
+        size_t sample_count = filter_channel_waveforms(item, args->filter_threshold, temp_filter_buffer, 2048);
 
-        if (filtered_len + acq_buffer.len + 6 * sizeof(*header_data) > ACQ_BUFFER_SIZE)
+        size_t header_bytes = sizeof(EventHeader_t);
+        size_t data_bytes = sample_count * sizeof(WaveformSample_t);
+        size_t total_bytes = header_bytes + data_bytes;
+
+        header.total_size = total_bytes;
+
+        // Check if buffer is full
+        if (acq_buffer_len + total_bytes > ACQ_BUFFER_SIZE)
         {
             if (g_is_debug_verbosity)
-                printf("Consumer buffer full, sending %zu elements.\n", acq_buffer.len);
-            uint16_t *data_copy = (uint16_t *)malloc(acq_buffer.len * sizeof(uint16_t));
-            memcpy(data_copy, acq_buffer.data, acq_buffer.len * sizeof(uint16_t));
-            callback(data_copy, acq_buffer.len);
-            acq_buffer.len = 0;
+                printf("Consumer buffer full, sending %zu bytes.\n", acq_buffer_len);
+
+            uint8_t *data_copy = (uint8_t *)malloc(acq_buffer_len);
+            memcpy(data_copy, acq_buffer, acq_buffer_len);
+            args->callback(data_copy, acq_buffer_len);
+            acq_buffer_len = 0;
         }
 
-        memcpy(acq_buffer.data + acq_buffer.len, header_data, 6 * sizeof(*header_data));
-        acq_buffer.len += 6 * sizeof(*header_data);
-        memcpy(acq_buffer.data + acq_buffer.len, temp_filter_buffer, filtered_len * sizeof(uint16_t));
-        acq_buffer.len += filtered_len;
+        // Dump structs to bytes - crystal clear!
+        memcpy(acq_buffer + acq_buffer_len, &header, header_bytes);
+        acq_buffer_len += header_bytes;
+
+        memcpy(acq_buffer + acq_buffer_len, temp_filter_buffer, data_bytes);
+        acq_buffer_len += data_bytes;
 
         queue_push_ptr(&g_free_pool_queue, item);
 
@@ -131,7 +153,7 @@ void *processing_thread_func(void *arg)
             {
                 printf("Consumer Processed %ld events.\n", acq_events);
                 printf("Consumer Missed events: %ld\n", missed_events);
-                printf("Consumer buffer length: %zu\n", acq_buffer.len);
+                printf("Consumer buffer samples: %zu\n", sample_count);
             }
             acq_events = 0;
             missed_events = 0;
@@ -140,10 +162,11 @@ void *processing_thread_func(void *arg)
     }
 
     printf("Consumer thread shutting down.\n");
-    free(acq_buffer.data);
+    free(acq_buffer);
     return NULL;
 }
-void run_acquisition(int handle, int is_debug_verbosity, python_callback_t callback)
+
+void run_acquisition(int handle, int is_debug_verbosity, int filter_threshold, python_callback_t callback)
 {
     g_is_debug_verbosity = is_debug_verbosity;
 
@@ -163,7 +186,8 @@ void run_acquisition(int handle, int is_debug_verbosity, python_callback_t callb
         printf("Producer: Pre-allocated %d event buffers.\n", EVENT_POOL_SIZE);
 
     pthread_t consumer_thread;
-    if (pthread_create(&consumer_thread, NULL, processing_thread_func, callback) != 0)
+    ProcessingThreadArgs_t args = {callback, filter_threshold};
+    if (pthread_create(&consumer_thread, NULL, processing_thread_func, &args) != 0)
     {
         fprintf(stderr, "Failed to create consumer thread.\n");
         exit(1);

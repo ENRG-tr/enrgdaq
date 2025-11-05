@@ -168,3 +168,6 @@ out/*
 .vscode/*
 
 *.out
+
+# Tool executables
+src/enrgdaq/tools/digbin2csv/digbin2csv
