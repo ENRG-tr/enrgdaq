@@ -1,25 +1,29 @@
 # pyright: reportPrivateImportUsage=false
 import ctypes as ct
+import os
+import subprocess
 import threading
 from datetime import timedelta
 from typing import Literal, Optional
 
 import caen_libs._caendigitizertypes as _types
+import msgspec
 from caen_libs import caendigitizer as dgtz
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import DAQJobConfig
+from enrgdaq.daq.models import DAQJobConfig, LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreRaw,
     DAQJobStoreConfig,
+    StorableDAQJobConfig,
 )
 
 DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB = 1
 UINT16_SIZE = ct.sizeof(ct.c_uint16)
 
 
-class DAQJobCAENDigitizerConfig(DAQJobConfig):
+class DAQJobCAENDigitizerConfig(StorableDAQJobConfig):
     """
     Configuration class for the CAEN Digitizer DAQ Job.
     """
@@ -42,30 +46,8 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     peak_detection_threshold: Optional[int] = None
     millivolts_per_adc: float = 1.0
 
-    peak_store_config: Optional[DAQJobStoreConfig] = None
-    waveform_store_config: Optional[DAQJobStoreConfig] = None
 
-
-class DigitizerEvent(Struct, kw_only=True):
-    class EventInfo(Struct):
-        event_size: int
-        board_id: int
-        pattern: int
-        channel_mask: int
-        event_counter: int
-        trigger_time_tag: int
-
-    class ChannelWaveform(Struct):
-        channel_id: int
-        waveform_bytes: bytes
-        waveform_dtype: str
-        waveform_shape: tuple[int, ...]
-
-    event_info: EventInfo
-    waveforms: list[ChannelWaveform]
-
-
-lib = ct.CDLL("./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so")
+DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
 
 
 CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_uint32)
@@ -94,8 +76,25 @@ class DAQJobCAENDigitizer(DAQJob):
         self._acquisition_thread = None
         self._device = None
         self.ctr = 0
-        lib.run_acquisition.argtypes = [ct.c_int, CALLBACK_FUNC]
-        lib.stop_acquisition.argtypes = []
+
+        # Compile if .so does not exist
+        if not os.path.exists(DIGITIZER_C_DLL_PATH):
+            self._logger.info("Compiling C library...")
+            ret = subprocess.run(
+                ["make", "-C", os.path.dirname(DIGITIZER_C_DLL_PATH)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if ret.returncode != 0:
+                self._logger.error(
+                    f"Failed to compile with error code: {ret.returncode}"
+                )
+                self._logger.error(f"stdout: {ret.stdout}")
+                self._logger.error(f"stderr: {ret.stderr}")
+        self._lib = ct.CDLL(DIGITIZER_C_DLL_PATH)
+        self._lib.run_acquisition.argtypes = [ct.c_int, ct.c_int, CALLBACK_FUNC]
+        self._lib.stop_acquisition.argtypes = []
 
         self.callback_delegate = CALLBACK_FUNC(self._event_callback)
 
@@ -119,7 +118,11 @@ class DAQJobCAENDigitizer(DAQJob):
             self.board_info = device.get_info()
             self._configure_device(device, self.board_info)
 
-            lib.run_acquisition(device.handle, self.callback_delegate)
+            self._lib.run_acquisition(
+                device.handle,
+                self.config.verbosity == LogVerbosity.DEBUG,
+                self.callback_delegate,
+            )
         except Exception as e:
             self._logger.error(
                 f"Error during C-based acquisition setup: {e}", exc_info=True
@@ -142,7 +145,9 @@ class DAQJobCAENDigitizer(DAQJob):
                 dgtz.TriggerPolarity.ON_RISING_EDGE,
             )
             device.set_channel_self_trigger(
-                dgtz.TriggerMode.ACQ_ONLY,
+                dgtz.TriggerMode.ACQ_ONLY
+                if (self.config.channel_self_trigger_channel_mask & (1 << channel))
+                else dgtz.TriggerMode.DISABLED,
                 (1 << channel),
             )
         device.set_sw_trigger_mode(self.config.sw_trigger_mode)
@@ -152,91 +157,21 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_post_trigger_size(85)
 
     def _event_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
+        assert self.config.store_config is not None
         event_data_ptr = ct.cast(buffer_ptr, ct.POINTER(ct.c_uint16))
         event_data_bytes = ct.string_at(event_data_ptr, buffer_len)
 
-        pass
-        """
-        event_info_c = event_info_ptr.contents
-
-        event_info = dgtz.EventInfo(
-            event_size=event_info_c.event_size,
-            board_id=event_info_c.board_id,
-            pattern=event_info_c.pattern,
-            channel_mask=event_info_c.channel_mask,
-            event_counter=event_info_c.event_counter,
-            trigger_time_tag=event_info_c.trigger_time_tag,
-        )
-
-        event = cast(
-            dgtz.Uint16Event,
-            dgtz_lib.decode_event(self.handle, event_data_ptr, self._event_dpp_ptr),
-        )
-
-        self._send_store_message(event, event_info)"""
-
-    def _create_event_object(self, event: dgtz.Uint16Event, event_info: dgtz.EventInfo):
-        assert self.board_info is not None
-
-        waveforms_to_send = []
-        raw_event = event.raw
-
-        for ch in range(self.board_info.channels):
-            num_samples = raw_event.ChSize[ch]
-            if num_samples == 0:
-                continue
-            data_ptr = raw_event.DataChannel[ch]
-            raw_data_bytes = ct.string_at(data_ptr, num_samples * UINT16_SIZE)
-
-            waveforms_to_send.append(
-                DigitizerEvent.ChannelWaveform(
-                    channel_id=ch,
-                    waveform_bytes=raw_data_bytes,
-                    waveform_dtype="<u2",
-                    waveform_shape=(num_samples,),
-                )
+        self._put_message_out(
+            DAQJobMessageStoreRaw(
+                store_config=self.config.store_config,
+                tag="waveform",
+                data=event_data_bytes,
             )
-
-        waveform_data = DigitizerEvent(
-            event_info=DigitizerEvent.EventInfo(
-                event_size=event_info.event_size,
-                board_id=event_info.board_id,
-                pattern=event_info.pattern,
-                channel_mask=event_info.channel_mask,
-                event_counter=event_info.event_counter,
-                trigger_time_tag=event_info.trigger_time_tag,
-            ),
-            waveforms=waveforms_to_send,
         )
-        return waveform_data
-
-    def _send_store_message(self, event: dgtz.Uint16Event, event_info: dgtz.EventInfo):
-        """
-        Sends the acquired data to the store. This method is now called from the C acquisition thread.
-        """
-        assert self.config.waveform_store_config is not None
-
-        packed_waveforms = self._create_event_object(event, event_info)
-
-        with self._msg_buffer_lock:
-            self._encoder.encode_into(packed_waveforms, self._msg_buffer)
-
-            if (
-                len(self._msg_buffer)
-                > DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB * 1000 * 1000
-            ):
-                self._put_message_out(
-                    DAQJobMessageStoreRaw(
-                        store_config=self.config.waveform_store_config,
-                        tag="waveform",
-                        data=self._msg_buffer,
-                    )
-                )
-                self._msg_buffer.clear()
 
     def __del__(self):
         self._logger.info("Stopping acquisition...")
-        lib.stop_acquisition()
+        self._lib.stop_acquisition()
         if self._acquisition_thread:
             self._logger.info("Joining acquisition thread...")
             self._acquisition_thread.join()

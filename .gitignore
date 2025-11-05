@@ -166,3 +166,5 @@ configs/*.toml.disabled
 out/*
 
 .vscode/*
+
+*.out

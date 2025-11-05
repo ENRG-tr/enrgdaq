@@ -9,8 +9,9 @@
 #include "queue.h"
 
 static int g_running = 0;
+static int g_is_debug_verbosity = 0;
 
-#define ACQ_BUFFER_SIZE 1024 * 128
+#define ACQ_BUFFER_SIZE 1024 * 512
 
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
 
@@ -48,9 +49,14 @@ size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold, uint
             if (event_copy->Waveforms[ch][i] < threshold)
                 continue;
 
-            if (buffer_len + 2 > out_buffer_max_len)
+            if (buffer_len + 3 > out_buffer_max_len)
+            {
+                fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!", ch);
+                fflush(stderr);
                 return buffer_len;
+            }
 
+            out_buffer[buffer_len++] = ch;
             out_buffer[buffer_len++] = i;
             // Use the data from our copied struct
             out_buffer[buffer_len++] = event_copy->Waveforms[ch][i];
@@ -74,7 +80,8 @@ void *processing_thread_func(void *arg)
     long missed_events = 0;
     time_t last_log_time = time(NULL);
 
-    printf("Consumer thread started.\n");
+    if (g_is_debug_verbosity)
+        printf("Consumer thread started.\n");
 
     while (1)
     {
@@ -91,17 +98,28 @@ void *processing_thread_func(void *arg)
             missed_events += item->event_info.EventCounter - last_event_counter - 1;
         last_event_counter = item->event_info.EventCounter;
 
-        size_t filtered_len = filter_channel_waveforms(item, 750, temp_filter_buffer, 2048);
+        uint32_t header_data[6];
+        header_data[1] = item->event_info.BoardId;
+        header_data[2] = item->event_info.Pattern;
+        header_data[3] = item->event_info.ChannelMask;
+        header_data[4] = item->event_info.EventCounter;
+        header_data[5] = item->event_info.TriggerTimeTag;
 
-        if (filtered_len + acq_buffer.len > ACQ_BUFFER_SIZE)
+        size_t filtered_len = filter_channel_waveforms(item, 750, temp_filter_buffer, 2048);
+        header_data[0] = filtered_len + 6 * sizeof(*header_data);
+
+        if (filtered_len + acq_buffer.len + 6 * sizeof(*header_data) > ACQ_BUFFER_SIZE)
         {
-            printf("Consumer buffer full, sending %zu elements.\n", acq_buffer.len);
+            if (g_is_debug_verbosity)
+                printf("Consumer buffer full, sending %zu elements.\n", acq_buffer.len);
             uint16_t *data_copy = (uint16_t *)malloc(acq_buffer.len * sizeof(uint16_t));
             memcpy(data_copy, acq_buffer.data, acq_buffer.len * sizeof(uint16_t));
             callback(data_copy, acq_buffer.len);
             acq_buffer.len = 0;
         }
 
+        memcpy(acq_buffer.data + acq_buffer.len, header_data, 6 * sizeof(*header_data));
+        acq_buffer.len += 6 * sizeof(*header_data);
         memcpy(acq_buffer.data + acq_buffer.len, temp_filter_buffer, filtered_len * sizeof(uint16_t));
         acq_buffer.len += filtered_len;
 
@@ -109,8 +127,12 @@ void *processing_thread_func(void *arg)
 
         if (time(NULL) - last_log_time >= 1)
         {
-            printf("Consumer Processed %ld events.\n", acq_events);
-            printf("Consumer Missed events: %ld\n", missed_events);
+            if (g_is_debug_verbosity)
+            {
+                printf("Consumer Processed %ld events.\n", acq_events);
+                printf("Consumer Missed events: %ld\n", missed_events);
+                printf("Consumer buffer length: %zu\n", acq_buffer.len);
+            }
             acq_events = 0;
             missed_events = 0;
             last_log_time = time(NULL);
@@ -121,8 +143,10 @@ void *processing_thread_func(void *arg)
     free(acq_buffer.data);
     return NULL;
 }
-void run_acquisition(int handle, python_callback_t callback)
+void run_acquisition(int handle, int is_debug_verbosity, python_callback_t callback)
 {
+    g_is_debug_verbosity = is_debug_verbosity;
+
     char *buffer = NULL;
     uint32_t buffer_size;
     CAEN_DGTZ_ErrorCode ret;
@@ -135,7 +159,8 @@ void run_acquisition(int handle, python_callback_t callback)
     {
         queue_push_ptr(&g_free_pool_queue, &g_event_pool[i]);
     }
-    printf("Producer: Pre-allocated %d event buffers.\n", EVENT_POOL_SIZE);
+    if (is_debug_verbosity)
+        printf("Producer: Pre-allocated %d event buffers.\n", EVENT_POOL_SIZE);
 
     pthread_t consumer_thread;
     if (pthread_create(&consumer_thread, NULL, processing_thread_func, callback) != 0)
@@ -153,7 +178,8 @@ void run_acquisition(int handle, python_callback_t callback)
     ret = CAEN_DGTZ_SWStartAcquisition(handle);
     check_c_error(ret, "CAEN_DGTZ_SWStartAcquisition");
 
-    printf("Producer thread (acquisition) started.\n");
+    if (is_debug_verbosity)
+        printf("Producer thread (acquisition) started.\n");
 
     while (g_running)
     {
@@ -200,8 +226,8 @@ void run_acquisition(int handle, python_callback_t callback)
                 if (ch_size > MAX_SAMPLES_PER_CHANNEL)
                 {
                     fprintf(stderr, "ERROR: MAX_SAMPLES_PER_CHANNEL is too small! %u > %d\n", ch_size, MAX_SAMPLES_PER_CHANNEL);
-                    // Handle error: stop, skip, etc.
-                    ch_size = MAX_SAMPLES_PER_CHANNEL; // Truncate to prevent buffer overflow
+                    fflush(stderr);
+                    ch_size = MAX_SAMPLES_PER_CHANNEL;
                 }
                 item_copy->ChSize[ch] = ch_size;
                 if (ch_size > 0)
@@ -210,22 +236,9 @@ void run_acquisition(int handle, python_callback_t callback)
                 }
             }
 
-            // 3. Push the *filled* item to the consumer
             queue_push_ptr(&g_work_queue, item_copy);
         }
     }
-
-    printf("Producer thread stopping...\n");
-
-    queue_shutdown(&g_work_queue);
-    queue_shutdown(&g_free_pool_queue);
-
-    pthread_join(consumer_thread, NULL);
-
-    CAEN_DGTZ_FreeReadoutBuffer(&buffer);
-    CAEN_DGTZ_FreeEvent(handle, (void **)&event16);
-
-    printf("Acquisition fully stopped.\n");
 }
 
 void stop_acquisition()

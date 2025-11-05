@@ -1,25 +1,16 @@
 daq_job_type = "DAQJobCAENDigitizer"
 
-# Connection settings
-connection_type = "USB"  # or "OPTICAL_LINK", "PCI_EXPRESS_A4818", "PCI_EXPRESS_A2818"
-link_number = "0" # Link number, PID or hostname depending on connection_type
+## --------------------- Connection Settings ---------------------
+connection_type = "OPTICAL_LINK"  # or "OPTICAL_LINK", "PCI_EXPRESS_A4818", "PCI_EXPRESS_A2818"
+link_number = "1"        # Link number, PID, or hostname depending on connection_type
+conet_node = 0           # CONET node for optical link
+vme_base_address = 0     # VME base address
 
-# Acquisition settings
-record_length = 4096
-channel_enable_mask = 0b11111111
-channel_trigger_threshold = 1
-channel_self_trigger_channel_mask = 0b0000100
-channel_self_trigger_mode = "ACQ_ONLY"
-sw_trigger_mode = "ACQ_ONLY"
+channel_enable_mask = 0xFFFF
+channel_self_trigger_channel_mask = 0xFFFF
+channel_self_trigger_threshold = 750
 max_num_events_blt = 1
 
-acquisition_mode = "SW_CONTROLLED"
-
-# Optional: Peak detection settings. Uncomment to enable.
-# peak_detection_threshold = 35000
-# millivolts_per_adc = 0.061 # Example value for a 1Vpp range on a 16-bit digitizer
-
-# Store configuration for CSV
-[store_config.csv]
+[store_config.raw]
 file_path = "caen_digitizer.csv"
 add_date = true

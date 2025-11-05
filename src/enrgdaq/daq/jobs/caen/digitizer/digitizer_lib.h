@@ -20,7 +20,7 @@ typedef struct EventDataCopy
 
 typedef void (*python_callback_t)(uint16_t *data, size_t len);
 
-void run_acquisition(int handle, python_callback_t callback);
+void run_acquisition(int handle, int is_debug_verbosity, python_callback_t callback);
 void stop_acquisition();
 
 #endif // DIGITIZER_LIB_H
