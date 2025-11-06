@@ -38,23 +38,33 @@ class DAQJobRemoteProxy(DAQJob):
 
     def __init__(self, config: DAQJobRemoteProxyConfig, **kwargs):
         super().__init__(config, **kwargs)
+        self._zmq_ctx = None
+        self._xsub_sock = None
+        self._xpub_sock = None
+
+    def _init(self):
+        """
+        Initializes the job.
+        """
 
         self._zmq_ctx = zmq.Context()
         self._xsub_sock = self._zmq_ctx.socket(zmq.XSUB)
-        self._xsub_sock.bind(config.zmq_xsub_url)
+        self._xsub_sock.bind(self.config.zmq_xsub_url)
 
         self._xpub_sock = self._zmq_ctx.socket(zmq.XPUB)
-        self._xpub_sock.bind(config.zmq_xpub_url)
+        self._xpub_sock.bind(self.config.zmq_xpub_url)
 
         self._logger.info(
-            f"Proxying between {config.zmq_xsub_url} -> {config.zmq_xpub_url}"
+            f"Proxying between {self.config.zmq_xsub_url} -> {self.config.zmq_xpub_url}"
         )
 
     def start(self):
         """
         Start the ZMQ proxy.
         """
+        self._init()
         try:
+            assert self._xsub_sock is not None and self._xpub_sock is not None
             zmq.proxy(self._xsub_sock, self._xpub_sock)
         except zmq.ContextTerminated:
             pass
@@ -63,7 +73,14 @@ class DAQJobRemoteProxy(DAQJob):
         """
         Destructor for DAQJobRemoteProxy.
         """
-        if getattr(self, "_zmq_ctx", None) is not None:
-            self._zmq_ctx.destroy()
+        assert (
+            self._xsub_sock is not None
+            and self._xpub_sock is not None
+            and self._zmq_ctx is not None
+        )
+        self._xsub_sock.close()
+        self._xpub_sock.close()
+
+        self._zmq_ctx.destroy()
 
         return super().__del__()
