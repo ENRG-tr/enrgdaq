@@ -8,7 +8,7 @@ from typing import Literal, Optional
 
 try:
     from caen_libs import caendigitizer as dgtz
-except ImportError:
+except Exception:
     pass
 from msgspec import Struct
 
