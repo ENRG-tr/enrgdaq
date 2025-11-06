@@ -200,7 +200,13 @@ class DAQJobRemote(DAQJob):
                 topic, message = self._zmq_sub.recv_multipart()
             except zmq.ContextTerminated:
                 break
-            recv_message = self._unpack_message(message)
+            try:
+                recv_message = self._unpack_message(message)
+            except Exception as e:
+                self._logger.error(
+                    f"Error while unpacking message sent in {topic}: {e}", exc_info=True
+                )
+                continue
             if (
                 recv_message.daq_job_info is not None
                 and recv_message.daq_job_info.supervisor_config is not None
