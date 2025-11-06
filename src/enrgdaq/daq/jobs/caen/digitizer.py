@@ -6,7 +6,10 @@ import threading
 from datetime import timedelta
 from typing import Literal, Optional
 
-from caen_libs import caendigitizer as dgtz
+try:
+    from caen_libs import caendigitizer as dgtz
+except Exception:
+    pass
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
