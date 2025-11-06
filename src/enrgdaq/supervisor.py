@@ -9,7 +9,7 @@ from typing import Optional
 import msgspec
 
 from enrgdaq.daq.alert.base import DAQJobAlert
-from enrgdaq.daq.base import DAQJob, DAQJobThread
+from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
     SUPERVISOR_CONFIG_FILE_PATH,
     load_daq_jobs,
@@ -51,7 +51,7 @@ class Supervisor:
         _last_stats_message_time (datetime): Last time a stats message was sent.
     """
 
-    daq_job_threads: list[DAQJobThread]
+    daq_job_processes: list[DAQJobProcess]
     daq_job_stats: DAQJobStatsDict
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
@@ -84,9 +84,9 @@ class Supervisor:
         self._logger.name = f"Supervisor({self.config.supervisor_id})"
 
         self.restart_schedules = []
-        self.daq_job_threads = self.start_daq_job_threads(self._daq_jobs_to_load)
+        self.daq_job_processes = self.start_daq_job_processes(self._daq_jobs_to_load)
         self.daq_job_stats: DAQJobStatsDict = {
-            type(thread.daq_job): DAQJobStats() for thread in self.daq_job_threads
+            type(thread.daq_job): DAQJobStats() for thread in self.daq_job_processes
         }
         self.warn_for_lack_of_daq_jobs()
 
@@ -94,9 +94,9 @@ class Supervisor:
             seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
         )
 
-    def start_daq_job_threads(
+    def start_daq_job_processes(
         self, daq_jobs_to_load: Optional[list[DAQJob]] = None
-    ) -> list[DAQJobThread]:
+    ) -> list[DAQJobProcess]:
         assert self.config is not None
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
@@ -113,7 +113,7 @@ class Supervisor:
                 self.loop()
             except KeyboardInterrupt:
                 self._logger.warning("KeyboardInterrupt received, cleaning up")
-                for daq_job_thread in self.daq_job_threads:
+                for daq_job_thread in self.daq_job_processes:
                     daq_job_thread.daq_job.__del__()
                 break
 
@@ -123,10 +123,10 @@ class Supervisor:
         """
 
         # Remove dead threads
-        dead_threads = [t for t in self.daq_job_threads if not t.thread.is_alive()]
+        dead_threads = [t for t in self.daq_job_processes if not t.thread.is_alive()]
         # Clean up dead threads
-        self.daq_job_threads = [
-            t for t in self.daq_job_threads if t not in dead_threads
+        self.daq_job_processes = [
+            t for t in self.daq_job_processes if t not in dead_threads
         ]
 
         # Get restart schedules for dead jobs
@@ -147,7 +147,7 @@ class Supervisor:
         # Send messages to appropriate DAQ Jobs
         self.send_messages_to_daq_jobs(daq_messages_out)
 
-    def handle_thread_alive_stats(self, dead_threads: list[DAQJobThread]):
+    def handle_thread_alive_stats(self, dead_threads: list[DAQJobProcess]):
         """
         Handles the alive stats for the dead threads.
 
@@ -155,7 +155,7 @@ class Supervisor:
             dead_threads (list[DAQJobThread]): List of dead threads.
         """
 
-        for thread in self.daq_job_threads:
+        for thread in self.daq_job_processes:
             if datetime.now() - thread.start_time > timedelta(
                 seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS
             ):
@@ -168,7 +168,7 @@ class Supervisor:
                 self.daq_job_stats, type(thread.daq_job)
             ).is_alive = False
 
-    def get_restart_schedules(self, dead_threads: list[DAQJobThread]):
+    def get_restart_schedules(self, dead_processes: list[DAQJobProcess]):
         """
         Gets the restart schedules for the dead threads.
 
@@ -180,22 +180,22 @@ class Supervisor:
         """
 
         res = []
-        for thread in dead_threads:
-            restart_offset = getattr(thread.daq_job, "restart_offset", None)
+        for process in dead_processes:
+            restart_offset = getattr(process.daq_job, "restart_offset", None)
             if not isinstance(restart_offset, timedelta):
                 restart_offset = timedelta(seconds=0)
             else:
                 self._logger.info(
-                    f"Scheduling restart of {type(thread.daq_job).__name__} in {restart_offset.total_seconds()} seconds"
+                    f"Scheduling restart of {type(process.daq_job).__name__} in {restart_offset.total_seconds()} seconds"
                 )
             res.append(
                 RestartDAQJobSchedule(
-                    daq_job_type=type(thread.daq_job),
-                    daq_job_config=thread.daq_job.config,
+                    daq_job_type=type(process.daq_job),
+                    daq_job_config=process.daq_job.config,
                     restart_at=datetime.now() + restart_offset,
                 )
             )
-            thread.daq_job.free()
+            process.daq_job.free()
         return res
 
     def restart_daq_jobs(self):
@@ -208,7 +208,7 @@ class Supervisor:
         for restart_schedule in self.restart_schedules:
             if datetime.now() < restart_schedule.restart_at:
                 continue
-            self.daq_job_threads.append(
+            self.daq_job_processes.append(
                 restart_daq_job(
                     restart_schedule.daq_job_type,
                     restart_schedule.daq_job_config,
@@ -260,7 +260,7 @@ class Supervisor:
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
         assert self.config is not None
         res = []
-        for thread in self.daq_job_threads:
+        for thread in self.daq_job_processes:
             try:
                 while True:
                     msg = thread.daq_job.message_out.get_nowait()
@@ -291,7 +291,7 @@ class Supervisor:
         """
 
         for message in daq_messages:
-            for daq_job_thread in self.daq_job_threads:
+            for daq_job_thread in self.daq_job_processes:
                 daq_job = daq_job_thread.daq_job
                 # Send if message is allowed for this DAQ Job
                 if any(
@@ -321,7 +321,7 @@ class Supervisor:
 
         for daq_job_type, warning_message in DAQ_JOB_ABSENT_WARNINGS.items():
             if not any(
-                x for x in self.daq_job_threads if isinstance(x.daq_job, daq_job_type)
+                x for x in self.daq_job_processes if isinstance(x.daq_job, daq_job_type)
             ):
                 self._logger.warning(warning_message)
 
