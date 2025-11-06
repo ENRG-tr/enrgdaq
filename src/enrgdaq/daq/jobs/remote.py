@@ -15,6 +15,7 @@ from enrgdaq.daq.models import (
     DAQJobMessage,
 )
 from enrgdaq.utils.subclasses import all_subclasses
+from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 1
@@ -110,6 +111,10 @@ class DAQJobRemote(DAQJob):
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
             args=(config.zmq_proxy_sub_urls,),
+            daemon=True,
+        )
+        self._send_remote_stats_thread = threading.Thread(
+            target=self._start_send_remote_stats_thread,
             daemon=True,
         )
         self._message_class_cache = {}
@@ -238,23 +243,21 @@ class DAQJobRemote(DAQJob):
                     recv_message.daq_job_info.supervisor_config.supervisor_id
                 ].update_message_out_stats(len(message))
 
+    def _start_send_remote_stats_thread(self):
+        while True:
+            self._send_remote_stats_message()
+            sleep_for(DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS)
+
     def start(self):
         """
         Start the receive thread and the DAQ job.
         """
         self._receive_thread.start()
+        self._send_remote_stats_thread.start()
 
         while True:
-            if not self._receive_thread.is_alive():
-                raise RuntimeError("Receive thread died")
             # message_in -> remote message_out
-            self.consume()
-            if (
-                datetime.now().timestamp() - self._remote_stats_last_sent_at
-                > DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS
-            ):
-                self._send_remote_stats_message()
-                self._remote_stats_last_sent_at = datetime.now().timestamp()
+            self.consume(nowait=False)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         """
