@@ -1,6 +1,7 @@
 import logging
 import os
 import platform
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty
@@ -310,8 +311,11 @@ class Supervisor:
                     # Update stats
                     stats = self.get_daq_job_stats(self.daq_job_stats, type(daq_job))
                     stats.message_in_stats.increase()
-                    stats.message_in_queue_stats.set(daq_job.message_in.qsize())
-                    stats.message_out_queue_stats.set(daq_job.message_out.qsize())
+
+                    # Do not do if Mac OS X
+                    if sys.platform != "darwin":
+                        stats.message_in_queue_stats.set(daq_job.message_in.qsize())
+                        stats.message_out_queue_stats.set(daq_job.message_out.qsize())
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {

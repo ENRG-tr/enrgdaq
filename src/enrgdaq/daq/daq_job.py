@@ -67,14 +67,14 @@ def restart_daq_job(
     new_daq_job = daq_job_type(
         daq_job_config, supervisor_config=supervisor_config.clone()
     )
-    thread = Process(target=new_daq_job.start, daemon=True)
-    thread.start()
-    return DAQJobProcess(new_daq_job, thread)
+    process = Process(target=new_daq_job.start, daemon=True)
+    process.start()
+    return DAQJobProcess(new_daq_job, process)
 
 
 def start_daq_jobs(daq_jobs: list[DAQJob]) -> list[DAQJobProcess]:
-    threads = []
+    processes = []
     for daq_job in daq_jobs:
-        threads.append(start_daq_job(daq_job))
+        processes.append(start_daq_job(daq_job))
 
-    return threads
+    return processes

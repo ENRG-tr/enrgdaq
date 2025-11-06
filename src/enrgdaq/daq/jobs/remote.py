@@ -98,11 +98,15 @@ class DAQJobRemote(DAQJob):
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
+        self._zmq_pub_ctx = None
+        self._zmq_pub = None
+        self._zmq_sub = None
 
-        if config.zmq_proxy_pub_url is not None:
+    def _init(self):
+        if self.config.zmq_proxy_pub_url is not None:
             self._zmq_pub_ctx = zmq.Context()
             self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
-            self._zmq_pub.connect(config.zmq_proxy_pub_url)
+            self._zmq_pub.connect(self.config.zmq_proxy_pub_url)
         else:
             self._zmq_pub_ctx = None
             self._zmq_pub = None
@@ -110,7 +114,7 @@ class DAQJobRemote(DAQJob):
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
-            args=(config.zmq_proxy_sub_urls,),
+            args=(self.config.zmq_proxy_sub_urls,),
             daemon=True,
         )
         self._send_remote_stats_thread = threading.Thread(
@@ -252,6 +256,7 @@ class DAQJobRemote(DAQJob):
         """
         Start the receive thread and the DAQ job.
         """
+        self._init()
         self._receive_thread.start()
         self._send_remote_stats_thread.start()
 
