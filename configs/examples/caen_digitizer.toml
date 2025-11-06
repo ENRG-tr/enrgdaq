@@ -1,16 +1,38 @@
 daq_job_type = "DAQJobCAENDigitizer"
 
-## --------------------- Connection Settings ---------------------
-connection_type = "OPTICAL_LINK"  # or "OPTICAL_LINK", "PCI_EXPRESS_A4818", "PCI_EXPRESS_A2818"
-link_number = "1"        # Link number, PID, or hostname depending on connection_type
+# --------------------- Connection Settings ---------------------
+# See CAEN documentation for details on connection parameters.
+# Supported types: "USB", "PCI_EXPRESS_A4818", "PCI_EXPRESS_A2818", "OPTICAL_LINK"
+connection_type = "OPTICAL_LINK"
+link_number = "1"        # Link number for OPTICAL_LINK/USB, device number for PCI_EXPRESS
 conet_node = 0           # CONET node for optical link
 vme_base_address = 0     # VME base address
 
-channel_enable_mask = 0xFFFF
-channel_self_trigger_channel_mask = 0xFFFF
-channel_self_trigger_threshold = 750
-max_num_events_blt = 1
+# --------------------- Channel Settings ---------------------
+channel_enable_mask = 0b00000000  # Bitmask for enabled channels, e.g., 0b11 for channels 0 and 1
+# channel_dc_offsets = {0 = 50, 1 = 50} # DC offsets from 0 to 65535 (can get from CAENScope)
 
-[store_config.raw]
-file_path = "caen_digitizer.csv"
+# --------------------- Acquisition Settings ---------------------
+record_length = 1024      # Number of samples per waveform
+acquisition_mode = "SW_CONTROLLED" # "SW_CONTROLLED" or "S_IN_CONTROLLED"
+max_num_events_blt = 1    # Max number of events per block transfer
+
+# --------------------- Trigger Settings ---------------------
+sw_trigger_mode = "ACQ_ONLY" # "ACQ_ONLY", "ACQ_AND_EXTOUT", "EXTOUT_ONLY"
+channel_self_trigger_threshold = 600  # Trigger threshold in LSB (see peak_threshold for details)
+channel_self_trigger_channel_mask = 0b00000000 # Bitmask for channels to use for self-trigger
+
+# --------------------- Analysis Settings ---------------------
+peak_threshold = 600 # Threshold for peak finding in waveforms in LSB (not mV)
+                     # For VX1751, 0-1023 is (-500)-500 mV, so map as such
+
+# --------------------- Storage Settings ---------------------
+[waveform_store_config.raw]
+file_path = "caen_digitizer_waveforms.raw"
 add_date = true
+overwrite = true
+
+[stats_store_config.csv]
+file_path = "caen_digitizer_stats.csv"
+add_date = true
+overwrite = true

@@ -12,6 +12,7 @@ typedef struct
     uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
+    uint64_t pc_unix_ns_timestamp;
 } EventHeader_t;
 
 typedef struct
@@ -30,6 +31,7 @@ typedef struct
     uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
+    uint64_t pc_unix_ns_timestamp;
     WaveformSample_t *event_data;
     size_t num_samples;
 } Event_t;
@@ -143,6 +145,7 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
             .channel_mask = header->channel_mask,
             .event_counter = header->event_counter,
             .trigger_time_tag = header->trigger_time_tag,
+            .pc_unix_ns_timestamp = header->pc_unix_ns_timestamp,
             .event_data = event_data,
             .num_samples = num_samples};
 
@@ -172,7 +175,7 @@ int write_events_to_csv(const EventList_t *events, const char *output_filename)
     }
 
     // Write CSV header
-    fprintf(f, "event_number,board_id,pattern,channel_mask,event_counter,trigger_time_tag,channel,sample_index,value\n");
+    fprintf(f, "i,pc_unix_ns_timestamp,trigger_time_tag,board_id,pattern,channel_mask,event_counter,channel,sample_index,value_lsb,value_mv\n");
 
     // Write data
     for (size_t i = 0; i < events->count; i++)
@@ -181,15 +184,17 @@ int write_events_to_csv(const EventList_t *events, const char *output_filename)
 
         for (size_t j = 0; j < event->num_samples; j++)
         {
-            fprintf(f, "%zu,%u,%u,%u,%u,%u,%u,%u,%u\n",
+            fprintf(f, "%zu,%lu,%u,%u,%u,%u,%u,%u,%u,%u,%hd\n",
                     i,
+                    event->pc_unix_ns_timestamp,
+                    event->trigger_time_tag,
                     event->board_id,
                     event->pattern,
                     event->channel_mask,
                     event->event_counter,
-                    event->trigger_time_tag,
                     event->event_data[j].channel,
                     event->event_data[j].sample_index,
+                    event->event_data[j].value_lsb,
                     event->event_data[j].value_mv);
         }
     }

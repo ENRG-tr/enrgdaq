@@ -7,19 +7,22 @@ from datetime import timedelta
 from typing import Literal, Optional
 
 from caen_libs import caendigitizer as dgtz
+from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import LogVerbosity
+from enrgdaq.daq.models import DAQJobConfig, LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreRaw,
-    StorableDAQJobConfig,
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfig,
 )
+from enrgdaq.utils.time import get_now_unix_timestamp_ms
 
 DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB = 1
 UINT16_SIZE = ct.sizeof(ct.c_uint16)
 
 
-class DAQJobCAENDigitizerConfig(StorableDAQJobConfig):
+class DAQJobCAENDigitizerConfig(DAQJobConfig):
     """
     Configuration class for the CAEN Digitizer DAQ Job.
     """
@@ -40,12 +43,50 @@ class DAQJobCAENDigitizerConfig(StorableDAQJobConfig):
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     peak_threshold: int = 750
 
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
 
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
 
 
-CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_uint32)
-dgtz_lib = dgtz.lib
+WAVEFORM_CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_uint32)
+STATS_CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p)
+
+
+class RunAcquisitionArgs(ct.Structure):
+    _fields_ = [
+        ("handle", ct.c_int),
+        ("is_debug_verbosity", ct.c_int),
+        ("filter_threshold", ct.c_int),
+        ("waveform_callback", WAVEFORM_CALLBACK_FUNC),
+        ("stats_callback", STATS_CALLBACK_FUNC),
+    ]
+
+
+class AcquisitionStatsRaw(ct.Structure):
+    _fields_ = [
+        ("acq_events", ct.c_long),
+        ("acq_bytes", ct.c_long),
+        ("missed_events", ct.c_long),
+        ("acq_samples", ct.c_long),
+    ]
+
+
+class AcquisitionStats(Struct):
+    acq_events: int
+    acq_bytes: int
+    missed_events: int
+    acq_samples: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        return cls(
+            acq_events=raw.acq_events,
+            acq_bytes=raw.acq_bytes,
+            missed_events=raw.missed_events,
+            acq_samples=raw.acq_samples,
+        )
 
 
 class DAQJobCAENDigitizer(DAQJob):
@@ -59,7 +100,6 @@ class DAQJobCAENDigitizer(DAQJob):
     restart_offset = timedelta(seconds=5)
 
     _msg_buffer: bytearray
-    _acquisition_thread: Optional[threading.Thread] = None
     _device: Optional[dgtz.Device] = None
 
     def __init__(self, config: DAQJobCAENDigitizerConfig, **kwargs):
@@ -67,7 +107,6 @@ class DAQJobCAENDigitizer(DAQJob):
         self._msg_buffer = bytearray()
         self._msg_buffer_lock = threading.Lock()
 
-        self._acquisition_thread = None
         self._device = None
         self.ctr = 0
 
@@ -87,15 +126,13 @@ class DAQJobCAENDigitizer(DAQJob):
                 self._logger.error(f"stdout: {ret.stdout}")
                 self._logger.error(f"stderr: {ret.stderr}")
         self._lib = ct.CDLL(DIGITIZER_C_DLL_PATH)
-        self._lib.run_acquisition.argtypes = [
-            ct.c_int,
-            ct.c_int,
-            ct.c_int,
-            CALLBACK_FUNC,
-        ]
+        self._lib.run_acquisition.argtypes = [ct.c_void_p]
         self._lib.stop_acquisition.argtypes = []
 
-        self.callback_delegate = CALLBACK_FUNC(self._event_callback)
+        self._waveform_callback_delegate = WAVEFORM_CALLBACK_FUNC(
+            self._waveform_callback
+        )
+        self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
 
     def start(self):
         try:
@@ -117,12 +154,14 @@ class DAQJobCAENDigitizer(DAQJob):
             self.board_info = device.get_info()
             self._configure_device(device, self.board_info)
 
-            self._lib.run_acquisition(
-                device.handle,
-                self.config.verbosity == LogVerbosity.DEBUG,
-                self.config.peak_threshold,
-                self.callback_delegate,
-            )
+            args = RunAcquisitionArgs()
+            args.handle = device.handle
+            args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
+            args.filter_threshold = self.config.peak_threshold
+            args.waveform_callback = self._waveform_callback_delegate
+            args.stats_callback = self._stats_callback_delegate
+
+            self._lib.run_acquisition(ct.pointer(args))
         except Exception as e:
             self._logger.error(
                 f"Error during C-based acquisition setup: {e}", exc_info=True
@@ -161,25 +200,52 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_post_trigger_size(85)
         device.calibrate()
 
-    def _event_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
-        assert self.config.store_config is not None
+    def _waveform_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
+        assert (
+            self.config.waveform_store_config is not None
+        ), "waveform_store_config is None"
         event_data_ptr = ct.cast(buffer_ptr, ct.POINTER(ct.c_uint16))
         event_data_bytes = ct.string_at(event_data_ptr, buffer_len)
 
         self._put_message_out(
             DAQJobMessageStoreRaw(
-                store_config=self.config.store_config,
+                store_config=self.config.waveform_store_config,
                 tag="waveform",
                 data=event_data_bytes,
+            )
+        )
+
+    def _stats_callback(self, buffer_ptr: ct.c_void_p):
+        assert self.config.stats_store_config is not None, "stats_store_config is None"
+        stats_raw = ct.cast(buffer_ptr, ct.POINTER(AcquisitionStatsRaw)).contents
+        stats = AcquisitionStats.from_raw(stats_raw)
+
+        self._put_message_out(
+            DAQJobMessageStoreTabular(
+                store_config=self.config.stats_store_config,
+                tag="stats",
+                keys=[
+                    "timestamp",
+                    "acq_events",
+                    "acq_bytes",
+                    "missed_events",
+                    "acq_samples",
+                ],
+                data=[
+                    [
+                        get_now_unix_timestamp_ms(),
+                        stats.acq_events,
+                        stats.acq_bytes,
+                        stats.missed_events,
+                        stats.acq_samples,
+                    ]
+                ],
             )
         )
 
     def __del__(self):
         self._logger.info("Stopping acquisition...")
         self._lib.stop_acquisition()
-        if self._acquisition_thread:
-            self._logger.info("Joining acquisition thread...")
-            self._acquisition_thread.join()
         if self._device:
             self._logger.info("Closing Digitizer...")
             self._device.__exit__(None, None, None)
