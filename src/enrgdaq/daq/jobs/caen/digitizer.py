@@ -73,6 +73,7 @@ class RunAcquisitionArgs(ct.Structure):
         ("filter_threshold", ct.c_int),
         ("waveform_callback", WAVEFORM_CALLBACK_FUNC),
         ("stats_callback", STATS_CALLBACK_FUNC),
+        ("channel_dc_offsets", ct.c_void_p),
     ]
 
 
