@@ -12,7 +12,7 @@ typedef struct
     uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
-    uint64_t pc_unix_ns_timestamp;
+    uint64_t pc_unix_ms_timestamp;
 } EventHeader_t;
 
 typedef struct
@@ -31,7 +31,7 @@ typedef struct
     uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
-    uint64_t pc_unix_ns_timestamp;
+    uint64_t pc_unix_ms_timestamp;
     WaveformSample_t *event_data;
     size_t num_samples;
 } Event_t;
@@ -96,11 +96,14 @@ void event_list_free(EventList_t *list)
 }
 
 // Parse acquisition buffer
-EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer_len)
+size_t parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer_len, EventList_t **events_out)
 {
     EventList_t *events = event_list_create(16); // Start with capacity for 16 events
     if (!events)
-        return NULL;
+    {
+        *events_out = NULL;
+        return 0;
+    }
 
     size_t offset = 0;
 
@@ -109,7 +112,6 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
         // Check if we have enough bytes for a header
         if (offset + sizeof(EventHeader_t) > buffer_len)
         {
-            fprintf(stderr, "Warning: Incomplete header at offset %zu, stopping parse\n", offset);
             break;
         }
 
@@ -119,7 +121,7 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
         // Check if we have enough bytes for the complete event
         if (offset + header->total_size > buffer_len)
         {
-            fprintf(stderr, "Warning: Incomplete event at offset %zu, stopping parse\n", offset);
+            // Not enough data for the full event
             break;
         }
 
@@ -131,7 +133,8 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
         if (!event_data)
         {
             event_list_free(events);
-            return NULL;
+            *events_out = NULL;
+            return 0; // Error
         }
 
         // Copy waveform data
@@ -145,7 +148,7 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
             .channel_mask = header->channel_mask,
             .event_counter = header->event_counter,
             .trigger_time_tag = header->trigger_time_tag,
-            .pc_unix_ns_timestamp = header->pc_unix_ns_timestamp,
+            .pc_unix_ms_timestamp = header->pc_unix_ms_timestamp,
             .event_data = event_data,
             .num_samples = num_samples};
 
@@ -154,30 +157,28 @@ EventList_t *parse_acquisition_buffer(const uint8_t *buffer_bytes, size_t buffer
         {
             free(event_data);
             event_list_free(events);
-            return NULL;
+            *events_out = NULL;
+            return 0; // Error
         }
 
         // Move to next event
         offset += header->total_size;
     }
 
-    return events;
+    *events_out = events;
+    return offset;
 }
 
 // Write events to CSV file
-int write_events_to_csv(const EventList_t *events, const char *output_filename)
+int write_events_to_csv(const EventList_t *events, FILE *f, size_t *event_counter_ptr)
 {
-    FILE *f = fopen(output_filename, "w");
     if (!f)
     {
-        fprintf(stderr, "Error: Could not open output file '%s'\n", output_filename);
+        fprintf(stderr, "Error: invalid file pointer provided to write_events_to_csv\n");
         return -1;
     }
-
-    // Write CSV header
-    fprintf(f, "i,pc_unix_ns_timestamp,trigger_time_tag,board_id,pattern,channel_mask,event_counter,channel,sample_index,value_lsb,value_mv\n");
-
     // Write data
+    size_t event_counter = *event_counter_ptr;
     for (size_t i = 0; i < events->count; i++)
     {
         const Event_t *event = &events->events[i];
@@ -185,8 +186,8 @@ int write_events_to_csv(const EventList_t *events, const char *output_filename)
         for (size_t j = 0; j < event->num_samples; j++)
         {
             fprintf(f, "%zu,%lu,%u,%u,%u,%u,%u,%u,%u,%u,%hd\n",
-                    i,
-                    event->pc_unix_ns_timestamp,
+                    event_counter++,
+                    event->pc_unix_ms_timestamp,
                     event->trigger_time_tag,
                     event->board_id,
                     event->pattern,
@@ -199,7 +200,6 @@ int write_events_to_csv(const EventList_t *events, const char *output_filename)
         }
     }
 
-    fclose(f);
     return 0;
 }
 
@@ -223,74 +223,111 @@ int main(int argc, char *argv[])
     const char *input_filename = argv[1];
     const char *output_filename = argv[2];
 
-    // Read input file
-    FILE *f = fopen(input_filename, "rb");
-    if (!f)
+    FILE *f_in = fopen(input_filename, "rb");
+    if (!f_in)
     {
         fprintf(stderr, "Error: Could not open input file '%s'\n", input_filename);
         return 1;
     }
 
-    // Get file size
-    fseek(f, 0, SEEK_END);
-    size_t file_size = ftell(f);
-    fseek(f, 0, SEEK_SET);
+    FILE *f_out = fopen(output_filename, "w");
+    if (!f_out)
+    {
+        fprintf(stderr, "Error: Could not open output file '%s'\n", output_filename);
+        fclose(f_in);
+        return 1;
+    }
 
-    printf("Reading %zu bytes from '%s'...\n", file_size, input_filename);
+    // Write CSV header
+    fprintf(f_out, "i,pc_unix_ns_timestamp,trigger_time_tag,board_id,pattern,channel_mask,event_counter,channel,sample_index,value_lsb,value_mv\n");
 
-    // Read entire file into buffer
-    uint8_t *buffer = (uint8_t *)malloc(file_size);
+    const size_t BATCH_SIZE = 1024 * 1024 * 100; // 100 MB batch size
+    uint8_t *buffer = (uint8_t *)malloc(BATCH_SIZE);
     if (!buffer)
     {
-        fprintf(stderr, "Error: Could not allocate memory\n");
-        fclose(f);
+        fprintf(stderr, "Error: Could not allocate memory for buffer\n");
+        fclose(f_in);
+        fclose(f_out);
         return 1;
     }
 
-    size_t bytes_read = fread(buffer, 1, file_size, f);
-    fclose(f);
-
-    if (bytes_read != file_size)
-    {
-        fprintf(stderr, "Error: Could not read entire file\n");
-        free(buffer);
-        return 1;
-    }
-
-    // Parse buffer
-    printf("Parsing buffer...\n");
-    EventList_t *events = parse_acquisition_buffer(buffer, file_size);
-    free(buffer);
-
-    if (!events)
-    {
-        fprintf(stderr, "Error: Failed to parse buffer\n");
-        return 1;
-    }
-
-    printf("Parsed %zu events\n", events->count);
-
-    // Calculate total data points
+    size_t bytes_in_buffer = 0;
+    size_t total_events_parsed = 0;
     size_t total_data_points = 0;
-    for (size_t i = 0; i < events->count; i++)
+
+    while (1)
     {
-        total_data_points += events->events[i].num_samples;
+        size_t bytes_to_read = BATCH_SIZE - bytes_in_buffer;
+        size_t bytes_read = fread(buffer + bytes_in_buffer, 1, bytes_to_read, f_in);
+
+        bytes_in_buffer += bytes_read;
+
+        if (bytes_in_buffer == 0)
+        {
+            break; // End of file and buffer is empty
+        }
+
+        printf("Processing batch of %zu bytes...\n", bytes_in_buffer);
+
+        EventList_t *events = NULL;
+        size_t consumed_bytes = parse_acquisition_buffer(buffer, bytes_in_buffer, &events);
+
+        if (!events && consumed_bytes == 0)
+        {
+            fprintf(stderr, "Error: Failed to parse buffer chunk.\n");
+            // If consumed_bytes is 0 and we are not at EOF, we might be in an unrecoverable state.
+            if (!feof(f_in))
+            {
+                fprintf(stderr, "Error: Cannot process data, stopping.\n");
+                break;
+            }
+        }
+
+        if (events)
+        {
+            printf("Parsed %zu events in this batch\n", events->count);
+
+            size_t batch_data_points = 0;
+            for (size_t i = 0; i < events->count; i++)
+            {
+                batch_data_points += events->events[i].num_samples;
+            }
+            printf("Batch data points: %zu\n", batch_data_points);
+            printf("total_events_parsed: %zu\n", total_events_parsed);
+
+            if (write_events_to_csv(events, f_out, &total_events_parsed) != 0)
+            {
+                event_list_free(events);
+                break; // Stop on write error
+            }
+
+            total_data_points += batch_data_points;
+            event_list_free(events);
+        }
+
+        if (consumed_bytes > 0)
+        {
+            // Move leftover data to the beginning of the buffer
+            bytes_in_buffer -= consumed_bytes;
+            memmove(buffer, buffer + consumed_bytes, bytes_in_buffer);
+        }
+
+        if (bytes_read == 0 && bytes_in_buffer > 0)
+        {
+            fprintf(stderr, "Warning: %zu bytes of trailing data in file will be discarded.\n", bytes_in_buffer);
+            break;
+        }
     }
 
+    printf("\nFinished processing.\n");
+    printf("Total events parsed: %zu\n", total_events_parsed);
     printf("Total data points: %zu\n", total_data_points);
-
-    // Write to CSV
-    printf("Writing to '%s'...\n", output_filename);
-    if (write_events_to_csv(events, output_filename) != 0)
-    {
-        event_list_free(events);
-        return 1;
-    }
-
-    printf("Success! CSV file written.\n");
+    printf("Success! CSV file written to '%s'.\n", output_filename);
 
     // Cleanup
-    event_list_free(events);
+    free(buffer);
+    fclose(f_in);
+    fclose(f_out);
 
     return 0;
 }

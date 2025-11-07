@@ -96,10 +96,12 @@ void *processing_thread_func(void *arg)
             stats.missed_events += item->event_info.EventCounter - last_event_counter - 1;
         last_event_counter = item->event_info.EventCounter;
 
-        // Build timestamp
-        struct timespec spec;
-        clock_gettime(CLOCK_MONOTONIC, &spec);
-        uint64_t pc_unix_ns_timestamp = spec.tv_sec * 10e9 + spec.tv_nsec;
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        uint64_t pc_unix_ms_timestamp =
+            (uint64_t)(tv.tv_sec) * 1000 +
+            (uint64_t)(tv.tv_usec) / 1000;
 
         // Build header struct
         EventHeader_t header = {
@@ -108,7 +110,7 @@ void *processing_thread_func(void *arg)
             .channel_mask = item->event_info.ChannelMask,
             .event_counter = item->event_info.EventCounter,
             .trigger_time_tag = item->event_info.TriggerTimeTag,
-            .pc_unix_ns_timestamp = pc_unix_ns_timestamp};
+            .pc_unix_ms_timestamp = pc_unix_ms_timestamp};
 
         // Filter waveforms into structured buffer
         fflush(stdout);

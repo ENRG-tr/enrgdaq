@@ -43,7 +43,7 @@ typedef struct
     uint8_t channel_mask;
     uint32_t event_counter;
     uint32_t trigger_time_tag;
-    uint64_t pc_unix_ns_timestamp;
+    uint64_t pc_unix_ms_timestamp;
 } EventHeader_t;
 
 typedef struct
