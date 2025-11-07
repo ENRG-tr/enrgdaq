@@ -15,6 +15,7 @@ from enrgdaq.daq.models import (
     DAQJobMessage,
 )
 from enrgdaq.utils.subclasses import all_subclasses
+from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 1
@@ -97,11 +98,15 @@ class DAQJobRemote(DAQJob):
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
+        self._zmq_pub_ctx = None
+        self._zmq_pub = None
+        self._zmq_sub = None
 
-        if config.zmq_proxy_pub_url is not None:
+    def _init(self):
+        if self.config.zmq_proxy_pub_url is not None:
             self._zmq_pub_ctx = zmq.Context()
             self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
-            self._zmq_pub.connect(config.zmq_proxy_pub_url)
+            self._zmq_pub.connect(self.config.zmq_proxy_pub_url)
         else:
             self._zmq_pub_ctx = None
             self._zmq_pub = None
@@ -109,7 +114,11 @@ class DAQJobRemote(DAQJob):
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
-            args=(config.zmq_proxy_sub_urls,),
+            args=(self.config.zmq_proxy_sub_urls,),
+            daemon=True,
+        )
+        self._send_remote_stats_thread = threading.Thread(
+            target=self._start_send_remote_stats_thread,
             daemon=True,
         )
         self._message_class_cache = {}
@@ -200,7 +209,13 @@ class DAQJobRemote(DAQJob):
                 topic, message = self._zmq_sub.recv_multipart()
             except zmq.ContextTerminated:
                 break
-            recv_message = self._unpack_message(message)
+            try:
+                recv_message = self._unpack_message(message)
+            except Exception as e:
+                self._logger.error(
+                    f"Error while unpacking message sent in {topic}: {e}", exc_info=True
+                )
+                continue
             if (
                 recv_message.daq_job_info is not None
                 and recv_message.daq_job_info.supervisor_config is not None
@@ -232,23 +247,22 @@ class DAQJobRemote(DAQJob):
                     recv_message.daq_job_info.supervisor_config.supervisor_id
                 ].update_message_out_stats(len(message))
 
+    def _start_send_remote_stats_thread(self):
+        while True:
+            self._send_remote_stats_message()
+            sleep_for(DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS)
+
     def start(self):
         """
         Start the receive thread and the DAQ job.
         """
+        self._init()
         self._receive_thread.start()
+        self._send_remote_stats_thread.start()
 
         while True:
-            if not self._receive_thread.is_alive():
-                raise RuntimeError("Receive thread died")
             # message_in -> remote message_out
-            self.consume()
-            if (
-                datetime.now().timestamp() - self._remote_stats_last_sent_at
-                > DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS
-            ):
-                self._send_remote_stats_message()
-                self._remote_stats_last_sent_at = datetime.now().timestamp()
+            self.consume(nowait=False)
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         """

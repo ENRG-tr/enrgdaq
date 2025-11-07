@@ -9,7 +9,16 @@ from typing import Literal, Optional
 try:
     from caen_libs import caendigitizer as dgtz
 except Exception:
-    pass
+    from types import SimpleNamespace
+
+    dgtz = SimpleNamespace()
+    dgtz.TriggerMode = SimpleNamespace(ACQ_ONLY="ACQ_ONLY", DISABLED="DISABLED")
+    dgtz.AcqMode = SimpleNamespace(SW_CONTROLLED="SW_CONTROLLED")
+    dgtz.TriggerPolarity = SimpleNamespace(ON_RISING_EDGE="ON_RISING_EDGE")
+    dgtz.IOLevel = SimpleNamespace(NIM="NIM")
+    dgtz.ConnectionType = {}
+    dgtz.Device = None
+    dgtz.BoardInfo = None
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
