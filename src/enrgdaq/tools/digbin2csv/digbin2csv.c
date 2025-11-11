@@ -177,8 +177,12 @@ int write_events_to_csv(const EventList_t *events, FILE *f, size_t *event_counte
         fprintf(stderr, "Error: invalid file pointer provided to write_events_to_csv\n");
         return -1;
     }
+    if (!event_counter_ptr) 
+    {
+	fprintf(stderr, "Error: invalid event_counter_ptr\n");
+	return -1;
+    }
     // Write data
-    size_t event_counter = *event_counter_ptr;
     for (size_t i = 0; i < events->count; i++)
     {
         const Event_t *event = &events->events[i];
@@ -186,7 +190,7 @@ int write_events_to_csv(const EventList_t *events, FILE *f, size_t *event_counte
         for (size_t j = 0; j < event->num_samples; j++)
         {
             fprintf(f, "%zu,%lu,%u,%u,%u,%u,%u,%u,%u,%u,%hd\n",
-                    event_counter++,
+                    (*event_counter_ptr)++,
                     event->pc_unix_ms_timestamp,
                     event->trigger_time_tag,
                     event->board_id,
