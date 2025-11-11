@@ -17,7 +17,7 @@ static int g_is_debug_verbosity = 0;
 
 #define ACQ_BUFFER_SIZE 1024 * 512
 #define FILTER_BUFFER_SIZE 1024 * 64
-#define HEADER_SIZE 6
+#define CHANNEL_COUNT 8
 #define PROCESSING_THREAD_TEMP_BUFFER_SIZE 1024 * 5
 
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
@@ -34,32 +34,31 @@ void check_c_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
     }
 }
 
-size_t filter_channel_waveforms(EventDataCopy_t *event_copy, int threshold,
-                                WaveformSample_t *out_buffer, size_t out_buffer_max_samples)
+size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 {
     size_t sample_count = 0;
 
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
-        for (int i = 0; i < event_copy->ChSize[ch]; i++)
+        for (int i = 0; i < args.event_copy->ChSize[ch]; i++)
         {
-            if (event_copy->Waveforms[ch][i] < threshold)
+            if (args.event_copy->Waveforms[ch][i] < args.filter_threshold)
                 continue;
 
-            if (sample_count >= out_buffer_max_samples)
+            if (sample_count >= args.out_buffer_max_samples)
             {
                 fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!\n", ch);
                 fflush(stderr);
                 return sample_count;
             }
-
-            out_buffer[sample_count].channel = (uint16_t)ch;
-            out_buffer[sample_count].sample_index = (uint16_t)i;
-            out_buffer[sample_count].value_lsb = event_copy->Waveforms[ch][i];
+            args.out_buffer[sample_count].channel = (uint16_t)ch;
+            args.out_buffer[sample_count].sample_index = (uint16_t)i;
+            args.out_buffer[sample_count].value_lsb = args.event_copy->Waveforms[ch][i];
             // We're using VX1751 which is 1 V_pp, which is represented using uint16, so we need to map it
-            // like => 0--1023 => (-500)--499
-            float normalized_value_lsb = (float)event_copy->Waveforms[ch][i] / 1023.0;
-            out_buffer[sample_count].value_mv = (int16_t)(normalized_value_lsb * 1000.0) - 500;
+            float normalized_value_lsb = (float)args.event_copy->Waveforms[ch][i] / 1023.0;
+            float dc_offset_diff = 0; // TODO: CHANGE THIS // (float)(65535 - args.channel_dc_offsets[ch]) / 65535.0;
+            args.out_buffer[sample_count].value_mv = (int16_t)((normalized_value_lsb - dc_offset_diff) * 1000.0);
+
             sample_count++;
         }
     }
@@ -112,9 +111,9 @@ void *processing_thread_func(void *arg)
             .trigger_time_tag = item->event_info.TriggerTimeTag,
             .pc_unix_ms_timestamp = pc_unix_ms_timestamp};
 
-        // Filter waveforms into structured buffer
-        fflush(stdout);
-        size_t sample_count = filter_channel_waveforms(item, args->filter_threshold, temp_filter_buffer, 9999);
+        size_t sample_count = filter_channel_waveforms(
+            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, temp_filter_buffer, 9999});
+
         stats.acq_samples += sample_count;
 
         size_t header_bytes = sizeof(EventHeader_t);
@@ -127,7 +126,6 @@ void *processing_thread_func(void *arg)
         // Check if buffer is full
         if (acq_buffer_len + total_bytes > ACQ_BUFFER_SIZE)
         {
-            fflush(stdout);
             if (g_is_debug_verbosity)
                 printf("Consumer buffer full, sending %zu bytes.\n", acq_buffer_len);
 
@@ -135,6 +133,7 @@ void *processing_thread_func(void *arg)
             memcpy(data_copy, acq_buffer, acq_buffer_len);
             fflush(stdout);
             args->waveform_callback(data_copy, acq_buffer_len);
+            free(data_copy);
             acq_buffer_len = 0;
         }
 
@@ -197,6 +196,15 @@ void run_acquisition(RunAcquisitionArgs_t *args)
     check_c_error(ret, "CAEN_DGTZ_AllocateEvent");
     ret = CAEN_DGTZ_MallocReadoutBuffer(args->handle, &buffer, &buffer_size);
     check_c_error(ret, "CAEN_DGTZ_MallocReadoutBuffer");
+
+    // Get DC offsets
+    int channel_dc_offsets[CHANNEL_COUNT];
+    for (int ch = 0; ch < CHANNEL_COUNT; ch++)
+    {
+        CAEN_DGTZ_GetChannelDCOffset(args->handle, ch, &channel_dc_offsets[ch]);
+        fflush(stdout);
+    }
+    args->channel_dc_offsets = channel_dc_offsets;
 
     g_running = 1;
     ret = CAEN_DGTZ_SWStartAcquisition(args->handle);

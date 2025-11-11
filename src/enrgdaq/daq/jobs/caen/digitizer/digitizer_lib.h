@@ -60,7 +60,18 @@ typedef struct
     int filter_threshold;
     waveform_callback_t waveform_callback;
     acquisition_stats_callback_t stats_callback;
+
+    int *channel_dc_offsets;
 } RunAcquisitionArgs_t;
+
+typedef struct
+{
+    EventDataCopy_t *event_copy;
+    int filter_threshold;
+    int *channel_dc_offsets;
+    WaveformSample_t *out_buffer;
+    size_t out_buffer_max_samples;
+} FilterWaveformsArgs_t;
 
 void run_acquisition(RunAcquisitionArgs_t *args);
 void stop_acquisition();
