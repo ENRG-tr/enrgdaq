@@ -2,6 +2,7 @@ import pickle
 import threading
 from collections import defaultdict
 from datetime import datetime, timedelta
+from queue import Empty
 from typing import Optional
 
 import msgspec
@@ -19,6 +20,7 @@ from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 1
+DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT = 1
 
 
 class SupervisorRemoteStats(Struct):
@@ -98,11 +100,6 @@ class DAQJobRemote(DAQJob):
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
-        self._zmq_pub_ctx = None
-        self._zmq_pub = None
-        self._zmq_sub = None
-
-    def _init(self):
         if self.config.zmq_proxy_pub_url is not None:
             self._zmq_pub_ctx = zmq.Context()
             self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
@@ -256,15 +253,20 @@ class DAQJobRemote(DAQJob):
         """
         Start the receive thread and the DAQ job.
         """
-        self._init()
         self._receive_thread.start()
         self._send_remote_stats_thread.start()
 
         while True:
             # message_in -> remote message_out
-            self.consume(nowait=False)
+            try:
+                self.consume(nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT)
+            except Empty:
+                if not self._receive_thread.is_alive():
+                    raise RuntimeError("Receive thread is dead")
+                if not self._send_remote_stats_thread.is_alive():
+                    raise RuntimeError("Send remote stats thread is dead")
 
-    def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
+    def _pack_message(self, message: DAQJobMessage, use_pickle: bool = False) -> bytes:
         """
         Pack a message for sending.
 

@@ -73,14 +73,11 @@ class DAQJobRemoteProxy(DAQJob):
         """
         Destructor for DAQJobRemoteProxy.
         """
-        assert (
-            self._xsub_sock is not None
-            and self._xpub_sock is not None
-            and self._zmq_ctx is not None
-        )
-        self._xsub_sock.close()
-        self._xpub_sock.close()
-
-        self._zmq_ctx.destroy()
+        if self._xsub_sock is not None:
+            self._xsub_sock.close()
+        if self._xpub_sock is not None:
+            self._xpub_sock.close()
+        if self._zmq_ctx is not None:
+            self._zmq_ctx.destroy()
 
         return super().__del__()

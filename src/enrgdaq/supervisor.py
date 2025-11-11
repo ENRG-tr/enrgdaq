@@ -14,12 +14,17 @@ from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
     SUPERVISOR_CONFIG_FILE_PATH,
     load_daq_jobs,
-    restart_daq_job,
+    start_daq_job,
     start_daq_jobs,
 )
 from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote, DAQJobRemoteStatsDict
-from enrgdaq.daq.models import DAQJobConfig, DAQJobInfo, DAQJobMessage, DAQJobStats
+from enrgdaq.daq.models import (
+    DAQJobInfo,
+    DAQJobMessage,
+    DAQJobMessageStop,
+    DAQJobStats,
+)
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.models import SupervisorConfig
 
@@ -35,8 +40,7 @@ DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS = 1
 
 @dataclass
 class RestartDAQJobSchedule:
-    daq_job_type: type[DAQJob]
-    daq_job_config: DAQJobConfig
+    daq_job_process: DAQJobProcess
     restart_at: datetime
 
 
@@ -63,10 +67,10 @@ class Supervisor:
     def __init__(
         self,
         config: Optional[SupervisorConfig] = None,
-        daq_jobs: Optional[list[DAQJob]] = None,
+        daq_job_processes: Optional[list[DAQJobProcess]] = None,
     ):
         self.config = config
-        self._daq_jobs_to_load = daq_jobs
+        self._daq_jobs_to_load = daq_job_processes
         self.daq_job_remote_stats = {}
         pass
 
@@ -87,7 +91,7 @@ class Supervisor:
         self.restart_schedules = []
         self.daq_job_processes = self.start_daq_job_processes(self._daq_jobs_to_load)
         self.daq_job_stats: DAQJobStatsDict = {
-            type(thread.daq_job): DAQJobStats() for thread in self.daq_job_processes
+            thread.daq_job_cls: DAQJobStats() for thread in self.daq_job_processes
         }
         self.warn_for_lack_of_daq_jobs()
 
@@ -96,7 +100,7 @@ class Supervisor:
         )
 
     def start_daq_job_processes(
-        self, daq_jobs_to_load: Optional[list[DAQJob]] = None
+        self, daq_jobs_to_load: Optional[list[DAQJobProcess]] = None
     ) -> list[DAQJobProcess]:
         assert self.config is not None
         # Start threads from user-provided daq jobs, or by
@@ -115,7 +119,9 @@ class Supervisor:
             except KeyboardInterrupt:
                 self._logger.warning("KeyboardInterrupt received, cleaning up")
                 for daq_job_thread in self.daq_job_processes:
-                    daq_job_thread.daq_job.__del__()
+                    daq_job_thread.message_out.put(
+                        DAQJobMessageStop(reason="KeyboardInterrupt")
+                    )
                 break
 
     def loop(self):
@@ -124,20 +130,20 @@ class Supervisor:
         """
 
         # Remove dead threads
-        dead_threads = [t for t in self.daq_job_processes if not t.thread.is_alive()]
+        dead_processes = [t for t in self.daq_job_processes if not t.process.is_alive()]
         # Clean up dead threads
         self.daq_job_processes = [
-            t for t in self.daq_job_processes if t not in dead_threads
+            t for t in self.daq_job_processes if t not in dead_processes
         ]
 
         # Get restart schedules for dead jobs
-        self.restart_schedules.extend(self.get_restart_schedules(dead_threads))
+        self.restart_schedules.extend(self.get_restart_schedules(dead_processes))
 
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
 
-        # Handle thread alive stats for dead & alive threads
-        self.handle_thread_alive_stats(dead_threads)
+        # Handle process alive stats for dead & alive processes
+        self.handle_process_alive_stats(dead_processes)
 
         # Get messages from DAQ Jobs
         daq_messages_out = self.get_messages_from_daq_jobs()
@@ -148,7 +154,7 @@ class Supervisor:
         # Send messages to appropriate DAQ Jobs
         self.send_messages_to_daq_jobs(daq_messages_out)
 
-    def handle_thread_alive_stats(self, dead_threads: list[DAQJobProcess]):
+    def handle_process_alive_stats(self, dead_processes: list[DAQJobProcess]):
         """
         Handles the alive stats for the dead threads.
 
@@ -156,20 +162,22 @@ class Supervisor:
             dead_threads (list[DAQJobThread]): List of dead threads.
         """
 
-        for thread in self.daq_job_processes:
-            if datetime.now() - thread.start_time > timedelta(
+        for process in self.daq_job_processes:
+            if datetime.now() - process.start_time > timedelta(
                 seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS
             ):
                 self.get_daq_job_stats(
-                    self.daq_job_stats, type(thread.daq_job)
+                    self.daq_job_stats, process.daq_job_cls
                 ).is_alive = True
 
-        for thread in dead_threads:
+        for process in dead_processes:
             self.get_daq_job_stats(
-                self.daq_job_stats, type(thread.daq_job)
+                self.daq_job_stats, process.daq_job_cls
             ).is_alive = False
 
-    def get_restart_schedules(self, dead_processes: list[DAQJobProcess]):
+    def get_restart_schedules(
+        self, dead_processes: list[DAQJobProcess]
+    ) -> list[RestartDAQJobSchedule]:
         """
         Gets the restart schedules for the dead threads.
 
@@ -182,21 +190,19 @@ class Supervisor:
 
         res = []
         for process in dead_processes:
-            restart_offset = getattr(process.daq_job, "restart_offset", None)
+            restart_offset = getattr(process.daq_job_cls, "restart_offset", None)
             if not isinstance(restart_offset, timedelta):
                 restart_offset = timedelta(seconds=0)
             else:
                 self._logger.info(
-                    f"Scheduling restart of {type(process.daq_job).__name__} in {restart_offset.total_seconds()} seconds"
+                    f"Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds"
                 )
             res.append(
                 RestartDAQJobSchedule(
-                    daq_job_type=type(process.daq_job),
-                    daq_job_config=process.daq_job.config,
+                    daq_job_process=process,
                     restart_at=datetime.now() + restart_offset,
                 )
             )
-            process.daq_job.free()
         return res
 
     def restart_daq_jobs(self):
@@ -210,16 +216,12 @@ class Supervisor:
             if datetime.now() < restart_schedule.restart_at:
                 continue
             self.daq_job_processes.append(
-                restart_daq_job(
-                    restart_schedule.daq_job_type,
-                    restart_schedule.daq_job_config,
-                    self.config,
-                )
+                start_daq_job(restart_schedule.daq_job_process)
             )
 
             # Update restart stats
             self.get_daq_job_stats(
-                self.daq_job_stats, restart_schedule.daq_job_type
+                self.daq_job_stats, restart_schedule.daq_job_process.daq_job_cls
             ).restart_stats.increase()
             schedules_to_remove.append(restart_schedule)
 
@@ -261,12 +263,14 @@ class Supervisor:
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
         assert self.config is not None
         res = []
-        for thread in self.daq_job_processes:
+        for process in self.daq_job_processes:
             try:
                 while True:
-                    msg = thread.daq_job.message_out.get_nowait()
+                    msg = process.message_out.get_nowait()
+                    print(msg)
                     if msg.daq_job_info is None:
-                        msg.daq_job_info = thread.daq_job.info
+                        self._logger.warning(f"Message {msg} has no daq_job_info")
+                        # msg.daq_job_info = process.daq_job.info
                     res.append(msg)
                     # Catch remote stats message
                     # TODO: These should be in a different class
@@ -277,7 +281,7 @@ class Supervisor:
                         self.daq_job_remote_stats = msg.stats
                     # Update stats
                     self.get_daq_job_stats(
-                        self.daq_job_stats, type(thread.daq_job)
+                        self.daq_job_stats, process.daq_job_cls
                     ).message_out_stats.increase()
             except Empty:
                 pass
@@ -292,30 +296,34 @@ class Supervisor:
         """
 
         for message in daq_messages:
-            for daq_job_thread in self.daq_job_processes:
-                daq_job = daq_job_thread.daq_job
+            for process in self.daq_job_processes:
+                daq_job_type = process.daq_job_cls
                 # Send if message is allowed for this DAQ Job
                 if any(
                     isinstance(message, msg_type)
-                    for msg_type in daq_job.allowed_message_in_types
+                    for msg_type in daq_job_type.allowed_message_in_types
                 ):
                     # Drop message type that is not supported by DAQJobStore
-                    if isinstance(daq_job, DAQJobStore) and not daq_job.can_store(
-                        message
-                    ):
+                    if isinstance(
+                        daq_job_type, DAQJobStore
+                    ) and not daq_job_type.can_store(message):
                         continue
-                    daq_job.message_in.put_nowait(
+                    process.message_in.put_nowait(
                         message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
                     )
 
                     # Update stats
-                    stats = self.get_daq_job_stats(self.daq_job_stats, type(daq_job))
+                    stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_type)
                     stats.message_in_stats.increase()
 
                     # Do not do if Mac OS X
                     if sys.platform != "darwin":
-                        stats.message_in_queue_stats.set(daq_job.message_in.qsize())
-                        stats.message_out_queue_stats.set(daq_job.message_out.qsize())
+                        stats.message_in_queue_stats.set(
+                            daq_job_type.message_in.qsize()
+                        )
+                        stats.message_out_queue_stats.set(
+                            daq_job_type.message_out.qsize()
+                        )
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
@@ -325,7 +333,9 @@ class Supervisor:
 
         for daq_job_type, warning_message in DAQ_JOB_ABSENT_WARNINGS.items():
             if not any(
-                x for x in self.daq_job_processes if isinstance(x.daq_job, daq_job_type)
+                process
+                for process in self.daq_job_processes
+                if issubclass(process.daq_job_cls, daq_job_type)
             ):
                 self._logger.warning(warning_message)
 

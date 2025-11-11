@@ -1,12 +1,12 @@
 import logging
-import threading
+import os
 import uuid
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from multiprocessing import Process, Queue
 from queue import Empty
 from typing import Any, Optional
 
+import coloredlogs
 import msgspec
 
 from enrgdaq.daq.models import (
@@ -19,9 +19,6 @@ from enrgdaq.daq.models import (
 )
 from enrgdaq.daq.store.models import DAQJobMessageStore
 from enrgdaq.models import SupervisorConfig
-
-daq_job_instance_id = 0
-daq_job_instance_id_lock = threading.Lock()
 
 
 class DAQJob:
@@ -55,13 +52,20 @@ class DAQJob:
     _logger: logging.Logger
 
     def __init__(
-        self, config: Any, supervisor_config: Optional[SupervisorConfig] = None
+        self,
+        config: Any,
+        supervisor_config: Optional[SupervisorConfig] = None,
+        instance_id: Optional[int] = None,
     ):
+        if os.environ.get("ENRGDAQ_IS_UNIT_TESTING") != "True":
+            coloredlogs.install(
+                level=logging.DEBUG,
+                datefmt="%Y-%m-%d %H:%M:%S",
+                fmt="%(asctime)s %(hostname)s %(name)s %(levelname)s %(message)s",
+            )
         global daq_job_instance_id, daq_job_instance_id_lock
 
-        with daq_job_instance_id_lock:
-            self.instance_id = daq_job_instance_id
-            daq_job_instance_id += 1
+        self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
         if isinstance(config, DAQJobConfig):
             self._logger.setLevel(config.verbosity.to_logging_level())
@@ -78,8 +82,9 @@ class DAQJob:
         else:
             self._supervisor_config = None
         self.info = self._create_info()
+        self._logger.debug(f"DAQ job {self.info.unique_id} created")
 
-    def consume(self, nowait=True):
+    def consume(self, nowait=True, timeout=None):
         """
         Consumes messages from the message_in queue.
         If nowait is True, it will consume the message immediately.
@@ -88,7 +93,7 @@ class DAQJob:
 
         # Return immediately after consuming the message
         if not nowait:
-            msg = self.message_in.get()
+            msg = self.message_in.get(timeout=timeout)
             if not self.handle_message(msg):
                 self.message_in.put(msg)
             return
@@ -206,8 +211,26 @@ class DAQJob:
         self.__del__()
 
 
-@dataclass
-class DAQJobProcess:
-    daq_job: DAQJob
-    thread: Process
-    start_time: datetime = field(default_factory=datetime.now)
+class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_config: SupervisorConfig
+    config: DAQJobConfig
+    message_in: "Queue[DAQJobMessage]"
+    message_out: "Queue[DAQJobMessage]"
+    process: Optional[Process]
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+
+    def start(self):
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_config=self.supervisor_config,
+            instance_id=self.instance_id,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f"Error on {self.daq_job_cls.__name__}.start(): {e}", exc_info=True
+            )
+            raise e
