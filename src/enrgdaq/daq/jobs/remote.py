@@ -266,7 +266,7 @@ class DAQJobRemote(DAQJob):
                 if not self._send_remote_stats_thread.is_alive():
                     raise RuntimeError("Send remote stats thread is dead")
 
-    def _pack_message(self, message: DAQJobMessage, use_pickle: bool = False) -> bytes:
+    def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         """
         Pack a message for sending.
 

@@ -56,6 +56,8 @@ class DAQJob:
         config: Any,
         supervisor_config: Optional[SupervisorConfig] = None,
         instance_id: Optional[int] = None,
+        message_in: Optional["Queue[DAQJobMessage]"] = None,
+        message_out: Optional["Queue[DAQJobMessage]"] = None,
     ):
         if os.environ.get("ENRGDAQ_IS_UNIT_TESTING") != "True":
             coloredlogs.install(
@@ -71,8 +73,8 @@ class DAQJob:
             self._logger.setLevel(config.verbosity.to_logging_level())
 
         self.config = config
-        self.message_in = Queue()
-        self.message_out = Queue()
+        self.message_in = message_in or Queue()
+        self.message_out = message_out or Queue()
 
         self._has_been_freed = False
         self.unique_id = str(uuid.uuid4())
@@ -226,6 +228,8 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             self.config,
             supervisor_config=self.supervisor_config,
             instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
         )
         try:
             instance.start()
