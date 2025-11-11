@@ -185,7 +185,7 @@ int write_events_to_csv(const EventList_t *events, FILE *f, size_t *event_counte
 
         for (size_t j = 0; j < event->num_samples; j++)
         {
-            fprintf(f, "%zu,%lu,%u,%u,%u,%u,%u,%u,%u,%u,%hd\n",
+            fprintf(f, "%zu,%llu,%u,%u,%u,%u,%u,%u,%u,%u,%hd\n",
                     event_counter++,
                     event->pc_unix_ms_timestamp,
                     event->trigger_time_tag,
@@ -267,7 +267,7 @@ int main(int argc, char *argv[])
             break; // End of file and buffer is empty
         }
 
-        printf("Processing batch of %zu bytes...\n", bytes_in_buffer);
+        fprintf(stderr, "Processing batch of %zu bytes...\n", bytes_in_buffer);
 
         EventList_t *events = NULL;
         size_t consumed_bytes = parse_acquisition_buffer(buffer, bytes_in_buffer, &events);
@@ -285,15 +285,15 @@ int main(int argc, char *argv[])
 
         if (events)
         {
-            printf("* Parsed %zu events in this batch\n", events->count);
+            fprintf(stderr, "* Parsed %zu events in this batch\n", events->count);
 
             size_t batch_data_points = 0;
             for (size_t i = 0; i < events->count; i++)
             {
                 batch_data_points += events->events[i].num_samples;
             }
-            printf("Batch data points: %zu\n", batch_data_points);
-            printf("Total events parsed: %zu\n", total_events_parsed);
+            fprintf(stderr, "Batch data points: %zu\n", batch_data_points);
+            fprintf(stderr, "Total events parsed: %zu\n", total_events_parsed);
 
             if (write_events_to_csv(events, f_out, &total_events_parsed) != 0)
             {
@@ -319,16 +319,16 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("\nFinished processing.\n");
-    printf("Total events parsed: %zu\n", total_events_parsed);
-    printf("Total data points: %zu\n", total_data_points);
+    fprintf(stderr, "\nFinished processing.\n");
+    fprintf(stderr, "Total events parsed: %zu\n", total_events_parsed);
+    fprintf(stderr, "Total data points: %zu\n", total_data_points);
     if (output_filename)
     {
-        printf("Success! CSV file written to '%s'.\n", output_filename);
+        fprintf(stderr, "Success! CSV file written to '%s'.\n", output_filename);
     }
     else
     {
-        printf("Success! CSV data written to stdout.\n");
+        fprintf(stderr, "Success! CSV data written to stdout.\n");
     }
 
     // Cleanup
