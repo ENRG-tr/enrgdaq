@@ -314,10 +314,8 @@ class Supervisor:
 
                     # Do not update stats if Mac OS X, as it does not support queue.qsize()
                     if sys.platform != "darwin":
-                        stats.message_in_queue_stats.set(daq_job_cls.message_in.qsize())
-                        stats.message_out_queue_stats.set(
-                            daq_job_cls.message_out.qsize()
-                        )
+                        stats.message_in_queue_stats.set(process.message_in.qsize())
+                        stats.message_out_queue_stats.set(process.message_out.qsize())
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
