@@ -206,22 +206,22 @@ int write_events_to_csv(const EventList_t *events, FILE *f, size_t *event_counte
 // Print usage information
 void print_usage(const char *program_name)
 {
-    fprintf(stderr, "Usage: %s <input_file> <output_file>\n", program_name);
+    fprintf(stderr, "Usage: %s <input_file> [output_file]\n", program_name);
     fprintf(stderr, "  <input_file>  - Binary file containing acquisition data\n");
-    fprintf(stderr, "  <output_file> - CSV file to write parsed data\n");
+    fprintf(stderr, "  [output_file] - CSV file to write parsed data (optional, defaults to stdout)\n");
 }
 
 // Main function
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
+    if (argc < 2 || argc > 3)
     {
         print_usage(argv[0]);
         return 1;
     }
 
     const char *input_filename = argv[1];
-    const char *output_filename = argv[2];
+    const char *output_filename = (argc == 3) ? argv[2] : NULL;
 
     FILE *f_in = fopen(input_filename, "rb");
     if (!f_in)
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    FILE *f_out = fopen(output_filename, "w");
+    FILE *f_out = (output_filename) ? fopen(output_filename, "w") : stdout;
     if (!f_out)
     {
         fprintf(stderr, "Error: Could not open output file '%s'\n", output_filename);
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
 
         if (events)
         {
-            printf("Parsed %zu events in this batch\n", events->count);
+            printf("* Parsed %zu events in this batch\n", events->count);
 
             size_t batch_data_points = 0;
             for (size_t i = 0; i < events->count; i++)
@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
                 batch_data_points += events->events[i].num_samples;
             }
             printf("Batch data points: %zu\n", batch_data_points);
-            printf("total_events_parsed: %zu\n", total_events_parsed);
+            printf("Total events parsed: %zu\n", total_events_parsed);
 
             if (write_events_to_csv(events, f_out, &total_events_parsed) != 0)
             {
@@ -322,12 +322,22 @@ int main(int argc, char *argv[])
     printf("\nFinished processing.\n");
     printf("Total events parsed: %zu\n", total_events_parsed);
     printf("Total data points: %zu\n", total_data_points);
-    printf("Success! CSV file written to '%s'.\n", output_filename);
+    if (output_filename)
+    {
+        printf("Success! CSV file written to '%s'.\n", output_filename);
+    }
+    else
+    {
+        printf("Success! CSV data written to stdout.\n");
+    }
 
     // Cleanup
     free(buffer);
     fclose(f_in);
-    fclose(f_out);
+    if (f_out != stdout)
+    {
+        fclose(f_out);
+    }
 
     return 0;
 }
