@@ -137,7 +137,6 @@ class Supervisor:
         self.daq_job_processes = [
             t for t in self.daq_job_processes if t not in dead_processes
         ]
-        print("dead processes: ", dead_processes)
 
         # Get restart schedules for dead jobs
         self.restart_schedules.extend(self.get_restart_schedules(dead_processes))
@@ -270,7 +269,6 @@ class Supervisor:
             try:
                 while True:
                     msg = process.message_out.get_nowait()
-                    print(msg)
                     if msg.daq_job_info is None:
                         self._logger.warning(f"Message {msg} has no daq_job_info")
                         # msg.daq_job_info = process.daq_job.info

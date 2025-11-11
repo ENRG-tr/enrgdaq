@@ -59,7 +59,7 @@ class TestSupervisor(unittest.TestCase):
             self.supervisor.daq_job_stats[mock_process.daq_job_cls], DAQJobStats
         )
 
-    @patch("enrgdaq.daq.daq_job.start_daq_job")
+    @patch("enrgdaq.supervisor.start_daq_job")
     @patch.object(Supervisor, "get_messages_from_daq_jobs")
     @patch.object(Supervisor, "get_supervisor_messages")
     @patch.object(Supervisor, "send_messages_to_daq_jobs")
@@ -90,14 +90,9 @@ class TestSupervisor(unittest.TestCase):
         mock_get_messages_from_daq_jobs.return_value = ["message1"]
         mock_get_supervisor_messages.return_value = ["message2"]
 
-        print("*****loop*****")
         self.supervisor.loop()
 
-        mock_start_daq_job.assert_called_once_with(
-            mock_process_dead.daq_job_cls,
-            mock_process_dead.daq_job.config,
-            self.supervisor.config,
-        )
+        mock_start_daq_job.assert_called_once_with(mock_process_dead)
         mock_get_messages_from_daq_jobs.assert_called_once()
         mock_get_supervisor_messages.assert_called_once()
         mock_send_messages_to_daq_jobs.assert_called_once()

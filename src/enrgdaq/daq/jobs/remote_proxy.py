@@ -38,14 +38,6 @@ class DAQJobRemoteProxy(DAQJob):
 
     def __init__(self, config: DAQJobRemoteProxyConfig, **kwargs):
         super().__init__(config, **kwargs)
-        self._zmq_ctx = None
-        self._xsub_sock = None
-        self._xpub_sock = None
-
-    def _init(self):
-        """
-        Initializes the job.
-        """
 
         self._zmq_ctx = zmq.Context()
         self._xsub_sock = self._zmq_ctx.socket(zmq.XSUB)
@@ -62,7 +54,6 @@ class DAQJobRemoteProxy(DAQJob):
         """
         Start the ZMQ proxy.
         """
-        self._init()
         try:
             assert self._xsub_sock is not None and self._xpub_sock is not None
             zmq.proxy(self._xsub_sock, self._xpub_sock)
