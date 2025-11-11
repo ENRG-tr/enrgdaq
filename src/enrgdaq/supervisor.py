@@ -130,11 +130,14 @@ class Supervisor:
         """
 
         # Remove dead threads
-        dead_processes = [t for t in self.daq_job_processes if not t.process.is_alive()]
+        dead_processes = [
+            t for t in self.daq_job_processes if t.process and not t.process.is_alive()
+        ]
         # Clean up dead threads
         self.daq_job_processes = [
             t for t in self.daq_job_processes if t not in dead_processes
         ]
+        print("dead processes: ", dead_processes)
 
         # Get restart schedules for dead jobs
         self.restart_schedules.extend(self.get_restart_schedules(dead_processes))
@@ -297,32 +300,25 @@ class Supervisor:
 
         for message in daq_messages:
             for process in self.daq_job_processes:
-                daq_job_type = process.daq_job_cls
+                daq_job_cls = process.daq_job_cls
                 # Send if message is allowed for this DAQ Job
                 if any(
                     isinstance(message, msg_type)
-                    for msg_type in daq_job_type.allowed_message_in_types
+                    for msg_type in daq_job_cls.allowed_message_in_types
                 ):
-                    # Drop message type that is not supported by DAQJobStore
-                    if isinstance(
-                        daq_job_type, DAQJobStore
-                    ) and not daq_job_type.can_store(message):
-                        continue
                     process.message_in.put_nowait(
                         message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
                     )
 
                     # Update stats
-                    stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_type)
+                    stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_cls)
                     stats.message_in_stats.increase()
 
-                    # Do not do if Mac OS X
+                    # Do not update stats if Mac OS X, as it does not support queue.qsize()
                     if sys.platform != "darwin":
-                        stats.message_in_queue_stats.set(
-                            daq_job_type.message_in.qsize()
-                        )
+                        stats.message_in_queue_stats.set(daq_job_cls.message_in.qsize())
                         stats.message_out_queue_stats.set(
-                            daq_job_type.message_out.qsize()
+                            daq_job_cls.message_out.qsize()
                         )
 
     def warn_for_lack_of_daq_jobs(self):

@@ -45,18 +45,18 @@ class TestSupervisor(unittest.TestCase):
     @patch.object(Supervisor, "start_daq_job_processes")
     @patch.object(Supervisor, "warn_for_lack_of_daq_jobs")
     def test_init(self, mock_warn_for_lack_of_daq_jobs, mock_start_daq_job_processes):
-        mock_thread = MagicMock()
-        mock_thread.daq_job = MagicMock()
-        mock_start_daq_job_processes.return_value = [mock_thread]
+        mock_process = MagicMock()
+        mock_process.daq_job_cls = MagicMock()
+        mock_start_daq_job_processes.return_value = [mock_process]
 
         self.supervisor.init()
 
         mock_start_daq_job_processes.assert_called_once()
         mock_warn_for_lack_of_daq_jobs.assert_called_once()
-        self.assertEqual(self.supervisor.daq_job_processes, [mock_thread])
-        self.assertIn(type(mock_thread.daq_job), self.supervisor.daq_job_stats)
+        self.assertEqual(self.supervisor.daq_job_processes, [mock_process])
+        self.assertIn(mock_process.daq_job_cls, self.supervisor.daq_job_stats)
         self.assertIsInstance(
-            self.supervisor.daq_job_stats[type(mock_thread.daq_job)], DAQJobStats
+            self.supervisor.daq_job_stats[mock_process.daq_job_cls], DAQJobStats
         )
 
     @patch("enrgdaq.daq.daq_job.start_daq_job")
@@ -70,26 +70,32 @@ class TestSupervisor(unittest.TestCase):
         mock_get_messages_from_daq_jobs,
         mock_start_daq_job,
     ):
-        mock_thread_alive = MagicMock()
-        mock_thread_alive.thread.is_alive.return_value = True
-        mock_thread_alive.start_time = datetime.now() - timedelta(seconds=5)
-        mock_thread_dead = MagicMock()
-        mock_thread_dead.thread.is_alive.return_value = False
-        mock_thread_dead.start_time = datetime.now() - timedelta(seconds=10)
-        mock_start_daq_job.return_value = mock_thread_alive
+        mock_daq_job_cls = MagicMock()
+        mock_daq_job_cls.__name__ = "mock_job"
 
-        self.supervisor.daq_job_processes = [mock_thread_alive, mock_thread_dead]
+        mock_process_alive = MagicMock()
+        mock_process_alive.daq_job_cls = mock_daq_job_cls
+        mock_process_alive.process.is_alive.return_value = True
+        mock_process_alive.start_time = datetime.now() - timedelta(seconds=5)
+        mock_process_dead = MagicMock()
+        mock_process_dead.daq_job_cls = mock_daq_job_cls
+        mock_process_dead.process.is_alive.return_value = False
+        mock_process_dead.start_time = datetime.now() - timedelta(seconds=10)
+        mock_start_daq_job.return_value = mock_process_alive
+
+        self.supervisor.daq_job_processes = [mock_process_alive, mock_process_dead]
         self.supervisor.daq_job_stats = {}
         self.supervisor.restart_schedules = []
 
         mock_get_messages_from_daq_jobs.return_value = ["message1"]
         mock_get_supervisor_messages.return_value = ["message2"]
 
+        print("*****loop*****")
         self.supervisor.loop()
 
         mock_start_daq_job.assert_called_once_with(
-            type(mock_thread_dead.daq_job),
-            mock_thread_dead.daq_job.config,
+            mock_process_dead.daq_job_cls,
+            mock_process_dead.daq_job.config,
             self.supervisor.config,
         )
         mock_get_messages_from_daq_jobs.assert_called_once()
@@ -98,7 +104,7 @@ class TestSupervisor(unittest.TestCase):
 
         self.assertEqual(
             self.supervisor.daq_job_processes,
-            [mock_thread_alive, mock_start_daq_job.return_value],
+            [mock_process_alive, mock_start_daq_job.return_value],
         )
 
     def test_handle_thread_alive_stats(self):
@@ -142,18 +148,18 @@ class TestSupervisor(unittest.TestCase):
     @patch("enrgdaq.supervisor.datetime")
     def test_get_restart_schedules(self, mock_datetime):
         mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
-        mock_thread = MagicMock()
-        mock_thread.daq_job_type = MagicMock()
-        mock_thread.daq_job_type.restart_offset = timedelta(seconds=10)
-        mock_thread.daq_job.config = MagicMock()
+        mock_daq_job_cls = MagicMock()
+        mock_daq_job_cls.restart_offset = timedelta(seconds=10)
+        mock_daq_job_cls.config = MagicMock()
+        mock_daq_job_cls.__name__ = "mock_job"
 
-        result = self.supervisor.get_restart_schedules([mock_thread])
+        mock_process = MagicMock()
+        mock_process.daq_job_cls = mock_daq_job_cls
+
+        result = self.supervisor.get_restart_schedules([mock_process])
 
         self.assertEqual(len(result), 1)
-        self.assertEqual(
-            result[0].daq_job_process.daq_job_cls, type(mock_thread.daq_job)
-        )
-        self.assertEqual(result[0].daq_job_process.config, mock_thread.daq_job.config)
+        self.assertEqual(result[0].daq_job_process, mock_process)
         self.assertEqual(result[0].restart_at, datetime(2023, 1, 1, 12, 0, 10))
 
     @patch("enrgdaq.supervisor.datetime")
@@ -190,7 +196,7 @@ class TestSupervisor(unittest.TestCase):
 
     def test_send_messages_to_daq_jobs(self):
         mock_process = MagicMock()
-        mock_process.allowed_message_in_types = [DAQJobMessageStore]
+        mock_process.daq_job_cls.allowed_message_in_types = [DAQJobMessageStore]
         mock_process.message_in = Queue()
         mock_message = DAQJobMessageStoreTabular(
             store_config=MagicMock(), keys=[], data=[], daq_job_info=DAQJobInfo.mock()
