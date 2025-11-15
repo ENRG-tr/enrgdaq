@@ -1,6 +1,7 @@
 import os
 from typing import Any, cast
 
+import numpy as np
 import uproot
 
 from enrgdaq.daq.models import DAQJobConfig
@@ -27,51 +28,55 @@ class DAQJobStoreROOT(DAQJobStore):
 
         self._open_files = {}
 
+    def store_loop(self):
+        pass
+
     def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         super().handle_message(message)
-        store_config = cast(DAQJobStoreConfigROOT, message.store_config)
+
+        print(self.message_in.qsize())
+
+        if message.data_columns is None:
+            # Per instructions, only process data_columns for performance.
+            return True
+
+        store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
 
         if file_path not in self._open_files:
-            file_exists = os.path.exists(file_path)
-            # Create the file if it doesn't exist
-            if not file_exists:
-                # If file was newly created, do not commit it, close it and
-                # switch to update mode on the next iteration
+            # Ensure directory exists to prevent errors
+            dir_name = os.path.dirname(file_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
+
+            if not os.path.exists(file_path):
                 root_file = uproot.recreate(file_path)
             else:
                 root_file = uproot.update(file_path)
-                self._open_files[file_path] = root_file
+            self._open_files[file_path] = root_file
         else:
-            file_exists = True
             root_file = self._open_files[file_path]
 
-        data_to_write = {}
-        for idx, key in enumerate(message.keys):
-            for data in message.data:
-                if key not in data_to_write:
-                    data_to_write[key] = []
-                data_to_write[key].append(data[idx])
+        # For performance, we assume a fixed tree name. This could be made configurable.
+        tree_name = "tree"
 
-        # TODO: This creates a new tree every time we commit. We should probably create tree
-        # once and only once, preferably when everything we needed to save is available
-        # This kind of depends on the task so it will have to wait
-        root_file["tree"] = {key: data_to_write[key] for key in message.keys}
-        root_file.file.sink.flush()
+        data_to_write = message.data_columns
 
-        # Close the file if it was newly created
-        if not file_exists:
-            root_file.file.sink.close()
+        rntuple = root_file.mkrntuple(
+            tree_name,
+            data_to_write,
+        )
+        rntuple.extend(data_to_write)
 
         return True
 
     def __del__(self):
-        # Close all open files
+        # Ensure all files are properly closed on exit.
         for root_file in self._open_files.values():
-            if root_file.closed:
-                continue
-            root_file.file.close()
+            if not root_file.closed:
+                root_file.close()
+        self._open_files.clear()
 
-        return super().__del__()
+        super().__del__()

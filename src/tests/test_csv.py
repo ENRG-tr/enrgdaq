@@ -10,7 +10,11 @@ from enrgdaq.daq.jobs.store.csv import (
     DAQJobStoreConfigCSV,
     DAQJobStoreCSV,
 )
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStore,
+    DAQJobMessageStoreTabular,
+    DAQJobStoreConfig,
+)
 from enrgdaq.utils.file import modify_file_path
 
 
@@ -51,12 +55,13 @@ class TestDAQJobStoreCSV(unittest.TestCase):
     def test_handle_message_new_file(
         self, mock_touch, mock_exists, mock_open, mock_add_date
     ):
-        message = MagicMock(spec=DAQJobMessageStore)
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = DAQJobStoreConfig(
             csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+        message.data_columns = None
         message.tag = None
 
         self.store.handle_message(message)
@@ -71,12 +76,13 @@ class TestDAQJobStoreCSV(unittest.TestCase):
     @patch("builtins.open", new_callable=mock_open)
     @patch("os.path.exists", return_value=True)
     def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):
-        message = MagicMock(spec=DAQJobMessageStore)
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = DAQJobStoreConfig(
             csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)
         )
         message.keys = ["header1", "header2"]
         message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+        message.data_columns = None
         message.tag = None
 
         self.store.handle_message(message)
@@ -86,6 +92,36 @@ class TestDAQJobStoreCSV(unittest.TestCase):
         self.assertIn("out/test.csv", self.store._open_csv_files)
         file = self.store._open_csv_files["out/test.csv"]
         self.assertEqual(len(file.write_queue), 2)  # 2 rows only, no header
+
+    @patch("enrgdaq.daq.jobs.store.csv.modify_file_path", return_value="test.csv")
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("os.path.exists", return_value=False)
+    @patch("pathlib.Path.touch")
+    def test_handle_message_data_columns(
+        self, mock_touch, mock_exists, mock_open, mock_add_date
+    ):
+        message = MagicMock(spec=DAQJobMessageStoreTabular)
+        message.store_config = DAQJobStoreConfig(
+            csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)
+        )
+        message.keys = ["header1", "header2"]
+        message.data = None
+        message.data_columns = {
+            "header1": ["row1_col1", "row2_col1"],
+            "header2": ["row1_col2", "row2_col2"],
+        }
+        message.tag = None
+
+        self.store.handle_message(message)
+
+        mock_add_date.assert_called_once_with("test.csv", True, None)
+        mock_open.assert_called_once_with("out/test.csv", "a", newline="")
+        self.assertIn("out/test.csv", self.store._open_csv_files)
+        file = self.store._open_csv_files["out/test.csv"]
+        self.assertEqual(len(file.write_queue), 3)  # 1 header + 2 rows
+        self.assertEqual(list(file.write_queue)[0], ["header1", "header2"])
+        self.assertEqual(list(file.write_queue)[1], ["row1_col1", "row1_col2"])
+        self.assertEqual(list(file.write_queue)[2], ["row2_col1", "row2_col2"])
 
     def test_flush(self):
         file = CSVFile(

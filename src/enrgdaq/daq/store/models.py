@@ -1,6 +1,7 @@
 from typing import Any, Optional
 
 from msgspec import Struct
+from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage, DAQRemoteConfig
 
@@ -67,7 +68,8 @@ class DAQJobMessageStoreTabular(DAQJobMessageStore, kw_only=True):
     """
 
     keys: list[str]
-    data: list[list[str | float | int]]
+    data: Optional[list[list[str | float | int] | ndarray]] = None
+    data_columns: Optional[dict[str, list[str | float | int] | ndarray]] = None
 
 
 class DAQJobMessageStoreRaw(DAQJobMessageStore, kw_only=True):

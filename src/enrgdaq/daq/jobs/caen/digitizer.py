@@ -6,6 +6,8 @@ import threading
 from datetime import timedelta
 from typing import Literal, Optional
 
+import numpy as np
+
 try:
     from caen_libs import caendigitizer as dgtz
 except Exception:
@@ -62,7 +64,7 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
 
 
-WAVEFORM_CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p, ct.c_uint32)
+WAVEFORM_CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p)
 STATS_CALLBACK_FUNC = ct.CFUNCTYPE(None, ct.c_void_p)
 
 
@@ -77,27 +79,34 @@ class RunAcquisitionArgs(ct.Structure):
     ]
 
 
+class WaveformSamplesRaw(ct.Structure):
+    _fields_ = [
+        ("len", ct.c_uint32),
+        ("pc_unix_ms_timestamp", ct.POINTER(ct.c_uint64)),
+        ("event_counter", ct.POINTER(ct.c_uint32)),
+        ("trigger_time_tag", ct.POINTER(ct.c_uint32)),
+        ("channel", ct.POINTER(ct.c_uint8)),
+        ("sample_index", ct.POINTER(ct.c_uint16)),
+        ("value_lsb", ct.POINTER(ct.c_uint16)),
+        ("value_mv", ct.POINTER(ct.c_int16)),
+    ]
+
+
 class AcquisitionStatsRaw(ct.Structure):
     _fields_ = [
         ("acq_events", ct.c_long),
-        ("acq_bytes", ct.c_long),
-        ("missed_events", ct.c_long),
         ("acq_samples", ct.c_long),
     ]
 
 
 class AcquisitionStats(Struct):
     acq_events: int
-    acq_bytes: int
-    missed_events: int
     acq_samples: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         return cls(
             acq_events=raw.acq_events,
-            acq_bytes=raw.acq_bytes,
-            missed_events=raw.missed_events,
             acq_samples=raw.acq_samples,
         )
 
@@ -213,18 +222,48 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_post_trigger_size(85)
         device.calibrate()
 
-    def _waveform_callback(self, buffer_ptr: ct.c_void_p, buffer_len: int):
+    def _waveform_callback(self, buffer_ptr: ct.c_void_p):
         assert (
             self.config.waveform_store_config is not None
         ), "waveform_store_config is None"
-        event_data_ptr = ct.cast(buffer_ptr, ct.POINTER(ct.c_uint16))
-        event_data_bytes = ct.string_at(event_data_ptr, buffer_len)
+        waveform_ptr = ct.cast(buffer_ptr, ct.POINTER(WaveformSamplesRaw)).contents
 
         self._put_message_out(
-            DAQJobMessageStoreRaw(
+            DAQJobMessageStoreTabular(
                 store_config=self.config.waveform_store_config,
                 tag="waveform",
-                data=event_data_bytes,
+                keys=[
+                    "timestamp",
+                    "event_counter",
+                    "trigger_time_tag",
+                    "channel",
+                    "sample_index",
+                    "value_lsb",
+                    "value_mv",
+                ],
+                data_columns={
+                    "timestamp": np.ctypeslib.as_array(
+                        waveform_ptr.pc_unix_ms_timestamp, shape=(waveform_ptr.len,)
+                    ),
+                    "event_counter": np.ctypeslib.as_array(
+                        waveform_ptr.event_counter, shape=(waveform_ptr.len,)
+                    ),
+                    "trigger_time_tag": np.ctypeslib.as_array(
+                        waveform_ptr.trigger_time_tag, shape=(waveform_ptr.len,)
+                    ),
+                    "channel": np.ctypeslib.as_array(
+                        waveform_ptr.channel, shape=(waveform_ptr.len,)
+                    ),
+                    "sample_index": np.ctypeslib.as_array(
+                        waveform_ptr.sample_index, shape=(waveform_ptr.len,)
+                    ),
+                    "value_lsb": np.ctypeslib.as_array(
+                        waveform_ptr.value_lsb, shape=(waveform_ptr.len,)
+                    ),
+                    "value_mv": np.ctypeslib.as_array(
+                        waveform_ptr.value_mv, shape=(waveform_ptr.len,)
+                    ),
+                },
             )
         )
 
@@ -240,16 +279,12 @@ class DAQJobCAENDigitizer(DAQJob):
                 keys=[
                     "timestamp",
                     "acq_events",
-                    "acq_bytes",
-                    "missed_events",
                     "acq_samples",
                 ],
                 data=[
                     [
                         get_now_unix_timestamp_ms(),
                         stats.acq_events,
-                        stats.acq_bytes,
-                        stats.missed_events,
                         stats.acq_samples,
                     ]
                 ],

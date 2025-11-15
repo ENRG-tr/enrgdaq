@@ -5,7 +5,10 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, TextIO, cast
+from typing import Any, Optional, Sequence, TextIO, cast
+
+import numpy as np
+from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
@@ -64,8 +67,17 @@ class DAQJobStoreCSV(DAQJobStore):
             file.write_queue.append(message.keys)
 
         # Append rows to write_queue
-        for row in message.data:
-            file.write_queue.append(row)
+        if message.data is not None:
+            for row in message.data:
+                file.write_queue.append(row)
+        elif message.data_columns is not None:
+            cols = [message.data_columns[k] for k in message.keys]
+            if cols and all(isinstance(c, ndarray) for c in cols):
+                data_rows = np.stack(cols, axis=-1)
+                file.write_queue.extend(data_rows)
+            else:
+                for row in zip(*cols):
+                    file.write_queue.append(list(row))
 
         return True
 

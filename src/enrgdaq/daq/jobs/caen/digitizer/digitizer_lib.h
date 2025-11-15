@@ -15,6 +15,18 @@ typedef struct
     long acq_samples;
 } AcquisitionStats_t;
 
+typedef struct
+{
+    uint32_t len;
+    uint64_t *pc_unix_ms_timestamp;
+    uint32_t *event_counter;
+    uint32_t *trigger_time_tag;
+    uint8_t *channel;
+    uint16_t *sample_index;
+    uint16_t *value_lsb;
+    int16_t *value_mv;
+} WaveformSamples_t;
+
 typedef void (*waveform_callback_t)(WaveformSamples_t *samples);
 typedef void (*acquisition_stats_callback_t)(AcquisitionStats_t *stats);
 
@@ -28,17 +40,6 @@ typedef struct EventDataCopy
 
 } EventDataCopy_t;
 
-typedef struct
-{
-    uint32_t len;
-    uint64_t *pc_unix_ms_timestamp;
-    uint32_t *event_counter;
-    uint32_t *trigger_time_tag;
-    uint8_t *channel;
-    uint16_t *sample_index;
-    uint16_t *value_lsb;
-    int16_t *value_mv;
-} WaveformSamples_t;
 typedef struct
 {
     int handle;

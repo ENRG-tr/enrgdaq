@@ -24,11 +24,7 @@ void check_dgtz_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
 {
     if (ret == CAEN_DGTZ_Success)
         return;
-    const char *error_message = CAEN_DGTZ_GetErrorString(ret);
-    if (error_message)
-        fprintf(stderr, "Error in %s: %s (%d)\n", func_name, error_message, ret);
-    else
-        fprintf(stderr, "Error in %s: %d", func_name, ret);
+    fprintf(stderr, "Error in %s: %d", func_name, ret);
     fflush(stderr);
     exit(1);
 }
@@ -51,7 +47,7 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
             if (args.event_copy->Waveforms[ch][i] < args.filter_threshold)
                 continue;
 
-            if (args->out_buffer->len + sample_count >= args->out_buffer_max_samples)
+            if (args.out_buffer->len + sample_count >= args.out_buffer_max_samples)
             {
                 fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!\n", ch);
                 fflush(stderr);
@@ -61,8 +57,8 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 
             // Header
             args.out_buffer->pc_unix_ms_timestamp[buf_index] = pc_unix_ms_timestamp;
-            args.out_buffer->event_counter[buf_index] = args.event_copy->event_info->EventCounter;
-            args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info->TriggerTimeTag;
+            args.out_buffer->event_counter[buf_index] = args.event_copy->event_info.EventCounter;
+            args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info.TriggerTimeTag;
 
             args.out_buffer->channel[buf_index] = (uint8_t)ch;
             args.out_buffer->sample_index[buf_index] = (uint16_t)i;
@@ -118,7 +114,7 @@ void *processing_thread_func(void *arg)
         {
             if (g_is_debug_verbosity)
             {
-                fprintf(stdout, "Consumer buffer full with %zu items.\n", acq_buffer.len);
+                fprintf(stdout, "Consumer buffer full with %u items.\n", acq_buffer.len);
             }
             args->waveform_callback(&acq_buffer);
             acq_buffer.len = 0;

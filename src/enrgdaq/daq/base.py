@@ -189,7 +189,10 @@ class DAQJob:
                 message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
-            msg_json = msgspec.json.encode(message)
+            try:
+                msg_json = msgspec.json.encode(message)
+            except Exception:
+                msg_json = {"error": "failed to encode message", "message": message}
             if self.config.verbosity == LogVerbosity.DEBUG and len(msg_json) < 1024:
                 if len(msg_json) > 1024:
                     self._logger.debug("Message out")
