@@ -15,28 +15,37 @@
 static int g_running = 0;
 static int g_is_debug_verbosity = 0;
 
-#define ACQ_BUFFER_SIZE 1024 * 512
-#define FILTER_BUFFER_SIZE 1024 * 64
 #define CHANNEL_COUNT 8
-#define PROCESSING_THREAD_TEMP_BUFFER_SIZE 1024 * 5
+#define ACQ_BUFFER_SIZE 1024 * 512
 
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
 
 ThreadSafeQueue_t g_free_pool_queue;
 ThreadSafeQueue_t g_work_queue;
 
-void check_c_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
+void check_dgtz_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
 {
-    if (ret != CAEN_DGTZ_Success)
-    {
+    if (ret == CAEN_DGTZ_Success)
+        return;
+    const char *error_message = CAEN_DGTZ_GetErrorString(ret);
+    if (error_message)
+        fprintf(stderr, "Error in %s: %s (%d)\n", func_name, error_message, ret);
+    else
         fprintf(stderr, "Error in %s: %d", func_name, ret);
-        exit(1);
-    }
+    fflush(stderr);
+    exit(1);
 }
 
 size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 {
     size_t sample_count = 0;
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+
+    uint64_t pc_unix_ms_timestamp =
+        (uint64_t)(tv.tv_sec) * 1000 +
+        (uint64_t)(tv.tv_usec) / 1000;
 
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
@@ -45,19 +54,26 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
             if (args.event_copy->Waveforms[ch][i] < args.filter_threshold)
                 continue;
 
-            if (sample_count >= args.out_buffer_max_samples)
+            if (args->out_buffer->len + sample_count >= args->out_buffer_max_samples)
             {
                 fprintf(stderr, "Buffer overflow at filter_channel_waveforms for channel %d!\n", ch);
                 fflush(stderr);
                 return sample_count;
             }
-            args.out_buffer[sample_count].channel = (uint16_t)ch;
-            args.out_buffer[sample_count].sample_index = (uint16_t)i;
-            args.out_buffer[sample_count].value_lsb = args.event_copy->Waveforms[ch][i];
-            // We're using VX1751 which is 1 V_pp, which is represented using uint16, so we need to map it
+            uint32_t buf_index = args.out_buffer->len + sample_count;
+
+            // Header
+            args.out_buffer->pc_unix_ms_timestamp[buf_index] = pc_unix_ms_timestamp;
+            args.out_buffer->event_counter[buf_index] = args.event_copy->event_info->EventCounter;
+            args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info->TriggerTimeTag;
+
+            args.out_buffer->channel[buf_index] = (uint8_t)ch;
+            args.out_buffer->sample_index[buf_index] = (uint16_t)i;
+            args.out_buffer->value_lsb[buf_index] = args.event_copy->Waveforms[ch][i];
+            // we're using vx1751 which is 1 v_pp, which is represented using uint16, so we need to map it
             float normalized_value_lsb = (float)args.event_copy->Waveforms[ch][i] / 1023.0;
-            float dc_offset_diff = 0; // TODO: CHANGE THIS // (float)(65535 - args.channel_dc_offsets[ch]) / 65535.0;
-            args.out_buffer[sample_count].value_mv = (int16_t)((normalized_value_lsb - dc_offset_diff) * 1000.0);
+            float dc_offset_diff = 0; // todo: change this // (float)(65535 - args.channel_dc_offsets[ch]) / 65535.0;
+            args.out_buffer->value_mv[buf_index] = (int16_t)((normalized_value_lsb - dc_offset_diff) * 1000.0);
 
             sample_count++;
         }
@@ -69,20 +85,24 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 // Updated processing thread
 void *processing_thread_func(void *arg)
 {
-    fflush(stdout);
     RunAcquisitionArgs_t *args = (RunAcquisitionArgs_t *)arg;
 
-    uint8_t *acq_buffer = (uint8_t *)malloc(ACQ_BUFFER_SIZE);
-    size_t acq_buffer_len = 0;
+    WaveformSamples_t acq_buffer = {
+        .pc_unix_ms_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
+        .event_counter = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
+        .trigger_time_tag = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
+        .channel = malloc(ACQ_BUFFER_SIZE * sizeof(uint8_t)),
+        .sample_index = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
+        .value_lsb = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
+        .value_mv = malloc(ACQ_BUFFER_SIZE * sizeof(int16_t)),
+        .len = 0};
 
-    WaveformSample_t temp_filter_buffer[9999];
-    long last_event_counter = -1;
     AcquisitionStats_t stats = {0};
 
     time_t last_log_time = time(NULL);
 
     if (g_is_debug_verbosity)
-        printf("Consumer thread started.\n");
+        fprintf(stdout, "Consumer thread started.\n");
 
     while (1)
     {
@@ -91,78 +111,46 @@ void *processing_thread_func(void *arg)
             break;
 
         stats.acq_events++;
-        if (item->is_first_in_block && last_event_counter != -1)
-            stats.missed_events += item->event_info.EventCounter - last_event_counter - 1;
-        last_event_counter = item->event_info.EventCounter;
 
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-
-        uint64_t pc_unix_ms_timestamp =
-            (uint64_t)(tv.tv_sec) * 1000 +
-            (uint64_t)(tv.tv_usec) / 1000;
-
-        // Build header struct
-        EventHeader_t header = {
-            .board_id = item->event_info.BoardId,
-            .pattern = item->event_info.Pattern,
-            .channel_mask = item->event_info.ChannelMask,
-            .event_counter = item->event_info.EventCounter,
-            .trigger_time_tag = item->event_info.TriggerTimeTag,
-            .pc_unix_ms_timestamp = pc_unix_ms_timestamp};
-
-        size_t sample_count = filter_channel_waveforms(
-            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, temp_filter_buffer, 9999});
-
-        stats.acq_samples += sample_count;
-
-        size_t header_bytes = sizeof(EventHeader_t);
-        size_t data_bytes = sample_count * sizeof(WaveformSample_t);
-        size_t total_bytes = header_bytes + data_bytes;
-
-        header.total_size = total_bytes;
-        stats.acq_bytes += total_bytes;
+        uint32_t total_ch_size = 0;
+        for (int ch = 0; ch < CHANNEL_COUNT; ch++)
+            total_ch_size += item->ChSize[ch];
 
         // Check if buffer is full
-        if (acq_buffer_len + total_bytes > ACQ_BUFFER_SIZE)
+        if (acq_buffer.len + total_ch_size > ACQ_BUFFER_SIZE)
         {
             if (g_is_debug_verbosity)
-                printf("Consumer buffer full, sending %zu bytes.\n", acq_buffer_len);
-
-            uint8_t *data_copy = (uint8_t *)malloc(acq_buffer_len);
-            memcpy(data_copy, acq_buffer, acq_buffer_len);
-            fflush(stdout);
-            args->waveform_callback(data_copy, acq_buffer_len);
-            free(data_copy);
-            acq_buffer_len = 0;
+            {
+                fprintf(stdout, "Consumer buffer full with %zu items.\n", acq_buffer.len);
+            }
+            args->waveform_callback(&acq_buffer);
+            acq_buffer.len = 0;
         }
 
-        // Dump structs to bytes - crystal clear!
-        memcpy(acq_buffer + acq_buffer_len, &header, header_bytes);
-        acq_buffer_len += header_bytes;
+        size_t sample_count = filter_channel_waveforms(
+            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE});
 
-        memcpy(acq_buffer + acq_buffer_len, temp_filter_buffer, data_bytes);
-        acq_buffer_len += data_bytes;
+        stats.acq_samples += sample_count;
+        acq_buffer.len += sample_count;
 
         queue_push_ptr(&g_free_pool_queue, item);
 
         if (time(NULL) - last_log_time >= 1)
         {
-            /*
-            if (g_is_debug_verbosity)
-            {
-                printf("Consumer Thread Acquisition Stats: Events=%" PRIu64 ", Bytes=%" PRIu64 ", Missed Events=%" PRIu64 ", Samples=%" PRIu64 "\n",
-                       stats.acq_events, stats.acq_bytes, stats.missed_events, stats.acq_samples);
-                fflush(stdout);
-            }*/
             args->stats_callback(&stats);
             stats = (const AcquisitionStats_t){0};
             last_log_time = time(NULL);
         }
     }
 
-    printf("Consumer thread shutting down.\n");
-    free(acq_buffer);
+    fprintf(stdout, "Consumer thread shutting down.\n");
+    free(acq_buffer.channel);
+    free(acq_buffer.sample_index);
+    free(acq_buffer.value_lsb);
+    free(acq_buffer.value_mv);
+    free(acq_buffer.pc_unix_ms_timestamp);
+    free(acq_buffer.event_counter);
+    free(acq_buffer.trigger_time_tag);
     return NULL;
 }
 
@@ -183,19 +171,20 @@ void run_acquisition(RunAcquisitionArgs_t *args)
         queue_push_ptr(&g_free_pool_queue, &g_event_pool[i]);
     }
     if (args->is_debug_verbosity)
-        printf("Producer: Pre-allocated %d event buffers.\n", EVENT_POOL_SIZE);
+        fprintf(stdout, "Producer: Pre-allocated %d event buffers.\n", EVENT_POOL_SIZE);
 
     pthread_t consumer_thread;
     if (pthread_create(&consumer_thread, NULL, processing_thread_func, args) != 0)
     {
         fprintf(stderr, "Failed to create consumer thread.\n");
+        fflush(stderr);
         exit(1);
     }
 
     ret = CAEN_DGTZ_AllocateEvent(args->handle, (void **)&event16);
-    check_c_error(ret, "CAEN_DGTZ_AllocateEvent");
+    check_dgtz_error(ret, "CAEN_DGTZ_AllocateEvent");
     ret = CAEN_DGTZ_MallocReadoutBuffer(args->handle, &buffer, &buffer_size);
-    check_c_error(ret, "CAEN_DGTZ_MallocReadoutBuffer");
+    check_dgtz_error(ret, "CAEN_DGTZ_MallocReadoutBuffer");
 
     // Get DC offsets
     int channel_dc_offsets[CHANNEL_COUNT];
@@ -208,10 +197,10 @@ void run_acquisition(RunAcquisitionArgs_t *args)
 
     g_running = 1;
     ret = CAEN_DGTZ_SWStartAcquisition(args->handle);
-    check_c_error(ret, "CAEN_DGTZ_SWStartAcquisition");
+    check_dgtz_error(ret, "CAEN_DGTZ_SWStartAcquisition");
 
     if (args->is_debug_verbosity)
-        printf("Producer thread (acquisition) started.\n");
+        fprintf(stdout, "Producer thread (acquisition) started.\n");
 
     while (g_running)
     {
@@ -219,7 +208,7 @@ void run_acquisition(RunAcquisitionArgs_t *args)
         ret = CAEN_DGTZ_ReadData(args->handle, CAEN_DGTZ_SLAVE_TERMINATED_READOUT_MBLT, buffer, &read_buffer_size);
         if (ret != CAEN_DGTZ_Success)
         {
-            check_c_error(ret, "CAEN_DGTZ_ReadData");
+            check_dgtz_error(ret, "CAEN_DGTZ_ReadData");
             continue;
         }
 
@@ -231,27 +220,30 @@ void run_acquisition(RunAcquisitionArgs_t *args)
 
         uint32_t num_events;
         ret = CAEN_DGTZ_GetNumEvents(args->handle, buffer, read_buffer_size, &num_events);
-        check_c_error(ret, "CAEN_DGTZ_GetNumEvents");
+        check_dgtz_error(ret, "CAEN_DGTZ_GetNumEvents");
 
         for (int i = 0; i < num_events; i++)
         {
             CAEN_DGTZ_EventInfo_t event_info;
             char *event_ptr = NULL;
             ret = CAEN_DGTZ_GetEventInfo(args->handle, buffer, read_buffer_size, i, &event_info, &event_ptr);
-            check_c_error(ret, "CAEN_DGTZ_GetEventInfo");
+            check_dgtz_error(ret, "CAEN_DGTZ_GetEventInfo");
 
             ret = CAEN_DGTZ_DecodeEvent(args->handle, event_ptr, (void **)&event16);
-            check_c_error(ret, "CAEN_DGTZ_DecodeEvent");
+            check_dgtz_error(ret, "CAEN_DGTZ_DecodeEvent");
 
             EventDataCopy_t *item_copy = queue_pop_ptr(&g_free_pool_queue);
             if (item_copy == NULL)
             {
+                fprintf(stderr, "ERROR: Failed to allocate event copy!\n");
+                fflush(stderr);
                 continue;
             }
 
             item_copy->is_first_in_block = (i == 0);
             item_copy->event_info = event_info; // Struct copy
 
+            // Copy waveform into the event copy
             for (int ch = 0; ch < CHANNEL_COUNT; ch++)
             {
                 uint32_t ch_size = event16->ChSize[ch];
@@ -263,9 +255,7 @@ void run_acquisition(RunAcquisitionArgs_t *args)
                 }
                 item_copy->ChSize[ch] = ch_size;
                 if (ch_size > 0)
-                {
                     memcpy(item_copy->Waveforms[ch], event16->DataChannel[ch], ch_size * sizeof(uint16_t));
-                }
             }
 
             queue_push_ptr(&g_work_queue, item_copy);

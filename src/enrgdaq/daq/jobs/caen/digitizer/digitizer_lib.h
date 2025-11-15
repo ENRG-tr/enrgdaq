@@ -11,12 +11,10 @@
 typedef struct
 {
     long acq_events;
-    long acq_bytes;
-    long missed_events;
     long acq_samples;
 } AcquisitionStats_t;
 
-typedef void (*waveform_callback_t)(uint8_t *data, size_t len);
+typedef void (*waveform_callback_t)(WaveformSamples_t *samples);
 typedef void (*acquisition_stats_callback_t)(AcquisitionStats_t *stats);
 
 typedef struct EventDataCopy
@@ -31,28 +29,15 @@ typedef struct EventDataCopy
 
 typedef struct
 {
-    waveform_callback_t waveform_callback;
-    int filter_threshold;
-} ProcessingThreadArgs_t;
-
-typedef struct
-{
-    uint32_t total_size; // Total size in bytes
-    uint8_t board_id;
-    uint32_t pattern;
-    uint8_t channel_mask;
-    uint32_t event_counter;
-    uint32_t trigger_time_tag;
-    uint64_t pc_unix_ms_timestamp;
-} EventHeader_t;
-
-typedef struct
-{
-    uint8_t channel;
-    uint16_t sample_index;
-    uint16_t value_lsb;
-    int16_t value_mv;
-} WaveformSample_t;
+    uint32_t len;
+    uint64_t *pc_unix_ms_timestamp;
+    uint32_t *event_counter;
+    uint32_t *trigger_time_tag;
+    uint8_t *channel;
+    uint16_t *sample_index;
+    uint16_t *value_lsb;
+    int16_t *value_mv;
+} WaveformSamples_t;
 typedef struct
 {
     int handle;
@@ -69,7 +54,7 @@ typedef struct
     EventDataCopy_t *event_copy;
     int filter_threshold;
     int *channel_dc_offsets;
-    WaveformSample_t *out_buffer;
+    WaveformSamples_t *out_buffer;
     size_t out_buffer_max_samples;
 } FilterWaveformsArgs_t;
 
