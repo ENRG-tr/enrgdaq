@@ -39,7 +39,8 @@ class DAQJobStore(DAQJob):
             )
         return super().handle_message(message)
 
-    def can_store(self, message: DAQJobMessage) -> bool:
+    @classmethod
+    def can_store(cls, message: DAQJobMessage) -> bool:
         """
         Determines if the given message can be stored based on its configuration.
         Args:
@@ -51,7 +52,7 @@ class DAQJobStore(DAQJob):
         if not isinstance(message, DAQJobMessageStore):
             return False
         is_message_allowed = False
-        for allowed_config_type in self.allowed_store_config_types:
+        for allowed_config_type in cls.allowed_store_config_types:
             if message.store_config.has_store_config(allowed_config_type):
                 is_message_allowed = True
         return is_message_allowed

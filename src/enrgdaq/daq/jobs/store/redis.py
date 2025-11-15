@@ -1,3 +1,4 @@
+import base64
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ from redis.commands.timeseries import TimeSeries
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
+    DAQJobMessageStoreRaw,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
 )
@@ -25,14 +27,14 @@ class DAQJobStoreRedisConfig(DAQJobConfig):
 @dataclass
 class RedisWriteQueueItem:
     store_config: DAQJobStoreConfigRedis
-    data: dict[str, list[Any]]
+    data: dict[str, list[Any]] | bytes
     tag: Optional[str]
 
 
 class DAQJobStoreRedis(DAQJobStore):
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
-    allowed_message_in_types = [DAQJobMessageStoreTabular]
+    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStoreRaw]
 
     _write_queue: deque[RedisWriteQueueItem]
     _last_flush_date: datetime
@@ -61,19 +63,25 @@ class DAQJobStoreRedis(DAQJobStore):
 
         super().start()
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStoreRaw
+    ) -> bool:
         if not super().handle_message(message):
             return False
 
         store_config = cast(DAQJobStoreConfigRedis, message.store_config.redis)
 
         data = {}
-        # Add data to data dict that we can add to Redis
-        for i, row in enumerate(message.keys):
-            data[row] = [x[i] for x in message.data]
-
-        # Append rows to write_queue
-        for row in message.data:
+        if isinstance(message, DAQJobMessageStoreTabular):
+            # Add data to data dict that we can add to Redis
+            for i, row in enumerate(message.keys):
+                data[row] = [x[i] for x in message.data]
+            for row in message.data:
+                self._write_queue.append(
+                    RedisWriteQueueItem(store_config, data, message.tag)
+                )
+        else:
+            data = message.data
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
             )
@@ -94,12 +102,23 @@ class DAQJobStoreRedis(DAQJobStore):
             if msg.store_config.key_expiration_days is not None:
                 key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
+            base_item_key = f"{msg.store_config.key}{msg.tag if msg.tag else ''}"
+            if isinstance(msg.data, bytes):
+                item_key = msg.store_config.key
+                data = base64.b64encode(msg.data).decode("utf-8")
+                self._connection.set(item_key, data, ex=key_expiration)
+                continue
+            if not isinstance(msg.data, dict):
+                self._logger.error(
+                    "msg.data must be a dict or bytes, but got " f"{type(msg.data)}"
+                )
+                continue
+
             batched_adds = []
             # Append item to key in redis
             for item in msg.data.items():
                 key, values = item
-                tag = "" if msg.tag is None else f".{msg.tag}"
-                item_key = f"{msg.store_config.key}{tag}.{key}"
+                item_key = f"{base_item_key}.{key}"
 
                 if not msg.store_config.use_timeseries:
                     # Add date to key if expiration is set

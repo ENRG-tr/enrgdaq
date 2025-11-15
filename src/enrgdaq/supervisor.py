@@ -300,22 +300,30 @@ class Supervisor:
             for process in self.daq_job_processes:
                 daq_job_cls = process.daq_job_cls
                 # Send if message is allowed for this DAQ Job
-                if any(
+                if not any(
                     isinstance(message, msg_type)
                     for msg_type in daq_job_cls.allowed_message_in_types
                 ):
-                    process.message_in.put_nowait(
-                        message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
-                    )
+                    continue
 
-                    # Update stats
-                    stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_cls)
-                    stats.message_in_stats.increase()
+                # Check if message is allowed for store
+                # TODO: Maybe a better way to do this?
+                if issubclass(daq_job_cls, DAQJobStore) and not daq_job_cls.can_store(
+                    message
+                ):
+                    continue
+                process.message_in.put_nowait(
+                    message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
+                )
 
-                    # Do not update stats if Mac OS X, as it does not support queue.qsize()
-                    if sys.platform != "darwin":
-                        stats.message_in_queue_stats.set(process.message_in.qsize())
-                        stats.message_out_queue_stats.set(process.message_out.qsize())
+                # Update stats
+                stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_cls)
+                stats.message_in_stats.increase()
+
+                # Do not update stats if Mac OS X, as it does not support queue.qsize()
+                if sys.platform != "darwin":
+                    stats.message_in_queue_stats.set(process.message_in.qsize())
+                    stats.message_out_queue_stats.set(process.message_out.qsize())
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
