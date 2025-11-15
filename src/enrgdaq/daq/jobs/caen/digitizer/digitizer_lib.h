@@ -5,8 +5,9 @@
 #include "CAENDigitizer.h"
 
 #define CHANNEL_COUNT 8
-#define MAX_SAMPLES_PER_CHANNEL 2048
-#define EVENT_POOL_SIZE 200
+#define MAX_SAMPLES_PER_CHANNEL 1024 * 2
+#define EVENT_POOL_SIZE 1024 * 4
+#define ACQ_BUFFER_SIZE 1024 * 512
 
 typedef struct
 {

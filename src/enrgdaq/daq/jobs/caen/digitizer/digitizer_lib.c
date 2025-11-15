@@ -15,9 +15,6 @@
 static int g_running = 0;
 static int g_is_debug_verbosity = 0;
 
-#define CHANNEL_COUNT 8
-#define ACQ_BUFFER_SIZE 1024 * 512
-
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
 
 ThreadSafeQueue_t g_free_pool_queue;
