@@ -3,10 +3,11 @@ import logging
 import os
 from multiprocessing import Process, Queue
 from pathlib import Path
+from typing import Type
 
 import msgspec
 
-from enrgdaq.daq.base import DAQJobProcess
+from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorConfig
@@ -16,10 +17,28 @@ SUPERVISOR_CONFIG_FILE_PATH = "configs/supervisor.toml"
 daq_job_instance_id = 0
 
 
+def _create_daq_job_process(
+    daq_job_cls: Type[DAQJob],
+    config: DAQJobConfig,
+    supervisor_config: SupervisorConfig,
+) -> DAQJobProcess:
+    global daq_job_instance_id
+    process = DAQJobProcess(
+        daq_job_cls=daq_job_cls,
+        supervisor_config=supervisor_config.clone(),
+        config=config,
+        message_in=Queue(),
+        message_out=Queue(),
+        process=None,
+        instance_id=daq_job_instance_id,
+    )
+    daq_job_instance_id += 1
+    return process
+
+
 def build_daq_job(
     toml_config: bytes, supervisor_config: SupervisorConfig
 ) -> DAQJobProcess:
-    global daq_job_instance_id
     generic_daq_job_config = msgspec.toml.decode(toml_config, type=DAQJobConfig)
     daq_job_class = get_daq_job_class(
         generic_daq_job_config.daq_job_type, warn_deprecated=True
@@ -34,17 +53,17 @@ def build_daq_job(
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
-    process = DAQJobProcess(
-        daq_job_cls=daq_job_class,
-        supervisor_config=supervisor_config.clone(),
-        config=config,
-        message_in=Queue(),
-        message_out=Queue(),
-        process=None,
-        instance_id=daq_job_instance_id,
+    return _create_daq_job_process(daq_job_class, config, supervisor_config)
+
+
+def rebuild_daq_job(
+    daq_job_process: DAQJobProcess, supervisor_config: SupervisorConfig
+) -> DAQJobProcess:
+    return _create_daq_job_process(
+        daq_job_process.daq_job_cls,
+        daq_job_process.config,
+        supervisor_config,
     )
-    daq_job_instance_id += 1
-    return process
 
 
 def load_daq_jobs(

@@ -14,6 +14,7 @@ from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
     SUPERVISOR_CONFIG_FILE_PATH,
     load_daq_jobs,
+    rebuild_daq_job,
     start_daq_job,
     start_daq_jobs,
 )
@@ -36,6 +37,9 @@ DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS = 5
 
 DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS = 1
 """Time in seconds between sending supervisor stats messages."""
+
+DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS = 2
+"""Default time in seconds to wait before restarting a DAQ job."""
 
 
 @dataclass
@@ -194,11 +198,12 @@ class Supervisor:
         for process in dead_processes:
             restart_offset = getattr(process.daq_job_cls, "restart_offset", None)
             if not isinstance(restart_offset, timedelta):
-                restart_offset = timedelta(seconds=0)
-            else:
-                self._logger.info(
-                    f"Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds"
+                restart_offset = timedelta(
+                    seconds=DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS
                 )
+            self._logger.info(
+                f"Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds"
+            )
             res.append(
                 RestartDAQJobSchedule(
                     daq_job_process=process,
@@ -217,13 +222,14 @@ class Supervisor:
         for restart_schedule in self.restart_schedules:
             if datetime.now() < restart_schedule.restart_at:
                 continue
-            self.daq_job_processes.append(
-                start_daq_job(restart_schedule.daq_job_process)
+            new_daq_job_process = rebuild_daq_job(
+                restart_schedule.daq_job_process, self.config
             )
+            self.daq_job_processes.append(start_daq_job(new_daq_job_process))
 
             # Update restart stats
             self.get_daq_job_stats(
-                self.daq_job_stats, restart_schedule.daq_job_process.daq_job_cls
+                self.daq_job_stats, new_daq_job_process.daq_job_cls
             ).restart_stats.increase()
             schedules_to_remove.append(restart_schedule)
 
