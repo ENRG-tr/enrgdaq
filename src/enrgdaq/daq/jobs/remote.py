@@ -68,6 +68,9 @@ class DAQJobRemoteConfig(DAQJobConfig):
     topics: list[str] = []
     zmq_proxy_pub_url: Optional[str] = None
 
+    zmq_router_url: Optional[str] = None
+    zmq_dealer_url: Optional[str] = None
+
 
 class DAQJobRemote(DAQJob):
     """
@@ -143,10 +146,10 @@ class DAQJobRemote(DAQJob):
         if message.remote_config.remote_disable:
             return True
 
-        self._send_remote_message(message)
+        self._send_remote_pub_message(message)
         return True
 
-    def _send_remote_message(self, message: DAQJobMessage):
+    def _send_remote_pub_message(self, message: DAQJobMessage):
         if self._zmq_pub is None:
             return
 
