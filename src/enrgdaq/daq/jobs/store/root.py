@@ -21,12 +21,14 @@ class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
     allowed_message_in_types = [DAQJobMessageStoreTabular]
-    _open_files: dict[str, Any]
+    _open_files: dict[str, uproot.WritableDirectory]
+    _open_trees: dict[str, dict[str, uproot.WritableTree]]
 
     def __init__(self, config: Any, **kwargs):
         super().__init__(config, **kwargs)
 
         self._open_files = {}
+        self._open_trees = {}
 
     def store_loop(self):
         pass
@@ -52,16 +54,19 @@ class DAQJobStoreROOT(DAQJobStore):
             if dir_name:
                 os.makedirs(dir_name, exist_ok=True)
 
-            mode = "recreate" if not os.path.exists(file_path) else "update"
-            root_file = getattr(uproot, mode)(file_path)
+            if os.path.exists(file_path):
+                root_file = uproot.update(file_path)
+            else:
+                root_file = uproot.recreate(file_path)
+
             self._open_files[file_path] = root_file
-            self._logger.info(f"Opened file {file_path}")
+            self._logger.debug(f"Opened file {file_path}")
         else:
             root_file = self._open_files[file_path]
 
         tree_name = store_config.tree_name
 
-        if tree_name not in root_file.keys():
+        if tree_name not in root_file:
             tree = root_file.mktree(
                 tree_name,
                 {
@@ -70,8 +75,18 @@ class DAQJobStoreROOT(DAQJobStore):
                     if isinstance(v, ndarray)
                 },
             )
+            self._logger.debug(f"Created tree {tree_name}")
+            if file_path not in self._open_trees:
+                self._open_trees[file_path] = {}
+            self._open_trees[file_path][tree_name] = tree
         else:
-            tree = root_file[tree_name]
+            if (
+                file_path in self._open_trees
+                and tree_name in self._open_trees[file_path]
+            ):
+                tree = self._open_trees[file_path][tree_name]
+            else:
+                tree = root_file[tree_name]
             assert isinstance(tree, uproot.WritableTree), "Tree is not a WritableTree"
 
         tree.extend(data_to_write)
