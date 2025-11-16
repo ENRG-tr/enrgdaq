@@ -228,6 +228,7 @@ class DAQJobCAENDigitizer(DAQJob):
         ), "waveform_store_config is None"
         waveform_ptr = ct.cast(buffer_ptr, ct.POINTER(WaveformSamplesRaw)).contents
 
+        self._logger.info("sending data")
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.waveform_store_config,

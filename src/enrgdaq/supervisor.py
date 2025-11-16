@@ -314,8 +314,10 @@ class Supervisor:
 
                 # Check if message is allowed for store
                 # TODO: Maybe a better way to do this?
-                if issubclass(daq_job_cls, DAQJobStore) and not daq_job_cls.can_store(
-                    message
+                if (
+                    isinstance(daq_job_cls, type)
+                    and issubclass(daq_job_cls, DAQJobStore)
+                    and not daq_job_cls.can_store(message)
                 ):
                     continue
                 process.message_in.put_nowait(

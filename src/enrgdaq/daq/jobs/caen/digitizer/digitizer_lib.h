@@ -7,7 +7,7 @@
 #define CHANNEL_COUNT 8
 #define MAX_SAMPLES_PER_CHANNEL 1024 * 2
 #define EVENT_POOL_SIZE 1024 * 4
-#define ACQ_BUFFER_SIZE 1024 * 512
+#define ACQ_BUFFER_SIZE 1024 * 1024 * 8
 
 typedef struct
 {

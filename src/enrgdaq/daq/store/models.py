@@ -13,6 +13,7 @@ class DAQJobStoreConfig(Struct, dict=True):
 
     csv: "Optional[DAQJobStoreConfigCSV]" = None
     root: "Optional[DAQJobStoreConfigROOT]" = None
+    hdf5: "Optional[DAQJobStoreConfigHDF5]" = None
     mysql: "Optional[DAQJobStoreConfigMySQL]" = None
     redis: "Optional[DAQJobStoreConfigRedis]" = None
     raw: "Optional[DAQJobStoreConfigRaw]" = None
@@ -170,6 +171,13 @@ class DAQJobStoreConfigRedis(DAQJobStoreConfigBase):
 class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool
+    tree_name: str
+
+
+class DAQJobStoreConfigHDF5(DAQJobStoreConfigBase):
+    file_path: str
+    add_date: bool
+    dataset_name: str
 
 
 class DAQJobStoreConfigMemory(DAQJobStoreConfigBase):

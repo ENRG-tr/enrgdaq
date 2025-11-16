@@ -1,8 +1,8 @@
 import os
 from typing import Any, cast
 
-import numpy as np
 import uproot
+from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
@@ -14,7 +14,7 @@ from enrgdaq.utils.file import modify_file_path
 
 
 class DAQJobStoreROOTConfig(DAQJobConfig):
-    pass
+    out_dir: str = "out/"
 
 
 class DAQJobStoreROOT(DAQJobStore):
@@ -34,41 +34,47 @@ class DAQJobStoreROOT(DAQJobStore):
     def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         super().handle_message(message)
 
-        print(self.message_in.qsize())
+        data_to_write = message.data_columns
+        if not data_to_write:
+            return True
 
         if message.data_columns is None:
-            # Per instructions, only process data_columns for performance.
             return True
 
         store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
+        file_path = os.path.join(self.config.out_dir, file_path)
 
-        if file_path not in self._open_files:
-            # Ensure directory exists to prevent errors
+        if file_path not in self._open_files or self._open_files[file_path].closed:
             dir_name = os.path.dirname(file_path)
             if dir_name:
                 os.makedirs(dir_name, exist_ok=True)
 
-            if not os.path.exists(file_path):
-                root_file = uproot.recreate(file_path)
-            else:
-                root_file = uproot.update(file_path)
+            mode = "recreate" if not os.path.exists(file_path) else "update"
+            root_file = getattr(uproot, mode)(file_path)
             self._open_files[file_path] = root_file
+            self._logger.info(f"Opened file {file_path}")
         else:
             root_file = self._open_files[file_path]
 
-        # For performance, we assume a fixed tree name. This could be made configurable.
-        tree_name = "tree"
+        tree_name = store_config.tree_name
 
-        data_to_write = message.data_columns
+        if tree_name not in root_file.keys():
+            tree = root_file.mktree(
+                tree_name,
+                {
+                    k: v.dtype
+                    for k, v in data_to_write.items()
+                    if isinstance(v, ndarray)
+                },
+            )
+        else:
+            tree = root_file[tree_name]
+            assert isinstance(tree, uproot.WritableTree), "Tree is not a WritableTree"
 
-        rntuple = root_file.mkrntuple(
-            tree_name,
-            data_to_write,
-        )
-        rntuple.extend(data_to_write)
+        tree.extend(data_to_write)
 
         return True
 

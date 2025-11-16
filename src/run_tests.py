@@ -13,7 +13,6 @@ if __name__ == "__main__":
         os.path.join(os.path.dirname(__file__), "tests"), pattern="test_*.py"
     )
     runner = unittest.TextTestRunner()
-    runner.verbosity = 2
     runner.run(suite)
 
     cov.stop()
