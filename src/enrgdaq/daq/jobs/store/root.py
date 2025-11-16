@@ -2,6 +2,7 @@ import os
 from typing import Any, cast
 
 import uproot
+import uproot.compression
 from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig
@@ -11,6 +12,8 @@ from enrgdaq.daq.store.models import (
     DAQJobStoreConfigROOT,
 )
 from enrgdaq.utils.file import modify_file_path
+
+ROOT_ZSTD_COMPRESSION_LEVEL = 5
 
 
 class DAQJobStoreROOTConfig(DAQJobConfig):
@@ -57,7 +60,10 @@ class DAQJobStoreROOT(DAQJobStore):
             if os.path.exists(file_path):
                 root_file = uproot.update(file_path)
             else:
-                root_file = uproot.recreate(file_path)
+                root_file = uproot.recreate(
+                    file_path,
+                    compression=uproot.compression.ZSTD(ROOT_ZSTD_COMPRESSION_LEVEL),
+                )
 
             self._open_files[file_path] = root_file
             self._logger.debug(f"Opened file {file_path}")
