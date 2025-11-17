@@ -35,7 +35,7 @@ class DAQJobCameraConfig(StorableDAQJobConfig):
 
     camera_device_index: int | None = None
     camera_device_name: str | None = None
-    store_interval_seconds: int = 5
+    store_interval_seconds: float = 5
     enable_time_text: bool = True
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
     time_text_background_opacity = 0.7
