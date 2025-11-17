@@ -131,9 +131,6 @@ class DAQJobCamera(DAQJob):
 
         movement_detected = self._detect_movement(frame)
 
-        if not movement_detected:
-            return False
-
         if self.config.enable_time_text:
             frame = self._insert_date_and_time(frame)
 
@@ -147,7 +144,7 @@ class DAQJobCamera(DAQJob):
             )
         )
         self._logger.debug("Image captured and sent")
-        return True
+        return movement_detected
 
     def _insert_date_and_time(self, frame):
         """
