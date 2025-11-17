@@ -15,6 +15,12 @@
 static int g_running = 0;
 static int g_is_debug_verbosity = 0;
 
+const int TTT_PERIOD_NS = 8; // 1 / 125 MHz
+
+const int64_t TTT_FULL_RANGE_TICKS = (1LL << 31);
+const int64_t TTT_ROLLOVER_NS = TTT_FULL_RANGE_TICKS * TTT_PERIOD_NS; // ~17.18s
+const uint32_t TTT_31_BIT_MASK = 0x7FFFFFFF;
+
 EventDataCopy_t g_event_pool[EVENT_POOL_SIZE];
 
 ThreadSafeQueue_t g_free_pool_queue;
@@ -29,16 +35,16 @@ void check_dgtz_error(CAEN_DGTZ_ErrorCode ret, const char *func_name)
     exit(1);
 }
 
+uint64_t get_pc_unix_ms_timestamp()
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (uint64_t)(tv.tv_sec) * 1000 + (uint64_t)(tv.tv_usec) / 1000;
+}
+
 size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 {
     size_t sample_count = 0;
-
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-
-    uint64_t pc_unix_ms_timestamp =
-        (uint64_t)(tv.tv_sec) * 1000 +
-        (uint64_t)(tv.tv_usec) / 1000;
 
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
@@ -56,7 +62,8 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
             uint32_t buf_index = args.out_buffer->len + sample_count;
 
             // Header
-            args.out_buffer->pc_unix_ms_timestamp[buf_index] = pc_unix_ms_timestamp;
+            args.out_buffer->pc_unix_ms_timestamp[buf_index] = args.pc_unix_ms_timestamp;
+            args.out_buffer->real_ns_timestamp[buf_index] = args.real_ns_timestamp_without_sample + i; // i = 1 ns
             args.out_buffer->event_counter[buf_index] = args.event_copy->event_info.EventCounter;
             args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info.TriggerTimeTag;
 
@@ -82,6 +89,7 @@ void *processing_thread_func(void *arg)
 
     WaveformSamples_t acq_buffer = {
         .pc_unix_ms_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
+        .real_ns_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
         .event_counter = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         .trigger_time_tag = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         .channel = malloc(ACQ_BUFFER_SIZE * sizeof(uint8_t)),
@@ -96,6 +104,10 @@ void *processing_thread_func(void *arg)
 
     if (g_is_debug_verbosity)
         fprintf(stdout, "Consumer thread started.\n");
+
+    uint64_t acq_start_time = get_pc_unix_ms_timestamp();
+    uint32_t last_ttt_value = -1;
+    uint64_t rollover_offset_ns = 0;
 
     while (1)
     {
@@ -120,8 +132,22 @@ void *processing_thread_func(void *arg)
             acq_buffer.len = 0;
         }
 
+        uint32_t correct_ttt_value = item->event_info.TriggerTimeTag & TTT_31_BIT_MASK;
+
+        if (last_ttt_value == -1)
+            last_ttt_value = correct_ttt_value;
+
+        int64_t pc_unix_ms_timestamp = get_pc_unix_ms_timestamp();
+
+        if (correct_ttt_value < last_ttt_value)
+            rollover_offset_ns += TTT_ROLLOVER_NS;
+
+        last_ttt_value = correct_ttt_value;
+
+        int64_t real_ns_timestamp_without_sample = (int64_t)correct_ttt_value * TTT_PERIOD_NS + rollover_offset_ns;
+
         size_t sample_count = filter_channel_waveforms(
-            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE});
+            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample});
 
         stats.acq_samples += sample_count;
         acq_buffer.len += sample_count;

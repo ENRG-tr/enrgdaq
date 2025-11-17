@@ -19,6 +19,7 @@ typedef struct
 {
     uint32_t len;
     uint64_t *pc_unix_ms_timestamp;
+    uint64_t *real_ns_timestamp;
     uint32_t *event_counter;
     uint32_t *trigger_time_tag;
     uint8_t *channel;
@@ -58,6 +59,8 @@ typedef struct
     int *channel_dc_offsets;
     WaveformSamples_t *out_buffer;
     size_t out_buffer_max_samples;
+    int64_t pc_unix_ms_timestamp;
+    int64_t real_ns_timestamp_without_sample;
 } FilterWaveformsArgs_t;
 
 void run_acquisition(RunAcquisitionArgs_t *args);

@@ -83,6 +83,7 @@ class WaveformSamplesRaw(ct.Structure):
     _fields_ = [
         ("len", ct.c_uint32),
         ("pc_unix_ms_timestamp", ct.POINTER(ct.c_uint64)),
+        ("real_ns_timestamp", ct.POINTER(ct.c_uint64)),
         ("event_counter", ct.POINTER(ct.c_uint32)),
         ("trigger_time_tag", ct.POINTER(ct.c_uint32)),
         ("channel", ct.POINTER(ct.c_uint8)),
@@ -244,6 +245,9 @@ class DAQJobCAENDigitizer(DAQJob):
                 data_columns={
                     "timestamp": np.ctypeslib.as_array(
                         waveform_ptr.pc_unix_ms_timestamp, shape=(waveform_ptr.len,)
+                    ),
+                    "real_ns_timestamp": np.ctypeslib.as_array(
+                        waveform_ptr.real_ns_timestamp, shape=(waveform_ptr.len,)
                     ),
                     "event_counter": np.ctypeslib.as_array(
                         waveform_ptr.event_counter, shape=(waveform_ptr.len,)
