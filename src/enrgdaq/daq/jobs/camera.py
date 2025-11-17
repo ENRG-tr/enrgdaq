@@ -112,7 +112,6 @@ class DAQJobCamera(DAQJob):
         change_percentage = cv2.countNonZero(thresh) / (
             thresh.shape[0] * thresh.shape[1]
         )
-        self._logger.info(f"Change percentage: {change_percentage:.4f}")
 
         self._previous_frame = gray_frame
 
