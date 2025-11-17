@@ -1,9 +1,10 @@
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
 import cv2
+import numpy as np
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
@@ -40,9 +41,15 @@ class DAQJobCameraConfig(StorableDAQJobConfig):
     store_interval_seconds_no_movement: float = 5
     """The interval in seconds to check for images when there is no movement."""
     enable_time_text: bool = True
+    """Whether to enable the time text overlay."""
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    """The position of the time text on the image."""
     time_text_background_opacity = 0.7
+    """The opacity of the time text overlay."""
     movement_detection_threshold: float = 0.02
+    """The threshold for detecting movement."""
+    movement_detection_frame_width: int = 500
+    """The width of the frame used for movement detection."""
 
 
 class DAQJobCamera(DAQJob):
@@ -86,27 +93,44 @@ class DAQJobCamera(DAQJob):
         assert camera_index is not None, "Camera not found"
         self._cam = cv2.VideoCapture(camera_index)
 
+        last_no_movement_capture_time = datetime.now()
         while True:
             start_time = datetime.now()
-            movement_detected = self.capture_and_process_image()
-            interval = (
-                self.config.store_interval_seconds
-                if movement_detected
-                else self.config.store_interval_seconds_no_movement
-            )
-            sleep_for(interval, start_time)
+            should_capture = False
+            movement_detected = self._detect_movement_from_camera()
+
+            if movement_detected:
+                should_capture = True
+            elif datetime.now() - last_no_movement_capture_time >= timedelta(
+                seconds=self.config.store_interval_seconds_no_movement
+            ):
+                should_capture = True
+                last_no_movement_capture_time = datetime.now()
+
+            if should_capture:
+                self.capture_and_process_image()
+
+            sleep_for(self.config.store_interval_seconds, start_time)
 
     def _detect_movement(self, current_frame: cv2.typing.MatLike) -> bool:
         """Detects movement by comparing the current frame with the previous one."""
-        gray_frame = cv2.cvtColor(current_frame, cv2.COLOR_BGR2GRAY)
-        gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+        aspect_ratio = current_frame.shape[0] / current_frame.shape[1]
+        new_width = self.config.movement_detection_frame_width
+        new_height = int(new_width * aspect_ratio)
+        resized_frame = cv2.resize(current_frame, (new_width, new_height))
+
+        gray_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
+        gray_frame = cv2.GaussianBlur(gray_frame, (7, 7), 0)
 
         if self._previous_frame is None:
             self._previous_frame = gray_frame
             return False
 
         frame_delta = cv2.absdiff(self._previous_frame, gray_frame)
-        thresh = cv2.threshold(frame_delta, 25, 255, cv2.THRESH_BINARY)[1]
+        thresh = cv2.threshold(frame_delta, 30, 255, cv2.THRESH_BINARY)[1]
+        # Dilate the thresholded image to fill in holes
+        kernel = np.ones((3, 3), np.uint8)
+        thresh = cv2.dilate(thresh, kernel, iterations=2)
 
         # The percentage of non-zero pixels in the thresholded image
         change_percentage = cv2.countNonZero(thresh) / (
@@ -121,14 +145,18 @@ class DAQJobCamera(DAQJob):
 
         return movement_detected
 
-    def capture_and_process_image(self) -> bool:
+    def _detect_movement_from_camera(self) -> bool:
+        assert self._cam is not None
+        res, frame = self._cam.read()
+        assert res
+        return self._detect_movement(frame)
+
+    def capture_and_process_image(self):
         assert self._cam is not None
 
         self._logger.debug("Capturing image...")
         res, frame = self._cam.read()
         assert res
-
-        movement_detected = self._detect_movement(frame)
 
         if self.config.enable_time_text:
             frame = self._insert_date_and_time(frame)
@@ -143,7 +171,6 @@ class DAQJobCamera(DAQJob):
             )
         )
         self._logger.debug("Image captured and sent")
-        return movement_detected
 
     def _insert_date_and_time(self, frame):
         """
