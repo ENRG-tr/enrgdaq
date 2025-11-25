@@ -18,6 +18,7 @@ class SupervisorCNCConfig(Struct):
 
     is_server: bool = False
     server_host: str = "localhost"
+    server_port: int = 1638
     rest_api_enabled: bool = False
     rest_api_host: str = "localhost"
     rest_api_port: int = 8000

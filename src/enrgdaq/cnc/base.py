@@ -20,7 +20,7 @@ from enrgdaq.cnc.models import (
 from enrgdaq.cnc.rest import start_rest_api
 from enrgdaq.models import SupervisorCNCConfig
 
-CNC_DEFAULT_PORT = 5555
+CNC_HEARTBEAT_INTERVAL_SECONDS = 1
 
 
 class SupervisorCNC:
@@ -44,7 +44,7 @@ class SupervisorCNC:
         self.config = config
         self.is_server = config.is_server
         self.server_host = config.server_host
-        self.port = CNC_DEFAULT_PORT
+        self.port = config.server_port
 
         self.context = zmq.Context()
         self.poller = zmq.Poller()
@@ -98,8 +98,6 @@ class SupervisorCNC:
             # Send initial heartbeat
             self.send_heartbeat()
 
-        heartbeat_interval = 1
-
         while not self._stop_event.is_set():
             try:
                 socks = dict(self.poller.poll(timeout=100))
@@ -117,7 +115,7 @@ class SupervisorCNC:
             # Send heartbeat periodically if client
             if not self.is_server:
                 current_time = time.time()
-                if current_time - last_heartbeat_time >= heartbeat_interval:
+                if current_time - last_heartbeat_time >= CNC_HEARTBEAT_INTERVAL_SECONDS:
                     self.send_heartbeat()
                     last_heartbeat_time = current_time
 
@@ -289,5 +287,7 @@ def start_supervisor_cnc(
         cnc.start()
         return cnc
     except Exception as e:
-        logging.getLogger(__name__).error(f"Failed to start SupervisorCNC: {e}")
+        logging.getLogger(__name__).error(
+            f"Failed to start SupervisorCNC: {e}", exc_info=True
+        )
         return None

@@ -106,7 +106,7 @@ class Supervisor:
         # Change logging name based on supervisor id
         self._logger.name = f"Supervisor({self.config.info.supervisor_id})"
 
-        if self.config.cnc:
+        if self.config.cnc is not None:
             self._cnc_instance = start_supervisor_cnc(
                 supervisor=self,
                 config=self.config.cnc,

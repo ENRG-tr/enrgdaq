@@ -8,6 +8,7 @@ from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats
 from enrgdaq.daq.models import DAQJobMessage, DAQJobStats
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobMessageStoreTabular
+from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
 from enrgdaq.supervisor import (
     DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS,
     DAQ_JOB_QUEUE_ACTION_TIMEOUT,
@@ -25,9 +26,10 @@ class TestSupervisor(unittest.TestCase):
         self.supervisor = Supervisor()
         self.supervisor.daq_job_stats = {}
         self.supervisor.daq_job_processes = []
-        self.supervisor.config = MagicMock()
+        self.supervisor.config = SupervisorConfig(
+            info=SupervisorInfo(supervisor_id="test"), cnc=None
+        )
         self.supervisor._logger = MagicMock()
-        self.supervisor.config.info = MagicMock()
 
     @patch("enrgdaq.supervisor.start_daq_jobs")
     @patch("enrgdaq.supervisor.load_daq_jobs")
@@ -52,6 +54,7 @@ class TestSupervisor(unittest.TestCase):
     def test_init(self, mock_warn_for_lack_of_daq_jobs, mock_start_daq_job_processes):
         mock_process = MagicMock()
         mock_process.daq_job_cls = MagicMock()
+        self.supervisor.config.cnc = SupervisorCNCConfig()
         mock_start_daq_job_processes.return_value = [mock_process]
 
         self.supervisor.init()

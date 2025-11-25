@@ -39,11 +39,14 @@ class TestCNC(unittest.TestCase):
     def setUp(self):
         self.server_supervisor = MockSupervisor("server", is_server=True)
         self.server_cnc = SupervisorCNC(
-            supervisor=self.server_supervisor, is_server=True
+            supervisor=self.server_supervisor,
+            config=SupervisorCNCConfig(is_server=True),
         )
 
         self.client_supervisor = MockSupervisor("client1")
-        self.client_cnc = SupervisorCNC(supervisor=self.client_supervisor)
+        self.client_cnc = SupervisorCNC(
+            supervisor=self.client_supervisor, config=SupervisorCNCConfig()
+        )
 
         self.mock_logger = MagicMock()
         self.server_cnc._logger = self.mock_logger
@@ -51,8 +54,7 @@ class TestCNC(unittest.TestCase):
 
         self.server_cnc.start()
         self.client_cnc.start()
-        # Wait longer to allow for connection and heartbeat processing
-        time.sleep(1.0)
+        time.sleep(0.5)
 
     def tearDown(self):
         self.server_cnc.stop()
@@ -194,7 +196,9 @@ class TestCNC(unittest.TestCase):
     def test_multiple_clients(self):
         # Set up a second client
         client2_supervisor = MockSupervisor("client2")
-        client2_cnc = SupervisorCNC(supervisor=client2_supervisor)
+        client2_cnc = SupervisorCNC(
+            supervisor=client2_supervisor, config=SupervisorCNCConfig()
+        )
         client2_cnc._logger = self.mock_logger
         client2_cnc.start()
         try:
