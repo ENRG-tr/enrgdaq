@@ -1,0 +1,6 @@
+[info]
+supervisor_id = "cnc-server"
+
+[cnc]
+is_server = true
+rest_api_enabled = true

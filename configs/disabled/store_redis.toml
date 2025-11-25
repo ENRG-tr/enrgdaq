@@ -1,4 +1,6 @@
 daq_job_type = "DAQJobStoreRedis"
+verbosity = "DEBUG"
+
 
 host = "127.0.0.1"
 # password = "password"

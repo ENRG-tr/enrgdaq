@@ -21,6 +21,8 @@ dependencies = [
     "h5py>=3.11.0",
     "lywsd03mmc-client",
     "lz4>=4.3.3",
+    "fastapi>=0.111.1",
+    "uvicorn>=0.30.3",
 ]
 
 [dependency-groups]

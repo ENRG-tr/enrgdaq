@@ -9,6 +9,11 @@ from typing import Optional
 
 import msgspec
 
+from enrgdaq.cnc.base import (
+    SupervisorCNC,
+    start_supervisor_cnc,
+)
+from enrgdaq.cnc.models import SupervisorStatus
 from enrgdaq.daq.alert.base import DAQJobAlert
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
@@ -27,7 +32,11 @@ from enrgdaq.daq.models import (
     DAQJobStats,
 )
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.models import SupervisorConfig, SupervisorInfo
+from enrgdaq.models import (
+    RestartScheduleInfo,
+    SupervisorConfig,
+    SupervisorInfo,
+)
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -68,6 +77,7 @@ class Supervisor:
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
+    _cnc_instance: Optional[SupervisorCNC] = None
 
     _last_stats_message_time: datetime
     _last_heartbeat_message_time: datetime
@@ -95,6 +105,12 @@ class Supervisor:
 
         # Change logging name based on supervisor id
         self._logger.name = f"Supervisor({self.config.info.supervisor_id})"
+
+        if self.config.cnc:
+            self._cnc_instance = start_supervisor_cnc(
+                supervisor=self,
+                config=self.config.cnc,
+            )
 
         self.restart_schedules = []
         self.daq_job_processes = self.start_daq_job_processes(self._daq_jobs_to_load)
@@ -125,11 +141,19 @@ class Supervisor:
                 self.loop()
             except KeyboardInterrupt:
                 self._logger.warning("KeyboardInterrupt received, cleaning up")
-                for daq_job_thread in self.daq_job_processes:
-                    daq_job_thread.message_out.put(
-                        DAQJobMessageStop(reason="KeyboardInterrupt")
-                    )
+                self.stop()
                 break
+
+    def stop(self):
+        """
+        Stops the supervisor and all its components.
+        """
+        if self._cnc_instance:
+            self._cnc_instance.stop()
+        for daq_job_thread in self.daq_job_processes:
+            daq_job_thread.message_out.put(
+                DAQJobMessageStop(reason="KeyboardInterrupt")
+            )
 
     def loop(self):
         """
@@ -162,6 +186,27 @@ class Supervisor:
 
         # Send messages to appropriate DAQ Jobs
         self.send_messages_to_daq_jobs(daq_messages_out)
+
+    def get_status(self) -> SupervisorStatus:
+        """
+        Gets the status of the supervisor and its DAQ jobs.
+
+        Returns:
+            SupervisorStatus: A struct containing the status.
+        """
+        assert self.config is not None
+        return SupervisorStatus(
+            supervisor_info=self.config.info,
+            daq_job_stats=self.daq_job_stats,
+            daq_job_remote_stats=self.daq_job_remote_stats,
+            restart_schedules=[
+                RestartScheduleInfo(
+                    job=sched.daq_job_process.daq_job_cls.__name__,
+                    restart_at=sched.restart_at.isoformat(),
+                )
+                for sched in self.restart_schedules
+            ],
+        )
 
     def handle_process_alive_stats(self, dead_processes: list[DAQJobProcess]):
         """

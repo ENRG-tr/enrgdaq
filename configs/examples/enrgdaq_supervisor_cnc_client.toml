@@ -1,0 +1,6 @@
+[info]
+supervisor_id = "cnc-client-1"
+
+[cnc]
+is_server = false
+server_host = "localhost"
