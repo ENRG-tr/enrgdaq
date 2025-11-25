@@ -68,9 +68,6 @@ class DAQJobRemoteConfig(DAQJobConfig):
     topics: list[str] = []
     zmq_proxy_pub_url: Optional[str] = None
 
-    zmq_router_url: Optional[str] = None
-    zmq_dealer_url: Optional[str] = None
-
 
 class DAQJobRemote(DAQJob):
     """
@@ -165,9 +162,9 @@ class DAQJobRemote(DAQJob):
         self._zmq_pub.send_multipart([remote_topic_bytes, packed_message])
 
         # Update remote stats
-        if self._supervisor_config:
+        if self._supervisor_info:
             self._remote_stats[
-                self._supervisor_config.supervisor_id
+                self._supervisor_info.supervisor_id
             ].update_message_out_stats(len(packed_message) + len(remote_topic_bytes))
 
         self._logger.debug(
@@ -193,8 +190,8 @@ class DAQJobRemote(DAQJob):
             topics_to_subscribe = [DEFAULT_REMOTE_TOPIC]
             topics_to_subscribe.extend(self.config.topics)
             # Subscribe to the supervisor id if we have it
-            if self.info.supervisor_config is not None:
-                topics_to_subscribe.append(self.info.supervisor_config.supervisor_id)
+            if self.info.supervisor_info is not None:
+                topics_to_subscribe.append(self.info.supervisor_info.supervisor_id)
             for topic in topics_to_subscribe:
                 zmq_sub.subscribe(topic)
 
@@ -224,10 +221,10 @@ class DAQJobRemote(DAQJob):
                 continue
             if (
                 recv_message.daq_job_info is not None
-                and recv_message.daq_job_info.supervisor_config is not None
-                and self.info.supervisor_config is not None
-                and recv_message.daq_job_info.supervisor_config.supervisor_id
-                == self.info.supervisor_config.supervisor_id
+                and recv_message.daq_job_info.supervisor_info is not None
+                and self.info.supervisor_info is not None
+                and recv_message.daq_job_info.supervisor_info.supervisor_id
+                == self.info.supervisor_info.supervisor_id
             ):
                 self._logger.warning(
                     f"Received own message '{type(recv_message).__name__}' on topic '{topic.decode()}', ignoring message. This should NOT happen. Check the config."
@@ -241,16 +238,13 @@ class DAQJobRemote(DAQJob):
             self.message_out.put(recv_message)
 
             # Update remote stats
-            if self._supervisor_config:
+            if self._supervisor_info:
                 self._remote_stats[
-                    self._supervisor_config.supervisor_id
+                    self._supervisor_info.supervisor_id
                 ].update_message_in_stats(len(message))
-            if (
-                recv_message.daq_job_info
-                and recv_message.daq_job_info.supervisor_config
-            ):
+            if recv_message.daq_job_info and recv_message.daq_job_info.supervisor_info:
                 self._remote_stats[
-                    recv_message.daq_job_info.supervisor_config.supervisor_id
+                    recv_message.daq_job_info.supervisor_info.supervisor_id
                 ].update_message_out_stats(len(message))
 
     def _start_send_remote_stats_thread(self):

@@ -10,7 +10,7 @@ import msgspec
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.types import get_daq_job_class
-from enrgdaq.models import SupervisorConfig
+from enrgdaq.models import SupervisorInfo
 
 SUPERVISOR_CONFIG_FILE_PATH = "configs/supervisor.toml"
 
@@ -22,12 +22,12 @@ DAQ_JOB_PROCESS_QUEUE_MAX_SIZE = 100
 def _create_daq_job_process(
     daq_job_cls: Type[DAQJob],
     config: DAQJobConfig,
-    supervisor_config: SupervisorConfig,
+    supervisor_info: SupervisorInfo,
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(
         daq_job_cls=daq_job_cls,
-        supervisor_config=supervisor_config.clone(),
+        supervisor_info=supervisor_info,
         config=config,
         message_in=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
         message_out=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
@@ -38,9 +38,7 @@ def _create_daq_job_process(
     return process
 
 
-def build_daq_job(
-    toml_config: bytes, supervisor_config: SupervisorConfig
-) -> DAQJobProcess:
+def build_daq_job(toml_config: bytes, supervisor_info: SupervisorInfo) -> DAQJobProcess:
     generic_daq_job_config = msgspec.toml.decode(toml_config, type=DAQJobConfig)
     daq_job_class = get_daq_job_class(
         generic_daq_job_config.daq_job_type, warn_deprecated=True
@@ -55,21 +53,21 @@ def build_daq_job(
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
-    return _create_daq_job_process(daq_job_class, config, supervisor_config)
+    return _create_daq_job_process(daq_job_class, config, supervisor_info)
 
 
 def rebuild_daq_job(
-    daq_job_process: DAQJobProcess, supervisor_config: SupervisorConfig
+    daq_job_process: DAQJobProcess, supervisor_info: SupervisorInfo
 ) -> DAQJobProcess:
     return _create_daq_job_process(
         daq_job_process.daq_job_cls,
         daq_job_process.config,
-        supervisor_config,
+        supervisor_info,
     )
 
 
 def load_daq_jobs(
-    job_config_dir: str, supervisor_config: SupervisorConfig
+    job_config_dir: str, supervisor_info: SupervisorInfo
 ) -> list[DAQJobProcess]:
     jobs = []
     job_files = glob.glob(os.path.join(job_config_dir, "*.toml"))
@@ -81,7 +79,7 @@ def load_daq_jobs(
         with open(job_file, "rb") as f:
             job_config_raw = f.read()
 
-        jobs.append(build_daq_job(job_config_raw, supervisor_config))
+        jobs.append(build_daq_job(job_config_raw, supervisor_info))
 
     return jobs
 

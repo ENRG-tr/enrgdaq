@@ -18,7 +18,7 @@ from enrgdaq.daq.models import (
     LogVerbosity,
 )
 from enrgdaq.daq.store.models import DAQJobMessageStore
-from enrgdaq.models import SupervisorConfig
+from enrgdaq.models import SupervisorInfo
 
 
 class DAQJob:
@@ -54,7 +54,7 @@ class DAQJob:
     def __init__(
         self,
         config: Any,
-        supervisor_config: Optional[SupervisorConfig] = None,
+        supervisor_info: Optional[SupervisorInfo] = None,
         instance_id: Optional[int] = None,
         message_in: Optional["Queue[DAQJobMessage]"] = None,
         message_out: Optional["Queue[DAQJobMessage]"] = None,
@@ -79,10 +79,10 @@ class DAQJob:
         self._has_been_freed = False
         self.unique_id = str(uuid.uuid4())
 
-        if supervisor_config is not None:
-            self._supervisor_config = supervisor_config
+        if supervisor_info is not None:
+            self._supervisor_info = supervisor_info
         else:
-            self._supervisor_config = None
+            self._supervisor_info = None
         self.info = self._create_info()
         self._logger.debug(f"DAQ job {self.info.unique_id} created")
 
@@ -136,9 +136,9 @@ class DAQJob:
             )
         # Drop remote messages silently if configured to do so
         if self.config.remote_config.drop_remote_messages:
-            if message.daq_job_info and message.daq_job_info.supervisor_config:
+            if message.daq_job_info and message.daq_job_info.supervisor_info:
                 remote_supervisor_id = (
-                    message.daq_job_info.supervisor_config.supervisor_id
+                    message.daq_job_info.supervisor_info.supervisor_id
                 )
             else:
                 remote_supervisor_id = "unknown"
@@ -166,7 +166,7 @@ class DAQJob:
             daq_job_class_name=type(self).__name__,
             unique_id=self.unique_id,
             instance_id=self.instance_id,
-            supervisor_config=getattr(self, "_supervisor_config", None),
+            supervisor_info=getattr(self, "_supervisor_config", None),
         )
 
     def _put_message_out(self, message: DAQJobMessage):
@@ -206,8 +206,8 @@ class DAQJob:
 
     @property
     def supervisor_id(self):
-        assert self.info.supervisor_config is not None
-        return self.info.supervisor_config.supervisor_id
+        assert self.info.supervisor_info is not None
+        return self.info.supervisor_info.supervisor_id
 
     def free(self):
         if self._has_been_freed:
@@ -218,7 +218,7 @@ class DAQJob:
 
 class DAQJobProcess(msgspec.Struct, kw_only=True):
     daq_job_cls: type[DAQJob]
-    supervisor_config: SupervisorConfig
+    supervisor_info: SupervisorInfo
     config: DAQJobConfig
     message_in: "Queue[DAQJobMessage]"
     message_out: "Queue[DAQJobMessage]"
@@ -229,7 +229,7 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     def start(self):
         instance = self.daq_job_cls(
             self.config,
-            supervisor_config=self.supervisor_config,
+            supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
             message_in=self.message_in,
             message_out=self.message_out,

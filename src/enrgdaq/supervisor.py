@@ -2,7 +2,6 @@ import logging
 import os
 import platform
 import sys
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty, Full
@@ -28,7 +27,7 @@ from enrgdaq.daq.models import (
     DAQJobStats,
 )
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.models import SupervisorConfig
+from enrgdaq.models import SupervisorConfig, SupervisorInfo
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -41,6 +40,9 @@ DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS = 1
 
 DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS = 2
 """Default time in seconds to wait before restarting a DAQ job."""
+
+DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS = 1
+"""Time in seconds between sending supervisor heartbeat messages."""
 
 
 @dataclass
@@ -68,6 +70,7 @@ class Supervisor:
     _logger: logging.Logger
 
     _last_stats_message_time: datetime
+    _last_heartbeat_message_time: datetime
 
     def __init__(
         self,
@@ -91,7 +94,7 @@ class Supervisor:
             self.config = self._load_supervisor_config()
 
         # Change logging name based on supervisor id
-        self._logger.name = f"Supervisor({self.config.supervisor_id})"
+        self._logger.name = f"Supervisor({self.config.info.supervisor_id})"
 
         self.restart_schedules = []
         self.daq_job_processes = self.start_daq_job_processes(self._daq_jobs_to_load)
@@ -100,9 +103,8 @@ class Supervisor:
         }
         self.warn_for_lack_of_daq_jobs()
 
-        self._last_stats_message_time = datetime.now() - timedelta(
-            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
-        )
+        self._last_stats_message_time = datetime.min
+        self._last_heartbeat_message_time = datetime.min
 
     def start_daq_job_processes(
         self, daq_jobs_to_load: Optional[list[DAQJobProcess]] = None
@@ -111,7 +113,7 @@ class Supervisor:
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
         return start_daq_jobs(
-            daq_jobs_to_load or load_daq_jobs("configs/", self.config)
+            daq_jobs_to_load or load_daq_jobs("configs/", self.config.info)
         )
 
     def run(self):
@@ -224,7 +226,7 @@ class Supervisor:
             if datetime.now() < restart_schedule.restart_at:
                 continue
             new_daq_job_process = rebuild_daq_job(
-                restart_schedule.daq_job_process, self.config
+                restart_schedule.daq_job_process, self.config.info
             )
             self.daq_job_processes.append(start_daq_job(new_daq_job_process))
 
@@ -260,6 +262,18 @@ class Supervisor:
                     daq_job_info=self._get_supervisor_daq_job_info(),
                 )
             )
+        # Send heartbeat message, targeted at the remote
+        """
+        if datetime.now() > self._last_heartbeat_message_time + timedelta(
+            seconds=DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS
+        ):
+            self._last_heartbeat_message_time = datetime.now()
+            messages.append(
+                DAQJobMessageHeartbeat(
+                    daq_job_info=self._get_supervisor_daq_job_info(),
+                )
+            )
+        """
         return messages
 
     def get_daq_job_stats(
@@ -284,7 +298,7 @@ class Supervisor:
                     # TODO: These should be in a different class
                     if (
                         isinstance(msg, DAQJobMessageStatsRemote)
-                        and msg.supervisor_id == self.config.supervisor_id
+                        and msg.supervisor_id == self.config.info.supervisor_id
                     ):
                         self.daq_job_remote_stats = msg.stats
                     # Update stats
@@ -361,7 +375,7 @@ class Supervisor:
             self._logger.warning(
                 f"No supervisor config file found at '{SUPERVISOR_CONFIG_FILE_PATH}', using default config"
             )
-            return SupervisorConfig(supervisor_id=platform.node())
+            return SupervisorConfig(info=SupervisorInfo(supervisor_id=platform.node()))
 
         with open(SUPERVISOR_CONFIG_FILE_PATH, "rb") as f:
             return msgspec.toml.decode(f.read(), type=SupervisorConfig)
@@ -371,7 +385,7 @@ class Supervisor:
         return DAQJobInfo(
             daq_job_type="Supervisor",
             daq_job_class_name="Supervisor",
-            supervisor_config=self.config,
-            unique_id=self.config.supervisor_id,
+            supervisor_info=self.config.info,
+            unique_id=self.config.info.supervisor_id,
             instance_id=0,
         )

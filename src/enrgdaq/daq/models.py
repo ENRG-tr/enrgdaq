@@ -7,7 +7,7 @@ from typing import Optional
 
 from msgspec import Struct, field
 
-from enrgdaq.models import SupervisorConfig
+from enrgdaq.models import SupervisorInfo
 
 DEFAULT_REMOTE_TOPIC = "DAQ"
 
@@ -52,7 +52,7 @@ class DAQJobInfo:
     daq_job_class_name: str  # has type(self).__name__
     unique_id: str
     instance_id: int
-    supervisor_config: Optional[SupervisorConfig] = None
+    supervisor_info: Optional[SupervisorInfo] = None
 
     @staticmethod
     def mock() -> "DAQJobInfo":
@@ -61,7 +61,7 @@ class DAQJobInfo:
             daq_job_class_name="mock",
             unique_id="mock",
             instance_id=0,
-            supervisor_config=SupervisorConfig(supervisor_id="mock"),
+            supervisor_info=SupervisorInfo(supervisor_id="mock"),
         )
 
 
@@ -115,14 +115,18 @@ class DAQJobMessage(Struct, kw_only=True):
 
     @property
     def supervisor_id(self) -> str:
-        if self.daq_job_info is None or self.daq_job_info.supervisor_config is None:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return "unknown"
 
-        return self.daq_job_info.supervisor_config.supervisor_id
+        return self.daq_job_info.supervisor_info.supervisor_id
 
 
 class DAQJobMessageStop(DAQJobMessage):
     reason: str
+
+
+class DAQJobMessageHeartbeat(DAQJobMessage):
+    pass
 
 
 class DAQJobStatsRecord(Struct):

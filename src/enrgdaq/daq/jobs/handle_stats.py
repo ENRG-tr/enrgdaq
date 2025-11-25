@@ -71,7 +71,7 @@ class DAQJobHandleStats(DAQJob):
             return False
 
         # Ignore if the message has no supervisor info
-        if not message.daq_job_info or not message.daq_job_info.supervisor_config:
+        if not message.daq_job_info or not message.daq_job_info.supervisor_info:
             return True
 
         if isinstance(message, DAQJobMessageStats):
@@ -145,11 +145,11 @@ class DAQJobHandleStats(DAQJob):
         # Combine remote stats from all supervisors
         remote_stats_combined = defaultdict(lambda: SupervisorRemoteStats())
         if (
-            self._supervisor_config
-            and self._supervisor_config.supervisor_id in self._remote_stats
+            self._supervisor_info
+            and self._supervisor_info.supervisor_id in self._remote_stats
         ):
             for supervisor_id, remote_stats in self._remote_stats[
-                self._supervisor_config.supervisor_id
+                self._supervisor_info.supervisor_id
             ].items():
                 remote_stats_combined[supervisor_id] = remote_stats
 
@@ -162,8 +162,8 @@ class DAQJobHandleStats(DAQJob):
                 # Skip if the remote supervisor id is the same as the local supervisor id or
                 # other supervisors try to overwrite other supervisors
                 if supervisor_id != remote_supervisor_id or (
-                    self._supervisor_config
-                    and self._supervisor_config.supervisor_id == remote_supervisor_id
+                    self._supervisor_info
+                    and self._supervisor_info.supervisor_id == remote_supervisor_id
                 ):
                     continue
                 # Convert the supervisor remote stats to a dict

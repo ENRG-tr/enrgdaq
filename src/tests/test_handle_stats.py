@@ -11,7 +11,7 @@ from enrgdaq.daq.jobs.handle_stats import (
 from enrgdaq.daq.jobs.remote import SupervisorRemoteStats
 from enrgdaq.daq.jobs.test_job import DAQJobTest
 from enrgdaq.daq.models import DAQJobInfo, DAQJobStats
-from enrgdaq.models import SupervisorConfig
+from enrgdaq.models import SupervisorInfo
 
 
 class TestDAQJobHandleStats(unittest.TestCase):
@@ -93,7 +93,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
             },
         }
 
-        self.daq_job_handle_stats._supervisor_config = SupervisorConfig(
+        self.daq_job_handle_stats._supervisor_info = SupervisorInfo(
             supervisor_id="remote_1"
         )
         self.daq_job_handle_stats._save_remote_stats()

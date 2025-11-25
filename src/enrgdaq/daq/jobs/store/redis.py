@@ -107,6 +107,7 @@ class DAQJobStoreRedis(DAQJobStore):
                 item_key = msg.store_config.key
                 data = base64.b64encode(msg.data).decode("utf-8")
                 self._connection.set(item_key, data, ex=key_expiration)
+                self._logger.debug(f"Added {len(data)} bytes to {item_key}")
                 continue
             if not isinstance(msg.data, dict):
                 self._logger.error(
@@ -131,6 +132,8 @@ class DAQJobStoreRedis(DAQJobStore):
                     # Set expiration if it was newly created
                     if not item_exists and key_expiration is not None:
                         self._connection.expire(item_key, key_expiration)
+
+                    self._logger.debug(f"Added {len(values)} values to {item_key}")
                     continue
 
                 # Save it via Redis TimeSeries

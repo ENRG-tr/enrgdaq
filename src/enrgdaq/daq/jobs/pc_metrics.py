@@ -75,7 +75,7 @@ class DAQJobPCMetrics(DAQJob):
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.store_config,
-                tag=self._supervisor_config.supervisor_id,
+                tag=self._supervisor_info.supervisor_id,
                 keys=keys,
                 data=[values],
             )

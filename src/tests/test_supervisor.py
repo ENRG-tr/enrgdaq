@@ -27,6 +27,7 @@ class TestSupervisor(unittest.TestCase):
         self.supervisor.daq_job_processes = []
         self.supervisor.config = MagicMock()
         self.supervisor._logger = MagicMock()
+        self.supervisor.config.info = MagicMock()
 
     @patch("enrgdaq.supervisor.start_daq_jobs")
     @patch("enrgdaq.supervisor.load_daq_jobs")
@@ -39,7 +40,10 @@ class TestSupervisor(unittest.TestCase):
         self.supervisor.daq_job_stats = {}
         self.supervisor.daq_job_processes = []
 
-        mock_load_daq_jobs.assert_called_once_with("configs/", self.supervisor.config)
+        assert self.supervisor.config
+        mock_load_daq_jobs.assert_called_once_with(
+            "configs/", self.supervisor.config.info
+        )
         mock_start_daq_jobs.assert_called_once_with(["job1", "job2"])
         self.assertEqual(result, ["thread1", "thread2"])
 
