@@ -3,7 +3,6 @@ from typing import Optional
 
 from enrgdaq.daq.alert.alert_slack import DAQJobAlertSlack
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.jobs.caen.n1081b import DAQJobN1081B
 from enrgdaq.daq.jobs.handle_alerts import DAQJobHandleAlerts
 from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats
 from enrgdaq.daq.jobs.healthcheck import DAQJobHealthcheck
@@ -20,7 +19,6 @@ def get_all_daq_job_types():
 
 
 DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
-    "n1081b": DAQJobN1081B,
     "test": DAQJobTest,
     "store_csv": DAQJobStoreCSV,
     "store_root": DAQJobStoreROOT,

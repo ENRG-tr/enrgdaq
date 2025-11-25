@@ -63,7 +63,7 @@ class DAQJob:
             coloredlogs.install(
                 level=logging.DEBUG,
                 datefmt="%Y-%m-%d %H:%M:%S",
-                fmt="%(asctime)s %(hostname)s %(name)s %(levelname)s %(message)s",
+                fmt="%(asctime)s.%(msecs)03d %(hostname)s %(name)s %(levelname)s %(message)s",
             )
         global daq_job_instance_id, daq_job_instance_id_lock
 
@@ -192,10 +192,10 @@ class DAQJob:
             try:
                 msg_json = msgspec.json.encode(message)
             except Exception:
-                msg_json = {"error": "failed to encode message", "message": message}
-            if self.config.verbosity == LogVerbosity.DEBUG and len(msg_json) < 1024:
+                msg_json = str(message)
+            if self.config.verbosity == LogVerbosity.DEBUG:
                 if len(msg_json) > 1024:
-                    self._logger.debug("Message out")
+                    self._logger.debug(f"Message out with {message.remote_config}")
                 else:
                     self._logger.debug(f"Message out: {msg_json}")
         self.message_out.put(message)

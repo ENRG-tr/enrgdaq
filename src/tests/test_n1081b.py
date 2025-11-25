@@ -1,9 +1,16 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from websocket import WebSocket
+try:
+    from enrgdaq.daq.jobs.caen.n1081b import (
+        DAQJobN1081B,
+        DAQJobN1081BConfig,
+        N1081BPatched,
+        WebSocket,
+    )
+except Exception:
+    raise unittest.SkipTest("N1081B module not installed, skipping tests for it...")
 
-from enrgdaq.daq.jobs.caen.n1081b import DAQJobN1081B, DAQJobN1081BConfig, N1081BPatched
 from enrgdaq.daq.store.models import DAQJobMessageStore
 
 
@@ -65,7 +72,11 @@ class TestDAQJobN1081B(unittest.TestCase):
     @patch.object(DAQJobN1081B, "_connect_to_device")
     @patch.object(DAQJobN1081B, "_is_connected", side_effect=[False, True])
     def test_start(
-        self, mock_is_connected, mock_connect_to_device, mock_poll_sections, mock_sleep
+        self,
+        mock_is_connected,
+        mock_connect_to_device,
+        mock_poll_sections,
+        mock_sleep,
     ):
         with self.assertRaises(StopIteration):
             self.daq_job.start()

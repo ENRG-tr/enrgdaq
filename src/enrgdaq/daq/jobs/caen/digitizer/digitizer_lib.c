@@ -62,15 +62,15 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
             uint32_t buf_index = args.out_buffer->len + sample_count;
 
             // Header
-            args.out_buffer->pc_unix_ms_timestamp[buf_index] = args.pc_unix_ms_timestamp;
+            // args.out_buffer->pc_unix_ms_timestamp[buf_index] = args.pc_unix_ms_timestamp;
             args.out_buffer->real_ns_timestamp[buf_index] = args.real_ns_timestamp_without_sample + i; // i = 1 ns
             args.out_buffer->event_counter[buf_index] = args.event_copy->event_info.EventCounter;
-            args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info.TriggerTimeTag;
+            // args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info.TriggerTimeTag;
 
             args.out_buffer->channel[buf_index] = (uint8_t)ch;
             args.out_buffer->sample_index[buf_index] = (uint16_t)i;
-            args.out_buffer->value_lsb[buf_index] = args.event_copy->Waveforms[ch][i];
-            // we're using vx1751 which is 1 v_pp, which is represented using uint16, so we need to map it
+            // args.out_buffer->value_lsb[buf_index] = args.event_copy->Waveforms[ch][i];
+            //  we're using vx1751 which is 1 v_pp, which is represented using uint16, so we need to map it
             float normalized_value_lsb = (float)args.event_copy->Waveforms[ch][i] / 1023.0;
             float dc_offset_diff = 0; // todo: change this // (float)(65535 - args.channel_dc_offsets[ch]) / 65535.0;
             args.out_buffer->value_mv[buf_index] = (int16_t)((normalized_value_lsb - dc_offset_diff) * 1000.0);
@@ -88,13 +88,13 @@ void *processing_thread_func(void *arg)
     RunAcquisitionArgs_t *args = (RunAcquisitionArgs_t *)arg;
 
     WaveformSamples_t acq_buffer = {
-        .pc_unix_ms_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
+        //.pc_unix_ms_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
         .real_ns_timestamp = malloc(ACQ_BUFFER_SIZE * sizeof(uint64_t)),
         .event_counter = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
-        .trigger_time_tag = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
+        //.trigger_time_tag = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         .channel = malloc(ACQ_BUFFER_SIZE * sizeof(uint8_t)),
         .sample_index = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
-        .value_lsb = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
+        //.value_lsb = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
         .value_mv = malloc(ACQ_BUFFER_SIZE * sizeof(int16_t)),
         .len = 0};
 
@@ -165,11 +165,11 @@ void *processing_thread_func(void *arg)
     fprintf(stdout, "Consumer thread shutting down.\n");
     free(acq_buffer.channel);
     free(acq_buffer.sample_index);
-    free(acq_buffer.value_lsb);
+    // free(acq_buffer.value_lsb);
     free(acq_buffer.value_mv);
-    free(acq_buffer.pc_unix_ms_timestamp);
+    // free(acq_buffer.pc_unix_ms_timestamp);
     free(acq_buffer.event_counter);
-    free(acq_buffer.trigger_time_tag);
+    // free(acq_buffer.trigger_time_tag);
     return NULL;
 }
 

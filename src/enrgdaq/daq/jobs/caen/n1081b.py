@@ -1,7 +1,11 @@
 import time
 
-from N1081B import N1081B
-from websocket import WebSocket, create_connection
+try:
+    from N1081B import N1081B
+    from websocket import WebSocket, create_connection
+except Exception:
+    raise
+
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage

@@ -1,4 +1,6 @@
 import os
+import time
+from queue import Empty
 from typing import Any, cast
 
 import uproot
@@ -13,7 +15,13 @@ from enrgdaq.daq.store.models import (
 )
 from enrgdaq.utils.file import modify_file_path
 
-ROOT_ZSTD_COMPRESSION_LEVEL = 5
+ROOT_ZSTD_COMPRESSION_LEVEL = 1
+ROOT_COMPRESSION_TYPES = {
+    "ZSTD": uproot.compression.ZSTD,
+    "LZ4": uproot.compression.LZ4,
+    "ZLIB": uproot.compression.ZLIB,
+    "LZMA": uproot.compression.LZMA,
+}
 
 
 class DAQJobStoreROOTConfig(DAQJobConfig):
@@ -33,8 +41,27 @@ class DAQJobStoreROOT(DAQJobStore):
         self._open_files = {}
         self._open_trees = {}
 
-    def store_loop(self):
-        pass
+    def start(self):
+        messages = []
+        while True:
+            start_time = time.time()
+            try:
+                message = self.message_in.get_nowait()
+                self._logger.debug(
+                    f"Took {time.time() - start_time} seconds to get message"
+                )
+                if not DAQJobStoreROOT.can_handle_message(message):
+                    continue
+                messages.append(message)
+            except Empty:
+                continue
+
+            if len(messages) == 0:
+                time.sleep(0.001)
+                continue
+            for message in messages:
+                self.handle_message(message)  # type: ignore
+            messages.clear()
 
     def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         super().handle_message(message)
@@ -62,7 +89,9 @@ class DAQJobStoreROOT(DAQJobStore):
             else:
                 root_file = uproot.recreate(
                     file_path,
-                    compression=uproot.compression.ZSTD(ROOT_ZSTD_COMPRESSION_LEVEL),
+                    compression=ROOT_COMPRESSION_TYPES[store_config.compression_type](
+                        level=store_config.compression_level
+                    ),
                 )
 
             self._open_files[file_path] = root_file
@@ -95,7 +124,11 @@ class DAQJobStoreROOT(DAQJobStore):
                 tree = root_file[tree_name]
             assert isinstance(tree, uproot.WritableTree), "Tree is not a WritableTree"
 
+        start_time = time.time()
         tree.extend(data_to_write)
+        self._logger.debug(
+            f"Wrote {len(data_to_write)} rows to tree {tree_name} in {time.time() - start_time} seconds"
+        )
 
         return True
 

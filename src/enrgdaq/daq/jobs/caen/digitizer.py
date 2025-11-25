@@ -1,8 +1,10 @@
 # pyright: reportPrivateImportUsage=false
 import ctypes as ct
+import io
 import os
 import subprocess
 import threading
+import time
 from datetime import timedelta
 from typing import Literal, Optional
 
@@ -21,12 +23,12 @@ except Exception:
     dgtz.ConnectionType = {}
     dgtz.Device = None
     dgtz.BoardInfo = None
+import lz4.frame
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobConfig, LogVerbosity
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreRaw,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
 )
@@ -56,6 +58,8 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
@@ -82,13 +86,13 @@ class RunAcquisitionArgs(ct.Structure):
 class WaveformSamplesRaw(ct.Structure):
     _fields_ = [
         ("len", ct.c_uint32),
-        ("pc_unix_ms_timestamp", ct.POINTER(ct.c_uint64)),
+        # ("pc_unix_ms_timestamp", ct.POINTER(ct.c_uint64)),
         ("real_ns_timestamp", ct.POINTER(ct.c_uint64)),
         ("event_counter", ct.POINTER(ct.c_uint32)),
-        ("trigger_time_tag", ct.POINTER(ct.c_uint32)),
+        # ("trigger_time_tag", ct.POINTER(ct.c_uint32)),
         ("channel", ct.POINTER(ct.c_uint8)),
         ("sample_index", ct.POINTER(ct.c_uint16)),
-        ("value_lsb", ct.POINTER(ct.c_uint16)),
+        # ("value_lsb", ct.POINTER(ct.c_uint16)),
         ("value_mv", ct.POINTER(ct.c_int16)),
     ]
 
@@ -129,6 +133,16 @@ class DAQJobCAENDigitizer(DAQJob):
         super().__init__(config, **kwargs)
         self._msg_buffer = bytearray()
         self._msg_buffer_lock = threading.Lock()
+
+        """
+        os.makedirs("out/digitizer", exist_ok=True)
+        self.output_filename = (
+            "/home/enrg/daq/enrgdaq/out/caen_digitizer_out/waveforms.npy.lz4"
+        )
+        # Clear the file on startup
+        with open(self.output_filename, "wb") as f:
+            pass
+        """
 
         self._device = None
         self.ctr = 0
@@ -219,8 +233,8 @@ class DAQJobCAENDigitizer(DAQJob):
         device.set_sw_trigger_mode(self.config.sw_trigger_mode)
         device.set_max_num_events_blt(self.config.max_num_events_blt)
         device.set_acquisition_mode(self.config.acquisition_mode)
-        device.set_io_level(dgtz.IOLevel.NIM)
-        device.set_post_trigger_size(85)
+        device.set_io_level(self.config.io_level)
+        device.set_post_trigger_size(self.config.post_trigger_size)
         device.calibrate()
 
     def _waveform_callback(self, buffer_ptr: ct.c_void_p):
@@ -229,45 +243,28 @@ class DAQJobCAENDigitizer(DAQJob):
         ), "waveform_store_config is None"
         waveform_ptr = ct.cast(buffer_ptr, ct.POINTER(WaveformSamplesRaw)).contents
 
+        keys_to_send = [
+            field[0] for field in WaveformSamplesRaw._fields_ if field[0] != "len"
+        ]
+        data_columns = {}
+        for field in keys_to_send:
+            data_columns[field] = np.ctypeslib.as_array(
+                getattr(waveform_ptr, field), shape=(waveform_ptr.len,)
+            )
+
+        """
+        # Save to lz4 compressed npy file
+        start_time = time.time()
+        self._save_waveform_to_npy_lz4(data_columns, self.output_filename)
+        self._logger.info(f"Took {time.time() - start_time} seconds to send")
+        return
+        """
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.waveform_store_config,
                 tag="waveform",
-                keys=[
-                    "timestamp",
-                    "event_counter",
-                    "trigger_time_tag",
-                    "channel",
-                    "sample_index",
-                    "value_lsb",
-                    "value_mv",
-                ],
-                data_columns={
-                    "timestamp": np.ctypeslib.as_array(
-                        waveform_ptr.pc_unix_ms_timestamp, shape=(waveform_ptr.len,)
-                    ),
-                    "real_ns_timestamp": np.ctypeslib.as_array(
-                        waveform_ptr.real_ns_timestamp, shape=(waveform_ptr.len,)
-                    ),
-                    "event_counter": np.ctypeslib.as_array(
-                        waveform_ptr.event_counter, shape=(waveform_ptr.len,)
-                    ),
-                    "trigger_time_tag": np.ctypeslib.as_array(
-                        waveform_ptr.trigger_time_tag, shape=(waveform_ptr.len,)
-                    ),
-                    "channel": np.ctypeslib.as_array(
-                        waveform_ptr.channel, shape=(waveform_ptr.len,)
-                    ),
-                    "sample_index": np.ctypeslib.as_array(
-                        waveform_ptr.sample_index, shape=(waveform_ptr.len,)
-                    ),
-                    "value_lsb": np.ctypeslib.as_array(
-                        waveform_ptr.value_lsb, shape=(waveform_ptr.len,)
-                    ),
-                    "value_mv": np.ctypeslib.as_array(
-                        waveform_ptr.value_mv, shape=(waveform_ptr.len,)
-                    ),
-                },
+                keys=["timestamp"] + keys_to_send,
+                data_columns=data_columns,
             )
         )
 
@@ -302,3 +299,22 @@ class DAQJobCAENDigitizer(DAQJob):
             self._logger.info("Closing Digitizer...")
             self._device.__exit__(None, None, None)
         return super().__del__()
+
+    def _save_waveform_to_npy_lz4(self, data_columns: dict, path: str):
+        """
+        Saves waveform data by appending to a lz4 compressed npy file.
+        """
+        # Save the numpy array to a in-memory buffer
+        with io.BytesIO() as bio:
+            np.save(bio, data_columns)
+            frame = bio.getvalue()
+
+        # Compress the frame
+        compressed = lz4.frame.compress(frame, compression_level=1)
+
+        # Append the compressed frame to the file
+        with open(path, "ab") as f:
+            # Write the size of the compressed frame first
+            f.write(len(compressed).to_bytes(4, "little"))
+            # Write the compressed frame
+            f.write(compressed)

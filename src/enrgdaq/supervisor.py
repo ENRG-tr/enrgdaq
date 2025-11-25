@@ -2,9 +2,10 @@ import logging
 import os
 import platform
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from queue import Empty
+from queue import Empty, Full
 from typing import Optional
 
 import msgspec
@@ -316,13 +317,21 @@ class Supervisor:
                 # TODO: Maybe a better way to do this?
                 if (
                     isinstance(daq_job_cls, type)
-                    and issubclass(daq_job_cls, DAQJobStore)
-                    and not daq_job_cls.can_store(message)
+                    and getattr(daq_job_cls, "can_handle_message", None)
+                    and not daq_job_cls.can_handle_message(message)  # type: ignore
                 ):
                     continue
-                process.message_in.put_nowait(
-                    message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
-                )
+
+                # Send message
+                try:
+                    process.message_in.put_nowait(
+                        message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
+                    )
+                except Full:
+                    self._logger.warning(
+                        f"Message queue for {process.daq_job_cls.__name__} is full, dropping message"
+                    )
+                    continue
 
                 # Update stats
                 stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_cls)

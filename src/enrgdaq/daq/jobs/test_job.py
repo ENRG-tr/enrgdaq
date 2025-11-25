@@ -2,8 +2,6 @@ import time
 from datetime import datetime
 from random import randint
 
-from N1081B import N1081B
-
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
@@ -30,12 +28,10 @@ class DAQJobTest(DAQJob):
 
     Attributes:
         config_type (type): The configuration class type.
-        device (N1081B): The device used for data acquisition.
         config (DAQJobTestConfig): The configuration instance.
     """
 
     config_type = DAQJobTestConfig
-    device: N1081B
     config: DAQJobTestConfig
 
     def start(self):

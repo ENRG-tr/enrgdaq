@@ -20,6 +20,7 @@ dependencies = [
     "uproot>=5.6.8",
     "h5py>=3.11.0",
     "lywsd03mmc-client",
+    "lz4>=4.3.3",
 ]
 
 [dependency-groups]

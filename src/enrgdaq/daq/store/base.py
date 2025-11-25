@@ -33,14 +33,14 @@ class DAQJobStore(DAQJob):
         raise NotImplementedError
 
     def handle_message(self, message: DAQJobMessage) -> bool:
-        if not self.can_store(message):
+        if not self.can_handle_message(message):
             raise Exception(
                 f"Invalid message type '{type(message)}' for DAQJob '{type(self).__name__}'"
             )
         return super().handle_message(message)
 
     @classmethod
-    def can_store(cls, message: DAQJobMessage) -> bool:
+    def can_handle_message(cls, message: DAQJobMessage) -> bool:
         """
         Determines if the given message can be stored based on its configuration.
         Args:

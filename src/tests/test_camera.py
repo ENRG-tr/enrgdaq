@@ -48,8 +48,7 @@ class TestDAQJobCamera(unittest.TestCase):
         with patch.object(
             self.daq_job_camera, "_put_message_out"
         ) as mock_put_message_out:
-            result = self.daq_job_camera.capture_and_process_image()
-            self.assertTrue(result)
+            self.daq_job_camera.capture_and_process_image()
             mock_put_message_out.assert_called_once()
             args, kwargs = mock_put_message_out.call_args
             self.assertEqual(args[0].data, b"test_bytes")

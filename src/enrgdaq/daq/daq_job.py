@@ -16,6 +16,8 @@ SUPERVISOR_CONFIG_FILE_PATH = "configs/supervisor.toml"
 
 daq_job_instance_id = 0
 
+DAQ_JOB_PROCESS_QUEUE_MAX_SIZE = 100
+
 
 def _create_daq_job_process(
     daq_job_cls: Type[DAQJob],
@@ -27,8 +29,8 @@ def _create_daq_job_process(
         daq_job_cls=daq_job_cls,
         supervisor_config=supervisor_config.clone(),
         config=config,
-        message_in=Queue(),
-        message_out=Queue(),
+        message_in=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
+        message_out=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
         process=None,
         instance_id=daq_job_instance_id,
     )

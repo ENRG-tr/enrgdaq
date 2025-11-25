@@ -172,6 +172,8 @@ class DAQJobStoreConfigROOT(DAQJobStoreConfigBase):
     file_path: str
     add_date: bool
     tree_name: str
+    compression_type: str = "ZSTD"
+    compression_level: int = 5
 
 
 class DAQJobStoreConfigHDF5(DAQJobStoreConfigBase):

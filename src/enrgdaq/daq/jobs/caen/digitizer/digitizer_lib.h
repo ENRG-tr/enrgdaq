@@ -18,13 +18,13 @@ typedef struct
 typedef struct
 {
     uint32_t len;
-    uint64_t *pc_unix_ms_timestamp;
+    // uint64_t *pc_unix_ms_timestamp;
     uint64_t *real_ns_timestamp;
     uint32_t *event_counter;
-    uint32_t *trigger_time_tag;
+    // uint32_t *trigger_time_tag;
     uint8_t *channel;
     uint16_t *sample_index;
-    uint16_t *value_lsb;
+    // uint16_t *value_lsb;
     int16_t *value_mv;
 } WaveformSamples_t;
 
