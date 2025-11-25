@@ -166,7 +166,7 @@ class DAQJob:
             daq_job_class_name=type(self).__name__,
             unique_id=self.unique_id,
             instance_id=self.instance_id,
-            supervisor_info=getattr(self, "_supervisor_config", None),
+            supervisor_info=getattr(self, "_supervisor_info", None),
         )
 
     def _put_message_out(self, message: DAQJobMessage):
