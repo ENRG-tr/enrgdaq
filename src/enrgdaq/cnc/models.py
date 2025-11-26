@@ -66,6 +66,45 @@ class CNCMessageResListClients(CNCMessage):
     clients: dict[str, SupervisorInfo]
 
 
+class CNCMessageReqUpdateAndRestart(CNCMessage):
+    """Request to update and restart ENRGDAQ."""
+
+    pass
+
+
+class CNCMessageResUpdateAndRestart(CNCMessage):
+    """Response to update and restart request."""
+
+    success: bool
+    message: str
+
+
+class CNCMessageReqRestartDAQJobs(CNCMessage):
+    """Request to restart DAQJobs."""
+
+    pass
+
+
+class CNCMessageResRestartDAQJobs(CNCMessage):
+    """Response to restart DAQJobs request."""
+
+    success: bool
+    message: str
+
+
+class CNCMessageReqRunCustomDAQJob(CNCMessage):
+    """Request to run a custom DAQJob with config."""
+
+    config: str  # TOML config as string
+
+
+class CNCMessageResRunCustomDAQJob(CNCMessage):
+    """Response to run custom DAQJob request."""
+
+    success: bool
+    message: str
+
+
 CNCMessageType = Union[
     CNCMessageHeartbeat,
     CNCMessageReqPing,
@@ -74,6 +113,12 @@ CNCMessageType = Union[
     CNCMessageResStatus,
     CNCMessageReqListClients,
     CNCMessageResListClients,
+    CNCMessageReqUpdateAndRestart,
+    CNCMessageResUpdateAndRestart,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageResRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
+    CNCMessageResRunCustomDAQJob,
 ]
 
 CNC_DEFAULT_PORT = 5555

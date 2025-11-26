@@ -9,8 +9,16 @@ from enrgdaq.cnc.base import SupervisorCNC
 from enrgdaq.cnc.models import (
     CNCMessageReqListClients,
     CNCMessageReqPing,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
+    CNCMessageReqUpdateAndRestart,
     CNCMessageResListClients,
+    CNCMessageResPing,
+    CNCMessageResRestartDAQJobs,
+    CNCMessageResRunCustomDAQJob,
+    CNCMessageResStatus,
+    CNCMessageResUpdateAndRestart,
     SupervisorStatus,
 )
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
@@ -91,22 +99,14 @@ class TestCNC(unittest.TestCase):
             ping_msg = CNCMessageReqPing()
             cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(ping_msg)])
 
-            pong_received = False
-            for _ in range(10):  # Poll for 1 second
-                log_messages = [
-                    call.args[0] for call in self.mock_logger.info.call_args_list
-                ]
-                if any("Received pong" in msg for msg in log_messages):
-                    pong_received = True
-                    break
-                time.sleep(0.1)
+            # Wait for the pong message
+            self.assertTrue(
+                cli_socket.poll(1000), "Did not receive pong in time"
+            )  # Wait 1 second
+            pong_msg_raw = cli_socket.recv()
+            pong_msg = msgspec.msgpack.decode(pong_msg_raw, type=CNCMessageResPing)
+            self.assertIsInstance(pong_msg, CNCMessageResPing)
 
-            self.assertTrue(pong_received, "Did not receive pong in time")
-
-            log_messages = [
-                call.args[0] for call in self.mock_logger.info.call_args_list
-            ]
-            self.assertTrue(any("Received ping" in msg for msg in log_messages))
         finally:
             cli_socket.close()
 
@@ -121,24 +121,105 @@ class TestCNC(unittest.TestCase):
             status_msg = CNCMessageReqStatus()
             cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(status_msg)])
 
-            status_received = False
-            for _ in range(10):  # Poll for 1 second
-                log_messages = [
-                    call.args[0] for call in self.mock_logger.info.call_args_list
-                ]
-                if any("Received status from client1" in msg for msg in log_messages):
-                    status_received = True
-                    break
-                time.sleep(0.1)
-
-            self.assertTrue(status_received, "Did not receive status in time")
-
-            log_messages = [
-                call.args[0] for call in self.mock_logger.info.call_args_list
-            ]
+            # Wait for the status message
             self.assertTrue(
-                any("Received get status request" in msg for msg in log_messages)
+                cli_socket.poll(1000), "Did not receive status in time"
+            )  # Wait 1 second
+            status_msg_raw = cli_socket.recv()
+            status_msg = msgspec.msgpack.decode(
+                status_msg_raw, type=CNCMessageResStatus
             )
+            self.assertIsInstance(status_msg, CNCMessageResStatus)
+            self.assertEqual(status_msg.status.supervisor_info.supervisor_id, "client1")
+
+        finally:
+            cli_socket.close()
+
+    def test_update_and_restart(self):
+        # Mock a CLI client
+        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
+        try:
+            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-update")
+            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+
+            # Send an update and restart request to the client
+            update_msg = CNCMessageReqUpdateAndRestart()
+            cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(update_msg)])
+
+            # Wait for the response
+            self.assertTrue(
+                cli_socket.poll(2000),
+                "Did not receive update and restart response in time",
+            )  # Wait 2 seconds
+            response_msg_raw = cli_socket.recv()
+            response_msg = msgspec.msgpack.decode(
+                response_msg_raw, type=CNCMessageResUpdateAndRestart
+            )
+            self.assertIsInstance(response_msg, CNCMessageResUpdateAndRestart)
+            self.assertTrue(response_msg.success)
+
+        finally:
+            cli_socket.close()
+
+    def test_restart_daqjobs(self):
+        # Mock a CLI client
+        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
+        try:
+            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-restart")
+            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+
+            # Send a restart DAQJobs request to the client
+            restart_msg = CNCMessageReqRestartDAQJobs()
+            cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(restart_msg)])
+
+            # Wait for the response
+            self.assertTrue(
+                cli_socket.poll(2000),
+                "Did not receive restart DAQJobs response in time",
+            )  # Wait 2 seconds
+            response_msg_raw = cli_socket.recv()
+            response_msg = msgspec.msgpack.decode(
+                response_msg_raw, type=CNCMessageResRestartDAQJobs
+            )
+            self.assertIsInstance(response_msg, CNCMessageResRestartDAQJobs)
+            self.assertTrue(response_msg.success)
+
+        finally:
+            cli_socket.close()
+
+    def test_run_custom_daqjob(self):
+        # Mock a CLI client
+        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
+        try:
+            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-run-custom")
+            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+
+            # Create a valid DAQJob config as a string
+            config_str = """
+daq_job_type = "test"
+rand_min = 1
+rand_max = 100
+
+[store_config]
+memory = {}
+"""
+
+            # Send a run custom DAQJob request to the client
+            custom_msg = CNCMessageReqRunCustomDAQJob(config=config_str)
+            cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(custom_msg)])
+
+            # Wait for the response
+            self.assertTrue(
+                cli_socket.poll(3000),
+                "Did not receive run custom DAQJob response in time",
+            )  # Wait 3 seconds
+            response_msg_raw = cli_socket.recv()
+            response_msg = msgspec.msgpack.decode(
+                response_msg_raw, type=CNCMessageResRunCustomDAQJob
+            )
+            self.assertIsInstance(response_msg, CNCMessageResRunCustomDAQJob)
+            self.assertTrue(response_msg.success)
+
         finally:
             cli_socket.close()
 
