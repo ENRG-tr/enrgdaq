@@ -64,6 +64,9 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
 
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None
+
 
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
 
@@ -134,15 +137,11 @@ class DAQJobCAENDigitizer(DAQJob):
         self._msg_buffer = bytearray()
         self._msg_buffer_lock = threading.Lock()
 
-        """
-        os.makedirs("out/digitizer", exist_ok=True)
-        self.output_filename = (
-            "/home/enrg/daq/enrgdaq/out/caen_digitizer_out/waveforms.npy.lz4"
-        )
-        # Clear the file on startup
-        with open(self.output_filename, "wb") as f:
-            pass
-        """
+        if self.config.save_npy_lz4:
+            assert (
+                self.config.output_filename is not None
+            ), "output_filename is required when save_npy_lz4 is True"
+            os.makedirs(os.path.dirname(self.config.output_filename), exist_ok=True)
 
         self._device = None
         self.ctr = 0
@@ -239,8 +238,8 @@ class DAQJobCAENDigitizer(DAQJob):
 
     def _waveform_callback(self, buffer_ptr: ct.c_void_p):
         assert (
-            self.config.waveform_store_config is not None
-        ), "waveform_store_config is None"
+            self.config.waveform_store_config is not None or self.config.save_npy_lz4
+        ), "waveform_store_config is None and save_npy_lz4 is False"
         waveform_ptr = ct.cast(buffer_ptr, ct.POINTER(WaveformSamplesRaw)).contents
 
         keys_to_send = [
@@ -252,13 +251,17 @@ class DAQJobCAENDigitizer(DAQJob):
                 getattr(waveform_ptr, field), shape=(waveform_ptr.len,)
             )
 
-        """
-        # Save to lz4 compressed npy file
-        start_time = time.time()
-        self._save_waveform_to_npy_lz4(data_columns, self.output_filename)
-        self._logger.info(f"Took {time.time() - start_time} seconds to send")
-        return
-        """
+        if self.config.save_npy_lz4:
+            assert self.config.output_filename is not None
+            # Save to lz4 compressed npy file
+            start_time = time.time()
+            self._save_waveform_to_npy_lz4(data_columns, self.config.output_filename)
+            self._logger.debug(
+                f"Took {time.time() - start_time} seconds to write to the npy.lz4 file"
+            )
+            return
+
+        assert self.config.waveform_store_config is not None
         self._put_message_out(
             DAQJobMessageStoreTabular(
                 store_config=self.config.waveform_store_config,
