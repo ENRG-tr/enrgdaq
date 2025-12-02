@@ -2,6 +2,7 @@
 import ctypes as ct
 import io
 import os
+import queue
 import subprocess
 import threading
 import time
@@ -137,11 +138,17 @@ class DAQJobCAENDigitizer(DAQJob):
         self._msg_buffer = bytearray()
         self._msg_buffer_lock = threading.Lock()
 
+        self._writer_queue = None
+        self._writer_thread = None
         if self.config.save_npy_lz4:
             assert (
                 self.config.output_filename is not None
             ), "output_filename is required when save_npy_lz4 is True"
             os.makedirs(os.path.dirname(self.config.output_filename), exist_ok=True)
+            self._writer_queue = queue.Queue()
+            self._writer_thread = threading.Thread(
+                target=self._writer_thread_func, daemon=True
+            )
 
         self._device = None
         self.ctr = 0
@@ -171,6 +178,9 @@ class DAQJobCAENDigitizer(DAQJob):
         self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
 
     def start(self):
+        if self._writer_thread:
+            self._writer_thread.start()
+
         try:
             self._logger.info("Opening Digitizer...")
             with dgtz.Device.open(
@@ -246,19 +256,21 @@ class DAQJobCAENDigitizer(DAQJob):
             field[0] for field in WaveformSamplesRaw._fields_ if field[0] != "len"
         ]
         data_columns = {}
+
         for field in keys_to_send:
             data_columns[field] = np.ctypeslib.as_array(
                 getattr(waveform_ptr, field), shape=(waveform_ptr.len,)
-            )
+            ).copy()
 
         if self.config.save_npy_lz4:
-            assert self.config.output_filename is not None
-            # Save to lz4 compressed npy file
-            start_time = time.time()
-            self._save_waveform_to_npy_lz4(data_columns, self.config.output_filename)
-            self._logger.debug(
-                f"Took {time.time() - start_time} seconds to write to the npy.lz4 file"
-            )
+            assert self._writer_queue is not None
+
+            if self._writer_queue.qsize() > 100:
+                self._logger.warning(
+                    f"Writer queue size high: {self._writer_queue.qsize()}"
+                )
+
+            self._writer_queue.put_nowait(data_columns)
             return
 
         assert self.config.waveform_store_config is not None
@@ -270,6 +282,32 @@ class DAQJobCAENDigitizer(DAQJob):
                 data_columns=data_columns,
             )
         )
+
+    def _writer_thread_func(self):
+        assert (
+            self.config.output_filename is not None and self._writer_queue is not None
+        )
+
+        while True:
+            try:
+                data = self._writer_queue.get()
+                if data is None:
+                    self._writer_queue.task_done()
+                    break
+
+                start_time = time.time()
+                self._save_waveform_to_npy_lz4(data, self.config.output_filename)
+
+                # Only log debug if it takes significant time to avoid log spam
+                elapsed = time.time() - start_time
+                if elapsed > 0.001:
+                    self._logger.debug(
+                        f"Took {elapsed:.6f} seconds to write to the npy.lz4 file"
+                    )
+
+                self._writer_queue.task_done()
+            except Exception as e:
+                self._logger.error(f"Error in writer thread: {e}", exc_info=True)
 
     def _stats_callback(self, buffer_ptr: ct.c_void_p):
         assert self.config.stats_store_config is not None, "stats_store_config is None"
@@ -296,6 +334,10 @@ class DAQJobCAENDigitizer(DAQJob):
         )
 
     def __del__(self):
+        if self._writer_thread and self._writer_queue:
+            self._logger.info("Stopping writer thread...")
+            self._writer_queue.put(None)
+            self._writer_thread.join()
         self._logger.info("Stopping acquisition...")
         self._lib.stop_acquisition()
         if self._device:
@@ -313,7 +355,7 @@ class DAQJobCAENDigitizer(DAQJob):
             frame = bio.getvalue()
 
         # Compress the frame
-        compressed = lz4.frame.compress(frame, compression_level=1)
+        compressed = lz4.frame.compress(frame, compression_level=-1)
 
         # Append the compressed frame to the file
         with open(path, "ab") as f:
