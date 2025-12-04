@@ -1,7 +1,11 @@
 import logging
+import queue
 import threading
+import time
+import uuid
+from concurrent.futures import Future
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 
 import msgspec
 import zmq
@@ -38,33 +42,27 @@ CNC_HEARTBEAT_INTERVAL_SECONDS = 1
 
 class SupervisorCNC:
     """
-    Command and Control for ENRGDAQ Supervisor.
-    This class can act as a server or a client.
+    Simplified Command and Control.
+    Handles ZMQ communication and provides a direct interface for the REST API.
     """
 
-    socket: zmq.Socket
-
-    def __init__(
-        self,
-        supervisor,
-        config: SupervisorCNCConfig,
-    ):
-        from enrgdaq.supervisor import Supervisor
-
+    def __init__(self, supervisor, config: SupervisorCNCConfig):
         self._logger = logging.getLogger(__name__)
-        self.supervisor: Supervisor = supervisor
-        self.supervisor_info = supervisor.config.info
+        self.supervisor = supervisor
         self.config = config
         self.is_server = config.is_server
-        self.server_host = config.server_host
-        self.port = config.server_port
+        self.supervisor_info = supervisor.config.info
 
         self.context = zmq.Context()
         self.poller = zmq.Poller()
+        self.socket: Optional[zmq.Socket] = None
+
+        self.clients = {}
+        self._pending_responses: Dict[str, Future] = {}
+        self._command_queue: queue.Queue = queue.Queue()
 
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self.run, daemon=True)
-        self._rest_api_thread = None
 
         self.message_handlers = {
             CNCMessageHeartbeat: HeartbeatHandler(self),
@@ -79,276 +77,173 @@ class SupervisorCNC:
         }
 
         if self.is_server:
-            self.clients = {}
             self.socket = self.context.socket(zmq.ROUTER)
-            self.socket.bind(f"tcp://*:{self.port}")
-            self._logger.info(f"C&C server started on port {self.port}")
-            if self.config.rest_api_enabled:
-                start_rest_api(
-                    self.context,
-                    self.port,
-                    self.config.rest_api_host,
-                    self.config.rest_api_port,
-                )
+            self.socket.bind(f"tcp://*:{config.server_port}")
+            self._logger.info(f"C&C Server started on port {config.server_port}")
+
+            if config.rest_api_enabled:
+                start_rest_api(self)
         else:
             self.socket = self.context.socket(zmq.DEALER)
             self.socket.setsockopt_string(
                 zmq.IDENTITY, self.supervisor_info.supervisor_id
             )
-            self.socket.connect(f"tcp://{self.server_host}:{self.port}")
-            self._logger.info(f"C&C client connected to {self.server_host}:{self.port}")
+            self.socket.connect(f"tcp://{config.server_host}:{config.server_port}")
+            self._logger.info(
+                f"C&C Client connected to {config.server_host}:{config.server_port}"
+            )
 
         self.poller.register(self.socket, zmq.POLLIN)
 
     def start(self):
-        """Starts the C&C thread."""
         self._thread.start()
 
     def stop(self):
-        """Stops the C&C thread."""
         self._stop_event.set()
-        self.socket.setsockopt(zmq.LINGER, 0)
-        self.socket.close()
-        self._thread.join(timeout=5)
-        if self._thread.is_alive():
-            self._logger.warning("C&C thread failed to stop.")
+        if self.socket:
+            self.socket.setsockopt(zmq.LINGER, 0)
+            self.socket.close()
+        self._thread.join(timeout=2)
         self.context.term()
 
-    def run(self):
-        """Main loop for the C&C thread."""
+    def send_command_sync(
+        self, target_client_id: str, msg: CNCMessage, timeout: int = 2
+    ) -> CNCMessage:
+        """
+        Thread-safe method called by REST API to send a command and wait for a reply.
+        """
         if not self.is_server:
-            import time
+            raise RuntimeError("Only server can send commands to clients.")
 
-            last_heartbeat_time = time.time()
-            # Send initial heartbeat
-            self.send_heartbeat()
+        # Generate request ID
+        req_id = str(uuid.uuid4())
+        msg.req_id = req_id
 
+        future = Future()
+        # Map the ID to the Future
+        self._pending_responses[req_id] = future
+
+        # Queue the send operation
+        self._command_queue.put((target_client_id, msg))
+
+        try:
+            return future.result(timeout=timeout)
+        except Exception as e:
+            # Cleanup on timeout
+            self._pending_responses.pop(req_id, None)
+            raise e
+
+    def run(self):
+        last_heartbeat = 0
         while not self._stop_event.is_set():
             try:
-                socks = dict(self.poller.poll(timeout=100))
+                # 1. Process outgoing commands from REST API
+                while not self._command_queue.empty():
+                    target_id, msg = self._command_queue.get()
+                    self._send_zmq_message(target_id.encode("utf-8"), msg)
+
+                # 2. Poll for incoming ZMQ messages
+                socks = dict(self.poller.poll(timeout=50))
+                if self.socket in socks:
+                    self.handle_incoming_message()
+
+                # 3. Client Heartbeat
+                if not self.is_server:
+                    if time.time() - last_heartbeat >= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                        self._send_zmq_message(
+                            None,
+                            CNCMessageHeartbeat(supervisor_info=self.supervisor_info),
+                        )
+                        last_heartbeat = time.time()
+
             except zmq.ZMQError:
                 if self._stop_event.is_set():
-                    break  # Stop if event is set
-                continue  # Continue if there's a ZMQ error but stop event is not set
+                    break
+            except Exception as e:
+                self._logger.error(f"Error in CNC loop: {e}", exc_info=True)
 
-            if self.socket in socks and socks[self.socket] == zmq.POLLIN:
-                if self.is_server:
-                    self.handle_server_message()
-                else:
-                    self.handle_client_message()
+    def handle_incoming_message(self):
+        assert self.socket is not None
+        try:
+            frames = self.socket.recv_multipart()
+        except zmq.ZMQError:
+            return
 
-            # Send heartbeat periodically if client
-            if not self.is_server:
-                current_time = time.time()
-                if current_time - last_heartbeat_time >= CNC_HEARTBEAT_INTERVAL_SECONDS:
-                    self.send_heartbeat()
-                    last_heartbeat_time = current_time
+        if not frames:
+            return
 
-    def send_heartbeat(self):
-        """Client sends a heartbeat to the server."""
+        # Router: [SenderID, Body]
+        # Dealer: [Body]
         if self.is_server:
-            return
-        self._logger.debug("Sending heartbeat")
-        msg = CNCMessageHeartbeat(supervisor_info=self.supervisor_info)
-        self.send_message(msg)
-
-    def send_message(self, msg: CNCMessage, identity: Optional[bytes] = None):
-        """Sends a message."""
-        packed_msg = msgspec.msgpack.encode(msg)
-        if self.is_server and identity:
-            self.socket.send_multipart([identity, packed_msg])
+            if len(frames) != 2:
+                return
+            sender_id_bytes, body = frames[0], frames[1]
+            sender_id_str = sender_id_bytes.decode("utf-8", errors="ignore")
         else:
-            self.socket.send(packed_msg)
-
-    def handle_server_message(self):
-        """Handles messages received on the server (from clients)."""
-        try:
-            sender_identity, *parts = self.socket.recv_multipart()
-        except zmq.ZMQError:
-            self._logger.warning("ZMQ error receiving message.")
-            return
-
-        if not parts:
-            self._logger.debug("Received empty message.")
-            return
+            if len(frames) != 1:
+                return
+            sender_id_bytes = None
+            sender_id_str = "server"
+            body = frames[0]
 
         try:
-            sender_id_str = sender_identity.decode("utf-8")
-        except UnicodeDecodeError:
-            self._logger.error("Received message with non-utf8 identity.")
-            return
+            msg = msgspec.msgpack.decode(body, type=CNCMessageType)
 
-        # Update client info on any message received from registered client
-        if sender_id_str in self.clients:
-            self.clients[sender_id_str]["last_seen"] = datetime.now().isoformat()
+            if self.is_server and sender_id_str:
+                # Update Registry
+                self.clients[sender_id_str] = {
+                    "identity": sender_id_bytes,
+                    "last_seen": datetime.now().isoformat(),
+                    "info": msg.supervisor_info
+                    if hasattr(msg, "supervisor_info")
+                    else self.clients.get(sender_id_str, {}).get("info"),
+                }
 
-        if len(parts) == 1:
-            # Direct message from a client (like heartbeat) or response from client
-            message_content = parts[0]
-            try:
-                msg = msgspec.msgpack.decode(message_content, type=CNCMessageType)
-                self._logger.debug(
-                    f"Server received direct message of type {type(msg).__name__} from {sender_id_str}"
-                )
+                # Only if the message actually has a req_id and it's in our pending map
+                if (
+                    hasattr(msg, "req_id")
+                    and msg.req_id
+                    and msg.req_id in self._pending_responses
+                ):
+                    future = self._pending_responses.pop(msg.req_id)
+                    if not future.done():
+                        future.set_result(msg)
 
-                # Update client info if it's a heartbeat
-                if isinstance(msg, CNCMessageHeartbeat):
-                    self.clients[sender_id_str] = {
-                        "identity": sender_identity,
-                        "last_seen": datetime.now().isoformat(),
-                        "info": msg.supervisor_info,
-                    }
+            self._process_payload(msg, sender_id_bytes)
 
-                # Handle the message with appropriate handler
-                handler = self.message_handlers.get(type(msg))
-                if handler:
-                    result = handler.handle(sender_identity, msg)
-                    if result:
-                        response, _ = result
-                        self.send_message(response, sender_identity)
-                else:
-                    self._logger.warning(
-                        f"Server received unhandled message type {type(msg).__name__} from {sender_id_str}"
-                    )
-            except Exception as e:
-                self._logger.error(
-                    f"Error processing direct message from {sender_id_str}: {e}"
-                )
-        elif len(parts) == 2:
-            target_or_external_identity, message_content = parts
+        except Exception as e:
+            self._logger.error(f"Error processing payload: {e}")
 
-            # If the sender is a registered client, this is a response to forward back to external client
-            if sender_id_str in self.clients:
-                external_client_identity = target_or_external_identity
-                response_message = message_content
-                self._logger.debug(
-                    f"Server forwarding response from client {sender_id_str} back to external client"
-                )
-                # Forward the response back to the external client
-                self.socket.send_multipart([external_client_identity, response_message])
-            else:
-                # This is a forward request from an external client to a specific registered client
-                try:
-                    target_client_id = target_or_external_identity.decode("utf-8")
-                    msg = msgspec.msgpack.decode(message_content, type=CNCMessageType)
+    def _process_payload(self, msg: CNCMessage, sender_id_bytes: Optional[bytes]):
+        handler = self.message_handlers.get(type(msg))
+        if handler:
+            identity_arg = sender_id_bytes if self.is_server else b"server"
+            result = handler.handle(identity_arg, msg)
+            if result:
+                response_msg, _ = result
 
-                    self._logger.debug(
-                        f"Server received forward request for {target_client_id} from {sender_id_str}"
-                    )
+                # Copy the request id from Request to Response
+                # This ensures the Server knows which request this response belongs to.
+                if hasattr(msg, "req_id") and hasattr(response_msg, "req_id"):
+                    response_msg.req_id = msg.req_id
 
-                    # Check if target client exists
-                    if target_client_id not in self.clients:
-                        self._logger.error(f"Client '{target_client_id}' not found.")
-                        return
+                self._send_zmq_message(sender_id_bytes, response_msg)
 
-                    # Forward the message to the target client
-                    target_client_identity = self.clients[target_client_id]["identity"]
-                    self.socket.send_multipart(
-                        [target_client_identity, sender_identity, message_content]
-                    )
-
-                except UnicodeDecodeError:
-                    self._logger.error(
-                        "Received message with non-utf8 target client ID."
-                    )
-                except Exception as e:
-                    self._logger.error(f"Error processing forward request: {e}")
+    def _send_zmq_message(self, identity: Optional[bytes], msg: CNCMessage):
+        assert self.socket is not None
+        packed = msgspec.msgpack.encode(msg)
+        if self.is_server:
+            if identity:
+                self.socket.send_multipart([identity, packed])
         else:
-            self._logger.warning(
-                f"Received message with {len(parts)} parts from {sender_id_str} (expected 1 or 2)"
-            )
-
-    def handle_client_message(self):
-        """Handles messages received on the client (from server)."""
-        try:
-            parts = self.socket.recv_multipart()
-        except zmq.ZMQError:
-            self._logger.warning("ZMQ error receiving message.")
-            return
-
-        if not parts:
-            self._logger.debug("Received empty message.")
-            return
-
-        if len(parts) == 1:
-            # Direct message from server
-            message_content = parts[0]
-            try:
-                msg = msgspec.msgpack.decode(message_content, type=CNCMessageType)
-                self._logger.debug(
-                    f"Client received direct message of type {type(msg).__name__} from server"
-                )
-
-                # Handle the message with appropriate handler
-                handler = self.message_handlers.get(type(msg))
-                if handler:
-                    # For client, pass the client's own identity to the handler
-                    client_identity = self.socket.getsockopt_string(
-                        zmq.IDENTITY
-                    ).encode("utf-8")
-                    result = handler.handle(client_identity, msg)
-                    if result:
-                        response, _ = result
-                        self.send_message(response)
-                else:
-                    self._logger.warning(
-                        f"Client received unhandled message type {type(msg).__name__} from server"
-                    )
-            except Exception as e:
-                self._logger.error(f"Error processing direct message from server: {e}")
-        elif len(parts) == 2:
-            # Message forwarded from external client: [external_client_identity, message_content]
-            external_client_identity, message_content = parts
-            try:
-                msg = msgspec.msgpack.decode(message_content, type=CNCMessageType)
-                self._logger.debug(
-                    f"Client received forwarded message of type {type(msg).__name__} from external client"
-                )
-
-                # Handle the message with appropriate handler
-                handler = self.message_handlers.get(type(msg))
-                if handler:
-                    # Pass the external client's identity to the handler so it knows who to respond to
-                    result = handler.handle(external_client_identity, msg)
-                    if result:
-                        response, _ = result
-                        # Send response back to server, which will forward to external client
-                        self.socket.send_multipart(
-                            [external_client_identity, msgspec.msgpack.encode(response)]
-                        )
-                else:
-                    self._logger.warning(
-                        f"Client received unhandled forwarded message type {type(msg).__name__} from external client"
-                    )
-            except Exception as e:
-                self._logger.error(
-                    f"Error processing forwarded message from external client: {e}"
-                )
-        else:
-            self._logger.warning(
-                f"Client received message with {len(parts)} parts (expected 1 or 2)"
-            )
+            self.socket.send(packed)
 
 
 def start_supervisor_cnc(
-    supervisor,
-    config: SupervisorCNCConfig,
+    supervisor, config: SupervisorCNCConfig
 ) -> Optional[SupervisorCNC]:
-    """
-    Initializes and starts the SupervisorCNC.
-
-    Args:
-        supervisor (Supervisor): The supervisor instance.
-        config (SupervisorCNCConfig): The C&C configuration.
-
-    Returns:
-        Optional[SupervisorCNC]: The started SupervisorCNC instance, or None on failure.
-    """
     try:
-        cnc = SupervisorCNC(
-            supervisor=supervisor,
-            config=config,
-        )
+        cnc = SupervisorCNC(supervisor, config)
         cnc.start()
         return cnc
     except Exception as e:

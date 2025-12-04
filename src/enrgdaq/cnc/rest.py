@@ -1,98 +1,102 @@
-import random
-import string
 import threading
 
 import msgspec
 import uvicorn
-import zmq
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from pydantic import BaseModel
 
 from enrgdaq.cnc.models import (
-    CNCMessageReqListClients,
-    CNCMessageType,
+    CNCMessageReqPing,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
+    CNCMessageReqStatus,
+    CNCMessageReqUpdateAndRestart,
 )
 
 
-def start_rest_api(context, port, rest_api_host, rest_api_port):
+def start_rest_api(cnc_instance):
+    """
+    Starts the REST API server in a separate thread.
+    Directly uses the passed `cnc_instance` to interact with the system.
+    """
     app = FastAPI()
 
-    # Create a single persistent socket for the REST API client
-    # This avoids creating new sockets for each request.
-    client_identity = f"cnc-rest-{''.join(random.choices(string.ascii_lowercase + string.digits, k=8))}"
-    persistent_socket = context.socket(zmq.DEALER)
-    persistent_socket.setsockopt_string(zmq.IDENTITY, client_identity)
-    persistent_socket.connect(f"tcp://localhost:{port}")
-    socket_lock = threading.Lock()
-
-    async def send_request(msg: CNCMessageType, timeout: int = 2000):
-        """Helper to send a request and wait for a reply."""
-        encoded_msg = msgspec.msgpack.encode(msg)
-        with socket_lock:
-            poller = zmq.Poller()
-            poller.register(persistent_socket, zmq.POLLIN)
-            persistent_socket.send(encoded_msg)
-
-            socks = dict(poller.poll(timeout))
-            if persistent_socket in socks:
-                message = persistent_socket.recv()
-                return msgspec.msgpack.decode(message, type=CNCMessageType)
-            else:
+    # Helper to execute the sync command safely
+    def execute_command(client_id: str, msg, timeout=5):
+        try:
+            # Check if client exists first
+            if client_id not in cnc_instance.clients:
                 raise HTTPException(
-                    status_code=504, detail="Timeout waiting for reply from server."
+                    status_code=404, detail="Client not found or not connected."
                 )
 
+            reply = cnc_instance.send_command_sync(client_id, msg, timeout=timeout)
+            return reply
+        except TimeoutError:
+            raise HTTPException(
+                status_code=504, detail="Timeout waiting for client response."
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
+
     @app.get("/clients")
-    async def list_clients():
-        msg = CNCMessageReqListClients()
-        reply = await send_request(msg)
-        return reply.clients
+    def list_clients():
+        # Directly read the CNC registry
+        return Response(
+            content=msgspec.json.encode(cnc_instance.clients),
+            media_type="application/json",
+        )
 
     @app.post("/clients/{client_id}/ping")
-    async def ping_client(client_id: str):
-        # In the new architecture, the server handles routing to specific clients
-        # We'll need to implement a mechanism to send to specific clients
-        # For now, this would require updating the message system to support targeted commands
-        raise HTTPException(
-            status_code=501,
-            detail="Client-specific commands not implemented in simplified architecture",
+    def ping_client(client_id: str):
+        msg = CNCMessageReqPing()
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
         )
 
     @app.get("/clients/{client_id}/status")
-    async def get_status(client_id: str):
-        # In the new architecture, the server handles routing to specific clients
-        # We'll need to implement a mechanism to send to specific clients
-        # For now, this would require updating the message system to support targeted commands
-        raise HTTPException(
-            status_code=501,
-            detail="Client-specific commands not implemented in simplified architecture",
+    def get_status(client_id: str):
+        msg = CNCMessageReqStatus()
+        reply = execute_command(client_id, msg)
+        # Handle reply structure (usually ResStatus has a .status field)
+        return Response(
+            content=msgspec.json.encode(reply.status), media_type="application/json"
         )
 
-    # A single socket is not thread-safe with async frameworks like FastAPI.
-    # We need a dependency to manage access to the socket.
-    # However, for simplicity in this context, we'll use a lock and assume
-    # the performance implications are acceptable.
-    # A more robust solution might involve a pool of sockets or a dedicated request/reply thread.
+    @app.post("/clients/{client_id}/update_and_restart")
+    def update_and_restart_client(client_id: str):
+        msg = CNCMessageReqUpdateAndRestart()
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
 
-    # The previous implementation of get_socket() per request is problematic
-    # because it creates a new identity and connection for every API call,
-    # which is inefficient and can lead to issues.
+    @app.post("/clients/{client_id}/restart_daqjobs")
+    def restart_daqjobs_client(client_id: str):
+        msg = CNCMessageReqRestartDAQJobs()
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
 
-    # Let's adapt the old structure to use the new helpers to minimize changes.
-    # NOTE: The code below is now redundant due to the helpers above, but I am
-    # adapting it to show how the logic changes in the original structure.
-    # The best approach is to use the helpers `send_request` and `forward_request`.
+    class RunCustomDAQJobRequest(BaseModel):
+        config: str
 
-    def get_socket_DEPRECATED():
-        socket = context.socket(zmq.DEALER)
-        client_identity = f"cnc-rest-{''.join(random.choices(string.ascii_lowercase + string.digits, k=8))}"
-        socket.setsockopt_string(zmq.IDENTITY, client_identity)
-        socket.connect(f"tcp://localhost:{port}")
-        return socket
+    @app.post("/clients/{client_id}/run_custom_daqjob")
+    def run_custom_daqjob_client(client_id: str, request: RunCustomDAQJobRequest):
+        msg = CNCMessageReqRunCustomDAQJob(config=request.config)
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
 
     config = uvicorn.Config(
         app,
-        host=rest_api_host,
-        port=rest_api_port,
+        host=cnc_instance.config.rest_api_host,
+        port=cnc_instance.config.rest_api_port,
         log_level="info",
     )
     server = uvicorn.Server(config)

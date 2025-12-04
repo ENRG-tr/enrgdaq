@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 
 from msgspec import Struct
 
@@ -18,10 +18,10 @@ class SupervisorStatus(Struct):
     restart_schedules: list[RestartScheduleInfo]
 
 
-class CNCMessage(Struct, tag=True):
+class CNCMessage(Struct, tag=True, kw_only=True):
     """Base class for C&C messages."""
 
-    pass
+    req_id: Optional[str] = None
 
 
 class CNCMessageHeartbeat(CNCMessage):
