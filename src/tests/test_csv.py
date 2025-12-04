@@ -11,7 +11,6 @@ from enrgdaq.daq.jobs.store.csv import (
     DAQJobStoreCSV,
 )
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStore,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
 )

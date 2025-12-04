@@ -5,7 +5,7 @@ from collections import deque
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Sequence, TextIO, cast
+from typing import Any, Optional, TextIO, cast
 
 import numpy as np
 from numpy import ndarray

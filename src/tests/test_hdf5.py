@@ -1,6 +1,5 @@
 import os
 import shutil
-import time
 import unittest
 from datetime import datetime
 
@@ -8,7 +7,6 @@ import h5py
 import numpy as np
 
 from enrgdaq.daq.jobs.store.hdf5 import DAQJobStoreHDF5, DAQJobStoreHDF5Config
-from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
