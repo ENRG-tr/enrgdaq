@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 import subprocess
+import threading
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
 from enrgdaq.cnc.models import (
     CNCMessage,
-    CNCMessageReqUpdateAndRestart,
-    CNCMessageResUpdateAndRestart,
+    CNCMessageReqRestartDAQ,
+    CNCMessageResRestartDAQ,
 )
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
 
+CNC_REQ_UPDATE_AND_RESTART_SECONDS = 2
 
-class ReqUpdateAndRestartHandler(CNCMessageHandler):
+
+class ReqRestartHandler(CNCMessageHandler):
     """
     Handler for CNCMessageReqUpdateAndRestart messages.
     """
@@ -27,7 +30,7 @@ class ReqUpdateAndRestartHandler(CNCMessageHandler):
         super().__init__(cnc)
 
     def handle(
-        self, sender_identity: bytes, msg: CNCMessageReqUpdateAndRestart
+        self, sender_identity: bytes, msg: CNCMessageReqRestartDAQ
     ) -> Optional[Tuple[CNCMessage, bool]]:
         """
         Handles an update and restart request.
@@ -38,23 +41,29 @@ class ReqUpdateAndRestartHandler(CNCMessageHandler):
         self._logger.info("Received update and restart request.")
 
         try:
-            # Run git pull
-            git_result = subprocess.run(
-                ["git", "pull"], check=True, capture_output=True, text=True
-            )
-            self._logger.info(f"Git pull output: {git_result.stdout}")
+            if msg.update:
+                # Run git pull
+                git_result = subprocess.run(
+                    ["git", "pull"], check=True, capture_output=True, text=True
+                )
+                self._logger.info(f"Git pull output: {git_result.stdout}")
 
-            # Run uv sync
-            sync_result = subprocess.run(
-                ["uv", "sync"], check=True, capture_output=True, text=True
-            )
-            self._logger.info(f"UV sync output: {sync_result.stdout}")
+                # Run uv sync
+                sync_result = subprocess.run(
+                    ["uv", "sync"], check=True, capture_output=True, text=True
+                )
+                self._logger.info(f"uv sync output: {sync_result.stdout}")
 
+                message = f"Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds."
+            else:
+                message = "Restart requested via CNC"
             success = True
-            message = "Update completed successfully."
-
             self._logger.info(message)
 
+            # Schedule exit
+            threading.Timer(
+                CNC_REQ_UPDATE_AND_RESTART_SECONDS if msg.update else 0, self._exit
+            ).start()
         except subprocess.CalledProcessError as e:
             success = False
             message = f"Error during update: {str(e)}"
@@ -64,4 +73,7 @@ class ReqUpdateAndRestartHandler(CNCMessageHandler):
             message = f"Unexpected error during update: {str(e)}"
             self._logger.error(message)
 
-        return CNCMessageResUpdateAndRestart(success=success, message=message), True
+        return CNCMessageResRestartDAQ(success=success, message=message), True
+
+    def _exit(self):
+        self.cnc.supervisor.stop()

@@ -6,15 +6,15 @@ from unittest.mock import MagicMock, patch
 from enrgdaq.cnc.base import SupervisorCNC
 from enrgdaq.cnc.models import (
     CNCMessageReqPing,
+    CNCMessageReqRestartDAQ,
     CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
-    CNCMessageReqUpdateAndRestart,
     CNCMessageResPing,
+    CNCMessageResRestartDAQ,
     CNCMessageResRestartDAQJobs,
     CNCMessageResRunCustomDAQJob,
     CNCMessageResStatus,
-    CNCMessageResUpdateAndRestart,
     SupervisorStatus,
 )
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
@@ -109,20 +109,20 @@ class TestCNC(unittest.TestCase):
         self.assertIsInstance(response, CNCMessageResStatus)
         self.assertEqual(response.status.supervisor_info.supervisor_id, "client1")
 
-    @patch("enrgdaq.cnc.handlers.ReqUpdateAndRestartHandler.handle")
-    def test_update_and_restart(self, mock_handle):
+    @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")
+    def test_restart_daq(self, mock_handle):
         self.test_connection_and_heartbeat()
 
         # Added 'message' argument to satisfy msgspec definition
         mock_handle.return_value = (
-            CNCMessageResUpdateAndRestart(success=True, message="OK"),
+            CNCMessageResRestartDAQ(success=True, message="OK"),
             None,
         )
 
-        update_msg = CNCMessageReqUpdateAndRestart()
+        update_msg = CNCMessageReqRestartDAQ()
         response = self.server_cnc.send_command_sync("client1", update_msg, timeout=2)
 
-        self.assertIsInstance(response, CNCMessageResUpdateAndRestart)
+        self.assertIsInstance(response, CNCMessageResRestartDAQ)
         self.assertTrue(response.success)
 
     @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")

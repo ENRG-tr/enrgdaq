@@ -7,11 +7,11 @@ from pydantic import BaseModel
 
 from enrgdaq.cnc.models import (
     CNCMessageReqPing,
+    CNCMessageReqRestartDAQ,
     CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
     CNCMessageReqStopAndRemoveDAQJob,
-    CNCMessageReqUpdateAndRestart,
 )
 
 
@@ -67,9 +67,12 @@ def start_rest_api(cnc_instance):
             content=msgspec.json.encode(reply.status), media_type="application/json"
         )
 
-    @app.post("/clients/{client_id}/update_and_restart")
-    def update_and_restart_client(client_id: str):
-        msg = CNCMessageReqUpdateAndRestart()
+    class RestartDAQRequest(BaseModel):
+        update: bool = False
+
+    @app.post("/clients/{client_id}/restart_daq")
+    def restart_daq(client_id: str, request: RestartDAQRequest):
+        msg = CNCMessageReqRestartDAQ(update=request.update)
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"

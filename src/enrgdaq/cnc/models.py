@@ -66,13 +66,15 @@ class CNCMessageResListClients(CNCMessage):
     clients: dict[str, Optional[SupervisorInfo]]
 
 
-class CNCMessageReqUpdateAndRestart(CNCMessage):
-    """Request to update and restart ENRGDAQ."""
+class CNCMessageReqRestartDAQ(CNCMessage):
+    """Request to restart ENRGDAQ."""
+
+    update: bool = False
 
     pass
 
 
-class CNCMessageResUpdateAndRestart(CNCMessage):
+class CNCMessageResRestartDAQ(CNCMessage):
     """Response to update and restart request."""
 
     success: bool
@@ -134,8 +136,8 @@ CNCMessageType = Union[
     CNCMessageResStatus,
     CNCMessageReqListClients,
     CNCMessageResListClients,
-    CNCMessageReqUpdateAndRestart,
-    CNCMessageResUpdateAndRestart,
+    CNCMessageReqRestartDAQ,
+    CNCMessageResRestartDAQ,
     CNCMessageReqRestartDAQJobs,
     CNCMessageResRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,

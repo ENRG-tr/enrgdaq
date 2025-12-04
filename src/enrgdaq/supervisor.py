@@ -158,10 +158,17 @@ class Supervisor:
         """
         if self._cnc_instance:
             self._cnc_instance.stop()
-        for daq_job_thread in self.daq_job_processes:
-            daq_job_thread.message_out.put(
+        for daq_job_process in self.daq_job_processes:
+            daq_job_process.message_out.put(
                 DAQJobMessageStop(reason="KeyboardInterrupt")
             )
+        # Wait for all threads to stop with a timeout
+        for daq_job_process in self.daq_job_processes:
+            if not daq_job_process.process:
+                continue
+            daq_job_process.process.join(timeout=5)
+
+        sys.exit(0)
 
     def loop(self):
         """
