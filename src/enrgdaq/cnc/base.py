@@ -48,7 +48,9 @@ class SupervisorCNC:
 
     def __init__(self, supervisor, config: SupervisorCNCConfig):
         self._logger = logging.getLogger(__name__)
-        self.supervisor = supervisor
+        from enrgdaq.supervisor import Supervisor
+
+        self.supervisor: Supervisor = supervisor
         self.config = config
         self.is_server = config.is_server
         self.supervisor_info = supervisor.config.info
@@ -212,7 +214,7 @@ class SupervisorCNC:
             self._process_payload(msg, sender_id_bytes)
 
         except Exception as e:
-            self._logger.error(f"Error processing payload: {e}")
+            self._logger.error(f"Error processing payload: {e}", exc_info=True)
 
     def _process_payload(self, msg: CNCMessage, sender_id_bytes: Optional[bytes]):
         handler = self.message_handlers.get(type(msg))

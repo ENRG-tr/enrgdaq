@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
@@ -9,6 +8,7 @@ from enrgdaq.cnc.models import (
     CNCMessageReqRestartDAQJobs,
     CNCMessageResRestartDAQJobs,
 )
+from enrgdaq.daq.models import DAQJobMessageStop
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
@@ -38,56 +38,29 @@ class ReqRestartDAQJobsHandler(CNCMessageHandler):
         self._logger.info("Received restart DAQJobs request.")
 
         try:
-            # Find and terminate existing DAQJob processes
-            import psutil
-
-            killed_pids = []
-            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
-                try:
-                    # Look for processes that are specifically DAQJob processes
-                    # We'll look for specific DAQJob indicators to avoid affecting other processes
-                    cmdline = (
-                        " ".join(proc.info["cmdline"]) if proc.info["cmdline"] else ""
-                    )
-
-                    # Look for processes that are specifically DAQJob-related
-                    # This should be more specific than just "daq" and "python"
-                    if (
-                        ("daq_job" in cmdline.lower())
-                        or ("enrgdaq" in cmdline.lower() and "daq" in cmdline.lower())
-                    ) and "python" in cmdline.lower():
-                        # Avoid terminating the current process or test processes
-                        current_pid = os.getpid()
-                        if proc.info["pid"] == current_pid:
-                            continue
-
-                        self._logger.info(
-                            f"Terminating DAQJob process {proc.info['pid']}: {proc.info['name']}"
-                        )
-                        proc.terminate()
-                        killed_pids.append(proc.info["pid"])
-                except (
-                    psutil.NoSuchProcess,
-                    psutil.AccessDenied,
-                    psutil.ZombieProcess,
-                ):
-                    pass
-
-            # Wait for processes to terminate
-            for pid in killed_pids:
-                try:
-                    p = psutil.Process(pid)
-                    p.wait(timeout=5)  # Wait up to 5 seconds for graceful termination
-                except psutil.TimeoutExpired:
-                    self._logger.info(f"Force killing process {pid}")
+            # Use the supervisor's built-in mechanism to restart DAQ jobs
+            # by stopping all current processes which will trigger restart logic
+            supervisor = self.cnc.supervisor
+            if supervisor:
+                # Send stop messages to all DAQ job processes to trigger restart
+                for daq_job_process in supervisor.daq_job_processes:
                     try:
-                        p.kill()  # Force kill if graceful termination takes too long
-                    except psutil.NoSuchProcess:
-                        pass  # Process already terminated
+                        # Send a stop message to each DAQ job process via its message_in queue
+                        daq_job_process.message_in.put(
+                            DAQJobMessageStop(reason="Restart requested via CNC")
+                        )
+                    except Exception as e:
+                        self._logger.warning(
+                            f"Error sending stop message to DAQ job: {e}"
+                        )
 
-            success = True
-            message = f"DAQJobs restarted. Terminated {len(killed_pids)} processes."
-            self._logger.info(message)
+                success = True
+                message = "Stop signals sent to all DAQ jobs."
+                self._logger.info(message)
+            else:
+                success = False
+                message = "Supervisor not available"
+                self._logger.error(message)
 
         except Exception as e:
             success = False

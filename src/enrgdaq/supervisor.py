@@ -17,7 +17,7 @@ from enrgdaq.cnc.models import SupervisorStatus
 from enrgdaq.daq.alert.base import DAQJobAlert
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
-    SUPERVISOR_CONFIG_FILE_PATH,
+    SUPERVISOR_CONFIG_FILE_NAME,
     load_daq_jobs,
     rebuild_daq_job,
     start_daq_job,
@@ -86,10 +86,16 @@ class Supervisor:
         self,
         config: Optional[SupervisorConfig] = None,
         daq_job_processes: Optional[list[DAQJobProcess]] = None,
+        daq_job_config_path: str = "configs/",
     ):
         self.config = config
         self._daq_jobs_to_load = daq_job_processes
         self.daq_job_remote_stats = {}
+        self._daq_job_config_path = daq_job_config_path
+        if not os.path.exists(self._daq_job_config_path):
+            raise ValueError(
+                f"DAQ job config path '{self._daq_job_config_path}' does not exist."
+            )
         pass
 
     def init(self):
@@ -113,24 +119,26 @@ class Supervisor:
             )
 
         self.restart_schedules = []
-        self.daq_job_processes = self.start_daq_job_processes(self._daq_jobs_to_load)
+        self.daq_job_processes = []
+        self.start_daq_job_processes(self._daq_jobs_to_load or [])
         self.daq_job_stats: DAQJobStatsDict = {
-            thread.daq_job_cls: DAQJobStats() for thread in self.daq_job_processes
+            thread.daq_job_cls.__name__: DAQJobStats()
+            for thread in self.daq_job_processes
         }
         self.warn_for_lack_of_daq_jobs()
 
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
 
-    def start_daq_job_processes(
-        self, daq_jobs_to_load: Optional[list[DAQJobProcess]] = None
-    ) -> list[DAQJobProcess]:
+    def start_daq_job_processes(self, daq_jobs_to_load: list[DAQJobProcess]):
         assert self.config is not None
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
-        return start_daq_jobs(
-            daq_jobs_to_load or load_daq_jobs("configs/", self.config.info)
+        started_jobs = start_daq_jobs(
+            daq_jobs_to_load
+            or load_daq_jobs(self._daq_job_config_path, self.config.info)
         )
+        self.daq_job_processes.extend(started_jobs)
 
     def run(self):
         """
@@ -195,6 +203,7 @@ class Supervisor:
             SupervisorStatus: A struct containing the status.
         """
         assert self.config is not None
+        self._logger.info(self.daq_job_processes)
         return SupervisorStatus(
             supervisor_info=self.config.info,
             daq_job_stats=self.daq_job_stats,
@@ -324,9 +333,10 @@ class Supervisor:
     def get_daq_job_stats(
         self, daq_job_stats: DAQJobStatsDict, daq_job_type: type[DAQJob]
     ) -> DAQJobStats:
-        if daq_job_type not in daq_job_stats:
-            daq_job_stats[daq_job_type] = DAQJobStats()
-        return daq_job_stats[daq_job_type]
+        daq_job_type_name = daq_job_type.__name__
+        if daq_job_type_name not in daq_job_stats:
+            daq_job_stats[daq_job_type_name] = DAQJobStats()
+        return daq_job_stats[daq_job_type_name]
 
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
         assert self.config is not None
@@ -416,13 +426,16 @@ class Supervisor:
                 self._logger.warning(warning_message)
 
     def _load_supervisor_config(self):
-        if not os.path.exists(SUPERVISOR_CONFIG_FILE_PATH):
+        supervisor_config_file_path = os.path.join(
+            self._daq_job_config_path, SUPERVISOR_CONFIG_FILE_NAME
+        )
+        if not os.path.exists(supervisor_config_file_path):
             self._logger.warning(
-                f"No supervisor config file found at '{SUPERVISOR_CONFIG_FILE_PATH}', using default config"
+                f"No supervisor config file found at '{supervisor_config_file_path}', using default config"
             )
             return SupervisorConfig(info=SupervisorInfo(supervisor_id=platform.node()))
 
-        with open(SUPERVISOR_CONFIG_FILE_PATH, "rb") as f:
+        with open(supervisor_config_file_path, "rb") as f:
             return msgspec.toml.decode(f.read(), type=SupervisorConfig)
 
     def _get_supervisor_daq_job_info(self):

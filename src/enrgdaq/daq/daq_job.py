@@ -3,7 +3,6 @@ import logging
 import os
 import platform
 from multiprocessing import Process, Queue, get_context
-from pathlib import Path
 from typing import Type
 
 import msgspec
@@ -13,7 +12,7 @@ from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorInfo
 
-SUPERVISOR_CONFIG_FILE_PATH = "configs/supervisor.toml"
+SUPERVISOR_CONFIG_FILE_NAME = "supervisor.toml"
 
 daq_job_instance_id = 0
 
@@ -74,7 +73,7 @@ def load_daq_jobs(
     job_files = glob.glob(os.path.join(job_config_dir, "*.toml"))
     for job_file in job_files:
         # Skip the supervisor config file
-        if Path(job_file) == Path(SUPERVISOR_CONFIG_FILE_PATH):
+        if os.path.basename(job_file) == SUPERVISOR_CONFIG_FILE_NAME:
             continue
 
         with open(job_file, "rb") as f:

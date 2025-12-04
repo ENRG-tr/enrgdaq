@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import tempfile
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
@@ -37,16 +38,13 @@ class ReqRunCustomDAQJobHandler(CNCMessageHandler):
         self._logger.info("Received run custom DAQJob request.")
 
         try:
-            # Import required modules
-            from enrgdaq.daq.daq_job import build_daq_job, start_daq_job
+            from enrgdaq.daq.daq_job import build_daq_job
             from enrgdaq.models import SupervisorInfo
 
             # Create a basic supervisor info for the custom job
             supervisor_info = SupervisorInfo(supervisor_id="remote_custom")
 
             # Write the config to a temporary file
-            import tempfile
-
             with tempfile.NamedTemporaryFile(
                 mode="w", suffix=".toml", delete=False
             ) as temp_config:
@@ -66,10 +64,10 @@ class ReqRunCustomDAQJobHandler(CNCMessageHandler):
                 )
 
                 # Start the DAQ job
-                started_job = start_daq_job(daq_job_process)
+                self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
                 success = True
-                message = f"DAQ job started with PID: {started_job.process.pid if started_job.process else 'Unknown'}"
+                message = f"DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else 'Unknown'}"
                 self._logger.info(message)
 
             except Exception as e:

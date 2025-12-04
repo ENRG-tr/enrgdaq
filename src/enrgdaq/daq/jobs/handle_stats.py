@@ -17,7 +17,7 @@ from enrgdaq.daq.store.models import (
 )
 from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
 
-DAQJobStatsDict = Dict[type[DAQJob], DAQJobStats]
+DAQJobStatsDict = Dict[str, DAQJobStats]
 DAQJobRemoteStatsDict = Dict[str, DAQJobRemoteStatsDict]
 
 DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS = 1
@@ -112,7 +112,7 @@ class DAQJobHandleStats(DAQJob):
                 data_to_send.append(
                     [
                         supervisor_id,
-                        daq_job_type.__name__,
+                        daq_job_type,
                         str(msg.is_alive).lower(),
                         *unpack_record(msg.message_in_stats),
                         *unpack_record(msg.message_out_stats),
