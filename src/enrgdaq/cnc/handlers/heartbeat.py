@@ -32,7 +32,7 @@ class HeartbeatHandler(CNCMessageHandler):
         :return: None
         """
         sender_id_str = sender_identity.decode("utf-8")
-        self._logger.info(f"Received heartbeat from {sender_id_str}")
+        self._logger.debug(f"Received heartbeat from {sender_id_str}")
         self.cnc.clients[sender_id_str] = {
             "identity": sender_identity,
             "last_seen": datetime.now().isoformat(),

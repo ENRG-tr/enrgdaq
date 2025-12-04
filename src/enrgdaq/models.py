@@ -3,18 +3,23 @@ from typing import Optional
 
 from msgspec import Struct
 
+from enrgdaq.daq.models import LogVerbosity
+
 
 class SupervisorCNCConfig(Struct):
     """
     Configuration for the Command and Control (C&C) system.
 
     Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
         is_server (bool): Whether this supervisor instance is the C&C server.
         server_host (str): The hostname or IP address of the C&C server.
         rest_api_enabled (bool): Whether to enable the REST API server.
         rest_api_host (str): The hostname or IP address for the REST API server.
         rest_api_port (int): The port for the REST API server.
     """
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
 
     is_server: bool = False
     server_host: str = "localhost"

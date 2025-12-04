@@ -50,6 +50,8 @@ class SupervisorCNC:
 
     def __init__(self, supervisor, config: SupervisorCNCConfig):
         self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(config.verbosity.to_logging_level())
+
         from enrgdaq.supervisor import Supervisor
 
         self.supervisor: Supervisor = supervisor
