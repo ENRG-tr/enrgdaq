@@ -1,8 +1,8 @@
 import glob
 import logging
 import os
-from multiprocessing import Process, Queue
-from pathlib import Path
+import platform
+from multiprocessing import Process, Queue, get_context
 from typing import Type
 
 import msgspec
@@ -12,7 +12,7 @@ from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorInfo
 
-SUPERVISOR_CONFIG_FILE_PATH = "configs/supervisor.toml"
+SUPERVISOR_CONFIG_FILE_NAME = "supervisor.toml"
 
 daq_job_instance_id = 0
 
@@ -73,7 +73,7 @@ def load_daq_jobs(
     job_files = glob.glob(os.path.join(job_config_dir, "*.toml"))
     for job_file in job_files:
         # Skip the supervisor config file
-        if Path(job_file) == Path(SUPERVISOR_CONFIG_FILE_PATH):
+        if os.path.basename(job_file) == SUPERVISOR_CONFIG_FILE_NAME:
             continue
 
         with open(job_file, "rb") as f:
@@ -86,9 +86,31 @@ def load_daq_jobs(
 
 def start_daq_job(daq_job_process: DAQJobProcess) -> DAQJobProcess:
     logging.info(f"Starting {daq_job_process.daq_job_cls.__name__}")
-    process = Process(target=daq_job_process.start, daemon=True)
+
+    job_multiprocessing_method = getattr(
+        daq_job_process.daq_job_cls, "multiprocessing_method", "default"
+    )
+    # Use 'fork' method on Unix systems (including macOS) by default to avoid semaphore lock issues
+    # when pickling/unpickling Queue objects during process spawn, but allow individual jobs to override
+    if platform.system() in ["Darwin", "Linux"]:
+        if job_multiprocessing_method == "spawn":
+            # Use default Process (which will use spawn on macOS)
+            process = Process(target=daq_job_process.start, daemon=True)
+        elif job_multiprocessing_method == "fork":
+            # Explicitly use fork context
+            ctx = get_context("fork")
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+        else:  # default behavior
+            # Use fork for better compatibility with most DAQ jobs
+            ctx = get_context("fork")
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+    else:
+        # Use default Process on Windows (which doesn't support fork)
+        process = Process(target=daq_job_process.start, daemon=True)
+
     process.start()
-    daq_job_process.process = process
+    # Type cast to handle ForkProcess vs Process type compatibility
+    daq_job_process.process = process  # type: ignore
     return daq_job_process
 
 

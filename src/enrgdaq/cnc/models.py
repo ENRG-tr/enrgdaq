@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 
 from msgspec import Struct
 
@@ -18,10 +18,10 @@ class SupervisorStatus(Struct):
     restart_schedules: list[RestartScheduleInfo]
 
 
-class CNCMessage(Struct, tag=True):
+class CNCMessage(Struct, tag=True, kw_only=True):
     """Base class for C&C messages."""
 
-    pass
+    req_id: Optional[str] = None
 
 
 class CNCMessageHeartbeat(CNCMessage):
@@ -63,7 +63,69 @@ class CNCMessageReqListClients(CNCMessage):
 class CNCMessageResListClients(CNCMessage):
     """List of connected clients."""
 
-    clients: dict[str, SupervisorInfo]
+    clients: dict[str, Optional[SupervisorInfo]]
+
+
+class CNCMessageReqRestartDAQ(CNCMessage):
+    """Request to restart ENRGDAQ."""
+
+    update: bool = False
+
+    pass
+
+
+class CNCMessageResRestartDAQ(CNCMessage):
+    """Response to update and restart request."""
+
+    success: bool
+    message: str
+
+
+class CNCMessageReqRestartDAQJobs(CNCMessage):
+    """Request to restart DAQJobs."""
+
+    pass
+
+
+class CNCMessageResRestartDAQJobs(CNCMessage):
+    """Response to restart DAQJobs request."""
+
+    success: bool
+    message: str
+
+
+class CNCMessageReqRunCustomDAQJob(CNCMessage):
+    """Request to run a custom DAQJob with config."""
+
+    config: str  # TOML config as string
+
+
+class CNCMessageResRunCustomDAQJob(CNCMessage):
+    """Response to run custom DAQJob request."""
+
+    success: bool
+    message: str
+
+
+class CNCMessageReqStopAndRemoveDAQJob(CNCMessage):
+    """Request to stop and remove a specific DAQJob by name."""
+
+    daq_job_name: str
+
+
+class CNCMessageResStopAndRemoveDAQJob(CNCMessage):
+    """Response to stop and remove DAQJob request."""
+
+    success: bool
+    message: str
+
+
+class CNCClientInfo(Struct):
+    """Information about a connected client."""
+
+    identity: Optional[bytes] = None
+    last_seen: str = ""
+    info: Optional[SupervisorInfo] = None
 
 
 CNCMessageType = Union[
@@ -74,6 +136,14 @@ CNCMessageType = Union[
     CNCMessageResStatus,
     CNCMessageReqListClients,
     CNCMessageResListClients,
+    CNCMessageReqRestartDAQ,
+    CNCMessageResRestartDAQ,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageResRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
+    CNCMessageResRunCustomDAQJob,
+    CNCMessageReqStopAndRemoveDAQJob,
+    CNCMessageResStopAndRemoveDAQJob,
 ]
 
 CNC_DEFAULT_PORT = 5555

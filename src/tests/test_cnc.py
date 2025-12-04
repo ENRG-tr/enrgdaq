@@ -1,16 +1,20 @@
 import time
 import unittest
-from unittest.mock import MagicMock
-
-import msgspec
-import zmq
+from concurrent.futures import TimeoutError
+from unittest.mock import MagicMock, patch
 
 from enrgdaq.cnc.base import SupervisorCNC
 from enrgdaq.cnc.models import (
-    CNCMessageReqListClients,
     CNCMessageReqPing,
+    CNCMessageReqRestartDAQ,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
-    CNCMessageResListClients,
+    CNCMessageResPing,
+    CNCMessageResRestartDAQ,
+    CNCMessageResRestartDAQJobs,
+    CNCMessageResRunCustomDAQJob,
+    CNCMessageResStatus,
     SupervisorStatus,
 )
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
@@ -25,6 +29,7 @@ class MockSupervisor:
         self.daq_job_stats = {}
         self.daq_job_remote_stats = {}
         self.restart_schedules = []
+        self.daq_job_processes = []
 
     def get_status(self):
         return SupervisorStatus(
@@ -34,15 +39,26 @@ class MockSupervisor:
             restart_schedules=[],
         )
 
+    def stop(self):
+        pass
+
+    def start_daq_job_processes(self, *args, **kwargs):
+        return []
+
+    def restart_daq_jobs(self):
+        pass
+
 
 class TestCNC(unittest.TestCase):
     def setUp(self):
+        # 1. Start Server
         self.server_supervisor = MockSupervisor("server", is_server=True)
         self.server_cnc = SupervisorCNC(
             supervisor=self.server_supervisor,
             config=SupervisorCNCConfig(is_server=True),
         )
 
+        # 2. Start Client
         self.client_supervisor = MockSupervisor("client1")
         self.client_cnc = SupervisorCNC(
             supervisor=self.client_supervisor, config=SupervisorCNCConfig()
@@ -54,6 +70,7 @@ class TestCNC(unittest.TestCase):
 
         self.server_cnc.start()
         self.client_cnc.start()
+
         time.sleep(0.5)
 
     def tearDown(self):
@@ -61,150 +78,112 @@ class TestCNC(unittest.TestCase):
         self.client_cnc.stop()
 
     def test_connection_and_heartbeat(self):
-        time.sleep(0.5)
-
-        # Wait for the heartbeat to be processed with retries
-        for _ in range(
-            15
-        ):  # Try up to 15 times with 0.2 second intervals (3 seconds total)
+        for _ in range(15):
             if "client1" in self.server_cnc.clients:
                 break
             time.sleep(0.2)
         else:
-            # If we still don't have the client after retries, fail the test
             self.fail(
                 f"Client 'client1' not found in server clients: {list(self.server_cnc.clients.keys())}"
             )
 
-        self.assertEqual(
-            self.server_cnc.clients["client1"]["info"].supervisor_id, "client1"
-        )
+        client_info = self.server_cnc.clients["client1"]
+        self.assertIsNotNone(client_info.info)
+        self.assertEqual(client_info.info.supervisor_id, "client1")
 
-    def test_ping_pong(self):
-        # Mock a CLI client
-        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
-        try:
-            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester")
-            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+    def test_ping_pong_sync(self):
+        self.test_connection_and_heartbeat()
 
-            # Send a ping command from CLI to client1
-            ping_msg = CNCMessageReqPing()
-            cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(ping_msg)])
+        ping_msg = CNCMessageReqPing()
+        response = self.server_cnc.send_command_sync("client1", ping_msg, timeout=2)
 
-            pong_received = False
-            for _ in range(10):  # Poll for 1 second
-                log_messages = [
-                    call.args[0] for call in self.mock_logger.info.call_args_list
-                ]
-                if any("Received pong" in msg for msg in log_messages):
-                    pong_received = True
-                    break
-                time.sleep(0.1)
-
-            self.assertTrue(pong_received, "Did not receive pong in time")
-
-            log_messages = [
-                call.args[0] for call in self.mock_logger.info.call_args_list
-            ]
-            self.assertTrue(any("Received ping" in msg for msg in log_messages))
-        finally:
-            cli_socket.close()
+        self.assertIsInstance(response, CNCMessageResPing)
+        self.assertEqual(response.req_id, ping_msg.req_id)
 
     def test_get_status(self):
-        # Mock a CLI client
-        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
-        try:
-            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-status")
-            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+        self.test_connection_and_heartbeat()
 
-            # Send a get status command from CLI to client1
-            status_msg = CNCMessageReqStatus()
-            cli_socket.send_multipart([b"client1", msgspec.msgpack.encode(status_msg)])
+        status_msg = CNCMessageReqStatus()
+        response = self.server_cnc.send_command_sync("client1", status_msg, timeout=2)
 
-            status_received = False
-            for _ in range(10):  # Poll for 1 second
-                log_messages = [
-                    call.args[0] for call in self.mock_logger.info.call_args_list
-                ]
-                if any("Received status from client1" in msg for msg in log_messages):
-                    status_received = True
-                    break
-                time.sleep(0.1)
+        self.assertIsInstance(response, CNCMessageResStatus)
+        self.assertEqual(response.status.supervisor_info.supervisor_id, "client1")
 
-            self.assertTrue(status_received, "Did not receive status in time")
+    @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")
+    def test_restart_daq(self, mock_handle):
+        self.test_connection_and_heartbeat()
 
-            log_messages = [
-                call.args[0] for call in self.mock_logger.info.call_args_list
-            ]
-            self.assertTrue(
-                any("Received get status request" in msg for msg in log_messages)
-            )
-        finally:
-            cli_socket.close()
+        # Added 'message' argument to satisfy msgspec definition
+        mock_handle.return_value = (
+            CNCMessageResRestartDAQ(success=True, message="OK"),
+            None,
+        )
+
+        update_msg = CNCMessageReqRestartDAQ()
+        response = self.server_cnc.send_command_sync("client1", update_msg, timeout=2)
+
+        self.assertIsInstance(response, CNCMessageResRestartDAQ)
+        self.assertTrue(response.success)
+
+    @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")
+    def test_restart_daqjobs(self, mock_handle):
+        self.test_connection_and_heartbeat()
+
+        # Added 'message' argument here as well for safety
+        mock_handle.return_value = (
+            CNCMessageResRestartDAQJobs(success=True, message="OK"),
+            None,
+        )
+
+        restart_msg = CNCMessageReqRestartDAQJobs()
+        response = self.server_cnc.send_command_sync("client1", restart_msg, timeout=2)
+
+        self.assertIsInstance(response, CNCMessageResRestartDAQJobs)
+        self.assertTrue(response.success)
+
+    @patch("enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler.handle")
+    def test_run_custom_daqjob(self, mock_handle):
+        self.test_connection_and_heartbeat()
+
+        # Added 'message' argument
+        mock_handle.return_value = (
+            CNCMessageResRunCustomDAQJob(success=True, message="OK"),
+            None,
+        )
+
+        config_str = "daq_job_type = 'test'"
+        custom_msg = CNCMessageReqRunCustomDAQJob(config=config_str)
+        response = self.server_cnc.send_command_sync("client1", custom_msg, timeout=3)
+
+        self.assertIsInstance(response, CNCMessageResRunCustomDAQJob)
+        self.assertTrue(response.success)
 
     def test_list_clients(self):
-        # Mock a CLI client
-        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
-        try:
-            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-list")
-            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+        self.test_connection_and_heartbeat()
 
-            # Send a list clients command
-            list_msg = CNCMessageReqListClients()
-            cli_socket.send(msgspec.msgpack.encode(list_msg))
+        clients = self.server_cnc.clients
+        self.assertIn("client1", clients)
+        client_info = clients["client1"]
+        self.assertIsNotNone(client_info.info)
+        self.assertEqual(client_info.info.supervisor_id, "client1")
 
-            # Wait for reply
-            self.assertTrue(cli_socket.poll(1000))
-            reply_msg = cli_socket.recv()
-            reply = msgspec.msgpack.decode(reply_msg, type=CNCMessageResListClients)
-
-            self.assertIn("client1", reply.clients)
-            self.assertEqual(reply.clients["client1"].supervisor_id, "client1")
-        finally:
-            cli_socket.close()
-
-    def test_get_status_for_unknown_client(self):
-        # Mock a CLI client
-        cli_socket = self.server_cnc.context.socket(zmq.DEALER)
-        try:
-            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-unknown")
-            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
-
-            # Send a get status command to a non-existent client
-            status_msg = CNCMessageReqStatus()
-            cli_socket.send_multipart(
-                [b"unknown_client", msgspec.msgpack.encode(status_msg)]
-            )
-
-            # Check for the error log
-            error_logged = False
-            for _ in range(10):  # Poll for 1 second
-                log_messages = [
-                    call.args[0] for call in self.mock_logger.error.call_args_list
-                ]
-                if any(
-                    "Client 'unknown_client' not found" in msg for msg in log_messages
-                ):
-                    error_logged = True
-                    break
-                time.sleep(0.1)
-
-            self.assertTrue(error_logged, "Did not log error for unknown client")
-        finally:
-            cli_socket.close()
+    def test_command_timeout(self):
+        ping_msg = CNCMessageReqPing()
+        with self.assertRaises(TimeoutError):
+            self.server_cnc.send_command_sync("unknown_client", ping_msg, timeout=1)
+        self.assertEqual(len(self.server_cnc._pending_responses), 0)
 
     def test_multiple_clients(self):
-        # Set up a second client
         client2_supervisor = MockSupervisor("client2")
         client2_cnc = SupervisorCNC(
             supervisor=client2_supervisor, config=SupervisorCNCConfig()
         )
         client2_cnc._logger = self.mock_logger
         client2_cnc.start()
+
         try:
-            # Wait for both clients to connect
             time.sleep(1.0)
-            for _ in range(15):
+            for _ in range(20):
                 if (
                     "client1" in self.server_cnc.clients
                     and "client2" in self.server_cnc.clients
@@ -212,28 +191,15 @@ class TestCNC(unittest.TestCase):
                     break
                 time.sleep(0.2)
             else:
-                self.fail(
-                    f"Not all clients connected: {list(self.server_cnc.clients.keys())}"
-                )
+                self.fail("Not all clients connected")
 
-            # Test list_clients with multiple clients
-            cli_socket = self.server_cnc.context.socket(zmq.DEALER)
-            cli_socket.setsockopt_string(zmq.IDENTITY, "cli-tester-multi")
-            cli_socket.connect(f"tcp://localhost:{self.server_cnc.port}")
+            ping_msg = CNCMessageReqPing()
+            resp1 = self.server_cnc.send_command_sync("client1", ping_msg, timeout=2)
+            self.assertIsInstance(resp1, CNCMessageResPing)
 
-            try:
-                list_msg = CNCMessageReqListClients()
-                cli_socket.send(msgspec.msgpack.encode(list_msg))
+            resp2 = self.server_cnc.send_command_sync("client2", ping_msg, timeout=2)
+            self.assertIsInstance(resp2, CNCMessageResPing)
 
-                self.assertTrue(cli_socket.poll(1000))
-                reply_msg = cli_socket.recv()
-                reply = msgspec.msgpack.decode(reply_msg, type=CNCMessageResListClients)
-
-                self.assertIn("client1", reply.clients)
-                self.assertIn("client2", reply.clients)
-                self.assertEqual(reply.clients["client2"].supervisor_id, "client2")
-            finally:
-                cli_socket.close()
         finally:
             client2_cnc.stop()
 

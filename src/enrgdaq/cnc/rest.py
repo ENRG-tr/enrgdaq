@@ -1,124 +1,119 @@
-import random
-import string
 import threading
 
 import msgspec
 import uvicorn
-import zmq
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
+from pydantic import BaseModel
 
 from enrgdaq.cnc.models import (
-    CNCMessageReqListClients,
     CNCMessageReqPing,
+    CNCMessageReqRestartDAQ,
+    CNCMessageReqRestartDAQJobs,
+    CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
-    CNCMessageResListClients,
-    CNCMessageResPing,
-    CNCMessageResStatus,
-    CNCMessageType,
+    CNCMessageReqStopAndRemoveDAQJob,
 )
 
 
-def start_rest_api(context, port, rest_api_host, rest_api_port):
+def start_rest_api(cnc_instance):
+    """
+    Starts the REST API server in a separate thread.
+    Directly uses the passed `cnc_instance` to interact with the system.
+    """
     app = FastAPI()
 
-    def get_socket():
-        socket = context.socket(zmq.DEALER)
-        client_identity = f"cnc-rest-{''.join(random.choices(string.ascii_lowercase + string.digits, k=8))}"
-        socket.setsockopt_string(zmq.IDENTITY, client_identity)
-        socket.connect(f"tcp://localhost:{port}")
-        return socket
+    # Helper to execute the sync command safely
+    def execute_command(client_id: str, msg, timeout=5):
+        try:
+            # Check if client exists first
+            if client_id not in cnc_instance.clients:
+                raise HTTPException(
+                    status_code=404, detail="Client not found or not connected."
+                )
+
+            reply = cnc_instance.send_command_sync(client_id, msg, timeout=timeout)
+            return reply
+        except TimeoutError:
+            raise HTTPException(
+                status_code=504, detail="Timeout waiting for client response."
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Internal Error: {str(e)}")
 
     @app.get("/clients")
-    async def list_clients():
-        socket = get_socket()
-        poller = zmq.Poller()
-        poller.register(socket, zmq.POLLIN)
-
-        msg = CNCMessageReqListClients()
-        socket.send(msgspec.msgpack.encode(msg))
-
-        socks = dict(poller.poll(2000))
-        if socket in socks:
-            message = socket.recv()
-            try:
-                reply = msgspec.msgpack.decode(message, type=CNCMessageType)
-                if isinstance(reply, CNCMessageResListClients):
-                    return reply.clients
-                else:
-                    raise HTTPException(
-                        status_code=500, detail="Invalid response from server"
-                    )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error decoding reply: {e}"
-                )
-        else:
-            raise HTTPException(
-                status_code=504, detail="Timeout waiting for reply from server."
-            )
+    def list_clients():
+        # Directly read the CNC registry
+        return Response(
+            content=msgspec.json.encode(cnc_instance.clients),
+            media_type="application/json",
+        )
 
     @app.post("/clients/{client_id}/ping")
-    async def ping_client(client_id: str):
-        socket = get_socket()
-        poller = zmq.Poller()
-        poller.register(socket, zmq.POLLIN)
-
+    def ping_client(client_id: str):
         msg = CNCMessageReqPing()
-        socket.send_multipart([client_id.encode(), msgspec.msgpack.encode(msg)])
-
-        socks = dict(poller.poll(2000))
-        if socket in socks:
-            message = socket.recv()
-            try:
-                reply = msgspec.msgpack.decode(message, type=CNCMessageType)
-                if isinstance(reply, CNCMessageResPing):
-                    return {"status": "pong"}
-                else:
-                    raise HTTPException(
-                        status_code=500, detail="Invalid response from server"
-                    )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error decoding reply: {e}"
-                )
-        else:
-            raise HTTPException(
-                status_code=504, detail="Timeout waiting for reply from server."
-            )
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
 
     @app.get("/clients/{client_id}/status")
-    async def get_status(client_id: str):
-        socket = get_socket()
-        poller = zmq.Poller()
-        poller.register(socket, zmq.POLLIN)
-
+    def get_status(client_id: str):
         msg = CNCMessageReqStatus()
-        socket.send_multipart([client_id.encode(), msgspec.msgpack.encode(msg)])
+        reply = execute_command(client_id, msg)
+        # Handle reply structure (usually ResStatus has a .status field)
+        return Response(
+            content=msgspec.json.encode(reply.status), media_type="application/json"
+        )
 
-        socks = dict(poller.poll(2000))
-        if socket in socks:
-            message = socket.recv()
-            try:
-                reply = msgspec.msgpack.decode(message, type=CNCMessageType)
-                if isinstance(reply, CNCMessageResStatus):
-                    return reply.status
-                else:
-                    raise HTTPException(
-                        status_code=500, detail="Invalid response from server"
-                    )
-            except Exception as e:
-                raise HTTPException(
-                    status_code=500, detail=f"Error decoding reply: {e}"
-                )
-        else:
-            raise HTTPException(
-                status_code=504, detail="Timeout waiting for reply from server."
-            )
+    class RestartDAQRequest(BaseModel):
+        update: bool = False
+
+    @app.post("/clients/{client_id}/restart_daq")
+    def restart_daq(client_id: str, request: RestartDAQRequest):
+        msg = CNCMessageReqRestartDAQ(update=request.update)
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
+
+    @app.post("/clients/{client_id}/restart_daqjobs")
+    def restart_daqjobs_client(client_id: str):
+        msg = CNCMessageReqRestartDAQJobs()
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
+
+    class StopAndRemoveDAQJobRequest(BaseModel):
+        daq_job_name: str
+
+    @app.post("/clients/{client_id}/stop_and_remove_daqjob")
+    def stop_and_remove_daqjob_client(
+        client_id: str, request: StopAndRemoveDAQJobRequest
+    ):
+        msg = CNCMessageReqStopAndRemoveDAQJob(daq_job_name=request.daq_job_name)
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
+
+    class RunCustomDAQJobRequest(BaseModel):
+        config: str
+
+    @app.post("/clients/{client_id}/run_custom_daqjob")
+    def run_custom_daqjob_client(client_id: str, request: RunCustomDAQJobRequest):
+        msg = CNCMessageReqRunCustomDAQJob(config=request.config)
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
 
     config = uvicorn.Config(
         app,
-        host=rest_api_host,
-        port=rest_api_port,
+        host=cnc_instance.config.rest_api_host,
+        port=cnc_instance.config.rest_api_port,
         log_level="info",
     )
     server = uvicorn.Server(config)
