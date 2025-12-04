@@ -60,6 +60,9 @@ class DAQJobCamera(DAQJob):
     allowed_message_in_types = []
     config_type = DAQJobCameraConfig
     config: DAQJobCameraConfig
+    multiprocessing_method = (
+        "spawn"  # Use spawn method to avoid AVCaptureDevice fork issues on macOS
+    )
     _cam: Optional[cv2.VideoCapture]
     _previous_frame: Optional[cv2.typing.MatLike] = None
 

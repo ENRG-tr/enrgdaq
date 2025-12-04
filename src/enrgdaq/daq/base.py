@@ -37,6 +37,7 @@ class DAQJob:
         info (DAQJobInfo): Information about the job.
         _has_been_freed (bool): Flag indicating if the job has been freed.
         _logger (logging.Logger): Logger instance for the job.
+        multiprocessing_method (str): The multiprocessing method to use ('fork' or 'spawn').
     """
 
     allowed_message_in_types: list[type[DAQJobMessage]] = []
@@ -50,6 +51,7 @@ class DAQJob:
     info: "DAQJobInfo"
     _has_been_freed: bool
     _logger: logging.Logger
+    multiprocessing_method: str = "default"  # Can be 'fork', 'spawn', or 'default'
 
     def __init__(
         self,

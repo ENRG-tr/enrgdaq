@@ -1,7 +1,8 @@
 import glob
 import logging
 import os
-from multiprocessing import Process, Queue
+import platform
+from multiprocessing import Process, Queue, get_context
 from pathlib import Path
 from typing import Type
 
@@ -86,9 +87,31 @@ def load_daq_jobs(
 
 def start_daq_job(daq_job_process: DAQJobProcess) -> DAQJobProcess:
     logging.info(f"Starting {daq_job_process.daq_job_cls.__name__}")
-    process = Process(target=daq_job_process.start, daemon=True)
+
+    job_multiprocessing_method = getattr(
+        daq_job_process.daq_job_cls, "multiprocessing_method", "default"
+    )
+    # Use 'fork' method on Unix systems (including macOS) by default to avoid semaphore lock issues
+    # when pickling/unpickling Queue objects during process spawn, but allow individual jobs to override
+    if platform.system() in ["Darwin", "Linux"]:
+        if job_multiprocessing_method == "spawn":
+            # Use default Process (which will use spawn on macOS)
+            process = Process(target=daq_job_process.start, daemon=True)
+        elif job_multiprocessing_method == "fork":
+            # Explicitly use fork context
+            ctx = get_context("fork")
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+        else:  # default behavior
+            # Use fork for better compatibility with most DAQ jobs
+            ctx = get_context("fork")
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+    else:
+        # Use default Process on Windows (which doesn't support fork)
+        process = Process(target=daq_job_process.start, daemon=True)
+
     process.start()
-    daq_job_process.process = process
+    # Type cast to handle ForkProcess vs Process type compatibility
+    daq_job_process.process = process  # type: ignore
     return daq_job_process
 
 
