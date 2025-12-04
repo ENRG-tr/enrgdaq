@@ -203,7 +203,6 @@ class Supervisor:
             SupervisorStatus: A struct containing the status.
         """
         assert self.config is not None
-        self._logger.info(self.daq_job_processes)
         return SupervisorStatus(
             supervisor_info=self.config.info,
             daq_job_stats=self.daq_job_stats,

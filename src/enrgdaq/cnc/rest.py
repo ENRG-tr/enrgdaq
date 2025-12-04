@@ -10,6 +10,7 @@ from enrgdaq.cnc.models import (
     CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
+    CNCMessageReqStopAndRemoveDAQJob,
     CNCMessageReqUpdateAndRestart,
 )
 
@@ -77,6 +78,19 @@ def start_rest_api(cnc_instance):
     @app.post("/clients/{client_id}/restart_daqjobs")
     def restart_daqjobs_client(client_id: str):
         msg = CNCMessageReqRestartDAQJobs()
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
+
+    class StopAndRemoveDAQJobRequest(BaseModel):
+        daq_job_name: str
+
+    @app.post("/clients/{client_id}/stop_and_remove_daqjob")
+    def stop_and_remove_daqjob_client(
+        client_id: str, request: StopAndRemoveDAQJobRequest
+    ):
+        msg = CNCMessageReqStopAndRemoveDAQJob(daq_job_name=request.daq_job_name)
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"

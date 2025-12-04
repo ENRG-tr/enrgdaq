@@ -105,6 +105,19 @@ class CNCMessageResRunCustomDAQJob(CNCMessage):
     message: str
 
 
+class CNCMessageReqStopAndRemoveDAQJob(CNCMessage):
+    """Request to stop and remove a specific DAQJob by name."""
+
+    daq_job_name: str
+
+
+class CNCMessageResStopAndRemoveDAQJob(CNCMessage):
+    """Response to stop and remove DAQJob request."""
+
+    success: bool
+    message: str
+
+
 CNCMessageType = Union[
     CNCMessageHeartbeat,
     CNCMessageReqPing,
@@ -119,6 +132,8 @@ CNCMessageType = Union[
     CNCMessageResRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageResRunCustomDAQJob,
+    CNCMessageReqStopAndRemoveDAQJob,
+    CNCMessageResStopAndRemoveDAQJob,
 ]
 
 CNC_DEFAULT_PORT = 5555

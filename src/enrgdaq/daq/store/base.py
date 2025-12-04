@@ -1,7 +1,7 @@
 import time
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import DAQJobMessage
+from enrgdaq.daq.models import DAQJobMessage, DAQJobMessageStop
 from enrgdaq.daq.store.models import DAQJobMessageStore
 
 STORE_LOOP_INTERVAL_SECONDS = 0.01
@@ -48,7 +48,8 @@ class DAQJobStore(DAQJob):
         Returns:
             bool: True if the message can be stored, False otherwise.
         """
-
+        if isinstance(message, DAQJobMessageStop):
+            return True
         if not isinstance(message, DAQJobMessageStore):
             return False
         is_message_allowed = False
