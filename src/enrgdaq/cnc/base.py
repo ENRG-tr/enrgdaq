@@ -23,6 +23,7 @@ from enrgdaq.cnc.handlers import (
     ResStatusHandler,
 )
 from enrgdaq.cnc.models import (
+    CNCClientInfo,
     CNCMessage,
     CNCMessageHeartbeat,
     CNCMessageReqListClients,
@@ -63,7 +64,7 @@ class SupervisorCNC:
         self.poller = zmq.Poller()
         self.socket: Optional[zmq.Socket] = None
 
-        self.clients = {}
+        self.clients: Dict[str, CNCClientInfo] = {}
         self._pending_responses: Dict[str, Future] = {}
         self._command_queue: queue.Queue = queue.Queue()
 
@@ -198,13 +199,16 @@ class SupervisorCNC:
 
             if self.is_server and sender_id_str:
                 # Update Registry
-                self.clients[sender_id_str] = {
-                    "identity": sender_id_bytes,
-                    "last_seen": datetime.now().isoformat(),
-                    "info": msg.supervisor_info
+                existing_info = self.clients.get(sender_id_str)
+                self.clients[sender_id_str] = CNCClientInfo(
+                    identity=sender_id_bytes,
+                    last_seen=datetime.now().isoformat(),
+                    info=msg.supervisor_info
                     if hasattr(msg, "supervisor_info")
-                    else self.clients.get(sender_id_str, {}).get("info"),
-                }
+                    else existing_info.info
+                    if existing_info
+                    else None,
+                )
 
                 # Only if the message actually has a req_id and it's in our pending map
                 if (

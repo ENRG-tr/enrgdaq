@@ -3,7 +3,6 @@ import unittest
 from concurrent.futures import TimeoutError
 from unittest.mock import MagicMock, patch
 
-
 from enrgdaq.cnc.base import SupervisorCNC
 from enrgdaq.cnc.models import (
     CNCMessageReqPing,
@@ -88,9 +87,9 @@ class TestCNC(unittest.TestCase):
                 f"Client 'client1' not found in server clients: {list(self.server_cnc.clients.keys())}"
             )
 
-        self.assertEqual(
-            self.server_cnc.clients["client1"]["info"].supervisor_id, "client1"
-        )
+        client_info = self.server_cnc.clients["client1"]
+        self.assertIsNotNone(client_info.info)
+        self.assertEqual(client_info.info.supervisor_id, "client1")
 
     def test_ping_pong_sync(self):
         self.test_connection_and_heartbeat()
@@ -164,12 +163,14 @@ class TestCNC(unittest.TestCase):
 
         clients = self.server_cnc.clients
         self.assertIn("client1", clients)
-        self.assertEqual(clients["client1"]["info"].supervisor_id, "client1")
+        client_info = clients["client1"]
+        self.assertIsNotNone(client_info.info)
+        self.assertEqual(client_info.info.supervisor_id, "client1")
 
     def test_command_timeout(self):
         ping_msg = CNCMessageReqPing()
         with self.assertRaises(TimeoutError):
-            self.server_cnc.send_command_sync("unknown_client", ping_msg, timeout=1.0)
+            self.server_cnc.send_command_sync("unknown_client", ping_msg, timeout=1)
         self.assertEqual(len(self.server_cnc._pending_responses), 0)
 
     def test_multiple_clients(self):

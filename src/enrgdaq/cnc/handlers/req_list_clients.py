@@ -36,5 +36,5 @@ class ReqListClientsHandler(CNCMessageHandler):
         """
         sender_id_str = sender_identity.decode("utf-8")
         self._logger.info(f"Received list clients request from {sender_id_str}")
-        client_list = {cid: cinfo["info"] for cid, cinfo in self.cnc.clients.items()}
+        client_list = {cid: cinfo.info for cid, cinfo in self.cnc.clients.items()}
         return CNCMessageResListClients(clients=client_list), False

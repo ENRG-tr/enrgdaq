@@ -63,7 +63,7 @@ class CNCMessageReqListClients(CNCMessage):
 class CNCMessageResListClients(CNCMessage):
     """List of connected clients."""
 
-    clients: dict[str, SupervisorInfo]
+    clients: dict[str, Optional[SupervisorInfo]]
 
 
 class CNCMessageReqUpdateAndRestart(CNCMessage):
@@ -116,6 +116,14 @@ class CNCMessageResStopAndRemoveDAQJob(CNCMessage):
 
     success: bool
     message: str
+
+
+class CNCClientInfo(Struct):
+    """Information about a connected client."""
+
+    identity: Optional[bytes] = None
+    last_seen: str = ""
+    info: Optional[SupervisorInfo] = None
 
 
 CNCMessageType = Union[

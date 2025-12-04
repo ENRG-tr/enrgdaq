@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Optional, Tuple
 
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
-from enrgdaq.cnc.models import CNCMessage, CNCMessageHeartbeat
+from enrgdaq.cnc.models import CNCClientInfo, CNCMessage, CNCMessageHeartbeat
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
@@ -33,9 +33,9 @@ class HeartbeatHandler(CNCMessageHandler):
         """
         sender_id_str = sender_identity.decode("utf-8")
         self._logger.debug(f"Received heartbeat from {sender_id_str}")
-        self.cnc.clients[sender_id_str] = {
-            "identity": sender_identity,
-            "last_seen": datetime.now().isoformat(),
-            "info": msg.supervisor_info,
-        }
+        self.cnc.clients[sender_id_str] = CNCClientInfo(
+            identity=sender_identity,
+            last_seen=datetime.now().isoformat(),
+            info=msg.supervisor_info,
+        )
         return None

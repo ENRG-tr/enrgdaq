@@ -1,34 +1,16 @@
-import logging
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
 from typing import Optional
 
 from msgspec import Struct, field
 
-from enrgdaq.models import SupervisorInfo
+from enrgdaq.models import LogVerbosity, SupervisorInfo
 
 DEFAULT_REMOTE_TOPIC = "DAQ"
 
 # Don't send messages to remote if the topic is this
 REMOTE_TOPIC_VOID = "@void_message"
-
-
-class LogVerbosity(str, Enum):
-    """
-    Enum representing the verbosity levels for logging.
-
-    Used in DAQJobConfig.
-    """
-
-    DEBUG = "DEBUG"
-    INFO = "INFO"
-    WARNING = "WARNING"
-    ERROR = "ERROR"
-
-    def to_logging_level(self) -> int:
-        return logging._nameToLevel[self.value]
 
 
 @dataclass
