@@ -2,7 +2,6 @@ import logging
 import os
 import platform
 import sys
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty, Full
@@ -97,7 +96,7 @@ class Supervisor:
             raise ValueError(
                 f"DAQ job config path '{self._daq_job_config_path}' does not exist."
             )
-        pass
+        self._is_stopped = False
 
     def init(self):
         """
@@ -145,30 +144,31 @@ class Supervisor:
         """
         Main loop that continuously runs the supervisor, handling job restarts and message passing.
         """
-        while True:
+        while not self._is_stopped:
             try:
                 self.loop()
             except KeyboardInterrupt:
-                self._logger.warning("KeyboardInterrupt received, cleaning up")
+                self._logger.warning("KeyboardInterrupt received, stopping")
                 self.stop()
                 break
+        for daq_job_process in self.daq_job_processes:
+            try:
+                daq_job_process.message_out.put_nowait(
+                    DAQJobMessageStop(reason="Stopped by supervisor")
+                )
+            except Exception:
+                # Queue might be closed, continue
+                pass
 
     def stop(self):
         """
         Stops the supervisor and all its components.
         """
+        if self._is_stopped:
+            return
         if self._cnc_instance:
             self._cnc_instance.stop()
-        for daq_job_process in self.daq_job_processes:
-            try:
-                daq_job_process.message_out.put(
-                    DAQJobMessageStop(reason="KeyboardInterrupt")
-                )
-            except Exception:
-                pass  # Queue might be closed, continue
-
-        time.sleep(5)
-        sys.exit(0)
+        self._is_stopped = True
 
     def loop(self):
         """
