@@ -2,6 +2,7 @@ import logging
 import os
 import platform
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from queue import Empty, Full
@@ -159,15 +160,14 @@ class Supervisor:
         if self._cnc_instance:
             self._cnc_instance.stop()
         for daq_job_process in self.daq_job_processes:
-            daq_job_process.message_out.put(
-                DAQJobMessageStop(reason="KeyboardInterrupt")
-            )
-        # Wait for all threads to stop with a timeout
-        for daq_job_process in self.daq_job_processes:
-            if not daq_job_process.process:
-                continue
-            daq_job_process.process.join(timeout=5)
+            try:
+                daq_job_process.message_out.put(
+                    DAQJobMessageStop(reason="KeyboardInterrupt")
+                )
+            except Exception:
+                pass  # Queue might be closed, continue
 
+        time.sleep(5)
         sys.exit(0)
 
     def loop(self):

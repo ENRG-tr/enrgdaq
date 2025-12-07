@@ -61,9 +61,7 @@ class ReqRestartHandler(CNCMessageHandler):
             self._logger.info(message)
 
             # Schedule exit
-            threading.Timer(
-                CNC_REQ_UPDATE_AND_RESTART_SECONDS if msg.update else 0, self._exit
-            ).start()
+            threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
         except subprocess.CalledProcessError as e:
             success = False
             message = f"Error during update: {str(e)}"
