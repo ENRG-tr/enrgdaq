@@ -26,7 +26,7 @@ jobs:
 
       - name: Generate documentation
         run: |
-          pdoc3 --html ./src/enrgdaq/ --output-dir docs/
+          pdoc3 --html ./src/enrgdaq/ --output-dir docs/ --skip-errors
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
