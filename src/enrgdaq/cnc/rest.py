@@ -16,6 +16,8 @@ from enrgdaq.cnc.models import (
 
 
 def start_rest_api(cnc_instance):
+    from enrgdaq.cnc.base import CNC_MAX_CLIENT_LOGS
+
     """
     Starts the REST API server in a separate thread.
     Directly uses the passed `cnc_instance` to interact with the system.
@@ -109,6 +111,13 @@ def start_rest_api(cnc_instance):
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"
         )
+
+    # Logging Endpoints
+    @app.get("/clients/{client_id}/logs")
+    def get_logs(client_id: str):
+        if client_id not in cnc_instance.client_logs:
+            return {"error": "Client not found"}
+        return {"logs": cnc_instance.client_logs[client_id][-CNC_MAX_CLIENT_LOGS:]}
 
     config = uvicorn.Config(
         app,

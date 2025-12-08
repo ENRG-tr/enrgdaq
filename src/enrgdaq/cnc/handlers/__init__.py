@@ -1,6 +1,7 @@
 from .base import CNCMessageHandler
 from .heartbeat import HeartbeatHandler
 from .req_list_clients import ReqListClientsHandler
+from .req_log import ReqLogHandler
 from .req_ping import ReqPingHandler
 from .req_restart_daq import ReqRestartHandler
 from .req_restart_daqjobs import ReqRestartDAQJobsHandler
@@ -13,13 +14,14 @@ from .res_status import ResStatusHandler
 __all__ = [
     "CNCMessageHandler",
     "HeartbeatHandler",
+    "ReqLogHandler",
     "ReqListClientsHandler",
     "ReqPingHandler",
-    "ReqStatusHandler",
-    "ResPingHandler",
-    "ResStatusHandler",
     "ReqRestartHandler",
     "ReqRestartDAQJobsHandler",
     "ReqRunCustomDAQJobHandler",
+    "ReqStatusHandler",
     "ReqStopAndRemoveDAQJobHandler",
+    "ResPingHandler",
+    "ResStatusHandler",
 ]

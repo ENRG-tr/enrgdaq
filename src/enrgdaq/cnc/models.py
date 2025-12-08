@@ -120,6 +120,16 @@ class CNCMessageResStopAndRemoveDAQJob(CNCMessage):
     message: str
 
 
+class CNCMessageLog(CNCMessage):
+    """Log message from client to server."""
+
+    level: str  # e.g. 'INFO', 'WARNING', 'ERROR'
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log
+
+
 class CNCClientInfo(Struct):
     """Information about a connected client."""
 
@@ -144,6 +154,5 @@ CNCMessageType = Union[
     CNCMessageResRunCustomDAQJob,
     CNCMessageReqStopAndRemoveDAQJob,
     CNCMessageResStopAndRemoveDAQJob,
+    CNCMessageLog,
 ]
-
-CNC_DEFAULT_PORT = 5555

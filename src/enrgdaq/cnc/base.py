@@ -3,6 +3,7 @@ import queue
 import threading
 import time
 import uuid
+from collections import defaultdict, deque
 from concurrent.futures import Future
 from datetime import datetime
 from typing import Dict, Optional
@@ -13,6 +14,7 @@ import zmq
 from enrgdaq.cnc.handlers import (
     HeartbeatHandler,
     ReqListClientsHandler,
+    ReqLogHandler,
     ReqPingHandler,
     ReqRestartDAQJobsHandler,
     ReqRestartHandler,
@@ -26,6 +28,7 @@ from enrgdaq.cnc.models import (
     CNCClientInfo,
     CNCMessage,
     CNCMessageHeartbeat,
+    CNCMessageLog,
     CNCMessageReqListClients,
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
@@ -41,6 +44,7 @@ from enrgdaq.cnc.rest import start_rest_api
 from enrgdaq.models import SupervisorCNCConfig
 
 CNC_HEARTBEAT_INTERVAL_SECONDS = 1
+CNC_MAX_CLIENT_LOGS = 1000
 
 
 class SupervisorCNC:
@@ -50,9 +54,6 @@ class SupervisorCNC:
     """
 
     def __init__(self, supervisor, config: SupervisorCNCConfig):
-        self._logger = logging.getLogger(__name__)
-        self._logger.setLevel(config.verbosity.to_logging_level())
-
         from enrgdaq.supervisor import Supervisor
 
         self.supervisor: Supervisor = supervisor
@@ -67,12 +68,27 @@ class SupervisorCNC:
         self.clients: Dict[str, CNCClientInfo] = {}
         self._pending_responses: Dict[str, Future] = {}
         self._command_queue: queue.Queue = queue.Queue()
+        self.client_logs: defaultdict[str, deque[CNCMessageLog]] = defaultdict(deque)
 
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self.run, daemon=True)
 
+        # Set up CNC logging to automatically capture and send logs
+        self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        self._logger.setLevel(config.verbosity.to_logging_level())
+
+        if not self.is_server:
+            from .log_util import CNCLogHandler
+
+            cnc_handler = CNCLogHandler(self)
+            cnc_handler.setLevel(config.verbosity.to_logging_level())
+
+            self._logger.addHandler(cnc_handler)
+            self._logger.propagate = False
+
         self.message_handlers = {
             CNCMessageHeartbeat: HeartbeatHandler(self),
+            CNCMessageLog: ReqLogHandler(self),
             CNCMessageReqPing: ReqPingHandler(self),
             CNCMessageResPing: ResPingHandler(self),
             CNCMessageReqStatus: ReqStatusHandler(self),
@@ -248,6 +264,11 @@ class SupervisorCNC:
                 self.socket.send_multipart([identity, packed])
         else:
             self.socket.send(packed)
+
+    def add_client_log(self, client_id: str, msg: CNCMessageLog):
+        self.client_logs[client_id].append(msg)
+        if len(self.client_logs[client_id]) > CNC_MAX_CLIENT_LOGS:
+            self.client_logs[client_id].popleft()
 
 
 def start_supervisor_cnc(
