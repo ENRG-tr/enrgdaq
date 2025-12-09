@@ -3,6 +3,7 @@ import threading
 import msgspec
 import uvicorn
 from fastapi import FastAPI, HTTPException, Response
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from enrgdaq.cnc.models import (
@@ -23,6 +24,15 @@ def start_rest_api(cnc_instance):
     Directly uses the passed `cnc_instance` to interact with the system.
     """
     app = FastAPI()
+
+    # Enable CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # Helper to execute the sync command safely
     def execute_command(client_id: str, msg, timeout=5):
