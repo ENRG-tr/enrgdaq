@@ -30,5 +30,5 @@ class ReqPingHandler(CNCMessageHandler):
         :param msg: The ping request message.
         :return: A pong response message.
         """
-        self._logger.info("Received ping, sending pong.")
+        self._logger.debug("Received ping, sending pong.")
         return CNCMessageResPing(), True

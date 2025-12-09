@@ -31,5 +31,5 @@ class ResStatusHandler(CNCMessageHandler):
         :return: None
         """
         sender_id_str = sender_identity.decode("utf-8")
-        self._logger.info(f"Received status from {sender_id_str}: {msg.status}")
+        self._logger.debug(f"Received status from {sender_id_str}: {msg.status}")
         return None
