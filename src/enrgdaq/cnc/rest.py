@@ -116,7 +116,8 @@ def start_rest_api(cnc_instance):
     def get_logs(client_id: str):
         if client_id not in cnc_instance.client_logs:
             return {"error": "Client not found"}
-        return {"logs": cnc_instance.client_logs[client_id][-CNC_MAX_CLIENT_LOGS:]}
+        logs = list(cnc_instance.client_logs[client_id])
+        return {"logs": logs[-CNC_MAX_CLIENT_LOGS:]}
 
     config = uvicorn.Config(
         app,
