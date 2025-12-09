@@ -111,6 +111,15 @@ def start_daq_job(daq_job_process: DAQJobProcess) -> DAQJobProcess:
     process.start()
     # Type cast to handle ForkProcess vs Process type compatibility
     daq_job_process.process = process  # type: ignore
+    try:
+        daq_job_process.daq_job_info = daq_job_process._daq_job_info_queue.get(
+            timeout=5000
+        )
+    except Exception as e:
+        logging.error(
+            f"Could not get DAQ job info for {daq_job_process.daq_job_cls.__name__}: {e}",
+            exc_info=True,
+        )
     return daq_job_process
 
 

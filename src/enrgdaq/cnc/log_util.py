@@ -1,5 +1,4 @@
 import logging
-import sys
 from datetime import datetime
 
 from enrgdaq.cnc.models import CNCMessageLog
@@ -57,5 +56,5 @@ class CNCLogHandler(logging.Handler):
             # Propagate the log message to the root logger
             logging.getLogger().handle(record)
 
-        except Exception as e:
-            print(f"Error sending log to CNC server: {e}", file=sys.stderr)
+        except Exception:
+            pass

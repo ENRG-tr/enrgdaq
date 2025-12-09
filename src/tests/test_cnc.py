@@ -33,6 +33,7 @@ class MockSupervisor:
 
     def get_status(self):
         return SupervisorStatus(
+            daq_jobs=[],
             supervisor_info=self.config.info,
             daq_job_stats=self.daq_job_stats,
             daq_job_remote_stats=self.daq_job_remote_stats,

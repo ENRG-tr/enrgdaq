@@ -30,6 +30,5 @@ class ReqStatusHandler(CNCMessageHandler):
         :param msg: The status request message.
         :return: A status response message.
         """
-        self._logger.info("Received get status request.")
         status = self.cnc.supervisor.get_status()
         return CNCMessageResStatus(status=status), True

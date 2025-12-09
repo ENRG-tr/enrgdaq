@@ -211,6 +211,11 @@ class Supervisor:
         """
         assert self.config is not None
         return SupervisorStatus(
+            daq_jobs=[
+                daq_job_process.daq_job_info
+                for daq_job_process in self.daq_job_processes
+                if daq_job_process.daq_job_info is not None
+            ],
             supervisor_info=self.config.info,
             daq_job_stats=self.daq_job_stats,
             daq_job_remote_stats=self.daq_job_remote_stats,

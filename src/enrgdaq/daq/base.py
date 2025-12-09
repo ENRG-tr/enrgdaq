@@ -227,6 +227,8 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     process: Optional[Process]
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
+    daq_job_info: Optional[DAQJobInfo] = None
+    _daq_job_info_queue: "Queue[DAQJobInfo]" = msgspec.field(default_factory=Queue)
 
     def start(self):
         instance = self.daq_job_cls(
@@ -236,6 +238,7 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             message_in=self.message_in,
             message_out=self.message_out,
         )
+        self._daq_job_info_queue.put(instance.info)
         try:
             instance.start()
         except Exception as e:
