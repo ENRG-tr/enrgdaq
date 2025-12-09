@@ -16,11 +16,11 @@ from enrgdaq.cnc.handlers import (
     ReqListClientsHandler,
     ReqLogHandler,
     ReqPingHandler,
-    ReqRestartDAQJobsHandler,
     ReqRestartHandler,
     ReqRunCustomDAQJobHandler,
     ReqStatusHandler,
-    ReqStopAndRemoveDAQJobHandler,
+    ReqStopDAQJobHandler,
+    ReqStopDAQJobsHandler,
     ResPingHandler,
     ResStatusHandler,
 )
@@ -32,10 +32,10 @@ from enrgdaq.cnc.models import (
     CNCMessageReqListClients,
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
-    CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
-    CNCMessageReqStopAndRemoveDAQJob,
+    CNCMessageReqStopDAQJob,
+    CNCMessageReqStopDAQJobs,
     CNCMessageResPing,
     CNCMessageResStatus,
     CNCMessageType,
@@ -95,9 +95,9 @@ class SupervisorCNC:
             CNCMessageResStatus: ResStatusHandler(self),
             CNCMessageReqListClients: ReqListClientsHandler(self),
             CNCMessageReqRestartDAQ: ReqRestartHandler(self),
-            CNCMessageReqRestartDAQJobs: ReqRestartDAQJobsHandler(self),
+            CNCMessageReqStopDAQJobs: ReqStopDAQJobsHandler(self),
             CNCMessageReqRunCustomDAQJob: ReqRunCustomDAQJobHandler(self),
-            CNCMessageReqStopAndRemoveDAQJob: ReqStopAndRemoveDAQJobHandler(self),
+            CNCMessageReqStopDAQJob: ReqStopDAQJobHandler(self),
         }
 
         if self.is_server:

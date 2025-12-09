@@ -81,13 +81,13 @@ class CNCMessageResRestartDAQ(CNCMessage):
     message: str
 
 
-class CNCMessageReqRestartDAQJobs(CNCMessage):
+class CNCMessageReqStopDAQJobs(CNCMessage):
     """Request to restart DAQJobs."""
 
     pass
 
 
-class CNCMessageResRestartDAQJobs(CNCMessage):
+class CNCMessageResStopDAQJobs(CNCMessage):
     """Response to restart DAQJobs request."""
 
     success: bool
@@ -107,13 +107,14 @@ class CNCMessageResRunCustomDAQJob(CNCMessage):
     message: str
 
 
-class CNCMessageReqStopAndRemoveDAQJob(CNCMessage):
+class CNCMessageReqStopDAQJob(CNCMessage):
     """Request to stop and remove a specific DAQJob by name."""
 
     daq_job_name: str
+    remove: bool = False
 
 
-class CNCMessageResStopAndRemoveDAQJob(CNCMessage):
+class CNCMessageResStopDAQJob(CNCMessage):
     """Response to stop and remove DAQJob request."""
 
     success: bool
@@ -148,11 +149,11 @@ CNCMessageType = Union[
     CNCMessageResListClients,
     CNCMessageReqRestartDAQ,
     CNCMessageResRestartDAQ,
-    CNCMessageReqRestartDAQJobs,
-    CNCMessageResRestartDAQJobs,
+    CNCMessageReqStopDAQJobs,
+    CNCMessageResStopDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageResRunCustomDAQJob,
-    CNCMessageReqStopAndRemoveDAQJob,
-    CNCMessageResStopAndRemoveDAQJob,
+    CNCMessageReqStopDAQJob,
+    CNCMessageResStopDAQJob,
     CNCMessageLog,
 ]

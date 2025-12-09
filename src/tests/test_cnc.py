@@ -7,14 +7,14 @@ from enrgdaq.cnc.base import SupervisorCNC
 from enrgdaq.cnc.models import (
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
-    CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
+    CNCMessageReqStopDAQJobs,
     CNCMessageResPing,
     CNCMessageResRestartDAQ,
-    CNCMessageResRestartDAQJobs,
     CNCMessageResRunCustomDAQJob,
     CNCMessageResStatus,
+    CNCMessageResStopDAQJobs,
     SupervisorStatus,
 )
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
@@ -109,7 +109,7 @@ class TestCNC(unittest.TestCase):
         self.assertIsInstance(response, CNCMessageResStatus)
         self.assertEqual(response.status.supervisor_info.supervisor_id, "client1")
 
-    @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")
+    @patch("enrgdaq.cnc.handlers.ReqStopDAQJobsHandler.handle")
     def test_restart_daq(self, mock_handle):
         self.test_connection_and_heartbeat()
 
@@ -125,20 +125,20 @@ class TestCNC(unittest.TestCase):
         self.assertIsInstance(response, CNCMessageResRestartDAQ)
         self.assertTrue(response.success)
 
-    @patch("enrgdaq.cnc.handlers.ReqRestartDAQJobsHandler.handle")
+    @patch("enrgdaq.cnc.handlers.ReqStopDAQJobsHandler.handle")
     def test_restart_daqjobs(self, mock_handle):
         self.test_connection_and_heartbeat()
 
         # Added 'message' argument here as well for safety
         mock_handle.return_value = (
-            CNCMessageResRestartDAQJobs(success=True, message="OK"),
+            CNCMessageResStopDAQJobs(success=True, message="OK"),
             None,
         )
 
-        restart_msg = CNCMessageReqRestartDAQJobs()
+        restart_msg = CNCMessageReqStopDAQJobs()
         response = self.server_cnc.send_command_sync("client1", restart_msg, timeout=2)
 
-        self.assertIsInstance(response, CNCMessageResRestartDAQJobs)
+        self.assertIsInstance(response, CNCMessageResStopDAQJobs)
         self.assertTrue(response.success)
 
     @patch("enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler.handle")

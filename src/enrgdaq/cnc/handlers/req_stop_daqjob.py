@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
 from enrgdaq.cnc.models import (
     CNCMessage,
-    CNCMessageReqStopAndRemoveDAQJob,
-    CNCMessageResStopAndRemoveDAQJob,
+    CNCMessageReqStopDAQJob,
+    CNCMessageResStopDAQJob,
 )
 from enrgdaq.daq.models import DAQJobMessageStop
 
@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
 
 
-class ReqStopAndRemoveDAQJobHandler(CNCMessageHandler):
+class ReqStopDAQJobHandler(CNCMessageHandler):
     """
-    Handler for CNCMessageReqStopAndRemoveDAQJob messages.
+    Handler for CNCMessageReqStopDAQJob messages.
     """
 
     def __init__(self, cnc: SupervisorCNC):
@@ -27,7 +27,7 @@ class ReqStopAndRemoveDAQJobHandler(CNCMessageHandler):
         super().__init__(cnc)
 
     def handle(
-        self, sender_identity: bytes, msg: CNCMessageReqStopAndRemoveDAQJob
+        self, sender_identity: bytes, msg: CNCMessageReqStopDAQJob
     ) -> Optional[Tuple[CNCMessage, bool]]:
         """
         Handles a stop and remove DAQJob request.
@@ -60,17 +60,20 @@ class ReqStopAndRemoveDAQJobHandler(CNCMessageHandler):
 
                         # Remove the process from the supervisor's list
                         supervisor.daq_job_processes.remove(target_process)
-                        supervisor.daq_job_stats.pop(
-                            target_process.daq_job_cls.__name__
-                        )
+                        if msg.remove:
+                            supervisor.daq_job_stats.pop(
+                                target_process.daq_job_cls.__name__
+                            )
 
                         success = True
-                        message = f"Stop signal sent and DAQ job '{msg.daq_job_name}' removed from supervisor."
+                        message = f"DAQJob {msg.daq_job_name} " + (
+                            "removed and stopped" if msg.remove else "stopped"
+                        )
                         self._logger.info(message)
                     except Exception as e:
                         success = False
-                        message = f"Error sending stop message to DAQ job '{msg.daq_job_name}': {str(e)}"
-                        self._logger.error(message)
+                        message = f"Error during Stop DAQJob for '{msg.daq_job_name}': {str(e)}"
+                        self._logger.error(message, exc_info=True)
                 else:
                     success = False
                     message = f"DAQ job '{msg.daq_job_name}' not found"
@@ -87,4 +90,4 @@ class ReqStopAndRemoveDAQJobHandler(CNCMessageHandler):
             )
             self._logger.error(message, exc_info=True)
 
-        return CNCMessageResStopAndRemoveDAQJob(success=success, message=message), True
+        return CNCMessageResStopDAQJob(success=success, message=message), True

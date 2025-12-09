@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Optional, Tuple
 from enrgdaq.cnc.handlers.base import CNCMessageHandler
 from enrgdaq.cnc.models import (
     CNCMessage,
-    CNCMessageReqRestartDAQJobs,
-    CNCMessageResRestartDAQJobs,
+    CNCMessageReqStopDAQJobs,
+    CNCMessageResStopDAQJobs,
 )
 from enrgdaq.daq.models import DAQJobMessageStop
 
@@ -14,9 +14,9 @@ if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
 
 
-class ReqRestartDAQJobsHandler(CNCMessageHandler):
+class ReqStopDAQJobsHandler(CNCMessageHandler):
     """
-    Handler for CNCMessageReqRestartDAQJobs messages.
+    Handler for CNCMessageReqStopDAQJobs messages.
     """
 
     def __init__(self, cnc: SupervisorCNC):
@@ -27,7 +27,7 @@ class ReqRestartDAQJobsHandler(CNCMessageHandler):
         super().__init__(cnc)
 
     def handle(
-        self, sender_identity: bytes, msg: CNCMessageReqRestartDAQJobs
+        self, sender_identity: bytes, msg: CNCMessageReqStopDAQJobs
     ) -> Optional[Tuple[CNCMessage, bool]]:
         """
         Handles a restart DAQJobs request.
@@ -67,4 +67,4 @@ class ReqRestartDAQJobsHandler(CNCMessageHandler):
             message = f"Error restarting DAQJobs: {str(e)}"
             self._logger.error(message)
 
-        return CNCMessageResRestartDAQJobs(success=success, message=message), True
+        return CNCMessageResStopDAQJobs(success=success, message=message), True

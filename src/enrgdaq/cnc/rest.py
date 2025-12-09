@@ -8,10 +8,10 @@ from pydantic import BaseModel
 from enrgdaq.cnc.models import (
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
-    CNCMessageReqRestartDAQJobs,
     CNCMessageReqRunCustomDAQJob,
     CNCMessageReqStatus,
-    CNCMessageReqStopAndRemoveDAQJob,
+    CNCMessageReqStopDAQJob,
+    CNCMessageReqStopDAQJobs,
 )
 
 
@@ -80,22 +80,21 @@ def start_rest_api(cnc_instance):
             content=msgspec.json.encode(reply), media_type="application/json"
         )
 
-    @app.post("/clients/{client_id}/restart_daqjobs")
-    def restart_daqjobs_client(client_id: str):
-        msg = CNCMessageReqRestartDAQJobs()
+    @app.post("/clients/{client_id}/stop_daqjobs")
+    def stop_daqjobs_client(client_id: str):
+        msg = CNCMessageReqStopDAQJobs()
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"
         )
 
-    class StopAndRemoveDAQJobRequest(BaseModel):
+    class StopDAQJobRequest(BaseModel):
         daq_job_name: str
+        remove: bool = False
 
-    @app.post("/clients/{client_id}/stop_and_remove_daqjob")
-    def stop_and_remove_daqjob_client(
-        client_id: str, request: StopAndRemoveDAQJobRequest
-    ):
-        msg = CNCMessageReqStopAndRemoveDAQJob(daq_job_name=request.daq_job_name)
+    @app.post("/clients/{client_id}/stop_daqjob")
+    def stop_daqjob_client(client_id: str, request: StopDAQJobRequest):
+        msg = CNCMessageReqStopDAQJob(daq_job_name=request.daq_job_name)
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"
