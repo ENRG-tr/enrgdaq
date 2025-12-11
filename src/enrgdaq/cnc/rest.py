@@ -14,6 +14,10 @@ from enrgdaq.cnc.models import (
     CNCMessageReqStopDAQJob,
     CNCMessageReqStopDAQJobs,
 )
+from enrgdaq.daq.template import (
+    get_store_config_templates,
+    get_daq_job_config_templates,
+)
 
 
 def start_rest_api(cnc_instance):
@@ -121,7 +125,6 @@ def start_rest_api(cnc_instance):
             content=msgspec.json.encode(reply), media_type="application/json"
         )
 
-    # Logging Endpoints
     @app.get("/clients/{client_id}/logs")
     def get_logs(client_id: str):
         if client_id not in cnc_instance.client_logs:
@@ -132,6 +135,21 @@ def start_rest_api(cnc_instance):
         logs = list(cnc_instance.client_logs[client_id])
         return Response(
             content=msgspec.json.encode({"logs": logs[-CNC_MAX_CLIENT_LOGS:]}),
+            media_type="application/json",
+        )
+
+    # Template Endpoints
+    @app.get("/templates/stores")
+    def get_store_templates():
+        return Response(
+            content=msgspec.json.encode(get_store_config_templates()),
+            media_type="application/json",
+        )
+
+    @app.get("/templates/daqjobs")
+    def get_daqjob_templates():
+        return Response(
+            content=msgspec.json.encode(get_daq_job_config_templates()),
             media_type="application/json",
         )
 

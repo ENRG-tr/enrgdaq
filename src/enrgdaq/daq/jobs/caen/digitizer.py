@@ -14,13 +14,28 @@ import numpy as np
 try:
     from caen_libs import caendigitizer as dgtz
 except Exception:
+    from enum import Enum
     from types import SimpleNamespace
 
+    # Create proper Enum fallbacks for schema generation
+    class TriggerMode(str, Enum):
+        ACQ_ONLY = "ACQ_ONLY"
+        DISABLED = "DISABLED"
+
+    class AcqMode(str, Enum):
+        SW_CONTROLLED = "SW_CONTROLLED"
+
+    class TriggerPolarity(str, Enum):
+        ON_RISING_EDGE = "ON_RISING_EDGE"
+
+    class IOLevel(str, Enum):
+        NIM = "NIM"
+
     dgtz = SimpleNamespace()
-    dgtz.TriggerMode = SimpleNamespace(ACQ_ONLY="ACQ_ONLY", DISABLED="DISABLED")
-    dgtz.AcqMode = SimpleNamespace(SW_CONTROLLED="SW_CONTROLLED")
-    dgtz.TriggerPolarity = SimpleNamespace(ON_RISING_EDGE="ON_RISING_EDGE")
-    dgtz.IOLevel = SimpleNamespace(NIM="NIM")
+    dgtz.TriggerMode = TriggerMode
+    dgtz.AcqMode = AcqMode
+    dgtz.TriggerPolarity = TriggerPolarity
+    dgtz.IOLevel = IOLevel
     dgtz.ConnectionType = {}
     dgtz.Device = None
     dgtz.BoardInfo = None
