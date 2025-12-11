@@ -67,6 +67,7 @@ class SupervisorInfo(Struct):
     """
 
     supervisor_id: str
+    supervisor_tags: list[str] = []
 
 
 class RestartScheduleInfo(Struct):
