@@ -79,7 +79,7 @@ class DAQJob:
         self.message_out = message_out or Queue()
 
         self._has_been_freed = False
-        self.unique_id = str(uuid.uuid4())
+        self.unique_id = getattr(config, "daq_job_unique_id", None) or str(uuid.uuid4())
 
         if supervisor_info is not None:
             self._supervisor_info = supervisor_info

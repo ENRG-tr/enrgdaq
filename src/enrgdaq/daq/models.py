@@ -73,6 +73,7 @@ class DAQJobConfig(Struct, kw_only=True):
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
+    daq_job_unique_id: Optional[str] = None
     daq_job_type: str
 
 
