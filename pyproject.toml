@@ -23,6 +23,7 @@ dependencies = [
     "lz4>=4.3.3",
     "fastapi>=0.111.1",
     "uvicorn>=0.30.3",
+    "tomli-w>=1.2.0",
 ]
 
 [dependency-groups]
