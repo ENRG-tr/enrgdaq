@@ -453,7 +453,6 @@ class Supervisor:
         assert self.config is not None
         return DAQJobInfo(
             daq_job_type="Supervisor",
-            daq_job_class_name="Supervisor",
             supervisor_info=self.config.info,
             unique_id=self.config.info.supervisor_id,
             instance_id=0,

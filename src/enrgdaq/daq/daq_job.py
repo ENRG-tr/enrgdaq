@@ -23,6 +23,7 @@ def _create_daq_job_process(
     daq_job_cls: Type[DAQJob],
     config: DAQJobConfig,
     supervisor_info: SupervisorInfo,
+    raw_config: str = "",
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(
@@ -33,6 +34,7 @@ def _create_daq_job_process(
         message_out=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
         process=None,
         instance_id=daq_job_instance_id,
+        raw_config=raw_config,
     )
     daq_job_instance_id += 1
     return process
@@ -53,7 +55,9 @@ def build_daq_job(toml_config: bytes, supervisor_info: SupervisorInfo) -> DAQJob
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
-    return _create_daq_job_process(daq_job_class, config, supervisor_info)
+    return _create_daq_job_process(
+        daq_job_class, config, supervisor_info, toml_config.decode()
+    )
 
 
 def rebuild_daq_job(

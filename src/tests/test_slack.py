@@ -38,7 +38,7 @@ class TestDAQJobAlertSlack(unittest.TestCase):
                 {
                     "fallback": "Test error message",
                     "color": "danger",
-                    "author_name": alert.daq_job_info.daq_job_class_name,
+                    "author_name": alert.daq_job_info.daq_job_type,
                     "title": "Alert!",
                     "fields": [
                         {

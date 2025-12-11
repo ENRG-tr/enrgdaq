@@ -20,8 +20,6 @@ class DAQJobInfo:
     Attributes:
         daq_job_type : str
             The type of the DAQ job.
-        daq_job_class_name : str
-            The class name of the DAQ job, typically the name of the class itself.
         unique_id : str
             A unique identifier for the DAQ job.
         instance_id : int
@@ -30,8 +28,7 @@ class DAQJobInfo:
             Configuration for the supervisor, if any.
     """
 
-    daq_job_type: str
-    daq_job_class_name: str  # has type(self).__name__
+    daq_job_type: str  # has type(self).__name__
     unique_id: str
     instance_id: int
     config: str
@@ -41,7 +38,6 @@ class DAQJobInfo:
     def mock() -> "DAQJobInfo":
         return DAQJobInfo(
             daq_job_type="mock",
-            daq_job_class_name="mock",
             unique_id="mock",
             instance_id=0,
             supervisor_info=SupervisorInfo(supervisor_id="mock"),

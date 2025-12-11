@@ -42,7 +42,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
             [
                 [
                     get_unix_timestamp_ms(date),
-                    message.daq_job_info.daq_job_class_name,
+                    message.daq_job_info.daq_job_type,
                     "high",
                     "Test alert message",
                 ]

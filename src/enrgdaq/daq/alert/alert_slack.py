@@ -40,7 +40,7 @@ class DAQJobAlertSlack(DAQJobAlert):
                 {
                     "fallback": alert.alert_info.message,
                     "color": ALERT_SEVERITY_TO_SLACK_COLOR[alert.alert_info.severity],
-                    "author_name": alert.daq_job_info.daq_job_class_name,
+                    "author_name": alert.daq_job_info.daq_job_type,
                     "title": "Alert!",
                     "fields": [
                         {

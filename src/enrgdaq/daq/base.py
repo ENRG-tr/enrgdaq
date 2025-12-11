@@ -60,6 +60,7 @@ class DAQJob:
         instance_id: Optional[int] = None,
         message_in: Optional["Queue[DAQJobMessage]"] = None,
         message_out: Optional["Queue[DAQJobMessage]"] = None,
+        raw_config: Optional[str] = None,
     ):
         if os.environ.get("ENRGDAQ_IS_UNIT_TESTING") != "True":
             coloredlogs.install(
@@ -67,7 +68,6 @@ class DAQJob:
                 datefmt="%Y-%m-%d %H:%M:%S",
                 fmt="%(asctime)s.%(msecs)03d %(hostname)s %(name)s %(levelname)s %(message)s",
             )
-        global daq_job_instance_id, daq_job_instance_id_lock
 
         self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
@@ -85,7 +85,7 @@ class DAQJob:
             self._supervisor_info = supervisor_info
         else:
             self._supervisor_info = None
-        self.info = self._create_info()
+        self.info = self._create_info(raw_config)
         self._logger.debug(f"DAQ job {self.info.unique_id} created")
 
     def consume(self, nowait=True, timeout=None):
@@ -153,28 +153,22 @@ class DAQJob:
     def start(self):
         raise NotImplementedError
 
-    def _create_info(self) -> "DAQJobInfo":
+    def _create_info(self, raw_config: Optional[str] = None) -> "DAQJobInfo":
         """
         Creates a DAQJobInfo object for the job.
 
         Returns:
             DAQJobInfo: The created DAQJobInfo object.
         """
-        config_toml = ""
-        try:
-            config_toml = msgspec.toml.encode(self.config).decode()
-        except Exception as e:
-            config_toml = str(e)
 
         return DAQJobInfo(
             daq_job_type=self.config.daq_job_type
             if isinstance(self.config, DAQJobConfig)
             else self.config["daq_job_type"],
-            daq_job_class_name=type(self).__name__,
             unique_id=self.unique_id,
             instance_id=self.instance_id,
             supervisor_info=getattr(self, "_supervisor_info", None),
-            config=config_toml,
+            config=raw_config or "# No config",
         )
 
     def _put_message_out(self, message: DAQJobMessage):
@@ -234,6 +228,8 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: Optional[DAQJobInfo] = None
+    raw_config: Optional[str] = None
+
     _daq_job_info_queue: "Queue[DAQJobInfo]" = msgspec.field(default_factory=Queue)
 
     def start(self):
@@ -243,6 +239,7 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             instance_id=self.instance_id,
             message_in=self.message_in,
             message_out=self.message_out,
+            raw_config=self.raw_config,
         )
         self._daq_job_info_queue.put(instance.info)
         try:
