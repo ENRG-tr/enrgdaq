@@ -160,6 +160,11 @@ class DAQJob:
         Returns:
             DAQJobInfo: The created DAQJobInfo object.
         """
+        config_toml = ""
+        try:
+            config_toml = msgspec.toml.encode(self.config).decode()
+        except Exception as e:
+            config_toml = str(e)
 
         return DAQJobInfo(
             daq_job_type=self.config.daq_job_type
@@ -169,7 +174,7 @@ class DAQJob:
             unique_id=self.unique_id,
             instance_id=self.instance_id,
             supervisor_info=getattr(self, "_supervisor_info", None),
-            config=msgspec.toml.encode(self.config).decode(),
+            config=config_toml,
         )
 
     def _put_message_out(self, message: DAQJobMessage):
