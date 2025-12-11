@@ -110,7 +110,7 @@ def start_rest_api(cnc_instance):
 
     @app.post("/clients/{client_id}/stop_daqjob")
     def stop_daqjob_client(client_id: str, request: StopDAQJobRequest):
-        msg = CNCMessageReqStopDAQJob(daq_job_unique_id=request.daq_job_name)
+        msg = CNCMessageReqStopDAQJob(**request.model_dump())
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"
