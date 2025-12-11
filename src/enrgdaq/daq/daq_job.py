@@ -24,6 +24,7 @@ def _create_daq_job_process(
     config: DAQJobConfig,
     supervisor_info: SupervisorInfo,
     raw_config: str = "",
+    log_queue: Queue = None,
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(
@@ -35,6 +36,7 @@ def _create_daq_job_process(
         process=None,
         instance_id=daq_job_instance_id,
         raw_config=raw_config,
+        log_queue=log_queue,
     )
     daq_job_instance_id += 1
     return process
@@ -67,6 +69,7 @@ def rebuild_daq_job(
         daq_job_process.daq_job_cls,
         daq_job_process.config,
         supervisor_info,
+        log_queue=daq_job_process.log_queue,
     )
 
 

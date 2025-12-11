@@ -229,10 +229,16 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     instance_id: int
     daq_job_info: Optional[DAQJobInfo] = None
     raw_config: Optional[str] = None
+    log_queue: Optional[Any] = None
 
     _daq_job_info_queue: "Queue[DAQJobInfo]" = msgspec.field(default_factory=Queue)
 
     def start(self):
+        if self.log_queue:
+            from logging.handlers import QueueHandler
+
+            logging.getLogger().addHandler(QueueHandler(self.log_queue))
+
         instance = self.daq_job_cls(
             self.config,
             supervisor_info=self.supervisor_info,

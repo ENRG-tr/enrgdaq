@@ -13,7 +13,10 @@ from enrgdaq.cnc.base import (
     SupervisorCNC,
     start_supervisor_cnc,
 )
+from enrgdaq.cnc.log_util import CNCLogHandler
 from enrgdaq.cnc.models import SupervisorStatus
+from logging.handlers import QueueListener
+from multiprocessing import Queue
 from enrgdaq.daq.alert.base import DAQJobAlert
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
@@ -98,6 +101,9 @@ class Supervisor:
             )
         self._is_stopped = False
 
+        self.log_queue = Queue()
+        self._log_listener = None
+
     def init(self):
         """
         Initializes the supervisor, loads configuration, starts DAQ job threads, and warns for lack of DAQ jobs.
@@ -118,6 +124,30 @@ class Supervisor:
                 config=self.config.cnc,
             )
 
+        # Set up log listener to capture logs from child processes
+        handlers = []
+        if self._cnc_instance:
+            # Find the CNCLogHandler in the CNC instance logger
+            cnc_handler = next(
+                (
+                    h
+                    for h in self._cnc_instance._logger.handlers
+                    if isinstance(h, CNCLogHandler)
+                ),
+                None,
+            )
+            if cnc_handler:
+                handlers.append(cnc_handler)
+            else:
+                # Fallback to root handlers if CNC handler is missing
+                handlers.extend(logging.getLogger().handlers)
+        else:
+            handlers.extend(logging.getLogger().handlers)
+
+        if handlers:
+            self._log_listener = QueueListener(self.log_queue, *handlers)
+            self._log_listener.start()
+
         self.restart_schedules = []
         self.daq_job_processes = []
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
@@ -134,10 +164,14 @@ class Supervisor:
         assert self.config is not None
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
-        started_jobs = start_daq_jobs(
-            daq_jobs_to_load
-            or load_daq_jobs(self._daq_job_config_path, self.config.info)
+        jobs_to_start = daq_jobs_to_load or load_daq_jobs(
+            self._daq_job_config_path, self.config.info
         )
+
+        for job in jobs_to_start:
+            job.log_queue = self.log_queue
+
+        started_jobs = start_daq_jobs(jobs_to_start)
         self.daq_job_processes.extend(started_jobs)
 
     def run(self):
@@ -168,6 +202,8 @@ class Supervisor:
             return
         if self._cnc_instance:
             self._cnc_instance.stop()
+        if self._log_listener:
+            self._log_listener.stop()
         self._is_stopped = True
 
     def loop(self):
