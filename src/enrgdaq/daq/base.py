@@ -169,6 +169,7 @@ class DAQJob:
             unique_id=self.unique_id,
             instance_id=self.instance_id,
             supervisor_info=getattr(self, "_supervisor_info", None),
+            config=msgspec.toml.encode(self.config).decode(),
         )
 
     def _put_message_out(self, message: DAQJobMessage):

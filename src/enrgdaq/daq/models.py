@@ -34,6 +34,7 @@ class DAQJobInfo:
     daq_job_class_name: str  # has type(self).__name__
     unique_id: str
     instance_id: int
+    config: str
     supervisor_info: Optional[SupervisorInfo] = None
 
     @staticmethod
@@ -44,6 +45,7 @@ class DAQJobInfo:
             unique_id="mock",
             instance_id=0,
             supervisor_info=SupervisorInfo(supervisor_id="mock"),
+            config="",
         )
 
 

@@ -457,4 +457,5 @@ class Supervisor:
             supervisor_info=self.config.info,
             unique_id=self.config.info.supervisor_id,
             instance_id=0,
+            config="",
         )
