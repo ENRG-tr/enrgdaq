@@ -112,7 +112,8 @@ class CNCMessageResRunCustomDAQJob(CNCMessage):
 class CNCMessageReqStopDAQJob(CNCMessage):
     """Request to stop and remove a specific DAQJob by name."""
 
-    daq_job_name: str
+    daq_job_name: Optional[str] = None
+    daq_job_unique_id: Optional[str] = None
     remove: bool = False
 
 

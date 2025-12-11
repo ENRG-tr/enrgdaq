@@ -1,4 +1,5 @@
 import threading
+from typing import Optional
 
 import msgspec
 import uvicorn
@@ -15,8 +16,8 @@ from enrgdaq.cnc.models import (
     CNCMessageReqStopDAQJobs,
 )
 from enrgdaq.daq.template import (
-    get_store_config_templates,
     get_daq_job_config_templates,
+    get_store_config_templates,
 )
 
 
@@ -103,12 +104,13 @@ def start_rest_api(cnc_instance):
         )
 
     class StopDAQJobRequest(BaseModel):
-        daq_job_name: str
+        daq_job_name: Optional[str] = None
+        daq_job_unique_id: Optional[str] = None
         remove: bool = False
 
     @app.post("/clients/{client_id}/stop_daqjob")
     def stop_daqjob_client(client_id: str, request: StopDAQJobRequest):
-        msg = CNCMessageReqStopDAQJob(daq_job_name=request.daq_job_name)
+        msg = CNCMessageReqStopDAQJob(daq_job_unique_id=request.daq_job_name)
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"

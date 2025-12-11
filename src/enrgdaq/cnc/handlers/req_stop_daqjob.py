@@ -35,8 +35,12 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
         :param msg: The stop and remove DAQJob request message.
         :return: A stop and remove DAQJob response message.
         """
+        if not msg.daq_job_name and not msg.daq_job_unique_id:
+            raise Exception(
+                "Either daq_job_name or daq_job_unique_id must be specified"
+            )
         self._logger.info(
-            f"Received stop and remove DAQJob request for job: {msg.daq_job_name}"
+            f"Received stop and remove DAQJob request for job: {msg.daq_job_unique_id}"
         )
 
         try:
@@ -45,7 +49,20 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
                 # Find the DAQ job process with the specified name
                 target_process = None
                 for daq_job_process in supervisor.daq_job_processes:
-                    if daq_job_process.daq_job_cls.__name__ == msg.daq_job_name:
+                    # If daq_job_unique_id is specified
+                    if (
+                        msg.daq_job_unique_id
+                        and daq_job_process.daq_job_info
+                        and daq_job_process.daq_job_info.unique_id
+                        == msg.daq_job_unique_id
+                    ):
+                        target_process = daq_job_process
+                        break
+                    # If daq_job_name is specified
+                    elif (
+                        msg.daq_job_name
+                        and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
+                    ):
                         target_process = daq_job_process
                         break
 
@@ -66,17 +83,19 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
                             )
 
                         success = True
-                        message = f"DAQJob {msg.daq_job_name} " + (
+                        message = f"DAQJob {msg.daq_job_unique_id} " + (
                             "removed and stopped" if msg.remove else "stopped"
                         )
                         self._logger.info(message)
                     except Exception as e:
                         success = False
-                        message = f"Error during Stop DAQJob for '{msg.daq_job_name}': {str(e)}"
+                        message = f"Error during Stop DAQJob for '{msg.daq_job_unique_id}': {str(e)}"
                         self._logger.error(message, exc_info=True)
                 else:
                     success = False
-                    message = f"DAQ job '{msg.daq_job_name}' not found"
+                    message = (
+                        f"DAQ job with unique id '{msg.daq_job_unique_id}' not found"
+                    )
                     self._logger.warning(message)
             else:
                 success = False
@@ -85,9 +104,7 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
 
         except Exception as e:
             success = False
-            message = (
-                f"Error stopping and removing DAQJob '{msg.daq_job_name}': {str(e)}"
-            )
+            message = f"Error stopping and removing DAQJob '{msg.daq_job_unique_id}': {str(e)}"
             self._logger.error(message, exc_info=True)
 
         return CNCMessageResStopDAQJob(success=success, message=message), True
