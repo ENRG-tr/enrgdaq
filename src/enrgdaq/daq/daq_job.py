@@ -3,7 +3,7 @@ import logging
 import os
 import platform
 from multiprocessing import Process, Queue, get_context
-from typing import Type
+from typing import Optional, Type
 
 import msgspec
 
@@ -24,7 +24,7 @@ def _create_daq_job_process(
     config: DAQJobConfig,
     supervisor_info: SupervisorInfo,
     raw_config: str = "",
-    log_queue: Queue = None,
+    log_queue: Optional[Queue] = None,
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(

@@ -8,11 +8,13 @@ from enrgdaq.cnc.models import (
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
     CNCMessageReqRunCustomDAQJob,
+    CNCMessageReqSendMessage,
     CNCMessageReqStatus,
     CNCMessageReqStopDAQJobs,
     CNCMessageResPing,
     CNCMessageResRestartDAQ,
     CNCMessageResRunCustomDAQJob,
+    CNCMessageResSendMessage,
     CNCMessageResStatus,
     CNCMessageResStopDAQJobs,
     SupervisorStatus,
@@ -91,6 +93,28 @@ class TestCNC(unittest.TestCase):
         client_info = self.server_cnc.clients["client1"]
         self.assertIsNotNone(client_info.info)
         self.assertEqual(client_info.info.supervisor_id, "client1")
+
+    def test_server_in_own_clients_list(self):
+        """Test that the server appears in its own clients list."""
+        self.assertIn("server", self.server_cnc.clients)
+        server_info = self.server_cnc.clients["server"]
+        self.assertIsNotNone(server_info.info)
+        self.assertEqual(server_info.info.supervisor_id, "server")
+        # Server should have no ZMQ identity (local processing)
+        self.assertIsNone(server_info.identity)
+
+    def test_server_ping_self(self):
+        """Test that the server can ping itself."""
+        ping_msg = CNCMessageReqPing()
+        response = self.server_cnc.send_command_sync("server", ping_msg, timeout=2)
+        self.assertIsInstance(response, CNCMessageResPing)
+
+    def test_server_status_self(self):
+        """Test that the server can get its own status."""
+        status_msg = CNCMessageReqStatus()
+        response = self.server_cnc.send_command_sync("server", status_msg, timeout=2)
+        self.assertIsInstance(response, CNCMessageResStatus)
+        self.assertEqual(response.status.supervisor_info.supervisor_id, "server")
 
     def test_ping_pong_sync(self):
         self.test_connection_and_heartbeat()
@@ -203,6 +227,59 @@ class TestCNC(unittest.TestCase):
 
         finally:
             client2_cnc.stop()
+
+    def test_send_message_unknown_type(self):
+        """Test that sending an unknown message type returns an error."""
+        self.test_connection_and_heartbeat()
+
+        send_msg = CNCMessageReqSendMessage(
+            message_type="UnknownMessageType",
+            payload="{}",
+        )
+        response = self.server_cnc.send_command_sync("client1", send_msg, timeout=2)
+
+        self.assertIsInstance(response, CNCMessageResSendMessage)
+        self.assertFalse(response.success)
+        self.assertIn("Unknown message type", response.message)
+
+    @patch("enrgdaq.cnc.handlers.ReqSendMessageHandler.handle")
+    def test_send_message_success(self, mock_handle):
+        """Test that sending a valid message type succeeds."""
+        self.test_connection_and_heartbeat()
+
+        mock_handle.return_value = (
+            CNCMessageResSendMessage(
+                success=True, message="Message sent to 1 job(s)", jobs_notified=1
+            ),
+            None,
+        )
+
+        payload = '{"reason": "Test stop"}'
+        send_msg = CNCMessageReqSendMessage(
+            message_type="DAQJobMessageStop",
+            payload=payload,
+        )
+        response = self.server_cnc.send_command_sync("client1", send_msg, timeout=2)
+
+        self.assertIsInstance(response, CNCMessageResSendMessage)
+        self.assertTrue(response.success)
+        self.assertEqual(response.jobs_notified, 1)
+
+    def test_send_message_no_jobs_accept(self):
+        """Test that sending a message when no jobs accept it returns appropriate error."""
+        self.test_connection_and_heartbeat()
+
+        # DAQJobMessageStop should not be accepted by any job since MockSupervisor has no jobs
+        payload = '{"reason": "Test stop"}'
+        send_msg = CNCMessageReqSendMessage(
+            message_type="DAQJobMessageStop",
+            payload=payload,
+        )
+        response = self.server_cnc.send_command_sync("client1", send_msg, timeout=2)
+
+        self.assertIsInstance(response, CNCMessageResSendMessage)
+        self.assertFalse(response.success)
+        self.assertIn("No jobs accepted", response.message)
 
 
 if __name__ == "__main__":

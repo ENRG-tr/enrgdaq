@@ -18,6 +18,7 @@ from enrgdaq.cnc.handlers import (
     ReqPingHandler,
     ReqRestartHandler,
     ReqRunCustomDAQJobHandler,
+    ReqSendMessageHandler,
     ReqStatusHandler,
     ReqStopDAQJobHandler,
     ReqStopDAQJobsHandler,
@@ -33,6 +34,7 @@ from enrgdaq.cnc.models import (
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
     CNCMessageReqRunCustomDAQJob,
+    CNCMessageReqSendMessage,
     CNCMessageReqStatus,
     CNCMessageReqStopDAQJob,
     CNCMessageReqStopDAQJobs,
@@ -69,6 +71,7 @@ class SupervisorCNC:
         self._pending_responses: Dict[str, Future] = {}
         self._command_queue: queue.Queue = queue.Queue()
         self.client_logs: defaultdict[str, deque[CNCMessageLog]] = defaultdict(deque)
+        self._server_client_id: Optional[str] = None
 
         self._stop_event = threading.Event()
         self._thread = threading.Thread(target=self.run, daemon=True)
@@ -98,12 +101,21 @@ class SupervisorCNC:
             CNCMessageReqStopDAQJobs: ReqStopDAQJobsHandler(self),
             CNCMessageReqRunCustomDAQJob: ReqRunCustomDAQJobHandler(self),
             CNCMessageReqStopDAQJob: ReqStopDAQJobHandler(self),
+            CNCMessageReqSendMessage: ReqSendMessageHandler(self),
         }
 
         if self.is_server:
             self.socket = self.context.socket(zmq.ROUTER)
             self.socket.bind(f"tcp://*:{config.server_port}")
             self._logger.info(f"C&C Server started on port {config.server_port}")
+
+            # Register the server as its own client
+            self._server_client_id = self.supervisor_info.supervisor_id
+            self.clients[self._server_client_id] = CNCClientInfo(
+                identity=None,  # No ZMQ identity for local processing
+                last_seen=datetime.now().isoformat(),
+                info=self.supervisor_info,
+            )
 
             if config.rest_api_enabled:
                 start_rest_api(self)
@@ -139,6 +151,10 @@ class SupervisorCNC:
         if not self.is_server:
             raise RuntimeError("Only server can send commands to clients.")
 
+        # Handle self-targeting: process locally without ZMQ
+        if target_client_id == self._server_client_id:
+            return self._process_local_command(msg)
+
         # Generate request ID
         req_id = str(uuid.uuid4())
         msg.req_id = req_id
@@ -157,6 +173,21 @@ class SupervisorCNC:
             self._pending_responses.pop(req_id, None)
             raise e
 
+    def _process_local_command(self, msg: CNCMessage) -> CNCMessage:
+        """
+        Process a command locally (for self-targeting).
+        This allows the server to send commands to itself.
+        """
+        handler = self.message_handlers.get(type(msg))
+        if handler:
+            # Use a placeholder identity for local processing
+            result = handler.handle(self._server_client_id.encode("utf-8"), msg)
+            if result:
+                response_msg, _ = result
+                return response_msg
+
+        raise RuntimeError(f"No handler found for message type: {type(msg).__name__}")
+
     def run(self):
         last_heartbeat = 0
         while not self._stop_event.is_set():
@@ -171,12 +202,21 @@ class SupervisorCNC:
                 if self.socket in socks:
                     self.handle_incoming_message()
 
-                # 3. Client Heartbeat
+                # 3. Client Heartbeat / Server self-update
                 if not self.is_server:
                     if time.time() - last_heartbeat >= CNC_HEARTBEAT_INTERVAL_SECONDS:
                         self._send_zmq_message(
                             None,
                             CNCMessageHeartbeat(supervisor_info=self.supervisor_info),
+                        )
+                        last_heartbeat = time.time()
+                else:
+                    # Update the server's own client entry periodically
+                    if time.time() - last_heartbeat >= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                        self.clients[self._server_client_id] = CNCClientInfo(
+                            identity=None,
+                            last_seen=datetime.now().isoformat(),
+                            info=self.supervisor_info,
                         )
                         last_heartbeat = time.time()
 

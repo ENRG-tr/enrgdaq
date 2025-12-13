@@ -124,6 +124,24 @@ class CNCMessageResStopDAQJob(CNCMessage):
     message: str
 
 
+class CNCMessageReqSendMessage(CNCMessage):
+    """Request to send a custom message to DAQ job(s)."""
+
+    message_type: str  # The type name of the DAQJobMessage to send
+    payload: str  # JSON-encoded message payload
+    target_daq_job_unique_id: Optional[str] = (
+        None  # If specified, only send to this job
+    )
+
+
+class CNCMessageResSendMessage(CNCMessage):
+    """Response to send custom message request."""
+
+    success: bool
+    message: str
+    jobs_notified: int = 0
+
+
 class CNCMessageLog(CNCMessage):
     """Log message from client to server."""
 
@@ -158,5 +176,7 @@ CNCMessageType = Union[
     CNCMessageResRunCustomDAQJob,
     CNCMessageReqStopDAQJob,
     CNCMessageResStopDAQJob,
+    CNCMessageReqSendMessage,
+    CNCMessageResSendMessage,
     CNCMessageLog,
 ]

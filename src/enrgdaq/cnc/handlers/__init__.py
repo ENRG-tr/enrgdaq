@@ -6,6 +6,7 @@ from .req_ping import ReqPingHandler
 from .req_restart_daq import ReqRestartHandler
 from .req_restart_daqjobs import ReqStopDAQJobsHandler
 from .req_run_custom_daqjob import ReqRunCustomDAQJobHandler
+from .req_send_message import ReqSendMessageHandler
 from .req_status import ReqStatusHandler
 from .req_stop_daqjob import ReqStopDAQJobHandler
 from .res_ping import ResPingHandler
@@ -20,6 +21,7 @@ __all__ = [
     "ReqRestartHandler",
     "ReqStopDAQJobsHandler",
     "ReqRunCustomDAQJobHandler",
+    "ReqSendMessageHandler",
     "ReqStatusHandler",
     "ReqStopDAQJobHandler",
     "ResPingHandler",

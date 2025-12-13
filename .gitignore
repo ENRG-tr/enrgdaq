@@ -171,3 +171,7 @@ out/*
 
 # Tool executables
 src/enrgdaq/tools/digbin2csv/digbin2csv
+
+configs/client
+configs/server
+configs/disabled

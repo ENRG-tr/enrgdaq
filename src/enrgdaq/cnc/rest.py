@@ -11,12 +11,14 @@ from enrgdaq.cnc.models import (
     CNCMessageReqPing,
     CNCMessageReqRestartDAQ,
     CNCMessageReqRunCustomDAQJob,
+    CNCMessageReqSendMessage,
     CNCMessageReqStatus,
     CNCMessageReqStopDAQJob,
     CNCMessageReqStopDAQJobs,
 )
 from enrgdaq.daq.template import (
     get_daq_job_config_templates,
+    get_message_templates,
     get_store_config_templates,
 )
 
@@ -127,6 +129,23 @@ def start_rest_api(cnc_instance):
             content=msgspec.json.encode(reply), media_type="application/json"
         )
 
+    class SendMessageRequest(BaseModel):
+        message_type: str
+        payload: str  # JSON-encoded message payload
+        target_daq_job_unique_id: Optional[str] = None
+
+    @app.post("/clients/{client_id}/send_message")
+    def send_message_client(client_id: str, request: SendMessageRequest):
+        msg = CNCMessageReqSendMessage(
+            message_type=request.message_type,
+            payload=request.payload,
+            target_daq_job_unique_id=request.target_daq_job_unique_id,
+        )
+        reply = execute_command(client_id, msg)
+        return Response(
+            content=msgspec.json.encode(reply), media_type="application/json"
+        )
+
     @app.get("/clients/{client_id}/logs")
     def get_logs(client_id: str):
         if client_id not in cnc_instance.client_logs:
@@ -152,6 +171,13 @@ def start_rest_api(cnc_instance):
     def get_daqjob_templates():
         return Response(
             content=msgspec.json.encode(get_daq_job_config_templates()),
+            media_type="application/json",
+        )
+
+    @app.get("/templates/messages")
+    def get_message_template_list():
+        return Response(
+            content=msgspec.json.encode(get_message_templates()),
             media_type="application/json",
         )
 
