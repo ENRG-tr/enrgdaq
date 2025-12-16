@@ -1,0 +1,44 @@
+daq_job_type = "DAQJobCAENHV"
+
+# CAEN system type (e.g., SY4527, SY5527, N1470, DT55XX, etc.)
+system_type = "SY4527"
+
+# Connection type (TCPIP, RS232, USB, OPTLINK, USB_VCP)
+link_type = "TCPIP"
+
+# Connection argument (IP address for TCPIP, device path for USB)
+connection_arg = "192.168.1.100"
+
+# Authentication (optional, leave empty if not required)
+username = ""
+password = ""
+
+# Poll interval in seconds (how often to read channel parameters)
+poll_interval_seconds = 1
+
+# Optional: Specific channels to monitor
+# If not specified, all channels on all boards will be monitored
+# [[channels_to_monitor]]
+# slot = 0
+# channels = [0, 1, 2, 3]
+
+# Optional: Specific parameters to monitor
+# If not specified, all readable parameters will be monitored
+# Common parameters: "VMon", "IMon", "V0Set", "I0Set", "Pw", "Status", "RUp", "RDwn"
+# params_to_monitor = ["VMon", "IMon", "V0Set", "I0Set", "Pw", "Status"]
+
+# Store configuration for CSV snapshot dump (overwrites every poll)
+# This stores ALL channel parameters in a single tabular format
+[store_config.csv]
+file_path = "caen_hv.csv"
+add_date = false
+overwrite = true
+
+# Store configuration for Redis timeseries (per-channel storage)
+# Each channel gets its own tag: slot_X_channel_Y
+# Parameters become keys: timestamp, V0Set, VMon, IMon, etc.
+# Example Redis keys: enrgdaq2.hv.slot_1_channel_7.V0Set
+#                     enrgdaq2.hv.slot_1_channel_7.VMon
+[timeseries_store_config.redis]
+key = "hv"
+use_timeseries = true
