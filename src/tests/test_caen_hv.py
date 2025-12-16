@@ -198,11 +198,12 @@ class TestDAQJobCAENHV(unittest.TestCase):
         message = daq_job._put_message_out.call_args[0][0]
         self.assertIsInstance(message, DAQJobMessageStore)
         self.assertEqual(message.tag, "ch_param")
+        # New format: param names are columns
         self.assertIn("timestamp", message.keys)
         self.assertIn("slot", message.keys)
         self.assertIn("channel", message.keys)
-        self.assertIn("param_name", message.keys)
-        self.assertIn("value", message.keys)
+        self.assertIn("IMon", message.keys)  # param name as column
+        self.assertIn("VMon", message.keys)  # param name as column
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     def test_poll_channel_params_skip_wronly(self, mock_hv):

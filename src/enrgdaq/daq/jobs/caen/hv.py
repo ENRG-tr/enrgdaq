@@ -253,12 +253,9 @@ class DAQJobCAENHV(DAQJob):
         if not has_store_config and not has_timeseries_config:
             return
 
-        # Collect all channel parameter data for bulk store
-        all_data_rows = []
-        all_keys = ["timestamp", "slot", "channel", "param_name", "param_type", "value"]
         timestamp = get_now_unix_timestamp_ms()
 
-        # Per-channel data for timeseries: {(slot, channel): {param_name: value}}
+        # Per-channel data: {(slot, channel): {param_name: value}}
         channel_params: dict[tuple[int, int], dict[str, float | int | str]] = {}
 
         for board in slots:
@@ -293,9 +290,8 @@ class DAQJobCAENHV(DAQJob):
                     )
                     continue
 
-                # Initialize per-channel dict for timeseries
-                if has_timeseries_config:
-                    channel_params[(board.slot, ch)] = {}
+                # Initialize per-channel dict
+                channel_params[(board.slot, ch)] = {}
 
                 for param_name in ch_params:
                     # Filter by params_to_monitor if specified
@@ -316,21 +312,7 @@ class DAQJobCAENHV(DAQJob):
                         # get_ch_param returns a list, get first value
                         value = param_value[0] if param_value else None
 
-                        # Add to bulk data for store_config
-                        if has_store_config:
-                            all_data_rows.append(
-                                [
-                                    timestamp,
-                                    board.slot,
-                                    ch,
-                                    param_name,
-                                    param_prop.type.name,
-                                    value,
-                                ]
-                            )
-
-                        # Add to per-channel dict for timeseries
-                        if has_timeseries_config and value is not None:
+                        if value is not None:
                             channel_params[(board.slot, ch)][param_name] = value
 
                     except Exception as e:
@@ -338,17 +320,39 @@ class DAQJobCAENHV(DAQJob):
                             f"Failed to read {param_name} for slot {board.slot} ch {ch}: {e}"
                         )
 
-        # Send bulk store message (CSV dump)
-        if has_store_config and all_data_rows:
-            self._put_message_out(
-                DAQJobMessageStoreTabular(
-                    store_config=self.config.store_config,
-                    tag="ch_param",
-                    keys=all_keys,
-                    data=all_data_rows,
+        # Build all unique param names for consistent columns
+        all_param_names: set[str] = set()
+        for params in channel_params.values():
+            all_param_names.update(params.keys())
+        sorted_param_names = sorted(all_param_names)
+
+        # Send bulk store message (CSV dump) - one row per channel
+        if has_store_config and channel_params and sorted_param_names:
+            keys = ["timestamp", "slot", "channel", *sorted_param_names]
+            data_rows = []
+
+            for (slot, ch), params in channel_params.items():
+                # Skip channels with no data
+                if not params:
+                    continue
+                row = [
+                    timestamp,
+                    slot,
+                    ch,
+                    *[params.get(pn) for pn in sorted_param_names],
+                ]
+                data_rows.append(row)
+
+            if data_rows:
+                self._put_message_out(
+                    DAQJobMessageStoreTabular(
+                        store_config=self.config.store_config,
+                        tag="ch_param",
+                        keys=keys,
+                        data=data_rows,
+                    )
                 )
-            )
-            self._logger.debug(f"Sent {len(all_data_rows)} channel parameter readings")
+                self._logger.debug(f"Sent {len(data_rows)} channel parameter readings")
 
         # Send per-channel timeseries messages
         if has_timeseries_config:
