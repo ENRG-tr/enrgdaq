@@ -5,7 +5,7 @@ Uses the caen_libs caenhvwrapper library to communicate with CAEN HV devices.
 """
 
 from datetime import datetime, timedelta
-from typing import Literal, Optional, Union
+from typing import Literal, Optional
 
 try:
     from caen_libs import caenhvwrapper as hv
@@ -89,8 +89,8 @@ class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
     param_name: str
     """Name of the parameter to set (e.g., 'V0Set', 'V1Set', 'I0Set', 'Pw')."""
 
-    value: Union[str, float, int]
-    """The value to set. Type depends on the parameter (float for voltage/current, int for on/off)."""
+    value: int
+    """The value to set."""
 
 
 class DAQJobCAENHVConfig(DAQJobConfig):
@@ -420,7 +420,7 @@ class DAQJobCAENHV(DAQJob):
                 message.slot,
                 message.channel_list,
                 message.param_name,
-                message.value,
+                int(message.value),
             )
 
             self._logger.info(
