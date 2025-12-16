@@ -414,18 +414,21 @@ class TestDAQJobCAENHV(unittest.TestCase):
 
         daq_job._poll_channel_params(mock_device, slots)
 
-        # Should send messages for each channel
-        # 2 channels, so 2 timeseries messages
+        # New structure: one message per param, with channels as keys
+        # 2 params (IMon, VMon), so 2 timeseries messages
         self.assertEqual(daq_job._put_message_out.call_count, 2)
 
-        # Check the first message
+        # Check the messages - tags are param names
+        tags = [call[0][0].tag for call in daq_job._put_message_out.call_args_list]
+        self.assertIn("IMon", tags)
+        self.assertIn("VMon", tags)
+
+        # Check keys contain channel identifiers
         first_call = daq_job._put_message_out.call_args_list[0]
         message = first_call[0][0]
-        self.assertIsInstance(message, DAQJobMessageStore)
-        self.assertEqual(message.tag, "slot_1_channel_0")
         self.assertIn("timestamp", message.keys)
-        self.assertIn("IMon", message.keys)
-        self.assertIn("VMon", message.keys)
+        self.assertIn("slot_1_channel_0", message.keys)
+        self.assertIn("slot_1_channel_1", message.keys)
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     @patch(
@@ -460,31 +463,32 @@ class TestDAQJobCAENHV(unittest.TestCase):
 
         daq_job._poll_channel_params(mock_device, slots)
 
-        # Should send 2 messages: 1 bulk + 1 timeseries
+        # Should send 2 messages: 1 bulk + 1 timeseries (for VMon param)
         self.assertEqual(daq_job._put_message_out.call_count, 2)
 
-        # Find the bulk message (tag = "ch_param")
+        # Find the bulk message (tag = "ch_param") and timeseries message (tag = "VMon")
         bulk_message = None
         timeseries_message = None
         for call in daq_job._put_message_out.call_args_list:
             msg = call[0][0]
             if msg.tag == "ch_param":
                 bulk_message = msg
-            elif msg.tag.startswith("slot_"):
+            elif msg.tag == "VMon":
                 timeseries_message = msg
 
         self.assertIsNotNone(bulk_message)
         self.assertIsNotNone(timeseries_message)
         self.assertEqual(bulk_message.store_config, store_config)
         self.assertEqual(timeseries_message.store_config, timeseries_config)
-        self.assertEqual(timeseries_message.tag, "slot_0_channel_0")
+        # Timeseries keys should include channel identifier
+        self.assertIn("slot_0_channel_0", timeseries_message.keys)
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     @patch(
         "enrgdaq.daq.jobs.caen.hv.get_now_unix_timestamp_ms", return_value=1234567890
     )
     def test_timeseries_tag_format(self, mock_timestamp, mock_hv):
-        """Test that timeseries tags follow the slot_X_channel_Y format."""
+        """Test that timeseries tags are param names and keys contain channel IDs."""
         mock_hv.ParamMode.WRONLY = "WRONLY"
 
         timeseries_config = MagicMock(spec=DAQJobStoreConfig)
@@ -497,7 +501,7 @@ class TestDAQJobCAENHV(unittest.TestCase):
         )
 
         mock_device = MagicMock()
-        mock_device.get_ch_param_info.return_value = ["VMon"]
+        mock_device.get_ch_param_info.return_value = ["VMon", "IMon"]
         mock_device.get_ch_param_prop.return_value = MockParamProp(
             mode="RDONLY", param_type="FLOAT"
         )
@@ -511,13 +515,20 @@ class TestDAQJobCAENHV(unittest.TestCase):
 
         daq_job._poll_channel_params(mock_device, slots)
 
-        # Should have 3 messages: slot_1_channel_0, slot_1_channel_1, slot_3_channel_0
-        self.assertEqual(daq_job._put_message_out.call_count, 3)
+        # Should have 2 messages (one per param: IMon, VMon)
+        self.assertEqual(daq_job._put_message_out.call_count, 2)
 
+        # Tags should be param names
         tags = [call[0][0].tag for call in daq_job._put_message_out.call_args_list]
-        self.assertIn("slot_1_channel_0", tags)
-        self.assertIn("slot_1_channel_1", tags)
-        self.assertIn("slot_3_channel_0", tags)
+        self.assertIn("IMon", tags)
+        self.assertIn("VMon", tags)
+
+        # Each message should have all channels as keys
+        for call in daq_job._put_message_out.call_args_list:
+            msg = call[0][0]
+            self.assertIn("slot_1_channel_0", msg.keys)
+            self.assertIn("slot_1_channel_1", msg.keys)
+            self.assertIn("slot_3_channel_0", msg.keys)
 
 
 class TestDAQJobCAENHVIntegration(unittest.TestCase):

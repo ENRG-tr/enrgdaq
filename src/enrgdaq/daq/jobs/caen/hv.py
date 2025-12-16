@@ -147,12 +147,12 @@ class DAQJobCAENHVConfig(DAQJobConfig):
     timeseries_store_config: Optional[DAQJobStoreConfig] = None
     """
     Configuration for storing channel parameters as timeseries data.
-    Each channel gets its own tag (e.g., 'slot_1_channel_7') with parameter
-    names as keys (e.g., 'V0Set', 'VMon', 'IMon').
+    Each parameter gets its own tag (e.g., 'VMon', 'IMon') with channel
+    identifiers as keys (e.g., 'slot_1_channel_7', 'slot_3_channel_0').
     Recommended for Redis timeseries storage.
     
-    Example Redis keys: enrgdaq2.hv.slot_1_channel_7.V0Set, 
-                        enrgdaq2.hv.slot_1_channel_7.VMon, etc.
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
     """
 
     channels_to_monitor: Optional[list[dict]] = None
@@ -354,30 +354,44 @@ class DAQJobCAENHV(DAQJob):
                 )
                 self._logger.debug(f"Sent {len(data_rows)} channel parameter readings")
 
-        # Send per-channel timeseries messages
-        if has_timeseries_config:
-            for (slot, ch), params in channel_params.items():
-                if not params:
+        # Send per-param timeseries messages
+        # Structure: tag=param_name, keys=[timestamp, slot_X_channel_Y, ...]
+        # This gives Redis keys like: hv.IMon.slot_3_channel_0
+        if has_timeseries_config and sorted_param_names:
+            # Build sorted channel identifiers
+            sorted_channels = sorted(channel_params.keys())
+            channel_keys = [f"slot_{s}_channel_{c}" for s, c in sorted_channels]
+
+            for param_name in sorted_param_names:
+                # Collect values for this param across all channels
+                values_for_param = []
+                has_any_value = False
+
+                for slot, ch in sorted_channels:
+                    value = channel_params.get((slot, ch), {}).get(param_name)
+                    values_for_param.append(value)
+                    if value is not None:
+                        has_any_value = True
+
+                # Only send if at least one channel has a value for this param
+                if not has_any_value:
                     continue
 
-                # Tag format: slot_X_channel_Y
-                tag = f"slot_{slot}_channel_{ch}"
-
-                # Keys: timestamp + all param names
-                keys = ["timestamp", *sorted(params.keys())]
-                values = [timestamp, *[params[k] for k in sorted(params.keys())]]
+                # Tag = param name, keys = timestamp + channel identifiers
+                keys = ["timestamp", *channel_keys]
+                values = [timestamp, *values_for_param]
 
                 self._put_message_out(
                     DAQJobMessageStoreTabular(
                         store_config=self.config.timeseries_store_config,
-                        tag=tag,
+                        tag=param_name,
                         keys=keys,
                         data=[values],
                     )
                 )
 
             self._logger.debug(
-                f"Sent timeseries data for {len(channel_params)} channels"
+                f"Sent timeseries data for {len(sorted_param_names)} params"
             )
 
     def handle_message(self, message: DAQJobMessage) -> bool:

@@ -4,6 +4,8 @@ import platform
 import sys
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from logging.handlers import QueueListener
+from multiprocessing import Queue
 from queue import Empty, Full
 from typing import Optional
 
@@ -15,8 +17,6 @@ from enrgdaq.cnc.base import (
 )
 from enrgdaq.cnc.log_util import CNCLogHandler
 from enrgdaq.cnc.models import SupervisorStatus
-from logging.handlers import QueueListener
-from multiprocessing import Queue
 from enrgdaq.daq.alert.base import DAQJobAlert
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
 from enrgdaq.daq.daq_job import (
@@ -94,6 +94,7 @@ class Supervisor:
         self.config = config
         self._daq_jobs_to_load = daq_job_processes
         self.daq_job_remote_stats = {}
+        self.daq_job_stats: DAQJobStatsDict = {}
         self._daq_job_config_path = daq_job_config_path
         if not os.path.exists(self._daq_job_config_path):
             raise ValueError(
@@ -151,10 +152,12 @@ class Supervisor:
         self.restart_schedules = []
         self.daq_job_processes = []
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
-        self.daq_job_stats: DAQJobStatsDict = {
-            thread.daq_job_cls.__name__: DAQJobStats()
-            for thread in self.daq_job_processes
-        }
+        self.daq_job_stats.update(
+            {
+                thread.daq_job_cls.__name__: DAQJobStats()
+                for thread in self.daq_job_processes
+            }
+        )
         self.warn_for_lack_of_daq_jobs()
 
         self._last_stats_message_time = datetime.min

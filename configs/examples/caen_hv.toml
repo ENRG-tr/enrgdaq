@@ -29,16 +29,18 @@ poll_interval_seconds = 1
 
 # Store configuration for CSV snapshot dump (overwrites every poll)
 # This stores ALL channel parameters in a single tabular format
+# Columns: timestamp, slot, channel, VMon, IMon, V0Set, ...
 [store_config.csv]
 file_path = "caen_hv.csv"
 add_date = false
 overwrite = true
 
-# Store configuration for Redis timeseries (per-channel storage)
-# Each channel gets its own tag: slot_X_channel_Y
-# Parameters become keys: timestamp, V0Set, VMon, IMon, etc.
-# Example Redis keys: enrgdaq2.hv.slot_1_channel_7.V0Set
-#                     enrgdaq2.hv.slot_1_channel_7.VMon
+# Store configuration for Redis timeseries (per-parameter storage)
+# Each parameter gets its own tag with channels as keys:
+# - tag = param name (e.g., "VMon", "IMon")
+# - keys = channel identifiers (e.g., "slot_1_channel_7")
+# Example Redis keys: hv.VMon.slot_1_channel_7
+#                     hv.IMon.slot_3_channel_0
 [timeseries_store_config.redis]
 key = "hv"
 use_timeseries = true

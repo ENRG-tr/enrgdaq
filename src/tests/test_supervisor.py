@@ -34,7 +34,9 @@ class TestSupervisor(unittest.TestCase):
     @patch("enrgdaq.supervisor.start_daq_jobs")
     @patch("enrgdaq.supervisor.load_daq_jobs")
     def test_start_daq_job_processes(self, mock_load_daq_jobs, mock_start_daq_jobs):
-        mock_load_daq_jobs.return_value = ["job1", "job2"]
+        mock_job1 = MagicMock()
+        mock_job2 = MagicMock()
+        mock_load_daq_jobs.return_value = [mock_job1, mock_job2]
         mock_start_daq_jobs.return_value = ["thread1", "thread2"]
 
         self.supervisor.start_daq_job_processes([])
@@ -43,7 +45,7 @@ class TestSupervisor(unittest.TestCase):
         mock_load_daq_jobs.assert_called_once_with(
             "configs/", self.supervisor.config.info
         )
-        mock_start_daq_jobs.assert_called_once_with(["job1", "job2"])
+        mock_start_daq_jobs.assert_called_once_with([mock_job1, mock_job2])
         self.assertEqual(self.supervisor.daq_job_processes, ["thread1", "thread2"])
 
     @patch.object(Supervisor, "warn_for_lack_of_daq_jobs")
