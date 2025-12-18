@@ -102,6 +102,15 @@ class DAQJobMessage(Struct, kw_only=True):
         return self.daq_job_info.supervisor_info.supervisor_id
 
 
+class SHMHandle(Struct):
+    shm_name: str
+    shm_size: int
+
+
+class DAQJobMessageSHM(DAQJobMessage):
+    shm: SHMHandle
+
+
 class DAQJobMessageStop(DAQJobMessage):
     reason: str
 

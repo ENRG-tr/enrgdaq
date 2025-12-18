@@ -295,7 +295,8 @@ class DAQJobCAENDigitizer(DAQJob):
                 tag="waveform",
                 keys=["timestamp"] + keys_to_send,
                 data_columns=data_columns,
-            )
+            ),
+            use_shm=True,
         )
 
     def _writer_thread_func(self):

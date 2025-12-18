@@ -3,7 +3,12 @@ from typing import Any, Optional
 from msgspec import Struct
 from numpy import ndarray
 
-from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage, DAQRemoteConfig
+from enrgdaq.daq.models import (
+    DAQJobConfig,
+    DAQJobMessage,
+    DAQRemoteConfig,
+    SHMHandle,
+)
 
 
 class DAQJobStoreConfig(Struct, dict=True):
@@ -58,6 +63,10 @@ class DAQJobMessageStore(DAQJobMessage):
                 continue
             return value.remote_config
         return None
+
+
+class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):
+    shm: SHMHandle
 
 
 class DAQJobMessageStoreTabular(DAQJobMessageStore, kw_only=True):

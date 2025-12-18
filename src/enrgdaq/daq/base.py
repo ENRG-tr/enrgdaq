@@ -1,8 +1,11 @@
 import logging
 import os
+import pickle
+import sys
 import uuid
 from datetime import datetime, timedelta
 from multiprocessing import Process, Queue
+from multiprocessing.shared_memory import SharedMemory
 from queue import Empty
 from typing import Any, Optional
 
@@ -13,11 +16,16 @@ from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobInfo,
     DAQJobMessage,
+    DAQJobMessageSHM,
     DAQJobMessageStop,
     DAQJobStopError,
     LogVerbosity,
+    SHMHandle,
 )
-from enrgdaq.daq.store.models import DAQJobMessageStore
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStore,
+    DAQJobMessageStoreSHM,
+)
 from enrgdaq.models import SupervisorInfo
 
 
@@ -98,6 +106,7 @@ class DAQJob:
         # Return immediately after consuming the message
         if not nowait:
             msg = self.message_in.get(timeout=timeout)
+            msg = self._unwrap_message(msg)
             if not self.handle_message(msg):
                 self.message_in.put(msg)
             return
@@ -105,10 +114,28 @@ class DAQJob:
         while True:
             try:
                 msg = self.message_in.get_nowait()
+                msg = self._unwrap_message(msg)
                 if not self.handle_message(msg):
                     self.message_in.put(msg)
             except Empty:
                 break
+
+    def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
+        if isinstance(message, DAQJobMessageSHM) or isinstance(
+            message, DAQJobMessageStoreSHM
+        ):
+            # Get the shared memory object
+            shm = SharedMemory(name=message.shm.shm_name, create=False)
+            assert shm.buf is not None, "Shared memory buffer is None"
+            try:
+                # Read the message from shared memory
+                message_bytes = shm.buf[: message.shm.shm_size]
+                message = pickle.loads(message_bytes)
+                del message_bytes
+            finally:
+                shm.close()
+                shm.unlink()
+        return message
 
     def handle_message(self, message: "DAQJobMessage") -> bool:
         """
@@ -171,7 +198,7 @@ class DAQJob:
             config=raw_config or "# No config",
         )
 
-    def _put_message_out(self, message: DAQJobMessage):
+    def _put_message_out(self, message: DAQJobMessage, use_shm=False):
         """
         Puts a message in the message_out queue.
 
@@ -200,6 +227,31 @@ class DAQJob:
                     self._logger.debug(f"Message out with {message.remote_config}")
                 else:
                     self._logger.debug(f"Message out: {msg_json}")
+
+        if use_shm and sys.platform != "win32":
+            original_message = message
+            # Pickle message
+            message_bytes = pickle.dumps(message)
+            # Create shared memory object
+            shm = SharedMemory(create=True, size=len(message_bytes))
+            assert shm.buf is not None, "Shared memory buffer is None"
+            # Write message to shared memory
+            shm.buf[: len(message_bytes)] = message_bytes
+            shm.close()
+            shm_handle = SHMHandle(shm_name=shm.name, shm_size=shm.size)
+            if isinstance(message, DAQJobMessageStore):
+                message = DAQJobMessageStoreSHM(
+                    store_config=getattr(original_message, "store_config"),
+                    tag=getattr(original_message, "tag", None),
+                    shm=shm_handle,
+                )
+            else:
+                message = DAQJobMessageSHM(
+                    shm=shm_handle,
+                )
+            message.daq_job_info = self.info
+            message.remote_config = self.config.remote_config
+
         self.message_out.put(message)
 
     def __del__(self):
