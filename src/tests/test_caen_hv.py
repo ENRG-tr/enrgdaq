@@ -41,6 +41,7 @@ class TestDAQJobCAENHVConfig(unittest.TestCase):
         self.assertEqual(config.username, "")
         self.assertEqual(config.password, "")
         self.assertEqual(config.poll_interval_seconds, 1)
+        self.assertEqual(config.loop_timeout_seconds, 60.0)
         self.assertIsNone(config.store_config)
 
     def test_config_with_optional_fields(self):
@@ -543,6 +544,96 @@ class TestDAQJobCAENHVIntegration(unittest.TestCase):
     def test_config_type_set(self):
         """Test that config_type is correctly set."""
         self.assertEqual(DAQJobCAENHV.config_type, DAQJobCAENHVConfig)
+
+
+class TestDAQJobCAENHVWatchdog(unittest.TestCase):
+    """Tests for the watchdog mechanism."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.store_config = MagicMock(spec=DAQJobStoreConfig)
+        self.config = DAQJobCAENHVConfig(
+            daq_job_type="DAQJobCAENHV",
+            system_type="SY4527",
+            link_type="TCPIP",
+            connection_arg="192.168.1.100",
+            store_config=self.store_config,
+            loop_timeout_seconds=60.0,
+        )
+
+    def test_watchdog_timer_initialized_as_none(self):
+        """Test that watchdog timer is None on initialization."""
+        daq_job = DAQJobCAENHV(self.config)
+        self.assertIsNone(daq_job._watchdog_timer)
+        self.assertFalse(daq_job._watchdog_triggered.is_set())
+
+    def test_start_watchdog_creates_timer(self):
+        """Test that _start_watchdog creates a timer."""
+        daq_job = DAQJobCAENHV(self.config)
+        daq_job._start_watchdog()
+
+        self.assertIsNotNone(daq_job._watchdog_timer)
+        self.assertTrue(daq_job._watchdog_timer.daemon)
+
+        # Clean up
+        daq_job._cancel_watchdog()
+
+    def test_start_watchdog_disabled_when_zero_timeout(self):
+        """Test that watchdog is not started when timeout is 0."""
+        config = DAQJobCAENHVConfig(
+            daq_job_type="DAQJobCAENHV",
+            system_type="SY4527",
+            link_type="TCPIP",
+            connection_arg="192.168.1.100",
+            loop_timeout_seconds=0,  # Disabled
+        )
+        daq_job = DAQJobCAENHV(config)
+        daq_job._start_watchdog()
+
+        self.assertIsNone(daq_job._watchdog_timer)
+
+    def test_cancel_watchdog(self):
+        """Test that _cancel_watchdog cancels and clears the timer."""
+        daq_job = DAQJobCAENHV(self.config)
+        daq_job._start_watchdog()
+
+        self.assertIsNotNone(daq_job._watchdog_timer)
+
+        daq_job._cancel_watchdog()
+        self.assertIsNone(daq_job._watchdog_timer)
+
+    def test_cancel_watchdog_when_not_set(self):
+        """Test that _cancel_watchdog works when timer is None."""
+        daq_job = DAQJobCAENHV(self.config)
+        # Should not raise
+        daq_job._cancel_watchdog()
+        self.assertIsNone(daq_job._watchdog_timer)
+
+    def test_watchdog_timeout_sets_event(self):
+        """Test that watchdog timeout sets the triggered event."""
+        daq_job = DAQJobCAENHV(self.config)
+        self.assertFalse(daq_job._watchdog_triggered.is_set())
+
+        daq_job._watchdog_timeout()
+
+        self.assertTrue(daq_job._watchdog_triggered.is_set())
+
+    def test_restart_watchdog_resets_timer(self):
+        """Test that calling _start_watchdog resets an existing timer."""
+        daq_job = DAQJobCAENHV(self.config)
+        daq_job._start_watchdog()
+
+        first_timer = daq_job._watchdog_timer
+
+        daq_job._start_watchdog()
+
+        second_timer = daq_job._watchdog_timer
+
+        # Should be a different timer object
+        self.assertIsNot(first_timer, second_timer)
+
+        # Clean up
+        daq_job._cancel_watchdog()
 
 
 if __name__ == "__main__":
