@@ -27,6 +27,7 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreSHM,
 )
 from enrgdaq.models import SupervisorInfo
+from enrgdaq.utils.watchdog import Watchdog
 
 
 class DAQJob:
@@ -60,6 +61,11 @@ class DAQJob:
     _has_been_freed: bool
     _logger: logging.Logger
     multiprocessing_method: str = "default"  # Can be 'fork', 'spawn', or 'default'
+    watchdog_timeout_seconds: float = 0  # Watchdog timeout in seconds, 0 = disabled
+    watchdog_force_exit: bool = (
+        False  # If True, force exit on timeout (for blocking calls)
+    )
+    _watchdog: Watchdog
 
     def __init__(
         self,
@@ -95,6 +101,13 @@ class DAQJob:
             self._supervisor_info = None
         self.info = self._create_info(raw_config)
         self._logger.debug(f"DAQ job {self.info.unique_id} created")
+
+        # Initialize watchdog using class variables
+        self._watchdog = Watchdog(
+            timeout_seconds=self.watchdog_timeout_seconds,
+            force_exit=self.watchdog_force_exit,
+            logger=self._logger,
+        )
 
     def consume(self, nowait=True, timeout=None):
         """
@@ -282,6 +295,7 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     daq_job_info: Optional[DAQJobInfo] = None
     raw_config: Optional[str] = None
     log_queue: Optional[Any] = None
+    restart_on_crash: bool = True
 
     _daq_job_info_queue: "Queue[DAQJobInfo]" = msgspec.field(default_factory=Queue)
 

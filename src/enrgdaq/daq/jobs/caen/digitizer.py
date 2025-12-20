@@ -355,7 +355,8 @@ class DAQJobCAENDigitizer(DAQJob):
             self._writer_queue.put(None)
             self._writer_thread.join()
         self._logger.info("Stopping acquisition...")
-        self._lib.stop_acquisition()
+        if self._lib:
+            self._lib.stop_acquisition()
         if self._device:
             self._logger.info("Closing Digitizer...")
             self._device.__exit__(None, None, None)

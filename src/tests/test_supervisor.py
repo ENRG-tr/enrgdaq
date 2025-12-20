@@ -179,6 +179,34 @@ class TestSupervisor(unittest.TestCase):
         self.assertEqual(result[0].restart_at, datetime(2023, 1, 1, 12, 0, 10))
 
     @patch("enrgdaq.supervisor.datetime")
+    def test_get_restart_schedules_no_restart_on_crash(self, mock_datetime):
+        """Test that processes with restart_on_crash=False are not scheduled for restart."""
+        mock_datetime.now.return_value = datetime(2023, 1, 1, 12, 0, 0)
+        mock_daq_job_cls = MagicMock()
+        mock_daq_job_cls.restart_offset = timedelta(seconds=10)
+        mock_daq_job_cls.config = MagicMock()
+        mock_daq_job_cls.__name__ = "mock_job"
+
+        # Process with restart_on_crash=False should not be scheduled
+        mock_process_no_restart = MagicMock()
+        mock_process_no_restart.daq_job_cls = mock_daq_job_cls
+        mock_process_no_restart.restart_on_crash = False
+
+        # Process with restart_on_crash=True should be scheduled
+        mock_process_with_restart = MagicMock()
+        mock_process_with_restart.daq_job_cls = mock_daq_job_cls
+        mock_process_with_restart.restart_on_crash = True
+
+        result = self.supervisor.get_restart_schedules(
+            [mock_process_no_restart, mock_process_with_restart]
+        )
+
+        # Only the process with restart_on_crash=True should be in the result
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0].daq_job_process, mock_process_with_restart)
+        self.assertEqual(result[0].restart_at, datetime(2023, 1, 1, 12, 0, 10))
+
+    @patch("enrgdaq.supervisor.datetime")
     def test_get_supervisor_messages(self, mock_datetime):
         now = datetime(2023, 1, 1, 12, 0, 0)
         mock_datetime.now.return_value = now

@@ -4,7 +4,6 @@ CAEN HV DAQ Job for controlling CAEN High Voltage power supplies.
 Uses the caen_libs caenhvwrapper library to communicate with CAEN HV devices.
 """
 
-import threading
 from datetime import datetime, timedelta
 from typing import Literal, Optional
 
@@ -94,7 +93,7 @@ class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
     """The value to set."""
 
 
-class DAQJobCAENHVConfig(DAQJobConfig):
+class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
     """
     Configuration for the CAEN HV DAQ Job.
 
@@ -171,14 +170,6 @@ class DAQJobCAENHVConfig(DAQJobConfig):
     Example: ["VMon", "IMon", "V0Set", "Pw", "Status"]
     """
 
-    loop_timeout_seconds: float = 60.0
-    """
-    Watchdog timeout in seconds. If the main loop doesn't complete
-    an iteration within this time, the job will exit and be restarted
-    by the supervisor. Set to 0 to disable the watchdog.
-    Default: 60 seconds.
-    """
-
 
 class DAQJobCAENHV(DAQJob):
     """
@@ -195,40 +186,14 @@ class DAQJobCAENHV(DAQJob):
     config: DAQJobCAENHVConfig
     allowed_message_in_types = [DAQJobMessageCAENHVSetChParam]
     restart_offset = timedelta(seconds=5)
+    watchdog_timeout_seconds = 60
+    watchdog_force_exit = True  # CAEN library calls can hang, force exit if stuck
 
     _device: Optional[hv.Device] = None
-    _watchdog_timer: Optional[threading.Timer] = None
 
     def __init__(self, config: DAQJobCAENHVConfig, **kwargs):
         super().__init__(config, **kwargs)
         self._device = None
-        self._watchdog_timer = None
-        self._watchdog_triggered = threading.Event()
-
-    def _start_watchdog(self):
-        """Start or restart the watchdog timer."""
-        self._cancel_watchdog()
-        if self.config.loop_timeout_seconds > 0:
-            self._watchdog_timer = threading.Timer(
-                self.config.loop_timeout_seconds, self._watchdog_timeout
-            )
-            self._watchdog_timer.daemon = True
-            self._watchdog_timer.start()
-
-    def _cancel_watchdog(self):
-        """Cancel the watchdog timer if running."""
-        if self._watchdog_timer is not None:
-            self._watchdog_timer.cancel()
-            self._watchdog_timer = None
-
-    def _watchdog_timeout(self):
-        """Called when the watchdog timer expires - loop is hung."""
-        self._logger.error(
-            f"Watchdog timeout! Loop has not completed in "
-            f"{self.config.loop_timeout_seconds} seconds. Exiting for restart..."
-        )
-        # Signal the loop to exit
-        self._watchdog_triggered.set()
 
     def start(self):
         self._logger.info("Opening CAEN HV device...")
@@ -265,17 +230,17 @@ class DAQJobCAENHV(DAQJob):
 
     def _run_loop(self, device: hv.Device, slots):
         """Main loop that polls parameters and handles messages."""
-        if self.config.loop_timeout_seconds > 0:
+        if self._watchdog.is_enabled:
             self._logger.info(
-                f"Watchdog enabled with {self.config.loop_timeout_seconds}s timeout"
+                f"Watchdog enabled with {self._watchdog.timeout_seconds}s timeout"
             )
 
         try:
-            while not self._watchdog_triggered.is_set():
+            while not self._watchdog.is_triggered():
                 start_time = datetime.now()
 
                 # Start/reset watchdog timer at the beginning of each iteration
-                self._start_watchdog()
+                self._watchdog.reset()
 
                 # Consume incoming messages
                 self.consume()
@@ -292,11 +257,11 @@ class DAQJobCAENHV(DAQJob):
                 sleep_for(self.config.poll_interval_seconds, start_time)
 
             # If we exited due to watchdog, log and let the job end
-            if self._watchdog_triggered.is_set():
+            if self._watchdog.is_triggered():
                 self._logger.warning("Loop exiting due to watchdog timeout")
         finally:
             # Clean up watchdog on exit
-            self._cancel_watchdog()
+            self._watchdog.stop()
 
     def _poll_channel_params(self, device: hv.Device, slots):
         """Poll channel parameters and send store messages."""

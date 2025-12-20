@@ -100,6 +100,7 @@ class CNCMessageReqRunCustomDAQJob(CNCMessage):
     """Request to run a custom DAQJob with config."""
 
     config: str  # TOML config as string
+    restart_on_crash: bool = True  # If False, job will not be restarted on crash
 
 
 class CNCMessageResRunCustomDAQJob(CNCMessage):

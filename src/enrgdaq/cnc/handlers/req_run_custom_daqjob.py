@@ -58,9 +58,10 @@ class ReqRunCustomDAQJobHandler(CNCMessageHandler):
             try:
                 # Build the DAQ job from the config
                 daq_job_process = build_daq_job(config_data, supervisor_info)
+                daq_job_process.restart_on_crash = msg.restart_on_crash
 
                 self._logger.info(
-                    f"Starting DAQ job: {daq_job_process.daq_job_cls.__name__}"
+                    f"Starting DAQ job: {daq_job_process.daq_job_cls.__name__} (restart_on_crash={msg.restart_on_crash})"
                 )
 
                 # Start the DAQ job

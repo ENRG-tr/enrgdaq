@@ -303,6 +303,14 @@ class Supervisor:
 
         res = []
         for process in dead_processes:
+            # Skip processes that should not be restarted on crash
+            if not process.restart_on_crash:
+                self._logger.info(
+                    f"Removing {process.daq_job_cls.__name__} from process list"
+                )
+                self.daq_job_processes.remove(process)
+                continue
+
             restart_offset = getattr(process.daq_job_cls, "restart_offset", None)
             if not isinstance(restart_offset, timedelta):
                 restart_offset = timedelta(

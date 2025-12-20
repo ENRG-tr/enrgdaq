@@ -120,10 +120,13 @@ def start_rest_api(cnc_instance):
 
     class RunCustomDAQJobRequest(BaseModel):
         config: str
+        restart_on_crash: bool = True
 
     @app.post("/clients/{client_id}/run_custom_daqjob")
     def run_custom_daqjob_client(client_id: str, request: RunCustomDAQJobRequest):
-        msg = CNCMessageReqRunCustomDAQJob(config=request.config)
+        msg = CNCMessageReqRunCustomDAQJob(
+            config=request.config, restart_on_crash=request.restart_on_crash
+        )
         reply = execute_command(client_id, msg)
         return Response(
             content=msgspec.json.encode(reply), media_type="application/json"
