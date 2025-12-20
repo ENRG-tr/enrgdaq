@@ -308,7 +308,8 @@ class Supervisor:
                 self._logger.info(
                     f"Removing {process.daq_job_cls.__name__} from process list"
                 )
-                self.daq_job_processes.remove(process)
+                if process in self.daq_job_processes:
+                    self.daq_job_processes.remove(process)
                 continue
 
             restart_offset = getattr(process.daq_job_cls, "restart_offset", None)
