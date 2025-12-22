@@ -4,9 +4,11 @@ import io
 import os
 import queue
 import subprocess
+import sys
 import threading
 import time
 from datetime import timedelta
+from pathlib import Path
 from typing import Literal, Optional
 
 import numpy as np
@@ -43,7 +45,12 @@ import lz4.frame
 from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.models import DAQJobConfig, LogVerbosity
+from enrgdaq.daq.models import (
+    DAQJobConfig,
+    DAQJobMessage,
+    DAQJobMessageStop,
+    LogVerbosity,
+)
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
@@ -210,6 +217,30 @@ class DAQJobCAENDigitizer(DAQJob):
         except Exception as e:
             self._logger.error(f"Error during acquisition: {e}", exc_info=True)
 
+    def handle_message(self, message: DAQJobMessage) -> bool:
+        if not isinstance(message, DAQJobMessageStop):
+            return super().handle_message(message)
+        if not self.config.save_npy_lz4:
+            return super().handle_message(message)
+
+        assert self.config.output_filename is not None
+
+        npy_path = Path(self.config.output_filename)
+        root_path = npy_path.parent / (npy_path.stem + ".root")
+        self._logger.info(f"Running npy2root: {npy_path} -> {root_path}")
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "enrgdaq.tools.npy2root",
+                str(npy_path),
+                str(root_path),
+            ],
+            check=True,
+        )
+
+        return super().handle_message(message)
+
     def _run_acquisition(self, device: dgtz.Device):
         try:
             self.board_info = device.get_info()
@@ -349,7 +380,7 @@ class DAQJobCAENDigitizer(DAQJob):
             )
         )
 
-    def __del__(self):
+    def _stop_acquisition(self):
         if self._writer_thread and self._writer_queue:
             self._logger.info("Stopping writer thread...")
             self._writer_queue.put(None)
@@ -360,6 +391,9 @@ class DAQJobCAENDigitizer(DAQJob):
         if self._device:
             self._logger.info("Closing Digitizer...")
             self._device.__exit__(None, None, None)
+
+    def __del__(self):
+        self._stop_acquisition()
         return super().__del__()
 
     def _save_waveform_to_npy_lz4(self, data_columns: dict, path: str):
