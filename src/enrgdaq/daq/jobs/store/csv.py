@@ -2,18 +2,21 @@ import csv
 import gzip
 import os
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, TextIO, cast
 
 import numpy as np
+import pyarrow as pa
+import pyarrow.csv as pa_csv
 from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigCSV,
 )
@@ -31,6 +34,8 @@ class CSVFile:
     file: TextIO
     last_flush_date: datetime
     write_queue: deque[list[Any]]
+    arrow_tables: list[pa.Table] = field(default_factory=list)
+    header_written: bool = False
     overwrite: Optional[bool] = None
 
 
@@ -46,7 +51,9 @@ class DAQJobStoreCSV(DAQJobStore):
 
         self._open_csv_files = {}
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
+    ) -> bool:
         if not super().handle_message(message):
             return False
 
@@ -62,6 +69,17 @@ class DAQJobStoreCSV(DAQJobStore):
         if file.overwrite:
             file.write_queue.clear()
 
+        # Handle PyArrow messages
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.table
+            if table is None or table.num_rows == 0:
+                return True
+
+            # Queue the table for efficient batch writing
+            file.arrow_tables.append(table)
+            return True
+
+        # Handle Tabular messages
         # Write headers if the file is new
         if new_file or file.overwrite:
             file.write_queue.append(message.keys)
@@ -131,10 +149,28 @@ class DAQJobStoreCSV(DAQJobStore):
             if file.file.closed:
                 files_to_delete.append(file_path)
                 continue
-            writer = csv.writer(file.file)
 
+            # Write PyArrow tables efficiently using native CSV writer
+            if file.arrow_tables:
+                combined = pa.concat_tables(file.arrow_tables)
+                file.arrow_tables.clear()
+
+                # Use PyArrow's native CSV writer (much faster)
+                write_options = pa_csv.WriteOptions(
+                    include_header=not file.header_written
+                )
+
+                # Write to the underlying file
+                pa_csv.write_csv(combined, file.file, write_options=write_options)
+                file.header_written = True
+
+            # Write traditional queue rows
+            writer = csv.writer(file.file)
             row_size = len(file.write_queue)
             if row_size > 0:
+                if not file.header_written:
+                    # First row is header for tabular messages
+                    pass
                 writer.writerows(list(file.write_queue))
             file.write_queue.clear()
 

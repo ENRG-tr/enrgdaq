@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import numpy as np
+import pyarrow as pa
 
 try:
     from caen_libs import caendigitizer as dgtz
@@ -52,7 +53,7 @@ from enrgdaq.daq.models import (
     LogVerbosity,
 )
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     DAQJobStoreConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms
@@ -329,12 +330,15 @@ class DAQJobCAENDigitizer(DAQJob):
             return
 
         assert self.config.waveform_store_config is not None
+
+        # Create PyArrow table from numpy arrays
+        table = pa.table(data_columns)
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.waveform_store_config,
                 tag="waveform",
-                keys=["timestamp"] + keys_to_send,
-                data_columns=data_columns,
+                table=table,
             ),
             use_shm=True,
         )
@@ -370,22 +374,20 @@ class DAQJobCAENDigitizer(DAQJob):
         stats_raw = ct.cast(buffer_ptr, ct.POINTER(AcquisitionStatsRaw)).contents
         stats = AcquisitionStats.from_raw(stats_raw)
 
+        # Create PyArrow table for stats
+        table = pa.table(
+            {
+                "timestamp": [get_now_unix_timestamp_ms()],
+                "acq_events": [stats.acq_events],
+                "acq_samples": [stats.acq_samples],
+            }
+        )
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.stats_store_config,
                 tag="stats",
-                keys=[
-                    "timestamp",
-                    "acq_events",
-                    "acq_samples",
-                ],
-                data=[
-                    [
-                        get_now_unix_timestamp_ms(),
-                        stats.acq_events,
-                        stats.acq_samples,
-                    ]
-                ],
+                table=table,
             )
         )
 

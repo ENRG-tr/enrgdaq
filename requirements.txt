@@ -43,6 +43,7 @@ platformdirs==4.3.6
 pre-commit==4.0.1
 psutil==6.1.1
 py-spy==0.4.1
+pyarrow==22.0.0
 pycparser==2.22 ; implementation_name == 'pypy'
 pydantic==2.12.4
 pydantic-core==2.41.5

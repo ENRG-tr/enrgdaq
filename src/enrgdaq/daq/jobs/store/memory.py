@@ -1,7 +1,5 @@
-from collections import deque
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
@@ -21,25 +19,14 @@ class DAQJobStoreMemoryConfig(DAQJobConfig):
     void_data: Optional[bool] = False
 
 
-@dataclass
-class MemoryWriteQueueItem:
-    tag: Optional[str]
-    keys: list[str]
-    rows: list[Any]
-    timestamp: datetime
-
-
 class DAQJobStoreMemory(DAQJobStore):
     config_type = DAQJobStoreMemoryConfig
     allowed_store_config_types = [DAQJobStoreConfigMemory]
     allowed_message_in_types = [DAQJobMessageStore]
 
-    _write_queue: deque[MemoryWriteQueueItem]
-
     def __init__(self, config: DAQJobStoreMemoryConfig, **kwargs):
         super().__init__(config, **kwargs)
-        self._write_queue = deque()
-        self._memory = deque()
+        self._memory = {}
 
     def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
         if not super().handle_message(message):
@@ -48,33 +35,21 @@ class DAQJobStoreMemory(DAQJobStore):
         if self.config.void_data:
             return True
         timestamp = datetime.now()
-        for row in message.data:
-            self._write_queue.append(
-                MemoryWriteQueueItem(
-                    tag=message.tag,
-                    keys=message.keys,
-                    rows=row,
-                    timestamp=timestamp,
-                )
-            )
+        self._memory[message.tag] = {
+            "timestamp": timestamp,
+            "keys": message.keys,
+            "rows": message.data,
+        }
         return True
 
     def store_loop(self):
-        while self._write_queue:
-            item = self._write_queue.popleft()
-            self._logger.debug("Adding message to memory: " + str(item))
-            self._memory.append(item)
-            if (
-                self.config.dispose_after_n_entries
-                and len(self._memory) > self.config.dispose_after_n_entries
-            ):
-                self._memory.pop()
+        pass
 
-    def get_all(self) -> list[MemoryWriteQueueItem]:
-        return list(self._write_queue)
+    def get_all(self):
+        return self._memory
 
     def clear(self):
-        self._write_queue.clear()
+        self._memory.clear()
 
     def __del__(self):
         self.clear()

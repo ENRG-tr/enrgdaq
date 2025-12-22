@@ -133,6 +133,18 @@ class DAQJob:
             except Empty:
                 break
 
+    def consume_all(self):
+        processed_any = False
+        while True:
+            try:
+                msg = self.message_in.get_nowait()
+                msg = self._unwrap_message(msg)
+                if self.handle_message(msg):
+                    processed_any = True
+            except Empty:
+                break
+        return processed_any
+
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
             message, DAQJobMessageStoreSHM

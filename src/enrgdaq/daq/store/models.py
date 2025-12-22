@@ -1,5 +1,6 @@
 from typing import Any, Optional
 
+import pyarrow as pa
 from msgspec import Struct
 from numpy import ndarray
 
@@ -80,6 +81,18 @@ class DAQJobMessageStoreTabular(DAQJobMessageStore, kw_only=True):
     keys: list[str]
     data: Optional[list[list[str | float | int] | ndarray]] = None
     data_columns: Optional[dict[str, list[str | float | int] | ndarray]] = None
+
+
+class DAQJobMessageStorePyArrow(DAQJobMessageStore, kw_only=True):
+    """
+    DAQJobMessageStorePyArrow is a high-performance message store using PyArrow's
+    columnar format. Optimized for numerical data with zero-copy reads.
+
+    Attributes:
+        table (pa.Table): A PyArrow Table containing the columnar data.
+    """
+
+    table: pa.Table
 
 
 class DAQJobMessageStoreRaw(DAQJobMessageStore, kw_only=True):

@@ -20,7 +20,9 @@ from enrgdaq.utils.time import sleep_for
 
 DAQ_JOB_REMOTE_MAX_REMOTE_MESSAGE_ID_COUNT = 10000
 DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 1
-DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT = 1
+DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT = 0.01
+DAQ_JOB_REMOTE_RECEIVE_THREAD_WAIT_SECONDS = 1 / 100
+DAQ_JOB_REMOTE_IS_ALIVE_CHECK_INTERVAL_SECONDS = 1 / 10
 
 
 class SupervisorRemoteStats(Struct):
@@ -97,6 +99,7 @@ class DAQJobRemote(DAQJob):
     _receive_thread: threading.Thread
     _remote_stats: DAQJobRemoteStatsDict
     _remote_stats_last_sent_at: float
+    _is_alive_check_interval: datetime
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -126,6 +129,7 @@ class DAQJobRemote(DAQJob):
         self._remote_message_ids = set()
         self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
         self._remote_stats_last_sent_at = datetime.now().timestamp()
+        self._last_is_alive_check_time = datetime.now()
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
@@ -260,14 +264,24 @@ class DAQJobRemote(DAQJob):
         self._send_remote_stats_thread.start()
 
         while True:
-            # message_in -> remote message_out
-            try:
-                self.consume(nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT)
-            except Empty:
+            # Consume all messages in the queue
+            while True:
+                try:
+                    self.consume(
+                        nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT
+                    )
+                except Empty:
+                    break
+
+            # Check thread healths
+            if datetime.now() - self._last_is_alive_check_time > timedelta(
+                seconds=DAQ_JOB_REMOTE_IS_ALIVE_CHECK_INTERVAL_SECONDS
+            ):
                 if not self._receive_thread.is_alive():
                     raise RuntimeError("Receive thread is dead")
                 if not self._send_remote_stats_thread.is_alive():
                     raise RuntimeError("Send remote stats thread is dead")
+                self._last_is_alive_check_time = datetime.now()
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -> bytes:
         """

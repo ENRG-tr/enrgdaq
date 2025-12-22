@@ -13,6 +13,7 @@ dependencies = [
     "opencv-python>=4.10.0.84",
     "psutil>=6.1.1",
     "py-spy>=0.4.1",
+    "pyarrow>=17.0.0",
     "pymysql>=1.1.1",
     "pyzmq>=26.2.0",
     "redis[hiredis]>=5.2.0",
@@ -27,10 +28,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-sensors = [
-    "lywsd03mmc-client",
-    "n1081b-sdk"
-]
+sensors = ["lywsd03mmc-client", "n1081b-sdk"]
 
 [tool.uv]
 dev-dependencies = ["pre-commit>=4.0.1", "ruff>=0.6.9", "snakeviz>=2.2.2"]

@@ -10,6 +10,7 @@ from numpy import ndarray
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigROOT,
 )
@@ -31,7 +32,7 @@ class DAQJobStoreROOTConfig(DAQJobConfig):
 class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
-    allowed_message_in_types = [DAQJobMessageStoreTabular]
+    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStorePyArrow]
     _open_files: dict[str, uproot.WritableDirectory]
     _open_trees: dict[str, dict[str, uproot.WritableTree]]
 
@@ -63,15 +64,26 @@ class DAQJobStoreROOT(DAQJobStore):
                 self.handle_message(message)  # type: ignore
             messages.clear()
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
+    ) -> bool:
         super().handle_message(message)
 
-        data_to_write = message.data_columns
-        if not data_to_write:
-            return True
-
-        if message.data_columns is None:
-            return True
+        # Get data to write based on message type
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.table
+            if table is None or table.num_rows == 0:
+                return True
+            # Convert PyArrow table to dict of numpy arrays
+            data_to_write = {}
+            for col_name in table.column_names:
+                col = table.column(col_name)
+                # Convert to numpy - this is efficient for numeric types
+                data_to_write[col_name] = col.to_numpy()
+        else:
+            data_to_write = message.data_columns
+            if not data_to_write:
+                return True
 
         store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
         file_path = modify_file_path(

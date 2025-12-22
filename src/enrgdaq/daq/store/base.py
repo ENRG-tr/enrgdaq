@@ -4,15 +4,16 @@ from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage, DAQJobMessageStop
 from enrgdaq.daq.store.models import DAQJobMessageStore
 
-STORE_LOOP_INTERVAL_SECONDS = 0.01
+# Sleep interval when no messages are available (prevents busy-waiting)
+STORE_IDLE_SLEEP_SECONDS = 0.001
 
 
 class DAQJobStore(DAQJob):
     """
-    DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-    and provides additional functionality for handling and storing messages.
-    Attributes:
-        allowed_store_config_types (list): A list of allowed store configuration types.
+    DAQJobStore is an abstract base class for data acquisition job stores.
+
+    Optimized for high throughput - only sleeps when idle to avoid
+    unnecessary latency in message processing.
     """
 
     allowed_store_config_types: list
@@ -20,17 +21,16 @@ class DAQJobStore(DAQJob):
     def start(self):
         """
         Starts the continuous loop for consuming and storing data.
-        This method runs an infinite loop that repeatedly calls the `consume`
-        and `store_loop` methods.
         """
-
         while True:
-            self.consume()
+            messages_processed = self.consume_all()
             self.store_loop()
-            time.sleep(STORE_LOOP_INTERVAL_SECONDS)
+
+            if not messages_processed:
+                time.sleep(STORE_IDLE_SLEEP_SECONDS)
 
     def store_loop(self):
-        raise NotImplementedError
+        pass
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not self.can_handle_message(message):

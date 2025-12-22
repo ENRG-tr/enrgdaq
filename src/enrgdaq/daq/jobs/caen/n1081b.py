@@ -1,5 +1,7 @@
 import time
 
+import pyarrow as pa
+
 try:
     from N1081B import N1081B
     from websocket import WebSocket, create_connection
@@ -10,7 +12,7 @@ except Exception:
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms
@@ -103,16 +105,20 @@ class DAQJobN1081B(DAQJob):
             self._send_store_message(data, section.name)
 
     def _send_store_message(self, data: dict, section):
-        keys = ["timestamp", *[f"lemo_{x['lemo']}" for x in data["counters"]]]
-        values = [
-            get_now_unix_timestamp_ms(),  # unix timestamp in milliseconds
-            *[x["value"] for x in data["counters"]],
-        ]
+        timestamp = get_now_unix_timestamp_ms()
+
+        columns = {
+            "timestamp": [timestamp],
+        }
+        for counter in data["counters"]:
+            columns[f"lemo_{counter['lemo']}"] = [counter["value"]]
+
+        table = pa.table(columns)
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
                 tag=section,
-                keys=keys,
-                data=[values],
+                table=table,
             )
         )
