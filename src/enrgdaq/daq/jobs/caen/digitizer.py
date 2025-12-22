@@ -198,6 +198,7 @@ class DAQJobCAENDigitizer(DAQJob):
             self._waveform_callback
         )
         self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
+        self._converting_npy_lz4 = False
 
     def start(self):
         if self._writer_thread:
@@ -220,12 +221,20 @@ class DAQJobCAENDigitizer(DAQJob):
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not isinstance(message, DAQJobMessageStop):
             return super().handle_message(message)
-        if not self.config.save_npy_lz4:
+        if not self.config.save_npy_lz4 or self._converting_npy_lz4:
             return super().handle_message(message)
 
+        self._converting_npy_lz4 = True
+        # Convert npy.lz4 to root
         assert self.config.output_filename is not None
 
         npy_path = Path(self.config.output_filename)
+        if not npy_path.exists():
+            self._logger.warning(
+                f"Npy file does not exist: {npy_path}, skipping conversion"
+            )
+            return super().handle_message(message)
+
         root_path = npy_path.parent / (npy_path.stem + ".root")
         self._logger.info(f"Running npy2root: {npy_path} -> {root_path}")
         subprocess.run(
