@@ -2,12 +2,13 @@ import logging
 import os
 import platform
 import sys
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from functools import cache
 from logging.handlers import QueueListener
 from multiprocessing import Queue
 from queue import Empty, Full
-from typing import Optional
 
 import msgspec
 
@@ -31,9 +32,12 @@ from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote, DAQJobRemoteStatsD
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessage,
+    DAQJobMessageRoutes,
     DAQJobMessageSHM,
     DAQJobMessageStop,
     DAQJobStats,
+    RouteMapping,
+    SupervisorDAQJobMessage,
 )
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import DAQJobMessageStoreSHM
@@ -58,6 +62,9 @@ DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS = 2
 DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS = 1
 """Time in seconds between sending supervisor heartbeat messages."""
 
+DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS = 1
+"""Time in seconds between sending supervisor routes messages."""
+
 
 @dataclass
 class RestartDAQJobSchedule:
@@ -70,33 +77,52 @@ class Supervisor:
     Supervisor class responsible for managing DAQ job threads, handling their lifecycle,
     and facilitating communication between them.
     Attributes:
-        daq_job_threads (list[DAQJobThread]): List of DAQ job threads managed by the supervisor.
+        config (SupervisorConfig | None): Configuration for the supervisor.
+        daq_job_processes (list[DAQJobProcess]): List of DAQ job processes managed by the supervisor.
         daq_job_stats (DAQJobStatsDict): Dictionary holding statistics for each DAQ job type.
         restart_schedules (list[RestartDAQJobSchedule]): List of schedules for restarting DAQ jobs.
         _logger (logging.Logger): Logger instance for logging supervisor activities.
         _last_stats_message_time (datetime): Last time a stats message was sent.
+        _cnc_instance (SupervisorCNC | None): CNC instance for the supervisor.
+
+        _last_stats_message_time (datetime): Last time a stats message was sent.
+        _last_heartbeat_message_time (datetime): Last time a heartbeat message was sent.
+        _log_queue (Queue[logging.LogRecord]): Queue for logging messages.
+        _log_listener (QueueListener | None): Log listener for the supervisor.
+        _is_stopped (bool): Whether the supervisor is stopped.
+        _daq_jobs_to_load (list[DAQJobProcess] | None): List of DAQ jobs to load.
+        _daq_job_config_path (str): Path to the DAQ job configuration file.
     """
 
+    config: SupervisorConfig | None
     daq_job_processes: list[DAQJobProcess]
     daq_job_stats: DAQJobStatsDict
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
-    _cnc_instance: Optional[SupervisorCNC] = None
+    _cnc_instance: SupervisorCNC | None = None
 
     _last_stats_message_time: datetime
     _last_heartbeat_message_time: datetime
+    _last_routes_message_time: datetime
+    _log_queue: "Queue[logging.LogRecord]"
+    _log_listener: QueueListener | None = None
+    _is_stopped: bool
+    _daq_jobs_to_load: list[DAQJobProcess] | None
+    _daq_job_config_path: str
 
     def __init__(
         self,
-        config: Optional[SupervisorConfig] = None,
-        daq_job_processes: Optional[list[DAQJobProcess]] = None,
+        config: SupervisorConfig | None = None,
+        daq_job_processes: list[DAQJobProcess] | None = None,
         daq_job_config_path: str = "configs/",
     ):
         self.config = config
         self._daq_jobs_to_load = daq_job_processes
+        self.daq_job_processes = []
+        self.restart_schedules = []
         self.daq_job_remote_stats = {}
-        self.daq_job_stats: DAQJobStatsDict = {}
+        self.daq_job_stats = {}
         self._daq_job_config_path = daq_job_config_path
         if not os.path.exists(self._daq_job_config_path):
             raise ValueError(
@@ -104,8 +130,13 @@ class Supervisor:
             )
         self._is_stopped = False
 
-        self.log_queue = Queue()
+        self._log_queue = Queue()
         self._log_listener = None
+        self._logger = logging.getLogger()
+
+        self._last_stats_message_time = datetime.now()
+        self._last_heartbeat_message_time = datetime.now()
+        self._last_routes_message_time = datetime.now()
 
     def init(self):
         """
@@ -114,7 +145,6 @@ class Supervisor:
         You should call this method after creating a new instance of the Supervisor class.
         """
 
-        self._logger = logging.getLogger()
         if not self.config:
             self.config = self._load_supervisor_config()
 
@@ -128,7 +158,7 @@ class Supervisor:
             )
 
         # Set up log listener to capture logs from child processes
-        handlers = []
+        handlers: list[logging.Handler] = []
         if self._cnc_instance:
             # Find the CNCLogHandler in the CNC instance logger
             cnc_handler = next(
@@ -148,7 +178,7 @@ class Supervisor:
             handlers.extend(logging.getLogger().handlers)
 
         if handlers:
-            self._log_listener = QueueListener(self.log_queue, *handlers)
+            self._log_listener = QueueListener(self._log_queue, *handlers)
             self._log_listener.start()
 
         self.restart_schedules = []
@@ -174,7 +204,7 @@ class Supervisor:
         )
 
         for job in jobs_to_start:
-            job.log_queue = self.log_queue
+            job.log_queue = self._log_queue
 
         started_jobs = start_daq_jobs(jobs_to_start)
         self.daq_job_processes.extend(started_jobs)
@@ -297,13 +327,13 @@ class Supervisor:
         Gets the restart schedules for the dead threads.
 
         Args:
-            dead_threads (list[DAQJobThread]): List of dead threads.
+            dead_processes (list[DAQJobProcess]): List of dead processes.
 
         Returns:
             list[RestartDAQJobSchedule]: List of restart schedules.
         """
 
-        res = []
+        res: list[RestartDAQJobSchedule] = []
         for process in dead_processes:
             # Skip processes that should not be restarted on crash
             if not process.restart_on_crash:
@@ -336,7 +366,7 @@ class Supervisor:
         """
         assert self.config is not None
 
-        schedules_to_remove = []
+        schedules_to_remove: list[RestartDAQJobSchedule] = []
         for restart_schedule in self.restart_schedules:
             if datetime.now() < restart_schedule.restart_at:
                 continue
@@ -364,7 +394,7 @@ class Supervisor:
             list[DAQJobMessage]: List of supervisor messages.
         """
 
-        messages = []
+        messages: list[DAQJobMessage] = []
 
         # Send stats message
         if datetime.now() > self._last_stats_message_time + timedelta(
@@ -389,6 +419,18 @@ class Supervisor:
                 )
             )
         """
+
+        # Send routes message
+        if datetime.now() > self._last_routes_message_time + timedelta(
+            seconds=DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS
+        ):
+            self._last_routes_message_time = datetime.now()
+            messages.append(
+                DAQJobMessageRoutes(
+                    routes=self._generate_route_mapping(),
+                    daq_job_info=self._get_supervisor_daq_job_info(),
+                )
+            )
         return messages
 
     def get_daq_job_stats(
@@ -401,7 +443,7 @@ class Supervisor:
 
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
         assert self.config is not None
-        res = []
+        res: list[DAQJobMessage] = []
         for process in self.daq_job_processes:
             try:
                 while True:
@@ -435,18 +477,26 @@ class Supervisor:
 
         for message in daq_messages:
             for process in self.daq_job_processes:
+                # Do not send to the same DAQ job
+                if (
+                    message.daq_job_info
+                    and process.daq_job_info
+                    and message.daq_job_info.unique_id == process.daq_job_info.unique_id
+                ):
+                    continue
+
                 daq_job_cls = process.daq_job_cls
                 # Send if message is allowed for this DAQ Job
                 if not any(
                     isinstance(message, msg_type)
                     for msg_type in daq_job_cls.allowed_message_in_types
-                ):
+                ) and not isinstance(message, SupervisorDAQJobMessage):
                     continue
 
                 # Check if message is allowed for store
                 # TODO: Maybe a better way to do this?
                 if (
-                    isinstance(daq_job_cls, type)
+                    isinstance(daq_job_cls, type(DAQJobStore))
                     and getattr(daq_job_cls, "can_handle_message", None)
                     and not daq_job_cls.can_handle_message(message)  # type: ignore
                 ):
@@ -504,6 +554,7 @@ class Supervisor:
         with open(supervisor_config_file_path, "rb") as f:
             return msgspec.toml.decode(f.read(), type=SupervisorConfig)
 
+    @cache
     def _get_supervisor_daq_job_info(self):
         assert self.config is not None
         return DAQJobInfo(
@@ -513,3 +564,11 @@ class Supervisor:
             instance_id=0,
             config="",
         )
+
+    def _generate_route_mapping(self) -> RouteMapping:
+        routes: RouteMapping = defaultdict(list)
+        for process in self.daq_job_processes:
+            if issubclass(process.daq_job_cls, DAQJobStore):
+                routes[process.daq_job_cls.__name__].append(process.message_in)
+
+        return dict(routes)

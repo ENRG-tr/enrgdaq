@@ -3,12 +3,11 @@ import logging
 import os
 import platform
 from multiprocessing import Process, Queue, get_context
-from typing import Optional, Type
 
 import msgspec
 
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
-from enrgdaq.daq.models import DAQJobConfig
+from enrgdaq.daq.models import DAQJobConfig, DAQJobMessageJobStarted
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorInfo
 
@@ -20,11 +19,11 @@ DAQ_JOB_PROCESS_QUEUE_MAX_SIZE = 100
 
 
 def _create_daq_job_process(
-    daq_job_cls: Type[DAQJob],
+    daq_job_cls: type[DAQJob],
     config: DAQJobConfig,
     supervisor_info: SupervisorInfo,
     raw_config: str = "",
-    log_queue: Optional[Queue] = None,
+    log_queue: "Queue | None" = None,  # pyright: ignore[reportMissingTypeArgument]
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(
@@ -52,7 +51,7 @@ def build_daq_job(toml_config: bytes, supervisor_info: SupervisorInfo) -> DAQJob
         raise Exception(f"Invalid DAQ job type: {generic_daq_job_config.daq_job_type}")
 
     # Get DAQ config clase based on daq_job_type
-    daq_job_config_class: DAQJobConfig = daq_job_class.config_type
+    daq_job_config_class: type[DAQJobConfig] = daq_job_class.config_type
 
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
@@ -116,12 +115,13 @@ def start_daq_job(daq_job_process: DAQJobProcess) -> DAQJobProcess:
         process = Process(target=daq_job_process.start, daemon=True)
 
     process.start()
-    # Type cast to handle ForkProcess vs Process type compatibility
-    daq_job_process.process = process  # type: ignore
+    daq_job_process.process = process
     try:
-        daq_job_process.daq_job_info = daq_job_process._daq_job_info_queue.get(
-            timeout=5000
-        )
+        daq_job_info_message = daq_job_process.message_out.get(timeout=5000)
+        if isinstance(daq_job_info_message, DAQJobMessageJobStarted):
+            daq_job_process.daq_job_info = daq_job_info_message.daq_job_info
+        else:
+            raise Exception("Initial message of DAQJob was not DAQJobMessageJobStarted")
     except Exception as e:
         logging.error(
             f"Could not get DAQ job info for {daq_job_process.daq_job_cls.__name__}: {e}",

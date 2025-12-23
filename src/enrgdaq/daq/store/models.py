@@ -1,7 +1,7 @@
-from typing import Any, Optional
+from typing import Optional
 
 import pyarrow as pa
-from msgspec import Struct
+from msgspec import Struct, field
 from numpy import ndarray
 
 from enrgdaq.daq.models import (
@@ -25,14 +25,16 @@ class DAQJobStoreConfig(Struct, dict=True):
     raw: "Optional[DAQJobStoreConfigRaw]" = None
     memory: "Optional[DAQJobStoreConfigMemory]" = None
 
-    def has_store_config(self, store_type: Any) -> bool:
+    store_types: set[type["DAQJobStoreConfigBase"]] = field(default_factory=set)
+
+    def __post_init__(self):
         for key in dir(self):
-            if key.startswith("_"):
-                continue
             value = getattr(self, key)
-            if isinstance(value, store_type):
-                return True
-        return False
+            if isinstance(value, DAQJobStoreConfigBase):
+                self.store_types.add(type(value))
+
+    def has_store_config(self, store_type: type["DAQJobStoreConfigBase"]) -> bool:
+        return store_type in self.store_types
 
 
 class DAQJobMessageStore(DAQJobMessage):
@@ -64,6 +66,11 @@ class DAQJobMessageStore(DAQJobMessage):
                 continue
             return value.remote_config
         return None
+
+    def __post_init__(self):
+        self.route_keys.extend(
+            [store_type.__name__ for store_type in self.store_config.store_types]
+        )
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):

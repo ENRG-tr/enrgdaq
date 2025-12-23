@@ -258,56 +258,210 @@ def plot_throughput_vs_payload(results: list[dict]):
     plt.close()
 
 
-def plot_throughput_vs_clients(results: list[dict]):
-    """Plot throughput scalability with number of clients."""
-    # Filter for client count test (50000 payload)
-    data = [r for r in results if r["payload_size"] == 50000]
-    data.sort(key=lambda x: x["num_clients"])
+def plot_peak_throughput(results: list[dict]):
+    """Plot peak throughput vs payload size - shows maximum system capability."""
+    # Filter for payload size test (3 clients)
+    data = [r for r in results if r["num_clients"] == 3]
+    data.sort(key=lambda x: x["payload_size"])
 
     if len(data) < 2:
-        print("Not enough data for throughput vs clients plot")
+        print("Not enough data for peak throughput plot")
         return
 
-    clients = [r["num_clients"] for r in data]
-    avg_throughput = [r["avg_throughput_mbps"] for r in data]
-    total_data = [r["total_data_mb"] for r in data]
+    payloads = [r["payload_size"] for r in data]
+    peak_throughput = [r["peak_throughput_mbps"] for r in data]
 
-    fig, ax1 = plt.subplots()
+    fig, ax = plt.subplots()
 
-    color1 = "#e74c3c"
-    ax1.bar(clients, avg_throughput, color=color1, alpha=0.7, label="Avg Throughput")
-    ax1.set_xlabel("Number of Concurrent Clients")
-    ax1.set_ylabel("Average Throughput (MB/s)", color=color1)
-    ax1.tick_params(axis="y", labelcolor=color1)
-
-    ax2 = ax1.twinx()
-    color2 = "#9b59b6"
-    ax2.plot(
-        clients,
-        total_data,
-        "D-",
-        color=color2,
-        linewidth=2,
-        markersize=10,
-        label="Total Data",
+    # Create gradient-like bar chart
+    colors = plt.cm.Blues(np.linspace(0.4, 0.9, len(payloads)))
+    bars = ax.bar(
+        range(len(payloads)),
+        peak_throughput,
+        color=colors,
+        edgecolor="navy",
+        linewidth=1.5,
     )
-    ax2.set_ylabel("Total Data Transferred (MB)", color=color2)
-    ax2.tick_params(axis="y", labelcolor=color2)
 
-    ax1.set_title(
-        "ENRGDAQ Scalability: Throughput vs Number of Clients\n(50,000 values/message, 10s duration)"
+    ax.set_xlabel("Message Payload Size (values)")
+    ax.set_ylabel("Peak Throughput (MB/s)")
+    ax.set_title("ENRGDAQ Maximum Throughput Capability")
+    ax.set_xticks(range(len(payloads)))
+    ax.set_xticklabels([f"{p:,}" for p in payloads], rotation=45, ha="right")
+    ax.grid(True, alpha=0.3, axis="y")
+
+    # Add value labels on bars
+    for bar, val in zip(bars, peak_throughput):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 5,
+            f"{val:.0f}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            fontweight="bold",
+        )
+
+    # Highlight maximum
+    max_idx = peak_throughput.index(max(peak_throughput))
+    ax.annotate(
+        f"Max: {max(peak_throughput):.0f} MB/s",
+        xy=(max_idx, max(peak_throughput)),
+        xytext=(max_idx - 1.5, max(peak_throughput) + 40),
+        fontsize=11,
+        fontweight="bold",
+        color="darkgreen",
+        arrowprops=dict(arrowstyle="->", color="darkgreen", lw=2),
     )
-    ax1.set_xticks(clients)
-
-    # Combined legend
-    lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
     plt.tight_layout()
-    plt.savefig(GRAPHS_DIR / "throughput_vs_clients.png")
-    plt.savefig(GRAPHS_DIR / "throughput_vs_clients.pdf")
-    print("  Saved: throughput_vs_clients.png/pdf")
+    plt.savefig(GRAPHS_DIR / "peak_throughput.png")
+    plt.savefig(GRAPHS_DIR / "peak_throughput.pdf")
+    print("  Saved: peak_throughput.png/pdf")
+    plt.close()
+
+
+def plot_requirements_comparison(results: list[dict]):
+    """Compare ENRGDAQ performance vs typical DAQ requirements."""
+    # Get best single-client result and typical multi-client result
+    single_client = [r for r in results if r["num_clients"] == 1]
+    multi_client = [
+        r for r in results if r["num_clients"] == 3 and r["payload_size"] >= 50000
+    ]
+
+    if not single_client or not multi_client:
+        print("Not enough data for requirements comparison")
+        return
+
+    # Get best results
+    best_single = max(single_client, key=lambda x: x["avg_throughput_mbps"])
+    best_multi = max(multi_client, key=lambda x: x["avg_throughput_mbps"])
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    categories = [
+        "CAEN Digitizer\nRequirement",
+        "ENRGDAQ\n(3 sources)",
+        "ENRGDAQ\n(single source)",
+        "ENRGDAQ\nPeak Capability",
+    ]
+    values = [
+        20,  # CAEN requirement
+        best_multi["avg_throughput_mbps"],
+        best_single["avg_throughput_mbps"],
+        best_single["peak_throughput_mbps"],
+    ]
+    colors = ["#e74c3c", "#3498db", "#2ecc71", "#9b59b6"]
+
+    bars = ax.bar(categories, values, color=colors, edgecolor="black", linewidth=1.5)
+
+    ax.set_ylabel("Throughput (MB/s)", fontsize=12)
+    ax.set_title("ENRGDAQ Performance vs Data Acquisition Requirements", fontsize=14)
+    ax.grid(True, alpha=0.3, axis="y")
+
+    # Add value labels
+    for bar, val in zip(bars, values):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + 3,
+            f"{val:.0f} MB/s",
+            ha="center",
+            va="bottom",
+            fontsize=11,
+            fontweight="bold",
+        )
+
+    # Add headroom annotations
+    headroom_single = best_single["avg_throughput_mbps"] / 20
+    ax.annotate(
+        f"{headroom_single:.1f}x headroom",
+        xy=(2, best_single["avg_throughput_mbps"]),
+        xytext=(2.5, best_single["avg_throughput_mbps"] - 20),
+        fontsize=10,
+        color="darkgreen",
+        arrowprops=dict(arrowstyle="->", color="darkgreen"),
+    )
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / "requirements_comparison.png")
+    plt.savefig(GRAPHS_DIR / "requirements_comparison.pdf")
+    print("  Saved: requirements_comparison.png/pdf")
+    plt.close()
+
+
+def plot_single_client_performance(results: list[dict]):
+    """Highlight single-client (optimal) performance across payload sizes."""
+    # Get single-client results (or best per payload)
+    payload_best = {}
+    for r in results:
+        ps = r["payload_size"]
+        if (
+            ps not in payload_best
+            or r["avg_throughput_mbps"] > payload_best[ps]["avg_throughput_mbps"]
+        ):
+            payload_best[ps] = r
+
+    data = sorted(payload_best.values(), key=lambda x: x["payload_size"])
+
+    if len(data) < 2:
+        print("Not enough data for single client plot")
+        return
+
+    payloads = [r["payload_size"] for r in data]
+    avg_throughput = [r["avg_throughput_mbps"] for r in data]
+    peak_throughput = [r["peak_throughput_mbps"] for r in data]
+
+    fig, ax = plt.subplots()
+
+    ax.fill_between(
+        payloads,
+        avg_throughput,
+        peak_throughput,
+        alpha=0.3,
+        color="#3498db",
+        label="Performance Range",
+    )
+    ax.plot(
+        payloads,
+        avg_throughput,
+        "o-",
+        color="#2ecc71",
+        linewidth=2,
+        markersize=8,
+        label="Sustained Throughput",
+    )
+    ax.plot(
+        payloads,
+        peak_throughput,
+        "s--",
+        color="#3498db",
+        linewidth=2,
+        markersize=8,
+        label="Peak Throughput",
+    )
+
+    # Add CAEN reference line
+    ax.axhline(y=20, color="red", linestyle=":", alpha=0.8, linewidth=2)
+    ax.text(
+        payloads[-1],
+        25,
+        "CAEN Digitizer (20 MB/s)",
+        fontsize=9,
+        color="red",
+        ha="right",
+    )
+
+    ax.set_xlabel("Payload Size (values per message)")
+    ax.set_ylabel("Throughput (MB/s)")
+    ax.set_title("ENRGDAQ Optimal Single-Source Performance")
+    ax.legend(loc="upper left")
+    ax.set_xscale("log")
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / "single_client_performance.png")
+    plt.savefig(GRAPHS_DIR / "single_client_performance.pdf")
+    print("  Saved: single_client_performance.png/pdf")
     plt.close()
 
 
@@ -462,7 +616,9 @@ def generate_all_plots():
 
     print("\nGenerating plots...")
     plot_throughput_vs_payload(results)
-    plot_throughput_vs_clients(results)
+    plot_peak_throughput(results)
+    plot_requirements_comparison(results)
+    plot_single_client_performance(results)
     plot_message_rate(results)
     plot_summary_comparison(results)
 

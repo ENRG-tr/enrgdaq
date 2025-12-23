@@ -5,8 +5,12 @@ from unittest.mock import MagicMock, patch
 
 from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreConfigCSV
-from enrgdaq.daq.jobs.test_job import DAQJobTest
-from enrgdaq.daq.models import DEFAULT_REMOTE_TOPIC, DAQJobMessage, DAQRemoteConfig
+from enrgdaq.daq.models import (
+    DEFAULT_REMOTE_TOPIC,
+    DAQJobInfo,
+    DAQJobMessage,
+    DAQRemoteConfig,
+)
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
@@ -57,7 +61,7 @@ class TestDAQJobRemote(unittest.TestCase):
             ),
             data=[],
             keys=[],
-            daq_job_info=DAQJobTest({"daq_job_type": "test"}).info,
+            daq_job_info=DAQJobInfo.mock(),
         )
         self.daq_job_remote.message_out = MagicMock()
 

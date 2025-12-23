@@ -1,25 +1,28 @@
 import logging
-import os
 import pickle
 import sys
 import uuid
 from datetime import datetime, timedelta
+from logging.handlers import QueueHandler
 from multiprocessing import Process, Queue
+from multiprocessing.context import ForkProcess
 from multiprocessing.shared_memory import SharedMemory
 from queue import Empty
 from typing import Any, Optional
 
-import coloredlogs
 import msgspec
 
 from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobInfo,
     DAQJobMessage,
+    DAQJobMessageJobStarted,
+    DAQJobMessageRoutes,
     DAQJobMessageSHM,
     DAQJobMessageStop,
     DAQJobStopError,
     LogVerbosity,
+    RouteMapping,
     SHMHandle,
 )
 from enrgdaq.daq.store.models import (
@@ -50,13 +53,13 @@ class DAQJob:
     """
 
     allowed_message_in_types: list[type[DAQJobMessage]] = []
-    config_type: Any
-    config: Any
+    config_type: type[DAQJobConfig]  # pyright: ignore[reportUninitializedInstanceVariable]
+    config: DAQJobConfig
     message_in: "Queue[DAQJobMessage]"
     message_out: "Queue[DAQJobMessage]"
     instance_id: int
     unique_id: str
-    restart_offset: timedelta
+    restart_offset: timedelta  # pyright: ignore[reportUninitializedInstanceVariable]
     info: "DAQJobInfo"
     _has_been_freed: bool
     _logger: logging.Logger
@@ -66,26 +69,23 @@ class DAQJob:
         False  # If True, force exit on timeout (for blocking calls)
     )
     _watchdog: Watchdog
+    _supervisor_info: SupervisorInfo | None
+    _routes: RouteMapping | None = None
 
     def __init__(
         self,
-        config: Any,
-        supervisor_info: Optional[SupervisorInfo] = None,
-        instance_id: Optional[int] = None,
-        message_in: Optional["Queue[DAQJobMessage]"] = None,
-        message_out: Optional["Queue[DAQJobMessage]"] = None,
-        raw_config: Optional[str] = None,
+        config: DAQJobConfig,
+        supervisor_info: SupervisorInfo | None = None,
+        instance_id: int | None = None,
+        message_in: "Queue[DAQJobMessage] | None" = None,
+        message_out: "Queue[DAQJobMessage] | None" = None,
+        raw_config: str | None = None,
     ):
-        if os.environ.get("ENRGDAQ_IS_UNIT_TESTING") != "True":
-            coloredlogs.install(
-                level=logging.DEBUG,
-                datefmt="%Y-%m-%d %H:%M:%S",
-                fmt="%(asctime)s.%(msecs)03d %(hostname)s %(name)s %(levelname)s %(message)s",
-            )
-
         self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
-        if isinstance(config, DAQJobConfig):
+
+        # TODO: In some tests config is a dict, so we need to check for this
+        if isinstance(config, DAQJobConfig):  # pyright: ignore[reportUnnecessaryIsInstance]
             self._logger.setLevel(config.verbosity.to_logging_level())
 
         self.config = config
@@ -102,14 +102,15 @@ class DAQJob:
         self.info = self._create_info(raw_config)
         self._logger.debug(f"DAQ job {self.info.unique_id} created")
 
-        # Initialize watchdog using class variables
         self._watchdog = Watchdog(
             timeout_seconds=self.watchdog_timeout_seconds,
             force_exit=self.watchdog_force_exit,
             logger=self._logger,
         )
 
-    def consume(self, nowait=True, timeout=None):
+        self._put_message_out(DAQJobMessageJobStarted())
+
+    def consume(self, nowait: bool = True, timeout: float | None = None):
         """
         Consumes messages from the message_in queue.
         If nowait is True, it will consume the message immediately.
@@ -169,6 +170,10 @@ class DAQJob:
 
         if isinstance(message, DAQJobMessageStop):
             raise DAQJobStopError(message.reason)
+
+        if isinstance(message, DAQJobMessageRoutes):
+            self._routes = message.routes
+            return True
         # check if the message is accepted
         is_message_type_accepted = False
         for accepted_message_type in self.allowed_message_in_types:
@@ -233,15 +238,7 @@ class DAQJob:
                 message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
-            try:
-                msg_json = msgspec.json.encode(message)
-            except Exception:
-                msg_json = str(message)
-            if self.config.verbosity == LogVerbosity.DEBUG:
-                if len(msg_json) > 1024:
-                    self._logger.debug(f"Message out with {message.remote_config}")
-                else:
-                    self._logger.debug(f"Message out: {msg_json}")
+            self._logger.debug(f"Message out: {message}")
 
         if use_shm and sys.platform != "win32":
             original_message = message
@@ -267,6 +264,13 @@ class DAQJob:
             message.daq_job_info = self.info
             message.remote_config = self.config.remote_config
 
+        if self._routes is not None:
+            for route_key, queue_list in self._routes.items():
+                if route_key in message.route_keys:
+                    self._logger.info("Routing through " + route_key)
+                    for queue in queue_list:
+                        queue.put(message)
+
         self.message_out.put(message)
 
     def __del__(self):
@@ -291,21 +295,20 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     config: DAQJobConfig
     message_in: "Queue[DAQJobMessage]"
     message_out: "Queue[DAQJobMessage]"
-    process: Optional[Process]
+    process: Process | ForkProcess | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
-    daq_job_info: Optional[DAQJobInfo] = None
-    raw_config: Optional[str] = None
-    log_queue: Optional[Any] = None
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
     restart_on_crash: bool = True
-
-    _daq_job_info_queue: "Queue[DAQJobInfo]" = msgspec.field(default_factory=Queue)
 
     def start(self):
         if self.log_queue:
-            from logging.handlers import QueueHandler
-
-            logging.getLogger().addHandler(QueueHandler(self.log_queue))
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
 
         instance = self.daq_job_cls(
             self.config,
@@ -315,7 +318,6 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             message_out=self.message_out,
             raw_config=self.raw_config,
         )
-        self._daq_job_info_queue.put(instance.info)
         try:
             instance.start()
         except Exception as e:

@@ -2,6 +2,7 @@ import pickle
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from multiprocessing.queues import Queue
 from multiprocessing.shared_memory import SharedMemory
 from typing import Optional
 
@@ -13,6 +14,9 @@ DEFAULT_REMOTE_TOPIC = "DAQ"
 
 # Don't send messages to remote if the topic is this
 REMOTE_TOPIC_VOID = "@void_message"
+
+RouteKey = str
+RouteMapping = dict[RouteKey, list[Queue["DAQJobMessage"]]]
 
 
 @dataclass
@@ -75,8 +79,8 @@ class DAQJobConfig(Struct, kw_only=True):
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
-    remote_config: Optional[DAQRemoteConfig] = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: Optional[str] = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+    daq_job_unique_id: str | None = None
 
 
 class DAQJobMessage(Struct, kw_only=True):
@@ -90,11 +94,12 @@ class DAQJobMessage(Struct, kw_only=True):
         remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
     """
 
-    id: Optional[str] = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: Optional[datetime] = field(default_factory=datetime.now)
+    id: str | None = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime | None = field(default_factory=datetime.now)
     is_remote: bool = False
-    daq_job_info: Optional["DAQJobInfo"] = None
+    daq_job_info: "DAQJobInfo | None" = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+    route_keys: list[RouteKey] = field(default_factory=list)
 
     @property
     def supervisor_id(self) -> str:
@@ -102,6 +107,36 @@ class DAQJobMessage(Struct, kw_only=True):
             return "unknown"
 
         return self.daq_job_info.supervisor_info.supervisor_id
+
+
+class SupervisorDAQJobMessage(DAQJobMessage):
+    pass
+
+
+class DAQJobMessageJobStarted(SupervisorDAQJobMessage):
+    """
+    DAQJobMessageJobStarted is sent when a DAQJob starts, primarily used for
+    setting DAQJobInfo of the DAQJobProcess. Also signals the process started
+    without a problem.
+    """
+
+    pass
+
+
+class DAQJobMessageRoutes(SupervisorDAQJobMessage):
+    """
+    DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
+    set the routes for the DAQJobProcess.
+
+    Attributes:
+        routes (RouteMapping): route_key to queue mapping.
+    """
+
+    routes: RouteMapping
+
+    @property
+    def remote_config(self) -> DAQRemoteConfig:
+        return DAQRemoteConfig(remote_disable=True)
 
 
 class SHMHandle(Struct):
