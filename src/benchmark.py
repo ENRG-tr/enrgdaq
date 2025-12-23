@@ -33,11 +33,12 @@ from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats, DAQJobHandleStatsCo
 from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from enrgdaq.daq.jobs.remote_proxy import DAQJobRemoteProxy, DAQJobRemoteProxyConfig
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreCSV, DAQJobStoreCSVConfig
-from enrgdaq.daq.jobs.store.memory import DAQJobStoreMemory, DAQJobStoreMemoryConfig
+from enrgdaq.daq.jobs.store.root import DAQJobStoreROOT, DAQJobStoreROOTConfig
+from enrgdaq.daq.models import LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigCSV,
-    DAQJobStoreConfigMemory,
+    DAQJobStoreConfigROOT,
 )
 from enrgdaq.models import SupervisorConfig, SupervisorInfo
 from enrgdaq.supervisor import Supervisor
@@ -157,11 +158,15 @@ def run_main_supervisor(
     daq_job_processes = [
         # Memory store that voids data (for benchmark purposes)
         _create_daq_job_process(
-            DAQJobStoreMemory,
-            DAQJobStoreMemoryConfig(
-                daq_job_type="DAQJobStoreMemory",
-                dispose_after_n_entries=10,
-                void_data=config.void_memory_data,
+            # DAQJobStoreMemory,
+            DAQJobStoreROOT,
+            # DAQJobStoreMemoryConfig(
+            #    daq_job_type="DAQJobStoreMemory",
+            #    dispose_after_n_entries=10,
+            #    void_data=config.void_memory_data,
+            # ),
+            DAQJobStoreROOTConfig(
+                daq_job_type="DAQJobStoreROOT", verbosity=LogVerbosity.DEBUG
             ),
             supervisor_info,
         ),
@@ -243,7 +248,13 @@ def run_client_supervisor(
                 daq_job_type="DAQJobBenchmark",
                 payload_size=config.payload_size,
                 use_shm=True,
-                store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory()),
+                store_config=DAQJobStoreConfig(
+                    root=DAQJobStoreConfigROOT(
+                        file_path="test.root",
+                        add_date=False,
+                        tree_name="benchmark_tree",
+                    )
+                ),
             ),
             supervisor_info,
         ),

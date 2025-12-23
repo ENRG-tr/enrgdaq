@@ -63,7 +63,7 @@ class DAQJobBenchmark(DAQJob):
                 "timestamp": pa.array(
                     np.full(self._payload_size, timestamp, dtype=np.float64)
                 ),
-                "value": pa.array(self._data_array),
+                "value": pa.array(np.random.random(self._payload_size)),
             }
         )
 
