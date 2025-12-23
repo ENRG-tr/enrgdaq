@@ -42,6 +42,7 @@ class TestROOTStore(unittest.TestCase):
         )
 
         self.assertTrue(self.root_store.handle_message(message))
+        self.root_store._flush_all_buffers()  # Flush buffered data to disk
 
         # Verify data is written correctly
         with uproot.open(self.test_file_real_path) as f:
@@ -60,6 +61,7 @@ class TestROOTStore(unittest.TestCase):
             data_columns={"col1": np.array([5, 6]), "col2": np.array([7.0, 8.0])},
         )
         self.assertTrue(self.root_store.handle_message(message_2))
+        self.root_store._flush_all_buffers()  # Flush buffered data to disk
 
         with uproot.open(self.test_file_real_path) as f:
             keys = f.keys()
@@ -87,8 +89,13 @@ class TestROOTStore(unittest.TestCase):
         real_file_path = os.path.join("out", file_path)
         real_dir_path = os.path.dirname(real_file_path)
 
+        # Ensure clean state for this test
+        if os.path.exists(real_dir_path):
+            shutil.rmtree(real_dir_path)
+
         self.assertFalse(os.path.exists(real_dir_path))
         self.assertTrue(self.root_store.handle_message(message))
+        self.root_store._flush_all_buffers()  # Flush buffered data to disk
         self.assertTrue(os.path.exists(real_file_path))
 
     def test_file_path_modification(self):
@@ -112,6 +119,7 @@ class TestROOTStore(unittest.TestCase):
         )
 
         self.assertTrue(self.root_store.handle_message(message))
+        self.root_store._flush_all_buffers()  # Flush buffered data to disk
         self.assertTrue(os.path.exists(expected_file_path))
 
     def test_empty_data(self):
@@ -152,6 +160,7 @@ class TestROOTStore(unittest.TestCase):
             data_columns={"b": np.array([2.0])},
         )
         self.assertTrue(self.root_store.handle_message(message2))
+        self.root_store._flush_all_buffers()  # Flush buffered data to disk
 
         with uproot.open(self.test_file_real_path) as f:
             self.assertIn("tree1", f)

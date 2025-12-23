@@ -125,7 +125,7 @@ class DAQJobStoreCSV(DAQJobStore):
                 file_handle,
                 datetime.now(),
                 deque(),
-                overwrite,
+                overwrite=overwrite,
             )
             self._open_csv_files[file_path] = file
         else:

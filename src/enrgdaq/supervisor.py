@@ -31,10 +31,12 @@ from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote, DAQJobRemoteStatsD
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessage,
+    DAQJobMessageSHM,
     DAQJobMessageStop,
     DAQJobStats,
 )
 from enrgdaq.daq.store.base import DAQJobStore
+from enrgdaq.daq.store.models import DAQJobMessageStoreSHM
 from enrgdaq.models import (
     RestartScheduleInfo,
     SupervisorConfig,
@@ -459,6 +461,11 @@ class Supervisor:
                     self._logger.warning(
                         f"Message queue for {process.daq_job_cls.__name__} is full, dropping message"
                     )
+                    # Clean SHM
+                    if isinstance(message, DAQJobMessageSHM) or isinstance(
+                        message, DAQJobMessageStoreSHM
+                    ):
+                        message.shm.cleanup()
                     continue
 
                 # Update stats

@@ -20,7 +20,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from multiprocessing import Process, Queue, Value
+from multiprocessing import Event, Process, Queue, Value
 from statistics import fmean
 from threading import Thread
 from typing import Optional
@@ -222,6 +222,7 @@ def run_client_supervisor(
     client_id: int,
     config: BenchmarkConfig,
     stop_flag: Value,
+    ready_event: Event,
 ):
     """Run a client supervisor that generates benchmark data."""
     # Suppress logging in child process
@@ -241,7 +242,7 @@ def run_client_supervisor(
             DAQJobBenchmarkConfig(
                 daq_job_type="DAQJobBenchmark",
                 payload_size=config.payload_size,
-                use_shm=False,  # Test without SHM
+                use_shm=True,
                 store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory()),
             ),
             supervisor_info,
@@ -267,7 +268,13 @@ def run_client_supervisor(
     # Register cleanup on exit
     atexit.register(cleanup_supervisor, supervisor)
 
-    run_supervisor_with_stats(supervisor, config, None, stop_flag, collect_stats=False)
+    # Initialize supervisor and signal ready
+    supervisor.init()
+    ready_event.set()  # Signal that this client is ready
+
+    run_supervisor_with_stats(
+        supervisor, config, None, stop_flag, collect_stats=False, skip_init=True
+    )
 
 
 def run_supervisor_with_stats(
@@ -276,11 +283,13 @@ def run_supervisor_with_stats(
     stats_queue: Optional["Queue[dict]"],
     stop_flag: Value,
     collect_stats: bool = True,
+    skip_init: bool = False,
 ):
     """Run a supervisor and optionally collect stats."""
     assert supervisor.config is not None
 
-    supervisor.init()
+    if not skip_init:
+        supervisor.init()
 
     # Start supervisor in a separate thread
     supervisor_thread = Thread(target=supervisor.run, daemon=True)
@@ -481,44 +490,59 @@ class BenchmarkRunner:
         main_process.start()
         self._processes.append(main_process)
 
-        # Give main supervisor time to start
-        time.sleep(2)
+        # Give main supervisor time to start (ZMQ needs to bind first)
+        time.sleep(1)
+
+        # Create ready events for each client
+        ready_events = [Event() for _ in range(self.config.num_clients)]
 
         # Start client processes
         print(f"Starting {self.config.num_clients} client(s)...")
         for i in range(self.config.num_clients):
             client_process = Process(
                 target=run_client_supervisor,
-                args=(i, self.config, self._stop_flag),
+                args=(i, self.config, self._stop_flag, ready_events[i]),
             )
             client_process.start()
             self._processes.append(client_process)
 
-        # Give clients time to start
-        time.sleep(1)
+        # Wait for all clients to signal ready (with timeout)
+        print("Waiting for clients to be ready...")
+        all_ready = all(event.wait(timeout=30) for event in ready_events)
+        if not all_ready:
+            print("WARNING: Not all clients signaled ready within timeout")
 
         print()
-        print("Benchmark running...")
+        print("Benchmark running... (waiting for first data)")
         print("-" * 80)
 
-        start_time = datetime.now()
+        # Timer starts when first data arrives, not now
+        start_time: datetime | None = None
         end_time_seconds = self.config.duration_seconds
 
         try:
             while not self._stop_flag.value:
-                elapsed = (datetime.now() - start_time).total_seconds()
-                if elapsed >= end_time_seconds:
-                    print(f"\nDuration of {end_time_seconds}s reached, stopping...")
-                    break
-
                 # Check for stats in queue
                 try:
                     stats_dict = self._stats_queue.get(timeout=0.5)
                     stats = self._dict_to_stats(stats_dict)
+
+                    # Start timer when first data arrives
+                    if start_time is None and stats.msg_in_count > 0:
+                        start_time = datetime.now()
+                        print("First data received, starting timer...")
+
                     self._stats_history.append(stats)
                     self._print_stats(stats)
                 except Exception:
                     pass
+
+                # Check duration (only if timer has started)
+                if start_time is not None:
+                    elapsed = (datetime.now() - start_time).total_seconds()
+                    if elapsed >= end_time_seconds:
+                        print(f"\nDuration of {end_time_seconds}s reached, stopping...")
+                        break
 
         finally:
             self._stop_flag.value = True
@@ -537,7 +561,10 @@ class BenchmarkRunner:
 
     def _print_summary(self):
         """Print benchmark summary statistics."""
-        if not self._stats_history:
+        # Filter to stats with actual data
+        data_stats = [s for s in self._stats_history if s.msg_in_count > 0]
+
+        if not data_stats:
             print("\nNo statistics collected.")
             return
 
@@ -546,19 +573,19 @@ class BenchmarkRunner:
         print("Benchmark Summary")
         print("=" * 80)
 
-        # Calculate averages
+        # Calculate duration from first data to last data
         total_duration = (
-            self._stats_history[-1].timestamp - self._stats_history[0].timestamp
+            data_stats[-1].timestamp - data_stats[0].timestamp
         ).total_seconds()
 
         if total_duration <= 0:
             total_duration = 1.0
 
-        avg_throughput = fmean([s.msg_in_out_mb_per_s for s in self._stats_history])
-        max_throughput = max([s.msg_in_out_mb_per_s for s in self._stats_history])
-        total_mb = self._stats_history[-1].msg_in_out_mb
-        total_msgs = self._stats_history[-1].msg_in_count
-        avg_queue = fmean([s.avg_queue_size for s in self._stats_history])
+        avg_throughput = fmean([s.msg_in_out_mb_per_s for s in data_stats])
+        max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
+        total_mb = data_stats[-1].msg_in_out_mb
+        total_msgs = data_stats[-1].msg_in_count
+        avg_queue = fmean([s.avg_queue_size for s in data_stats])
 
         print(f"Duration:              {total_duration:.1f} seconds")
         print(f"Average Throughput:    {avg_throughput:.2f} MB/s")

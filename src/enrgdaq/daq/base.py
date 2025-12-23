@@ -149,17 +149,7 @@ class DAQJob:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
             message, DAQJobMessageStoreSHM
         ):
-            # Get the shared memory object
-            shm = SharedMemory(name=message.shm.shm_name, create=False)
-            assert shm.buf is not None, "Shared memory buffer is None"
-            try:
-                # Read the message from shared memory
-                message_bytes = shm.buf[: message.shm.shm_size]
-                message = pickle.loads(message_bytes)
-                del message_bytes
-            finally:
-                shm.close()
-                shm.unlink()
+            return message.shm.load()
         return message
 
     def handle_message(self, message: "DAQJobMessage") -> bool:

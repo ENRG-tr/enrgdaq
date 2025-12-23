@@ -5,6 +5,7 @@ from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigMemory,
 )
@@ -28,18 +29,32 @@ class DAQJobStoreMemory(DAQJobStore):
         super().__init__(config, **kwargs)
         self._memory = {}
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
+    ) -> bool:
         if not super().handle_message(message):
             return False
 
         if self.config.void_data:
             return True
+
         timestamp = datetime.now()
-        self._memory[message.tag] = {
-            "timestamp": timestamp,
-            "keys": message.keys,
-            "rows": message.data,
-        }
+
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.table
+            if table is None or table.num_rows == 0:
+                return True
+            self._memory[message.tag] = {
+                "timestamp": timestamp,
+                "keys": table.column_names,
+                "table": table,
+            }
+        else:
+            self._memory[message.tag] = {
+                "timestamp": timestamp,
+                "keys": message.keys,
+                "rows": message.data,
+            }
         return True
 
     def store_loop(self):

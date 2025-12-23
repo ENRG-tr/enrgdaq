@@ -1,6 +1,8 @@
+import pickle
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from multiprocessing.shared_memory import SharedMemory
 from typing import Optional
 
 from msgspec import Struct, field
@@ -105,6 +107,22 @@ class DAQJobMessage(Struct, kw_only=True):
 class SHMHandle(Struct):
     shm_name: str
     shm_size: int
+
+    def load(self) -> DAQJobMessage:
+        shm = SharedMemory(name=self.shm_name, create=False)
+        assert shm.buf is not None, "Shared memory buffer is None"
+        message_bytes = shm.buf[: self.shm_size]
+        message = pickle.loads(message_bytes)
+        del message_bytes
+        self.cleanup(shm)
+        return message
+
+    def cleanup(self, shm: SharedMemory | None = None):
+        if shm is None:
+            shm = SharedMemory(name=self.shm_name, create=False)
+        assert shm.buf is not None, "Shared memory buffer is None"
+        shm.close()
+        shm.unlink()
 
 
 class DAQJobMessageSHM(DAQJobMessage):

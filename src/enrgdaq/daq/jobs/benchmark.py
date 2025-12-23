@@ -2,10 +2,11 @@ import time
 from datetime import datetime
 
 import numpy as np
+import pyarrow as pa
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 
@@ -17,22 +18,17 @@ class DAQJobBenchmarkConfig(StorableDAQJobConfig):
     Configuration for DAQJobBenchmark.
 
     Attributes:
-        payload_size (int): Number of values per message.
+        payload_size (int): Number of rows per message.
         use_shm (bool): Use shared memory for message passing.
     """
 
-    payload_size: int = 1000  # default to 1000 values per message
-    use_shm: bool = False  # Use shared memory for large payloads
+    payload_size: int = 1000
+    use_shm: bool = False
 
 
 class DAQJobBenchmark(DAQJob):
     """
     Benchmark job for DAQ system to stress test serialization/deserialization/networking.
-
-    Optimization: Stores numpy data as raw bytes in the data field. This is MUCH faster
-    to pickle than Python lists because:
-    1. numpy.tobytes() is just a memcpy (C-level, no Python object overhead)
-    2. Pickling a single bytes object is much faster than 100k+ Python floats
     """
 
     config_type = DAQJobBenchmarkConfig
@@ -42,10 +38,7 @@ class DAQJobBenchmark(DAQJob):
         super().__init__(config, **kwargs)
         self._payload_size = self.config.payload_size
         # Pre-allocate numpy array for the payload (reused each message)
-        # First element is timestamp, rest is data
-        self._data_array = np.zeros(1 + self._payload_size, dtype=np.float64)
-        # Pre-compute keys once
-        self._keys = ["timestamp"] + [f"V{i}" for i in range(self._payload_size)]
+        self._data_array = np.zeros(self._payload_size, dtype=np.float64)
 
     def start(self):
         """
@@ -57,19 +50,27 @@ class DAQJobBenchmark(DAQJob):
 
     def _send_store_message(self):
         """
-        Send a store message with a large payload.
+        Send a store message with a large payload using PyArrow.
+        Uses columnar layout: many rows, few columns.
         """
-        # Update timestamp in pre-allocated array
-        self._data_array[0] = datetime.now().timestamp() * 1000  # timestamp in ms
+        timestamp = datetime.now().timestamp() * 1000  # timestamp in ms
 
-        # Convert numpy array to bytes
-        data_bytes = self._data_array.tobytes()
+        # Create PyArrow table with many rows
+        # timestamp column: same timestamp for all rows in this batch
+        # value column: the actual payload data
+        table = pa.table(
+            {
+                "timestamp": pa.array(
+                    np.full(self._payload_size, timestamp, dtype=np.float64)
+                ),
+                "value": pa.array(self._data_array),
+            }
+        )
 
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=self._keys,
-                data=[data_bytes],
+                table=table,
             ),
             use_shm=self.config.use_shm,
         )
