@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.utils.queue API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.utils.queue</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.utils.queue.ZMQQueue"><code class="flex name class">
+<span>class <span class="ident">ZMQQueue</span></span>
+<span>(</span><span>uri: str | None = None, maxsize: int = 0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ZMQQueue:
+    &#34;&#34;&#34;A high-performance multiprocess queue using ZeroMQ IPC.
+
+    This class mimics the queue.Queue interface but works across process boundaries
+    without requiring inheritance. It uses ZMQ PUSH/PULL sockets over IPC.
+
+    The first call to &#39;get&#39; will bind a PULL socket to the URI.
+    The first call to &#39;put&#39; will connect a PUSH socket to the URI.
+    &#34;&#34;&#34;
+
+    def __init__(self, uri: Optional[str] = None, maxsize: int = 0):
+        self.uri = uri or f&#34;ipc://{tempfile.gettempdir()}/enrgdaq_q_{uuid.uuid4()}.ipc&#34;
+        self.maxsize = maxsize
+        self._context: Optional[zmq.Context] = None
+        self._push_socket: Optional[zmq.Socket] = None
+        self._pull_socket: Optional[zmq.Socket] = None
+        self._pid = os.getpid()
+
+    def __getstate__(self):
+        # Only pickle the URI and maxsize. Sockets and contexts cannot be pickled.
+        return {
+            &#34;uri&#34;: self.uri,
+            &#34;maxsize&#34;: self.maxsize,
+        }
+
+    def __setstate__(self, state):
+        self.uri = state[&#34;uri&#34;]
+        self.maxsize = state[&#34;maxsize&#34;]
+        self._context = None
+        self._push_socket = None
+        self._pull_socket = None
+        self._pid = os.getpid()
+
+    def _get_context(self) -&gt; zmq.Context:
+        if self._context is None or self._pid != os.getpid():
+            self._context = zmq.Context.instance()
+            self._pid = os.getpid()
+        return self._context
+
+    def _get_push_socket(self) -&gt; zmq.Socket:
+        if self._push_socket is None or self._pid != os.getpid():
+            ctx = self._get_context()
+            socket = ctx.socket(zmq.PUSH)
+            # Set a high water mark if maxsize is specified
+            if self.maxsize &gt; 0:
+                socket.set(zmq.SNDHWM, self.maxsize)
+            socket.connect(self.uri)
+            self._push_socket = socket
+
+        assert self._push_socket is not None
+        return self._push_socket
+
+    def _get_pull_socket(self) -&gt; zmq.Socket:
+        if self._pull_socket is None or self._pid != os.getpid():
+            ctx = self._get_context()
+            socket = ctx.socket(zmq.PULL)
+            if self.maxsize &gt; 0:
+                socket.set(zmq.RCVHWM, self.maxsize)
+            try:
+                socket.bind(self.uri)
+            except zmq.ZMQError as e:
+                if e.errno == zmq.EADDRINUSE:
+                    # Someone else already bound to this URI (probably another consumer)
+                    # For a simple Queue substitute, we should probably allow multiple consumers
+                    # but ZMQ PULL doesn&#39;t naturally support multiple binders.
+                    # However, if we&#39;re substituting Manager().Queue(), usually there&#39;s one consumer.
+                    socket.connect(self.uri)
+                else:
+                    raise
+            self._pull_socket = socket
+
+        assert self._pull_socket is not None
+        return self._pull_socket
+
+    def put(self, obj: Any, block: bool = True, timeout: Optional[float] = None):
+        socket = self._get_push_socket()
+        flags = 0 if block else zmq.NOBLOCK
+
+        try:
+            buffers = []
+            # Use Protocol 5 to collect out-of-band buffers for zero-copy
+            header = pickle.dumps(obj, protocol=5, buffer_callback=buffers.append)
+
+            # Combine header and buffers into a multipart message
+            payload = [header] + [zmq.Frame(b) for b in buffers]
+
+            if timeout is not None and block:
+                if socket.poll(int(timeout * 1000), zmq.POLLOUT):
+                    socket.send_multipart(payload, flags)
+                else:
+                    raise Full
+            else:
+                socket.send_multipart(payload, flags)
+        except zmq.Again:
+            raise Full
+
+    def get(self, block: bool = True, timeout: Optional[float] = None) -&gt; Any:
+        socket = self._get_pull_socket()
+
+        try:
+            if not block:
+                payload = socket.recv_multipart(zmq.NOBLOCK)
+            elif timeout is not None:
+                if socket.poll(int(timeout * 1000), zmq.POLLIN):
+                    payload = socket.recv_multipart()
+                else:
+                    raise Empty
+            else:
+                payload = socket.recv_multipart()
+
+            header = payload[0]
+            buffers = payload[1:]
+            return pickle.loads(header, buffers=buffers)
+        except (zmq.Again, IndexError):
+            raise Empty
+
+    def put_nowait(self, obj: Any):
+        return self.put(obj, block=False)
+
+    def get_nowait(self) -&gt; Any:
+        return self.get(block=False)
+
+    def qsize(self) -&gt; int:
+        # ZMQ doesn&#39;t have a cross-platform way to get queue size from sockets easily
+        # Returning 0 as a placeholder since supervisor uses it for stats on non-Mac
+        return 0
+
+    def empty(self) -&gt; bool:
+        socket = self._get_pull_socket()
+        return not socket.poll(0, zmq.POLLIN)
+
+    def close(self):
+        if self._push_socket:
+            self._push_socket.close()
+            self._push_socket = None
+        if self._pull_socket:
+            self._pull_socket.close()
+            self._pull_socket = None
+        # Note: we don&#39;t destroy the URI/IPC file here as other processes might be using it.
+        # Ideally, there should be a cleanup mechanism.
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
+
+    def __repr__(self):
+        return f&#34;ZMQQueue(uri=&#39;{self.uri}&#39;, maxsize={self.maxsize})&#34;</code></pre>
+</details>
+<div class="desc"><p>A high-performance multiprocess queue using ZeroMQ IPC.</p>
+<p>This class mimics the queue.Queue interface but works across process boundaries
+without requiring inheritance. It uses ZMQ PUSH/PULL sockets over IPC.</p>
+<p>The first call to 'get' will bind a PULL socket to the URI.
+The first call to 'put' will connect a PUSH socket to the URI.</p></div>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.utils.queue.ZMQQueue.close"><code class="name flex">
+<span>def <span class="ident">close</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close(self):
+    if self._push_socket:
+        self._push_socket.close()
+        self._push_socket = None
+    if self._pull_socket:
+        self._pull_socket.close()
+        self._pull_socket = None
+    # Note: we don&#39;t destroy the URI/IPC file here as other processes might be using it.
+    # Ideally, there should be a cleanup mechanism.</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.empty"><code class="name flex">
+<span>def <span class="ident">empty</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def empty(self) -&gt; bool:
+    socket = self._get_pull_socket()
+    return not socket.poll(0, zmq.POLLIN)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>self, block: bool = True, timeout: float | None = None) ‑> Any</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get(self, block: bool = True, timeout: Optional[float] = None) -&gt; Any:
+    socket = self._get_pull_socket()
+
+    try:
+        if not block:
+            payload = socket.recv_multipart(zmq.NOBLOCK)
+        elif timeout is not None:
+            if socket.poll(int(timeout * 1000), zmq.POLLIN):
+                payload = socket.recv_multipart()
+            else:
+                raise Empty
+        else:
+            payload = socket.recv_multipart()
+
+        header = payload[0]
+        buffers = payload[1:]
+        return pickle.loads(header, buffers=buffers)
+    except (zmq.Again, IndexError):
+        raise Empty</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.get_nowait"><code class="name flex">
+<span>def <span class="ident">get_nowait</span></span>(<span>self) ‑> Any</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_nowait(self) -&gt; Any:
+    return self.get(block=False)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.put"><code class="name flex">
+<span>def <span class="ident">put</span></span>(<span>self, obj: Any, block: bool = True, timeout: float | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def put(self, obj: Any, block: bool = True, timeout: Optional[float] = None):
+    socket = self._get_push_socket()
+    flags = 0 if block else zmq.NOBLOCK
+
+    try:
+        buffers = []
+        # Use Protocol 5 to collect out-of-band buffers for zero-copy
+        header = pickle.dumps(obj, protocol=5, buffer_callback=buffers.append)
+
+        # Combine header and buffers into a multipart message
+        payload = [header] + [zmq.Frame(b) for b in buffers]
+
+        if timeout is not None and block:
+            if socket.poll(int(timeout * 1000), zmq.POLLOUT):
+                socket.send_multipart(payload, flags)
+            else:
+                raise Full
+        else:
+            socket.send_multipart(payload, flags)
+    except zmq.Again:
+        raise Full</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.put_nowait"><code class="name flex">
+<span>def <span class="ident">put_nowait</span></span>(<span>self, obj: Any)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def put_nowait(self, obj: Any):
+    return self.put(obj, block=False)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.queue.ZMQQueue.qsize"><code class="name flex">
+<span>def <span class="ident">qsize</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def qsize(self) -&gt; int:
+    # ZMQ doesn&#39;t have a cross-platform way to get queue size from sockets easily
+    # Returning 0 as a placeholder since supervisor uses it for stats on non-Mac
+    return 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.utils" href="index.html">enrgdaq.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.utils.queue.ZMQQueue" href="#enrgdaq.utils.queue.ZMQQueue">ZMQQueue</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.close" href="#enrgdaq.utils.queue.ZMQQueue.close">close</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.empty" href="#enrgdaq.utils.queue.ZMQQueue.empty">empty</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.get" href="#enrgdaq.utils.queue.ZMQQueue.get">get</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.get_nowait" href="#enrgdaq.utils.queue.ZMQQueue.get_nowait">get_nowait</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.put" href="#enrgdaq.utils.queue.ZMQQueue.put">put</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.put_nowait" href="#enrgdaq.utils.queue.ZMQQueue.put_nowait">put_nowait</a></code></li>
+<li><code><a title="enrgdaq.utils.queue.ZMQQueue.qsize" href="#enrgdaq.utils.queue.ZMQQueue.qsize">qsize</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

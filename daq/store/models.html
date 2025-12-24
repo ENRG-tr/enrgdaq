@@ -273,7 +273,23 @@ of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgda
         table (pa.Table): A PyArrow Table containing the columnar data.
     &#34;&#34;&#34;
 
-    table: pa.Table</code></pre>
+    table: pa.Table
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Convert table to bytes using Arrow IPC
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, self.table.schema) as writer:
+            writer.write_table(self.table)
+        state[&#34;table&#34;] = sink.getvalue().to_pybytes()
+        return state
+
+    def __setstate__(self, state):
+        # Restore table from bytes
+        table_bytes = state[&#34;table&#34;]
+        with pa.ipc.open_stream(table_bytes) as reader:
+            state[&#34;table&#34;] = reader.read_all()
+        self.__dict__.update(state)</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStorePyArrow is a high-performance message store using PyArrow's
 columnar format. Optimized for numerical data with zero-copy reads.</p>
@@ -306,7 +322,23 @@ columnar format. Optimized for numerical data with zero-copy reads.</p>
         table (pa.Table): A PyArrow Table containing the columnar data.
     &#34;&#34;&#34;
 
-    table: pa.Table</code></pre>
+    table: pa.Table
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Convert table to bytes using Arrow IPC
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, self.table.schema) as writer:
+            writer.write_table(self.table)
+        state[&#34;table&#34;] = sink.getvalue().to_pybytes()
+        return state
+
+    def __setstate__(self, state):
+        # Restore table from bytes
+        table_bytes = state[&#34;table&#34;]
+        with pa.ipc.open_stream(table_bytes) as reader:
+            state[&#34;table&#34;] = reader.read_all()
+        self.__dict__.update(state)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>

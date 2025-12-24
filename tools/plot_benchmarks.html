@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.tools.plot_benchmarks API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.tools.plot_benchmarks</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.tools.plot_benchmarks.load_results"><code class="name flex">
+<span>def <span class="ident">load_results</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_results():
+    &#34;&#34;&#34;Load latest results for plotting.&#34;&#34;&#34;
+    latest = RESULTS_DIR / &#34;latest_results.json&#34;
+    if not latest.exists():
+        print(f&#34;Error: {latest} not found. Run with --run first.&#34;)
+        sys.exit(1)
+    with open(latest) as f:
+        return json.load(f)</code></pre>
+</details>
+<div class="desc"><p>Load latest results for plotting.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main():
+    parser = argparse.ArgumentParser(description=&#34;ENRGDAQ Visualization Suite&#34;)
+    parser.add_argument(&#34;--run&#34;, action=&#34;store_true&#34;, help=&#34;Run benchmarks&#34;)
+    parser.add_argument(
+        &#34;--plot&#34;, action=&#34;store_true&#34;, help=&#34;Generate plots from latest results&#34;
+    )
+    parser.add_argument(&#34;--all&#34;, action=&#34;store_true&#34;, help=&#34;Run and plot&#34;)
+    args = parser.parse_args()
+
+    if not any([args.run, args.plot, args.all]):
+        parser.print_help()
+        sys.exit(1)
+
+    GRAPHS_DIR.mkdir(parents=True, exist_ok=True)
+
+    if args.run or args.all:
+        results = run_benchmarks()
+    else:
+        results = load_results()
+
+    if args.plot or args.all or not args.run:
+        print(&#34;\n=== Generating Advanced Visuals ===&#34;)
+        plot_wcd_headroom(results)
+        plot_performance_curve(results)
+        plot_latency_jitter(results)
+        plot_cpu_efficiency(results)
+        plot_aggregate_scaling(results)
+        print(f&#34;Success! High-resolution graphs saved to: {GRAPHS_DIR}/&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.plot_aggregate_scaling"><code class="name flex">
+<span>def <span class="ident">plot_aggregate_scaling</span></span>(<span>results: list[dict])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_aggregate_scaling(results: list[dict]):
+    &#34;&#34;&#34;Plot aggregate throughput scaling with client count.&#34;&#34;&#34;
+    # Filter for results with 500k payload (our efficiency sweet spot)
+    data = [r for r in results if r[&#34;payload_size&#34;] == 500000]
+    data = sorted(data, key=lambda x: x[&#34;num_clients&#34;])
+
+    if not data:
+        return
+
+    clients = [r[&#34;num_clients&#34;] for r in data]
+    throughput = [r[&#34;avg_throughput_mbs&#34;] for r in data]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Bar plot for throughput
+    bars = ax.bar(
+        [str(c) for c in clients],
+        throughput,
+        color=COLORS[&#34;primary&#34;],
+        alpha=0.8,
+        label=&#34;Aggregate Throughput&#34;,
+    )
+
+    # Aesthetics
+    ax.set_xlabel(&#34;Number of Concurrent Clients&#34;, fontsize=12, fontweight=&#34;bold&#34;)
+    ax.set_ylabel(&#34;Total System Throughput (MB/s)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
+    ax.set_title(
+        &#34;ENRGDAQ Aggregate Scalability\n(Fixed 500k Payload)&#34;,
+        fontsize=15,
+        fontweight=&#34;bold&#34;,
+        pad=20,
+    )
+
+    # Gbps labels on top
+    for bar, val in zip(bars, throughput):
+        gbps = (val * 8) / 1000.0
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            val + 20,
+            f&#34;{val:,.0f} MB/s\n({gbps:.1f} Gbps)&#34;,
+            ha=&#34;center&#34;,
+            va=&#34;bottom&#34;,
+            fontweight=&#34;bold&#34;,
+            color=COLORS[&#34;dark&#34;],
+        )
+
+    # Draw the 11.4 Gbps hardware limit line
+    ceiling_mbps = 1433.0
+    ax.axhline(ceiling_mbps, color=COLORS[&#34;danger&#34;], ls=&#34;--&#34;, lw=2, alpha=0.6)
+    ax.text(
+        -0.4,
+        ceiling_mbps + 30,
+        &#34;System Hardware Limit (11.4 Gbps)&#34;,
+        color=COLORS[&#34;danger&#34;],
+        fontweight=&#34;bold&#34;,
+    )
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / &#34;aggregate_scaling.png&#34;)
+    plt.savefig(GRAPHS_DIR / &#34;aggregate_scaling.pdf&#34;)
+    plt.close()</code></pre>
+</details>
+<div class="desc"><p>Plot aggregate throughput scaling with client count.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.plot_cpu_efficiency"><code class="name flex">
+<span>def <span class="ident">plot_cpu_efficiency</span></span>(<span>results: list[dict])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_cpu_efficiency(results: list[dict]):
+    &#34;&#34;&#34;Plot Throughput vs CPU efficiency.&#34;&#34;&#34;
+    data = sorted(results, key=lambda x: x[&#34;payload_size&#34;])
+    throughput = [r[&#34;avg_throughput_mbs&#34;] for r in data]
+    cpu = [r[&#34;cpu_usage_percent&#34;] for r in data]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Normalize to MB/s per CPU %
+    efficiency = [t / c if c &gt; 0 else 0 for t, c in zip(throughput, cpu)]
+
+    ax.bar(
+        [str(r[&#34;payload_size&#34;]) for r in data],
+        efficiency,
+        color=COLORS[&#34;highlight&#34;],
+        alpha=0.7,
+    )
+
+    ax.set_xlabel(&#34;Payload Size (Values per Message)&#34;, fontsize=12)
+    ax.set_ylabel(&#34;Efficiency (MB/s per 1% CPU)&#34;, fontsize=12)
+    ax.set_title(
+        &#34;CPU Efficiency Scaling\nDelegation to C++ Backends (libzmq, PyArrow)&#34;,
+        fontsize=14,
+        fontweight=&#34;bold&#34;,
+    )
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / &#34;cpu_efficiency.png&#34;)
+    plt.savefig(GRAPHS_DIR / &#34;cpu_efficiency.pdf&#34;)
+    plt.close()</code></pre>
+</details>
+<div class="desc"><p>Plot Throughput vs CPU efficiency.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.plot_latency_jitter"><code class="name flex">
+<span>def <span class="ident">plot_latency_jitter</span></span>(<span>results: list[dict])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_latency_jitter(results: list[dict]):
+    &#34;&#34;&#34;Plot latency jitter (p95, p99) against payload size.&#34;&#34;&#34;
+    data = sorted(results, key=lambda x: x[&#34;payload_size&#34;])
+    payloads = [r[&#34;payload_size&#34;] for r in data]
+    p95 = [r[&#34;latency_p95_ms&#34;] for r in data]
+    p99 = [r[&#34;latency_p99_ms&#34;] for r in data]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    ax.plot(
+        payloads,
+        p95,
+        &#34;o-&#34;,
+        color=COLORS[&#34;secondary&#34;],
+        lw=3,
+        label=&#34;p95 Jitter (95th percentile)&#34;,
+    )
+    ax.plot(
+        payloads,
+        p99,
+        &#34;s-&#34;,
+        color=COLORS[&#34;danger&#34;],
+        lw=2,
+        alpha=0.7,
+        label=&#34;p99 Jitter (Worst-case tail)&#34;,
+    )
+
+    ax.set_xscale(&#34;log&#34;)
+    ax.set_yscale(&#34;log&#34;)
+    ax.set_xlabel(&#34;Payload Size (Values per Message)&#34;, fontsize=12)
+    ax.set_ylabel(&#34;Latency (ms)&#34;, fontsize=12)
+    ax.set_title(
+        &#34;Non-Deterministic Latency (Jitter Analysis)\nEffect of Python GC &amp; ZMQ Context Swapping&#34;,
+        fontsize=14,
+        fontweight=&#34;bold&#34;,
+    )
+
+    # JINST Reference line for &#34;Soft Real-Time&#34; (e.g. 10ms)
+    ax.axhline(10.0, color=COLORS[&#34;dark&#34;], ls=&#34;--&#34;, alpha=0.4)
+    ax.text(
+        payloads[0],
+        11,
+        &#34;Standard Soft Real-Time Threshold (10ms)&#34;,
+        color=COLORS[&#34;dark&#34;],
+        alpha=0.6,
+    )
+
+    ax.legend()
+    plt.grid(True, which=&#34;both&#34;, ls=&#34;-&#34;, alpha=0.1)
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / &#34;latency_jitter.png&#34;)
+    plt.savefig(GRAPHS_DIR / &#34;latency_jitter.pdf&#34;)
+    plt.close()</code></pre>
+</details>
+<div class="desc"><p>Plot latency jitter (p95, p99) against payload size.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.plot_performance_curve"><code class="name flex">
+<span>def <span class="ident">plot_performance_curve</span></span>(<span>results: list[dict])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_performance_curve(results: list[dict]):
+    &#34;&#34;&#34;Modern performance curve showing throughput vs payload size.&#34;&#34;&#34;
+    data = sorted(results, key=lambda x: x[&#34;payload_size&#34;])
+    payloads = [r[&#34;payload_size&#34;] for r in data]
+    avg = [r[&#34;avg_throughput_mbs&#34;] for r in data]
+    peak = [r[&#34;peak_throughput_mbs&#34;] for r in data]
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Area fill
+    ax.fill_between(payloads, avg, color=COLORS[&#34;primary&#34;], alpha=0.1)
+
+    # Lines
+    ax.plot(
+        payloads,
+        avg,
+        &#34;o-&#34;,
+        color=COLORS[&#34;secondary&#34;],
+        lw=4,
+        markersize=10,
+        label=&#34;Sustained Throughput&#34;,
+    )
+    ax.plot(
+        payloads,
+        peak,
+        &#34;s--&#34;,
+        color=COLORS[&#34;primary&#34;],
+        lw=2,
+        alpha=0.5,
+        label=&#34;Peak Capability&#34;,
+    )
+
+    # 11.4 Gbps Ceiling (based on latest tests)
+    ceiling_mbps = 1433.0
+    ax.axhline(ceiling_mbps, color=COLORS[&#34;dark&#34;], ls=&#34;:&#34;, lw=2, alpha=0.6)
+    ax.text(
+        payloads[0],
+        ceiling_mbps + 30,
+        &#34;11.4 Gbps Performance Ceiling&#34;,
+        color=COLORS[&#34;dark&#34;],
+        fontweight=&#34;bold&#34;,
+        fontsize=10,
+    )
+
+    # 10GbE Comparison
+    ax.axhline(1250, color=COLORS[&#34;danger&#34;], ls=&#34;-.&#34;, lw=1, alpha=0.4)
+    ax.text(
+        payloads[0],
+        1250 - 60,
+        &#34;Standard 10 Gbps Ethernet Limit&#34;,
+        color=COLORS[&#34;danger&#34;],
+        alpha=0.7,
+    )
+
+    ax.set_xscale(&#34;log&#34;)
+    ax.set_xlabel(&#34;Payload Size (Values per Message)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
+    ax.set_ylabel(&#34;Data Throughput (MB/s)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
+    ax.set_title(
+        &#34;ENRGDAQ Throughput Scaling\n(Arrow IPC + Zero-Copy ZMQ)&#34;,
+        fontsize=16,
+        pad=20,
+        fontweight=&#34;bold&#34;,
+    )
+
+    ax.legend(frameon=True, facecolor=&#34;white&#34;, edgecolor=&#34;#dee2e6&#34;)
+    plt.grid(True, which=&#34;both&#34;, ls=&#34;-&#34;, alpha=0.15)
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / &#34;throughput_scaling.png&#34;)
+    plt.savefig(GRAPHS_DIR / &#34;throughput_scaling.pdf&#34;)
+    plt.close()</code></pre>
+</details>
+<div class="desc"><p>Modern performance curve showing throughput vs payload size.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.plot_wcd_headroom"><code class="name flex">
+<span>def <span class="ident">plot_wcd_headroom</span></span>(<span>results: list[dict])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_wcd_headroom(results: list[dict]):
+    &#34;&#34;&#34;Specific plot for Water Cherenkov Detector (WCD) headroom.&#34;&#34;&#34;
+    # Context: 1-ton WCD with 8 PMTs.
+    # Approx 4 MB/s requirement assumes 100 Hz triggers with 500 samples/ch
+    wcd_requirement = 4.0
+
+    # Use the best observed result
+    best = max(results, key=lambda x: x[&#34;avg_throughput_mbs&#34;])
+
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    labels = [
+        &#34;Target: WCD Experiment\n(8 PMTs @ 100Hz)&#34;,
+        &#34;Achieved: ENRGDAQ\n(Zero-Copy Python)&#34;,
+    ]
+    values = [wcd_requirement, best[&#34;avg_throughput_mbs&#34;]]
+
+    bars = ax.bar(
+        labels,
+        values,
+        color=[COLORS[&#34;danger&#34;], COLORS[&#34;primary&#34;]],
+        alpha=0.85,
+        width=0.5,
+    )
+
+    # Aesthetics
+    ax.set_ylabel(&#34;Throughput (MB/s)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
+    ax.set_title(
+        &#34;Safety Margin: ENRGDAQ vs. WCD Requirements&#34;,
+        fontsize=15,
+        pad=25,
+        fontweight=&#34;bold&#34;,
+    )
+
+    # Log scale is often better for such massive differences, but linear shows the &#39;wow&#39; factor
+    # We&#39;ll use linear but with a break or a clear label
+
+    headroom = values[1] / values[0]
+    ax.annotate(
+        f&#34;{headroom:.0f}x Headroom&#34;,
+        xy=(1, values[1]),
+        xytext=(1, values[1] * 1.05),
+        ha=&#34;center&#34;,
+        fontsize=14,
+        fontweight=&#34;bold&#34;,
+        color=COLORS[&#34;secondary&#34;],
+        arrowprops=dict(arrowstyle=&#34;-&gt;&#34;, color=COLORS[&#34;secondary&#34;], lw=2),
+    )
+
+    for bar, val in zip(bars, values):
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            val + 10,
+            f&#34;{val:,.1f} MB/s&#34;,
+            ha=&#34;center&#34;,
+            va=&#34;bottom&#34;,
+            fontweight=&#34;bold&#34;,
+            color=COLORS[&#34;dark&#34;],
+        )
+
+    plt.tight_layout()
+    plt.savefig(GRAPHS_DIR / &#34;wcd_headroom.png&#34;)
+    plt.savefig(GRAPHS_DIR / &#34;wcd_headroom.pdf&#34;)
+    plt.close()</code></pre>
+</details>
+<div class="desc"><p>Specific plot for Water Cherenkov Detector (WCD) headroom.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.run_benchmarks"><code class="name flex">
+<span>def <span class="ident">run_benchmarks</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run_benchmarks():
+    &#34;&#34;&#34;Run comprehensive benchmark suite.&#34;&#34;&#34;
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    results = []
+
+    # Scaling Payloads
+    print(&#34;\n=== Running Performance Scaling Benchmarks ===&#34;)
+    payload_sizes = [1000, 10000, 50000, 100000, 500000]
+    for payload in payload_sizes:
+        res = run_single_benchmark(3, payload, 10)
+        if res:
+            results.append(asdict(res))
+        time.sleep(1)
+
+    # Aggregate Scaling (Fixed Payload, Varying Clients)
+    print(&#34;\n=== Running Aggregate Scaling Benchmarks ===&#34;)
+    client_counts = [1, 2, 4, 8]
+    for clients in client_counts:
+        # Fixed payload at 500k to show system limits
+        res = run_single_benchmark(clients, 500000, 10)
+        if res:
+            results.append(asdict(res))
+        time.sleep(1)
+
+    with open(RESULTS_DIR / &#34;latest_results.json&#34;, &#34;w&#34;) as f:
+        json.dump(results, f, indent=2)
+    return results</code></pre>
+</details>
+<div class="desc"><p>Run comprehensive benchmark suite.</p></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.run_single_benchmark"><code class="name flex">
+<span>def <span class="ident">run_single_benchmark</span></span>(<span>clients: int, payload_size: int, duration: int) ‑> <a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult">BenchmarkResult</a> | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run_single_benchmark(
+    clients: int, payload_size: int, duration: int
+) -&gt; Optional[BenchmarkResult]:
+    &#34;&#34;&#34;Run a single benchmark configuration and return results.&#34;&#34;&#34;
+    cmd = [
+        &#34;python3&#34;,
+        &#34;src/benchmark.py&#34;,
+        &#34;--clients&#34;,
+        str(clients),
+        &#34;--payload-size&#34;,
+        str(payload_size),
+        &#34;--duration&#34;,
+        str(duration),
+        &#34;--use-memory-store&#34;,
+        &#34;--use-shm&#34;,
+        &#34;--stats-interval&#34;,
+        &#34;1.0&#34;,
+    ]
+
+    print(f&#34;  Running: clients={clients}, payload={payload_size}...&#34;)
+    try:
+        process = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        stdout, stderr = process.communicate(timeout=duration + 30)
+
+        if process.returncode != 0:
+            print(f&#34;    Failed: {stderr}&#34;)
+            return None
+
+        # Parse summary from stdout
+        lines = stdout.split(&#34;\n&#34;)
+        data = {}
+        for line in lines:
+            if &#34;Average Throughput:&#34; in line:
+                data[&#34;avg_throughput&#34;] = float(
+                    line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
+                )
+            if &#34;Peak Throughput:&#34; in line:
+                data[&#34;peak_throughput&#34;] = float(
+                    line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
+                )
+            if &#34;Messages/Second:&#34; in line:
+                data[&#34;messages_per_second&#34;] = float(
+                    line.split(&#34;:&#34;)[1].replace(&#34;,&#34;, &#34;&#34;).strip()
+                )
+            if &#34;Average Queue Size:&#34; in line:
+                data[&#34;avg_queue&#34;] = float(line.split(&#34;:&#34;)[1].strip())
+            if &#34;Avg CPU Usage:&#34; in line:
+                data[&#34;cpu_usage&#34;] = float(line.split(&#34;:&#34;)[1].replace(&#34;%&#34;, &#34;&#34;).strip())
+            if &#34;Avg p95 Latency:&#34; in line:
+                data[&#34;latency_p95&#34;] = float(
+                    line.split(&#34;:&#34;)[1].replace(&#34;ms&#34;, &#34;&#34;).strip()
+                )
+            if &#34;Peak p99 Latency:&#34; in line:
+                data[&#34;latency_p99&#34;] = float(
+                    line.split(&#34;:&#34;)[1].replace(&#34;ms&#34;, &#34;&#34;).strip()
+                )
+
+        return BenchmarkResult(
+            num_clients=clients,
+            payload_size=payload_size,
+            duration=duration,
+            avg_throughput_mbs=data.get(&#34;avg_throughput&#34;, 0),
+            peak_throughput_mbs=data.get(&#34;peak_throughput&#34;, 0),
+            messages_per_second=data.get(&#34;messages_per_second&#34;, 0),
+            avg_queue_size=data.get(&#34;avg_queue&#34;, 0),
+            cpu_usage_percent=data.get(&#34;cpu_usage&#34;, 0),
+            latency_p95_ms=data.get(&#34;latency_p95&#34;, 0),
+            latency_p99_ms=data.get(&#34;latency_p99&#34;, 0),
+        )
+
+    except Exception as e:
+        print(f&#34;    Error: {e}&#34;)
+        return None</code></pre>
+</details>
+<div class="desc"><p>Run a single benchmark configuration and return results.</p></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult"><code class="flex name class">
+<span>class <span class="ident">BenchmarkResult</span></span>
+<span>(</span><span>num_clients: int,<br>payload_size: int,<br>duration: int,<br>avg_throughput_mbs: float,<br>peak_throughput_mbs: float,<br>messages_per_second: float,<br>avg_queue_size: float,<br>cpu_usage_percent: float,<br>latency_p95_ms: float,<br>latency_p99_ms: float)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class BenchmarkResult:
+    num_clients: int
+    payload_size: int
+    duration: int
+    avg_throughput_mbs: float
+    peak_throughput_mbs: float
+    messages_per_second: float
+    avg_queue_size: float
+    cpu_usage_percent: float
+    latency_p95_ms: float
+    latency_p99_ms: float</code></pre>
+</details>
+<div class="desc"><p>BenchmarkResult(num_clients: int, payload_size: int, duration: int, avg_throughput_mbs: float, peak_throughput_mbs: float, messages_per_second: float, avg_queue_size: float, cpu_usage_percent: float, latency_p95_ms: float, latency_p99_ms: float)</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_queue_size"><code class="name">var <span class="ident">avg_queue_size</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_throughput_mbs"><code class="name">var <span class="ident">avg_throughput_mbs</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.cpu_usage_percent"><code class="name">var <span class="ident">cpu_usage_percent</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.duration"><code class="name">var <span class="ident">duration</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p95_ms"><code class="name">var <span class="ident">latency_p95_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p99_ms"><code class="name">var <span class="ident">latency_p99_ms</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.messages_per_second"><code class="name">var <span class="ident">messages_per_second</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.num_clients"><code class="name">var <span class="ident">num_clients</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.payload_size"><code class="name">var <span class="ident">payload_size</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs"><code class="name">var <span class="ident">peak_throughput_mbs</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.tools" href="index.html">enrgdaq.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.tools.plot_benchmarks.load_results" href="#enrgdaq.tools.plot_benchmarks.load_results">load_results</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.main" href="#enrgdaq.tools.plot_benchmarks.main">main</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.plot_aggregate_scaling" href="#enrgdaq.tools.plot_benchmarks.plot_aggregate_scaling">plot_aggregate_scaling</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.plot_cpu_efficiency" href="#enrgdaq.tools.plot_benchmarks.plot_cpu_efficiency">plot_cpu_efficiency</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.plot_latency_jitter" href="#enrgdaq.tools.plot_benchmarks.plot_latency_jitter">plot_latency_jitter</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.plot_performance_curve" href="#enrgdaq.tools.plot_benchmarks.plot_performance_curve">plot_performance_curve</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.plot_wcd_headroom" href="#enrgdaq.tools.plot_benchmarks.plot_wcd_headroom">plot_wcd_headroom</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.run_benchmarks" href="#enrgdaq.tools.plot_benchmarks.run_benchmarks">run_benchmarks</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.run_single_benchmark" href="#enrgdaq.tools.plot_benchmarks.run_single_benchmark">run_single_benchmark</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult">BenchmarkResult</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_queue_size" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_queue_size">avg_queue_size</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_throughput_mbs" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_throughput_mbs">avg_throughput_mbs</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.cpu_usage_percent" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.cpu_usage_percent">cpu_usage_percent</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.duration" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.duration">duration</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p95_ms" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p95_ms">latency_p95_ms</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p99_ms" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.latency_p99_ms">latency_p99_ms</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.messages_per_second" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.messages_per_second">messages_per_second</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.num_clients" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.num_clients">num_clients</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.payload_size" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.payload_size">payload_size</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs">peak_throughput_mbs</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
-<title>enrgdaq.tools API documentation</title>
+<title>enrgdaq.tools.latex_tables API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
@@ -33,34 +33,127 @@ el.replaceWith(d);
 <main>
 <article id="content">
 <header>
-<h1 class="title">Namespace <code>enrgdaq.tools</code></h1>
+<h1 class="title">Module <code>enrgdaq.tools.latex_tables</code></h1>
 </header>
 <section id="section-intro">
 </section>
 <section>
-<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt><code class="name"><a title="enrgdaq.tools.benchmark_runner" href="benchmark_runner.html">enrgdaq.tools.benchmark_runner</a></code></dt>
+<dt id="enrgdaq.tools.latex_tables.generate_latex_table"><code class="name flex">
+<span>def <span class="ident">generate_latex_table</span></span>(<span>)</span>
+</code></dt>
 <dd>
-<div class="desc"><p>ENRGDAQ Benchmark Script …</p></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.tools.latex_tables" href="latex_tables.html">enrgdaq.tools.latex_tables</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.tools.npy2root" href="npy2root/index.html">enrgdaq.tools.npy2root</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="enrgdaq.tools.plot_benchmarks" href="plot_benchmarks.html">enrgdaq.tools.plot_benchmarks</a></code></dt>
-<dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_latex_table():
+    &#34;&#34;&#34;Generates LaTeX tables for JINST using Cores and Efficiency metrics.&#34;&#34;&#34;
+    results_file = &#34;results/benchmarks/latest_results.json&#34;
+    if not os.path.exists(results_file):
+        print(f&#34;Error: {results_file} not found.&#34;)
+        return
+
+    with open(results_file, &#34;r&#34;) as f:
+        data = json.load(f)
+
+    # 1. Performance Scaling Table (Single Client Focus for Latency/Efficiency)
+    # We use results where num_clients == 1 or 3 to show scaling
+    scaling_data = [r for r in data if r[&#34;num_clients&#34;] == 1]
+    # If no 1-client results (e.g. failed), fallback to 3
+    if not scaling_data:
+        scaling_data = [r for r in data if r[&#34;num_clients&#34;] == 3]
+
+    scaling_data = sorted(scaling_data, key=lambda x: x[&#34;payload_size&#34;])
+
+    print(&#34;\n% --- REVISED JINST TABLE: Performance Scaling (Single Client) ---&#34;)
+    print(&#34;\\begin{table}[htbp]&#34;)
+    print(&#34;\\centering&#34;)
+    print(
+        &#34;\\caption{ENRGDAQ Steady-State Performance (Single Client). Note the distinct efficiency gain at larger payload sizes, characteristic of Zero-Copy architectures.}&#34;
+    )
+    print(&#34;\\label{tab:performance}&#34;)
+    print(&#34;\\begin{tabular}{l c c c c c}&#34;)
+    print(&#34;\\hline&#34;)
+    print(
+        &#34;\\textbf{Payload} &amp; \\textbf{Throughput} &amp; \\textbf{Event Rate} &amp; \\textbf{CPU Load} &amp; \\textbf{Latency ($p_{99}$)} &amp; \\textbf{Efficiency} \\\\&#34;
+    )
+    print(&#34;(Bytes) &amp; (Gbps) &amp; (kHz) &amp; (Cores) &amp; (ms) &amp; (Gbps/Core) \\\\&#34;)
+    print(&#34;\\hline&#34;)
+
+    for r in scaling_data:
+        payload = r[&#34;payload_size&#34;]
+        gbps = (r[&#34;avg_throughput_mbs&#34;] * 8) / 1000.0
+        khz = r[&#34;messages_per_second&#34;] / 1000.0
+        cores = r[&#34;cpu_usage_percent&#34;] / 100.0
+        p99 = r[&#34;latency_p99_ms&#34;]
+        efficiency = gbps / cores if cores &gt; 0 else 0
+
+        # Highlight the best result as per suggestion
+        is_best = payload == 500000
+        fmt = &#34;\\textbf{&#34; if is_best else &#34;&#34;
+        end_fmt = &#34;}&#34; if is_best else &#34;&#34;
+
+        print(
+            f&#34;{payload:,} &amp; {fmt}{gbps:.2f}{end_fmt} &amp; {khz:.1f} &amp; {fmt}{cores:.1f}{end_fmt} &amp; {p99:.1f} &amp; {fmt}{efficiency:.2f}{end_fmt} \\\\&#34;
+        )
+
+    print(&#34;\\hline&#34;)
+    print(&#34;\\end{tabular}&#34;)
+    print(
+        &#34;\\footnotesize{\\textit{*CPU Load represents aggregate usage across Supervisor and Job processes. 1.0 = 1 full core.}}&#34;
+    )
+    print(&#34;\\end{table}&#34;)
+    print(&#34;% --- END TABLE ---\n&#34;)
+
+    # 2. Aggregate Scaling Table (Bridging to 11 Gbps)
+    aggregate_data = [r for r in data if r[&#34;payload_size&#34;] == 500000]
+    aggregate_data = sorted(aggregate_data, key=lambda x: x[&#34;num_clients&#34;])
+
+    print(&#34;% --- JINST TABLE: Aggregate System Scalability ---&#34;)
+    print(&#34;\\begin{table}[htbp]&#34;)
+    print(&#34;\\centering&#34;)
+    print(
+        &#34;\\caption{Aggregate Throughput Scaling with Concurrent Readout Clients (Payload=500kB)}&#34;
+    )
+    print(&#34;\\begin{tabular}{l c c c}&#34;)
+    print(&#34;\\hline&#34;)
+    print(
+        &#34;\\textbf{Clients} &amp; \\textbf{Total Throughput} &amp; \\textbf{Total Throughput} &amp; \\textbf{Scaling} \\\\&#34;
+    )
+    print(&#34;&amp; (MB/s) &amp; (Gbps) &amp; Efficiency \\\\&#34;)
+    print(&#34;\\hline&#34;)
+
+    baseline = None
+    for r in aggregate_data:
+        clients = r[&#34;num_clients&#34;]
+        mbs = r[&#34;avg_throughput_mbs&#34;]
+        gbps = (mbs * 8) / 1000.0
+
+        if baseline is None and clients == 1:
+            baseline = gbps
+            scaling = 1.0
+        elif baseline:
+            scaling = gbps / (baseline * clients)
+        else:
+            scaling = 0
+
+        print(f&#34;{clients} &amp; {mbs:,.0f} &amp; {gbps:.2f} &amp; {scaling:.2f} \\\\&#34;)
+
+    print(&#34;\\hline&#34;)
+    print(&#34;\\end{tabular}&#34;)
+    print(&#34;\\label{tab:aggregate}&#34;)
+    print(&#34;\\end{table}&#34;)
+    print(&#34;% --- END TABLE ---\n&#34;)</code></pre>
+</details>
+<div class="desc"><p>Generates LaTeX tables for JINST using Cores and Efficiency metrics.</p></div>
 </dd>
 </dl>
-</section>
-<section>
-</section>
-<section>
 </section>
 <section>
 </section>
@@ -72,15 +165,12 @@ el.replaceWith(d);
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="enrgdaq" href="../index.html">enrgdaq</a></code></li>
+<li><code><a title="enrgdaq.tools" href="index.html">enrgdaq.tools</a></code></li>
 </ul>
 </li>
-<li><h3><a href="#header-submodules">Sub-modules</a></h3>
-<ul>
-<li><code><a title="enrgdaq.tools.benchmark_runner" href="benchmark_runner.html">enrgdaq.tools.benchmark_runner</a></code></li>
-<li><code><a title="enrgdaq.tools.latex_tables" href="latex_tables.html">enrgdaq.tools.latex_tables</a></code></li>
-<li><code><a title="enrgdaq.tools.npy2root" href="npy2root/index.html">enrgdaq.tools.npy2root</a></code></li>
-<li><code><a title="enrgdaq.tools.plot_benchmarks" href="plot_benchmarks.html">enrgdaq.tools.plot_benchmarks</a></code></li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.tools.latex_tables.generate_latex_table" href="#enrgdaq.tools.latex_tables.generate_latex_table">generate_latex_table</a></code></li>
 </ul>
 </li>
 </ul>

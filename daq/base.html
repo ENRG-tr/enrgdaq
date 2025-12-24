@@ -130,6 +130,11 @@ el.replaceWith(d);
             logger=self._logger,
         )
 
+        self._latency_samples: list[float] = []
+        self._processed_count = 0
+        self._sent_count = 0
+        self._last_stats_report_time = datetime.now()
+
         self._put_message_out(DAQJobMessageJobStarted())
 
     def consume(self, nowait: bool = True, timeout: float | None = None):
@@ -154,6 +159,8 @@ el.replaceWith(d);
             except (Empty, FileNotFoundError):
                 break
 
+        self.report_stats()
+
     def consume_all(self):
         processed_any = False
         while True:
@@ -164,6 +171,8 @@ el.replaceWith(d);
                     processed_any = True
             except (Empty, FileNotFoundError):
                 break
+
+        self.report_stats()
         return processed_any
 
     def _unwrap_message(self, message: DAQJobMessage) -&gt; DAQJobMessage:
@@ -215,6 +224,17 @@ el.replaceWith(d);
                 f&#34;Dropping remote message &#39;{type(message)}&#39; from &#39;{remote_supervisor_id}&#39; because drop_remote_messages is True&#34;
             )
             return True
+
+        self._processed_count += 1
+        from enrgdaq.daq.store.models import DAQJobMessageStore
+
+        if message.timestamp and isinstance(message, DAQJobMessageStore):
+            latency = (datetime.now() - message.timestamp).total_seconds() * 1000.0
+            self._latency_samples.append(latency)
+            # Keep only last 1000 samples to prevent memory leak
+            if len(self._latency_samples) &gt; 1000:
+                self._latency_samples.pop(0)
+
         return True
 
     def start(self):
@@ -309,6 +329,43 @@ el.replaceWith(d);
 
         if not message_routed:
             self.message_out.put(message)
+        self._sent_count += 1
+
+    def get_latency_stats(self) -&gt; Any:
+        from enrgdaq.daq.models import DAQJobLatencyStats
+
+        if not self._latency_samples:
+            return DAQJobLatencyStats()
+
+        samples = sorted(self._latency_samples)
+        count = len(samples)
+        return DAQJobLatencyStats(
+            count=self._processed_count,
+            min_ms=samples[0],
+            max_ms=samples[-1],
+            avg_ms=sum(samples) / count,
+            p95_ms=samples[int(count * 0.95)],
+            p99_ms=samples[int(count * 0.99)],
+        )
+
+    def report_stats(self, force: bool = False):
+        if (
+            not force
+            and (datetime.now() - self._last_stats_report_time).total_seconds()
+            &lt; DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS
+        ):
+            return
+
+        from enrgdaq.daq.models import DAQJobMessageStatsReport
+
+        self._last_stats_report_time = datetime.now()
+        report = DAQJobMessageStatsReport(
+            processed_count=self._processed_count,
+            sent_count=self._sent_count,
+            latency=self.get_latency_stats(),
+        )
+        self._put_message_out(report)
+        self._latency_samples = []  # RESET after report to get interval stats
 
     def __del__(self):
         self._logger.info(&#34;DAQ job is being deleted&#34;)
@@ -470,7 +527,9 @@ def supervisor_id(self):
             msg = self._unwrap_message(msg)
             self.handle_message(msg)
         except (Empty, FileNotFoundError):
-            break</code></pre>
+            break
+
+    self.report_stats()</code></pre>
 </details>
 <div class="desc"><p>Consumes messages from the message_in queue.
 If nowait is True, it will consume the message immediately.
@@ -494,6 +553,8 @@ Otherwise, it will wait until a message is available.</p></div>
                 processed_any = True
         except (Empty, FileNotFoundError):
             break
+
+    self.report_stats()
     return processed_any</code></pre>
 </details>
 <div class="desc"></div>
@@ -511,6 +572,33 @@ Otherwise, it will wait until a message is available.</p></div>
         return
     self._has_been_freed = True
     self.__del__()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.get_latency_stats"><code class="name flex">
+<span>def <span class="ident">get_latency_stats</span></span>(<span>self) ‑> Any</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_latency_stats(self) -&gt; Any:
+    from enrgdaq.daq.models import DAQJobLatencyStats
+
+    if not self._latency_samples:
+        return DAQJobLatencyStats()
+
+    samples = sorted(self._latency_samples)
+    count = len(samples)
+    return DAQJobLatencyStats(
+        count=self._processed_count,
+        min_ms=samples[0],
+        max_ms=samples[-1],
+        avg_ms=sum(samples) / count,
+        p95_ms=samples[int(count * 0.95)],
+        p99_ms=samples[int(count * 0.99)],
+    )</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -564,6 +652,17 @@ Otherwise, it will wait until a message is available.</p></div>
             f&#34;Dropping remote message &#39;{type(message)}&#39; from &#39;{remote_supervisor_id}&#39; because drop_remote_messages is True&#34;
         )
         return True
+
+    self._processed_count += 1
+    from enrgdaq.daq.store.models import DAQJobMessageStore
+
+    if message.timestamp and isinstance(message, DAQJobMessageStore):
+        latency = (datetime.now() - message.timestamp).total_seconds() * 1000.0
+        self._latency_samples.append(latency)
+        # Keep only last 1000 samples to prevent memory leak
+        if len(self._latency_samples) &gt; 1000:
+            self._latency_samples.pop(0)
+
     return True</code></pre>
 </details>
 <div class="desc"><p>Handles a message received from the message queue.</p>
@@ -584,6 +683,35 @@ Otherwise, it will wait until a message is available.</p></div>
 <dt><code>Exception</code></dt>
 <dd>If the message is not accepted by the job.</dd>
 </dl></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.report_stats"><code class="name flex">
+<span>def <span class="ident">report_stats</span></span>(<span>self, force: bool = False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def report_stats(self, force: bool = False):
+    if (
+        not force
+        and (datetime.now() - self._last_stats_report_time).total_seconds()
+        &lt; DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS
+    ):
+        return
+
+    from enrgdaq.daq.models import DAQJobMessageStatsReport
+
+    self._last_stats_report_time = datetime.now()
+    report = DAQJobMessageStatsReport(
+        processed_count=self._processed_count,
+        sent_count=self._sent_count,
+        latency=self.get_latency_stats(),
+    )
+    self._put_message_out(report)
+    self._latency_samples = []  # RESET after report to get interval stats</code></pre>
+</details>
+<div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
@@ -1354,12 +1482,14 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume_all" href="#enrgdaq.daq.base.DAQJob.consume_all">consume_all</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.free" href="#enrgdaq.daq.base.DAQJob.free">free</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.get_latency_stats" href="#enrgdaq.daq.base.DAQJob.get_latency_stats">get_latency_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.info" href="#enrgdaq.daq.base.DAQJob.info">info</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.instance_id" href="#enrgdaq.daq.base.DAQJob.instance_id">instance_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_in" href="#enrgdaq.daq.base.DAQJob.message_in">message_in</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_out" href="#enrgdaq.daq.base.DAQJob.message_out">message_out</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.multiprocessing_method" href="#enrgdaq.daq.base.DAQJob.multiprocessing_method">multiprocessing_method</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.report_stats" href="#enrgdaq.daq.base.DAQJob.report_stats">report_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.restart_offset" href="#enrgdaq.daq.base.DAQJob.restart_offset">restart_offset</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.start" href="#enrgdaq.daq.base.DAQJob.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.supervisor_id" href="#enrgdaq.daq.base.DAQJob.supervisor_id">supervisor_id</a></code></li>
