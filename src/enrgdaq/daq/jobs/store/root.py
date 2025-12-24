@@ -184,7 +184,11 @@ class DAQJobStoreROOT(DAQJobStore):
             root_file = self._open_files[file_path]
 
         # Create or get tree
-        if tree_name not in root_file:
+        # Check our cache first - if we have the tree cached, use it
+        if file_path in self._open_trees and tree_name in self._open_trees[file_path]:
+            tree = self._open_trees[file_path][tree_name]
+        elif tree_name not in root_file:
+            # Tree doesn't exist, create it
             tree = root_file.mktree(
                 tree_name,
                 {
@@ -198,14 +202,13 @@ class DAQJobStoreROOT(DAQJobStore):
                 self._open_trees[file_path] = {}
             self._open_trees[file_path][tree_name] = tree
         else:
-            if (
-                file_path in self._open_trees
-                and tree_name in self._open_trees[file_path]
-            ):
-                tree = self._open_trees[file_path][tree_name]
-            else:
-                tree = root_file[tree_name]
-            assert isinstance(tree, uproot.WritableTree), "Tree is not a WritableTree"
+            # Tree exists in file but not in our cache - this shouldn't happen
+            # in normal operation. It can occur if a file was left from a previous
+            # run. The caller should clean up output files before starting.
+            raise RuntimeError(
+                f"Tree '{tree_name}' already exists in file '{file_path}' but was not created "
+                f"by this process. Please remove the file and try again."
+            )
 
         # Write the combined data in one extend() call
         start_time = time.time()

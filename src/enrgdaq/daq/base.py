@@ -140,17 +140,15 @@ class DAQJob:
         if not nowait:
             msg = self.message_in.get(timeout=timeout)
             msg = self._unwrap_message(msg)
-            if not self.handle_message(msg):
-                self.message_in.put(msg)
+            self.handle_message(msg)
             return
 
         while True:
             try:
                 msg = self.message_in.get_nowait()
                 msg = self._unwrap_message(msg)
-                if not self.handle_message(msg):
-                    self.message_in.put(msg)
-            except Empty:
+                self.handle_message(msg)
+            except (Empty, FileNotFoundError):
                 break
 
     def consume_all(self):
@@ -161,7 +159,7 @@ class DAQJob:
                 msg = self._unwrap_message(msg)
                 if self.handle_message(msg):
                     processed_any = True
-            except Empty:
+            except (Empty, FileNotFoundError):
                 break
         return processed_any
 
@@ -237,7 +235,9 @@ class DAQJob:
             config=raw_config or "# No config",
         )
 
-    def _put_message_out(self, message: DAQJobMessage, use_shm=False):
+    def _put_message_out(
+        self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
+    ):
         """
         Puts a message in the message_out queue.
 
@@ -247,14 +247,15 @@ class DAQJob:
             message (DAQJobMessage): The message to put in the queue.
         """
 
-        message.daq_job_info = self.info
-        message.remote_config = self.config.remote_config
+        if modify_message_metadata:
+            message.daq_job_info = self.info
+            message.remote_config = self.config.remote_config
 
-        # Get the remote config from the store config if it exists
-        if isinstance(message, DAQJobMessageStore):
-            store_remote_config = message.get_remote_config()
-            if store_remote_config is not None:
-                message.remote_config = store_remote_config
+            # Get the remote config from the store config if it exists
+            if isinstance(message, DAQJobMessageStore):
+                store_remote_config = message.get_remote_config()
+                if store_remote_config is not None:
+                    message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
             self._logger.debug(f"Message out: {message}")
@@ -282,14 +283,26 @@ class DAQJob:
                 )
             message.daq_job_info = self.info
             message.remote_config = self.config.remote_config
+            message.route_keys = original_message.route_keys
 
+        if False and self.supervisor_id != "benchmark_client_0":
+            print(
+                "***",
+                self.supervisor_id,
+                type(self).__name__,
+                "putting message",
+                type(message),
+                self._routes,
+            )
         message_routed = False
+        # print(type(self).__name__, self._routes, message.route_keys)
         if self._routes is not None:
-            for route_key, queue_list in self._routes.items():
-                if route_key in message.route_keys:
-                    for queue in queue_list:
+            for route_key in message.route_keys:
+                if route_key in self._routes:
+                    for queue in self._routes[route_key]:
                         queue.put(message)
                         message_routed = True
+                        break
 
         if not message_routed:
             self.message_out.put(message)

@@ -98,7 +98,7 @@ class DAQJobMessage(Struct, kw_only=True):
     is_remote: bool = False
     daq_job_info: "DAQJobInfo | None" = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: list[RouteKey] = field(default_factory=list)
+    route_keys: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -> str:

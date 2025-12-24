@@ -28,7 +28,11 @@ from enrgdaq.daq.daq_job import (
     start_daq_jobs,
 )
 from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
-from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote, DAQJobRemoteStatsDict
+from enrgdaq.daq.jobs.remote import (
+    DAQJobMessageStatsRemote,
+    DAQJobRemote,
+    DAQJobRemoteStatsDict,
+)
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessage,
@@ -62,7 +66,7 @@ DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS = 2
 DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS = 1
 """Time in seconds between sending supervisor heartbeat messages."""
 
-DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS = 1
+DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS = 0.1
 """Time in seconds between sending supervisor routes messages."""
 
 
@@ -134,9 +138,9 @@ class Supervisor:
         self._log_listener = None
         self._logger = logging.getLogger()
 
-        self._last_stats_message_time = datetime.now()
-        self._last_heartbeat_message_time = datetime.now()
-        self._last_routes_message_time = datetime.now()
+        self._last_stats_message_time = datetime.min
+        self._last_heartbeat_message_time = datetime.min
+        self._last_routes_message_time = datetime.min
 
     def init(self):
         """
@@ -432,9 +436,10 @@ class Supervisor:
             seconds=DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS
         ):
             self._last_routes_message_time = datetime.now()
+            routes = self._generate_route_mapping()
             messages.append(
                 DAQJobMessageRoutes(
-                    routes=self._generate_route_mapping(),
+                    routes=routes,
                     daq_job_info=self._get_supervisor_daq_job_info(),
                 )
             )
@@ -503,24 +508,18 @@ class Supervisor:
                 ) and not isinstance(message, SupervisorDAQJobMessage):
                     continue
 
-                # Check if message is allowed for store
-                # TODO: Maybe a better way to do this?
+                # Check if base class can handle such message
                 if (
-                    isinstance(daq_job_cls, type(DAQJobStore))
-                    and getattr(daq_job_cls, "can_handle_message", None)
+                    getattr(daq_job_cls, "can_handle_message", None)
                     and not daq_job_cls.can_handle_message(message)  # type: ignore
+                    and not isinstance(daq_job_cls, SupervisorDAQJobMessage)
                 ):
                     continue
 
                 # Send message
                 try:
-                    process.message_in.put_nowait(
-                        message  # , timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT
-                    )
+                    process.message_in.put_nowait(message)
                 except Full:
-                    self._logger.warning(
-                        f"Message queue for {process.daq_job_cls.__name__} is full, dropping message"
-                    )
                     # Clean SHM
                     if isinstance(message, DAQJobMessageSHM) or isinstance(
                         message, DAQJobMessageStoreSHM
@@ -578,7 +577,9 @@ class Supervisor:
     def _generate_route_mapping(self) -> RouteMapping:
         routes: RouteMapping = defaultdict(list)
         for process in self.daq_job_processes:
-            if issubclass(process.daq_job_cls, DAQJobStore):
+            if issubclass(process.daq_job_cls, DAQJobStore) or issubclass(
+                process.daq_job_cls, DAQJobRemote
+            ):
                 routes[process.daq_job_cls.__name__].append(process.message_in)
 
         return dict(routes)

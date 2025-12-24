@@ -29,20 +29,27 @@ import psutil
 
 from enrgdaq.daq.base import _create_queue
 from enrgdaq.daq.daq_job import _create_daq_job_process
+from enrgdaq.daq.jobs import remote as remote_module
 from enrgdaq.daq.jobs.benchmark import DAQJobBenchmark, DAQJobBenchmarkConfig
 from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats, DAQJobHandleStatsConfig
 from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
 from enrgdaq.daq.jobs.remote_proxy import DAQJobRemoteProxy, DAQJobRemoteProxyConfig
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreCSV, DAQJobStoreCSVConfig
+from enrgdaq.daq.jobs.store.memory import DAQJobStoreMemory, DAQJobStoreMemoryConfig
 from enrgdaq.daq.jobs.store.root import DAQJobStoreROOT, DAQJobStoreROOTConfig
 from enrgdaq.daq.models import LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigCSV,
+    DAQJobStoreConfigMemory,
     DAQJobStoreConfigROOT,
 )
 from enrgdaq.models import SupervisorConfig, SupervisorInfo
 from enrgdaq.supervisor import Supervisor
+
+# Override remote stats interval for more accurate benchmarking
+# Default is 1 second, which causes bursty/inconsistent stats
+remote_module.DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 0.1
 
 # Default configuration
 DEFAULT_ZMQ_XSUB_URL = "tcp://localhost:10001"
@@ -50,7 +57,7 @@ DEFAULT_ZMQ_XPUB_URL = "tcp://localhost:10002"
 DEFAULT_NUM_CLIENTS = 5
 DEFAULT_PAYLOAD_SIZE = 1000
 DEFAULT_DURATION_SECONDS = 60
-DEFAULT_STATS_INTERVAL_SECONDS = 1
+DEFAULT_STATS_INTERVAL_SECONDS = 0.25
 
 
 @dataclass
@@ -80,6 +87,7 @@ class BenchmarkConfig:
     output_stats_csv: str = "benchmark_stats.csv"
     output_remote_stats_csv: str = "benchmark_remote_stats.csv"
     void_memory_data: bool = True
+    use_memory_store: bool = False
 
 
 def create_supervisor_info(supervisor_id: str) -> SupervisorInfo:
@@ -154,28 +162,40 @@ def run_main_supervisor(
     supervisor_config = create_supervisor_config(supervisor_id)
 
     # Create DAQ job processes using the proper factory function
-    daq_job_processes = [
-        # Memory store that voids data (for benchmark purposes)
-        _create_daq_job_process(
-            # DAQJobStoreMemory,
-            DAQJobStoreROOT,
-            # DAQJobStoreMemoryConfig(
-            #    daq_job_type="DAQJobStoreMemory",
-            #    dispose_after_n_entries=10,
-            #    void_data=config.void_memory_data,
-            # ),
-            DAQJobStoreROOTConfig(
-                daq_job_type="DAQJobStoreROOT", verbosity=LogVerbosity.DEBUG
-            ),
-            supervisor_info,
-        ),
-        # CSV store for stats output
+    daq_job_processes = []
+
+    # Main store - either Memory (fast, for testing) or ROOT (slow, for production)
+    if config.use_memory_store:
+        daq_job_processes.append(
+            _create_daq_job_process(
+                DAQJobStoreMemory,
+                DAQJobStoreMemoryConfig(
+                    daq_job_type="DAQJobStoreMemory",
+                    void_data=config.void_memory_data,
+                ),
+                supervisor_info,
+            )
+        )
+    else:
+        daq_job_processes.append(
+            _create_daq_job_process(
+                DAQJobStoreROOT,
+                DAQJobStoreROOTConfig(
+                    daq_job_type="DAQJobStoreROOT", verbosity=LogVerbosity.DEBUG
+                ),
+                supervisor_info,
+            )
+        )
+    # CSV store for stats output
+    daq_job_processes.append(
         _create_daq_job_process(
             DAQJobStoreCSV,
             DAQJobStoreCSVConfig(daq_job_type="DAQJobStoreCSV"),
             supervisor_info,
-        ),
-        # Remote job for receiving from clients
+        )
+    )
+    # Remote job for receiving from clients
+    daq_job_processes.append(
         _create_daq_job_process(
             DAQJobRemote,
             DAQJobRemoteConfig(
@@ -183,8 +203,10 @@ def run_main_supervisor(
                 zmq_proxy_sub_urls=[config.zmq_xpub_url],
             ),
             supervisor_info,
-        ),
-        # Stats handler
+        )
+    )
+    # Stats handler
+    daq_job_processes.append(
         _create_daq_job_process(
             DAQJobHandleStats,
             DAQJobHandleStatsConfig(
@@ -197,8 +219,10 @@ def run_main_supervisor(
                 ),
             ),
             supervisor_info,
-        ),
-        # Remote proxy (XSUB/XPUB)
+        )
+    )
+    # Remote proxy (XSUB/XPUB)
+    daq_job_processes.append(
         _create_daq_job_process(
             DAQJobRemoteProxy,
             DAQJobRemoteProxyConfig(
@@ -207,8 +231,8 @@ def run_main_supervisor(
                 zmq_xpub_url=config.zmq_xpub_url,
             ),
             supervisor_info,
-        ),
-    ]
+        )
+    )
 
     supervisor = Supervisor(
         config=supervisor_config,
@@ -244,8 +268,10 @@ def run_client_supervisor(
             DAQJobBenchmarkConfig(
                 daq_job_type="DAQJobBenchmark",
                 payload_size=config.payload_size,
-                use_shm=True,
-                store_config=DAQJobStoreConfig(
+                use_shm=False,
+                store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory())
+                if config.use_memory_store
+                else DAQJobStoreConfig(
                     root=DAQJobStoreConfigROOT(
                         file_path="test.root",
                         add_date=False,
@@ -489,6 +515,13 @@ class BenchmarkRunner:
         print("=" * 80)
         print()
 
+        # Clean up any existing output files from previous runs
+        output_files_to_clean = ["out/test.root"]
+        for output_file in output_files_to_clean:
+            if os.path.exists(output_file):
+                os.remove(output_file)
+                print(f"Removed existing output file: {output_file}")
+
         # Start main supervisor process
         print("Starting main supervisor...")
         main_process = Process(
@@ -659,6 +692,11 @@ Examples:
         action="store_true",
         help="Don't void memory store data (uses more memory)",
     )
+    parser.add_argument(
+        "--use-memory-store",
+        action="store_true",
+        help="Use Memory store instead of ROOT store (for testing throughput without disk I/O)",
+    )
 
     args = parser.parse_args()
 
@@ -670,6 +708,7 @@ Examples:
         zmq_xsub_url=args.zmq_xsub,
         zmq_xpub_url=args.zmq_xpub,
         void_memory_data=not args.no_void_data,
+        use_memory_store=args.use_memory_store,
     )
 
 

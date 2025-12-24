@@ -1,4 +1,3 @@
-import time
 from datetime import datetime
 
 import numpy as np
@@ -45,8 +44,9 @@ class DAQJobBenchmark(DAQJob):
         Start the benchmark job, sending as much data as possible.
         """
         while True:
+            self.consume()
             self._send_store_message()
-            time.sleep(DAQ_JOB_BENCHMARK_SLEEP_INTERVAL_SECONDS)
+            # No sleep - run at full speed for maximum throughput
 
     def _send_store_message(self):
         """

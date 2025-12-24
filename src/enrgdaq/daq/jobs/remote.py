@@ -14,6 +14,7 @@ from enrgdaq.daq.models import (
     DEFAULT_REMOTE_TOPIC,
     DAQJobConfig,
     DAQJobMessage,
+    SupervisorDAQJobMessage,
 )
 from enrgdaq.utils.subclasses import all_subclasses
 from enrgdaq.utils.time import sleep_for
@@ -133,10 +134,10 @@ class DAQJobRemote(DAQJob):
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if (
-            # Ignore if we already received the message
-            message.id in self._remote_message_ids
             # Ignore if the message is not allowed by the DAQ Job
-            or not super().handle_message(message)
+            not super().handle_message(message)
+            # Ignore if we already received the message
+            or message.id in self._remote_message_ids
             # Ignore if the message is remote, meaning it was sent by another Supervisor
             or message.is_remote
             # Ignore if we are not connected to the proxy
@@ -144,7 +145,9 @@ class DAQJobRemote(DAQJob):
         ):
             return True  # Silently ignore
 
-        if message.remote_config.remote_disable:
+        if message.remote_config.remote_disable and not isinstance(
+            message, SupervisorDAQJobMessage
+        ):
             return True
 
         self._send_remote_pub_message(message)
@@ -152,6 +155,8 @@ class DAQJobRemote(DAQJob):
 
     @classmethod
     def can_handle_message(cls, message: DAQJobMessage) -> bool:
+        if isinstance(message, SupervisorDAQJobMessage):
+            return True
         if message.remote_config.remote_disable:
             return False
         return True
@@ -238,10 +243,9 @@ class DAQJobRemote(DAQJob):
                 f"Received {len(message)} bytes for message '{type(recv_message).__name__}' on topic '{topic.decode()}'"
             )
             recv_message.is_remote = True
-            # remote message_in -> message_out
-            self.message_out.put(recv_message)
 
-            # Update remote stats
+            # Update remote stats BEFORE forwarding - we want to track what we
+            # received from ZMQ, not what we successfully forwarded
             if self._supervisor_info:
                 self._remote_stats[
                     self._supervisor_info.supervisor_id
@@ -250,6 +254,9 @@ class DAQJobRemote(DAQJob):
                 self._remote_stats[
                     recv_message.daq_job_info.supervisor_info.supervisor_id
                 ].update_message_out_stats(len(message))
+
+            # remote message_in -> message_out
+            self._put_message_out(recv_message, modify_message_metadata=False)
 
     def _start_send_remote_stats_thread(self):
         while True:
