@@ -176,4 +176,3 @@ configs/client
 configs/server
 configs/disabled
 
-benchmark_*

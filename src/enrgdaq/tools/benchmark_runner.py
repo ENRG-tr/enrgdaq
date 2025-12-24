@@ -72,6 +72,10 @@ class BenchmarkStats:
     msg_in_out_mb_per_s: float
     avg_queue_size: float
     active_job_count: int
+    cpu_usage_percent: float
+    rss_mb: float
+    latency_p95_ms: float
+    latency_p99_ms: float
 
 
 @dataclass
@@ -88,6 +92,7 @@ class BenchmarkConfig:
     output_remote_stats_csv: str = "benchmark_remote_stats.csv"
     void_memory_data: bool = True
     use_memory_store: bool = False
+    use_shm: bool = True
 
 
 def create_supervisor_info(supervisor_id: str) -> SupervisorInfo:
@@ -141,7 +146,7 @@ def cleanup_supervisor(supervisor: Supervisor):
         time.sleep(0.1)
         # Force kill any remaining DAQ job processes
         for process in supervisor.daq_job_processes:
-            if process.process and process.process.is_alive():
+            if process.process and process.process.is_alive() and process.process.pid:
                 kill_process_tree(process.process.pid)
     except Exception:
         pass
@@ -268,7 +273,7 @@ def run_client_supervisor(
             DAQJobBenchmarkConfig(
                 daq_job_type="DAQJobBenchmark",
                 payload_size=config.payload_size,
-                use_shm=True,
+                use_shm=config.use_shm,
                 store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory())
                 if config.use_memory_store
                 else DAQJobStoreConfig(
@@ -390,6 +395,35 @@ def run_supervisor_with_stats(
                 else:
                     msg_in_out_mb_per_s = 0.0
 
+                # Calculate CPU and Memory usage
+                cpu_usage = sum(
+                    [
+                        stats.resource_stats.cpu_percent
+                        for stats in supervisor.daq_job_stats.values()
+                    ]
+                )
+                rss_mb_total = sum(
+                    [
+                        stats.resource_stats.rss_mb
+                        for stats in supervisor.daq_job_stats.values()
+                    ]
+                )
+
+                # Calculate Latency (max of p95/p99 across jobs to be conservative)
+                p95_latencies = [
+                    stats.latency_stats.p95_ms
+                    for stats in supervisor.daq_job_stats.values()
+                    if stats.latency_stats.count > 0
+                ]
+                p99_latencies = [
+                    stats.latency_stats.p99_ms
+                    for stats in supervisor.daq_job_stats.values()
+                    if stats.latency_stats.count > 0
+                ]
+
+                latency_p95 = max(p95_latencies) if p95_latencies else 0.0
+                latency_p99 = max(p99_latencies) if p99_latencies else 0.0
+
                 current_stats = {
                     "timestamp": now.isoformat(),
                     "supervisor_id": supervisor.config.info.supervisor_id,
@@ -399,6 +433,10 @@ def run_supervisor_with_stats(
                     "msg_in_out_mb_per_s": msg_in_out_mb_per_s,
                     "avg_queue_size": avg_queue_size,
                     "active_job_count": active_job_count,
+                    "cpu_usage_percent": cpu_usage,
+                    "rss_mb": rss_mb_total,
+                    "latency_p95_ms": latency_p95,
+                    "latency_p99_ms": latency_p99,
                 }
 
                 try:
@@ -437,6 +475,10 @@ class BenchmarkRunner:
             msg_in_out_mb_per_s=d["msg_in_out_mb_per_s"],
             avg_queue_size=d["avg_queue_size"],
             active_job_count=d["active_job_count"],
+            cpu_usage_percent=d.get("cpu_usage_percent", 0.0),
+            rss_mb=d.get("rss_mb", 0.0),
+            latency_p95_ms=d.get("latency_p95_ms", 0.0),
+            latency_p99_ms=d.get("latency_p99_ms", 0.0),
         )
 
     def _print_stats(self, stats: BenchmarkStats):
@@ -444,10 +486,8 @@ class BenchmarkRunner:
         print(
             f"[{stats.timestamp.strftime('%H:%M:%S')}] "
             f"Throughput: {stats.msg_in_out_mb_per_s:7.2f} MB/s | "
-            f"Total: {stats.msg_in_out_mb:10.2f} MB | "
-            f"Msgs In: {stats.msg_in_count:8d} | "
-            f"Msgs Out: {stats.msg_out_count:8d} | "
-            f"Avg Queue: {stats.avg_queue_size:5.1f} | "
+            f"CPU: {stats.cpu_usage_percent:5.1f}% | "
+            f"p95 Latency: {stats.latency_p95_ms:5.2f}ms | "
             f"Active Jobs: {stats.active_job_count:3d}"
         )
 
@@ -602,8 +642,10 @@ class BenchmarkRunner:
 
     def _print_summary(self):
         """Print benchmark summary statistics."""
-        # Filter to stats with actual data
+        # Filter to stats with actual data, skipping the first 3 seconds of warmup
         data_stats = [s for s in self._stats_history if s.msg_in_count > 0]
+        if len(data_stats) > 3:
+            data_stats = data_stats[3:]
 
         if not data_stats:
             print("\nNo statistics collected.")
@@ -635,6 +677,15 @@ class BenchmarkRunner:
         print(f"Total Messages:        {total_msgs:,}")
         print(f"Average Queue Size:    {avg_queue:.1f}")
         print(f"Messages/Second:       {total_msgs / total_duration:,.0f}")
+        print(
+            f"Avg CPU Usage:         {fmean([s.cpu_usage_percent for s in data_stats]):.1f}%"
+        )
+        print(
+            f"Avg p95 Latency:       {fmean([s.latency_p95_ms for s in data_stats]):.2f} ms"
+        )
+        print(
+            f"Peak p99 Latency:      {max([s.latency_p99_ms for s in data_stats]):.2f} ms"
+        )
         print("=" * 80)
 
 
@@ -693,9 +744,15 @@ Examples:
         help="Don't void memory store data (uses more memory)",
     )
     parser.add_argument(
+        "--use-shm", action="store_true", default=True, help="Use SHM for zero-copy"
+    )
+    parser.add_argument(
+        "--no-shm", action="store_false", dest="use_shm", help="Disable SHM"
+    )
+    parser.add_argument(
         "--use-memory-store",
         action="store_true",
-        help="Use Memory store instead of ROOT store (for testing throughput without disk I/O)",
+        help="Use Memory store instead of ROOT store",
     )
 
     args = parser.parse_args()
@@ -709,6 +766,7 @@ Examples:
         zmq_xpub_url=args.zmq_xpub,
         void_memory_data=not args.no_void_data,
         use_memory_store=args.use_memory_store,
+        use_shm=args.use_shm,
     )
 
 

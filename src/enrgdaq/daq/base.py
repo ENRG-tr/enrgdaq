@@ -35,6 +35,8 @@ from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
 
+DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS = 1.0
+
 
 def _create_queue(maxsize: int = 0) -> Any:
     """Create a queue appropriate for the current context.
@@ -122,6 +124,11 @@ class DAQJob:
             logger=self._logger,
         )
 
+        self._latency_samples: list[float] = []
+        self._processed_count = 0
+        self._sent_count = 0
+        self._last_stats_report_time = datetime.now()
+
         self._put_message_out(DAQJobMessageJobStarted())
 
     def consume(self, nowait: bool = True, timeout: float | None = None):
@@ -146,6 +153,8 @@ class DAQJob:
             except (Empty, FileNotFoundError):
                 break
 
+        self.report_stats()
+
     def consume_all(self):
         processed_any = False
         while True:
@@ -156,6 +165,8 @@ class DAQJob:
                     processed_any = True
             except (Empty, FileNotFoundError):
                 break
+
+        self.report_stats()
         return processed_any
 
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
@@ -207,6 +218,17 @@ class DAQJob:
                 f"Dropping remote message '{type(message)}' from '{remote_supervisor_id}' because drop_remote_messages is True"
             )
             return True
+
+        self._processed_count += 1
+        from enrgdaq.daq.store.models import DAQJobMessageStore
+
+        if message.timestamp and isinstance(message, DAQJobMessageStore):
+            latency = (datetime.now() - message.timestamp).total_seconds() * 1000.0
+            self._latency_samples.append(latency)
+            # Keep only last 1000 samples to prevent memory leak
+            if len(self._latency_samples) > 1000:
+                self._latency_samples.pop(0)
+
         return True
 
     def start(self):
@@ -301,6 +323,43 @@ class DAQJob:
 
         if not message_routed:
             self.message_out.put(message)
+        self._sent_count += 1
+
+    def get_latency_stats(self) -> Any:
+        from enrgdaq.daq.models import DAQJobLatencyStats
+
+        if not self._latency_samples:
+            return DAQJobLatencyStats()
+
+        samples = sorted(self._latency_samples)
+        count = len(samples)
+        return DAQJobLatencyStats(
+            count=self._processed_count,
+            min_ms=samples[0],
+            max_ms=samples[-1],
+            avg_ms=sum(samples) / count,
+            p95_ms=samples[int(count * 0.95)],
+            p99_ms=samples[int(count * 0.99)],
+        )
+
+    def report_stats(self, force: bool = False):
+        if (
+            not force
+            and (datetime.now() - self._last_stats_report_time).total_seconds()
+            < DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS
+        ):
+            return
+
+        from enrgdaq.daq.models import DAQJobMessageStatsReport
+
+        self._last_stats_report_time = datetime.now()
+        report = DAQJobMessageStatsReport(
+            processed_count=self._processed_count,
+            sent_count=self._sent_count,
+            latency=self.get_latency_stats(),
+        )
+        self._put_message_out(report)
+        self._latency_samples = []  # RESET after report to get interval stats
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")

@@ -11,6 +11,7 @@ from queue import Empty, Full
 from typing import Any
 
 import msgspec
+import psutil
 
 from enrgdaq.cnc.base import (
     SupervisorCNC,
@@ -38,6 +39,7 @@ from enrgdaq.daq.models import (
     DAQJobMessage,
     DAQJobMessageRoutes,
     DAQJobMessageSHM,
+    DAQJobMessageStatsReport,
     DAQJobMessageStop,
     DAQJobStats,
     RouteMapping,
@@ -114,6 +116,7 @@ class Supervisor:
     _is_stopped: bool
     _daq_jobs_to_load: list[DAQJobProcess] | None
     _daq_job_config_path: str
+    _psutil_process_cache: dict[int, psutil.Process]
 
     def __init__(
         self,
@@ -128,6 +131,7 @@ class Supervisor:
         self.daq_job_remote_stats = {}
         self.daq_job_stats = {}
         self._daq_job_config_path = daq_job_config_path
+        self._psutil_process_cache = {}
         if not os.path.exists(self._daq_job_config_path):
             raise ValueError(
                 f"DAQ job config path '{self._daq_job_config_path}' does not exist."
@@ -331,6 +335,29 @@ class Supervisor:
                 self.daq_job_stats, process.daq_job_cls
             ).is_alive = False
 
+        # Resource Monitoring
+        for process in self.daq_job_processes:
+            if process.process and process.process.is_alive():
+                try:
+                    pid = process.process.pid
+                    if pid is None:
+                        continue
+                    if pid not in self._psutil_process_cache:
+                        self._psutil_process_cache[pid] = psutil.Process(pid)
+
+                    p = self._psutil_process_cache[pid]
+                    stats = self.get_daq_job_stats(
+                        self.daq_job_stats, process.daq_job_cls
+                    )
+                    # Use cpu_percent() - first call usually 0.0,
+                    # but since we cache the process object, subsequent calls will be accurate.
+                    stats.resource_stats.cpu_percent = p.cpu_percent()
+                    stats.resource_stats.rss_mb = p.memory_info().rss / 1024 / 1024
+                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    if process.process.pid in self._psutil_process_cache:
+                        del self._psutil_process_cache[process.process.pid]
+                    pass
+
     def get_restart_schedules(
         self, dead_processes: list[DAQJobProcess]
     ) -> list[RestartDAQJobSchedule]:
@@ -464,13 +491,20 @@ class Supervisor:
                         self._logger.warning(f"Message {msg} has no daq_job_info")
                         # msg.daq_job_info = process.daq_job.info
                     res.append(msg)
-                    # Catch remote stats message
-                    # TODO: These should be in a different class
                     if (
                         isinstance(msg, DAQJobMessageStatsRemote)
                         and msg.supervisor_id == self.config.info.supervisor_id
                     ):
                         self.daq_job_remote_stats = msg.stats
+
+                    if isinstance(msg, DAQJobMessageStatsReport):
+                        stats = self.get_daq_job_stats(
+                            self.daq_job_stats, process.daq_job_cls
+                        )
+                        stats.latency_stats = msg.latency
+                        stats.message_in_stats.set(msg.processed_count)
+                        stats.message_out_stats.set(msg.sent_count)
+
                     # Update stats
                     self.get_daq_job_stats(
                         self.daq_job_stats, process.daq_job_cls
@@ -528,7 +562,10 @@ class Supervisor:
                     continue
 
                 # Update stats
-                stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_cls)
+                stats = self.get_daq_job_stats(
+                    self.daq_job_stats,
+                    daq_job_cls,  # type: ignore
+                )
                 stats.message_in_stats.increase()
 
                 # Do not update stats if Mac OS X, as it does not support queue.qsize()

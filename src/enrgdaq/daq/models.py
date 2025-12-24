@@ -191,6 +191,29 @@ class DAQJobStatsRecord(Struct):
         self.last_updated = datetime.now()
 
 
+class DAQJobLatencyStats(Struct):
+    """
+    Statistics for message processing latency.
+    Measurements are in milliseconds.
+    """
+
+    count: int = 0
+    min_ms: float = 0.0
+    max_ms: float = 0.0
+    avg_ms: float = 0.0
+    p95_ms: float = 0.0
+    p99_ms: float = 0.0
+
+
+class DAQJobResourceStats(Struct):
+    """
+    Statistics for process resource usage.
+    """
+
+    cpu_percent: float = 0.0
+    rss_mb: float = 0.0
+
+
 class DAQJobStats(Struct):
     """
     A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.
@@ -209,7 +232,19 @@ class DAQJobStats(Struct):
         default_factory=DAQJobStatsRecord
     )
     restart_stats: DAQJobStatsRecord = field(default_factory=DAQJobStatsRecord)
+    latency_stats: DAQJobLatencyStats = field(default_factory=DAQJobLatencyStats)
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
     is_alive: bool = True
+
+
+class DAQJobMessageStatsReport(DAQJobMessage):
+    """
+    Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
+    """
+
+    processed_count: int
+    sent_count: int
+    latency: DAQJobLatencyStats
 
 
 class DAQJobStopError(Exception):
