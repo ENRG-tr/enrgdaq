@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.store.csv API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.store.csv.CSVFile"><code class="flex name class">
 <span>class <span class="ident">CSVFile</span></span>
-<span>(</span><span>file: <class 'TextIO'>,<br>last_flush_date: datetime.datetime,<br>write_queue: collections.deque[list[typing.Any]],<br>overwrite: bool | None = None)</span>
+<span>(</span><span>file: <class 'TextIO'>,<br>last_flush_date: datetime.datetime,<br>write_queue: collections.deque[list[typing.Any]],<br>arrow_tables: list[pyarrow.lib.Table] = &lt;factory&gt;,<br>header_written: bool = False,<br>overwrite: bool | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -60,12 +60,22 @@ class CSVFile:
     file: TextIO
     last_flush_date: datetime
     write_queue: deque[list[Any]]
+    arrow_tables: list[pa.Table] = field(default_factory=list)
+    header_written: bool = False
     overwrite: Optional[bool] = None</code></pre>
 </details>
-<div class="desc"><p>CSVFile(file: <class 'TextIO'>, last_flush_date: datetime.datetime, write_queue: collections.deque[list[typing.Any]], overwrite: Optional[bool] = None)</p></div>
-<h3>Class variables</h3>
+<div class="desc"><p>CSVFile(file: <class 'TextIO'>, last_flush_date: datetime.datetime, write_queue: collections.deque[list[typing.Any]], arrow_tables: list[pyarrow.lib.Table] = <factory>, header_written: bool = False, overwrite: Optional[bool] = None)</p></div>
+<h3>Instance variables</h3>
 <dl>
+<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.arrow_tables"><code class="name">var <span class="ident">arrow_tables</span> : list[pyarrow.lib.Table]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.jobs.store.csv.CSVFile.file"><code class="name">var <span class="ident">file</span> : <class 'TextIO'></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.csv.CSVFile.header_written"><code class="name">var <span class="ident">header_written</span> : bool</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -104,7 +114,9 @@ class CSVFile:
 
         self._open_csv_files = {}
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
+    ) -&gt; bool:
         if not super().handle_message(message):
             return False
 
@@ -120,13 +132,33 @@ class CSVFile:
         if file.overwrite:
             file.write_queue.clear()
 
+        # Handle PyArrow messages
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.table
+            if table is None or table.num_rows == 0:
+                return True
+
+            # Queue the table for efficient batch writing
+            file.arrow_tables.append(table)
+            return True
+
+        # Handle Tabular messages
         # Write headers if the file is new
         if new_file or file.overwrite:
             file.write_queue.append(message.keys)
 
         # Append rows to write_queue
-        for row in message.data:
-            file.write_queue.append(row)
+        if message.data is not None:
+            for row in message.data:
+                file.write_queue.append(row)
+        elif message.data_columns is not None:
+            cols = [message.data_columns[k] for k in message.keys]
+            if cols and all(isinstance(c, ndarray) for c in cols):
+                data_rows = np.stack(cols, axis=-1)
+                file.write_queue.extend(data_rows)
+            else:
+                for row in zip(*cols):
+                    file.write_queue.append(list(row))
 
         return True
 
@@ -156,7 +188,7 @@ class CSVFile:
                 file_handle,
                 datetime.now(),
                 deque(),
-                overwrite,
+                overwrite=overwrite,
             )
             self._open_csv_files[file_path] = file
         else:
@@ -180,10 +212,28 @@ class CSVFile:
             if file.file.closed:
                 files_to_delete.append(file_path)
                 continue
-            writer = csv.writer(file.file)
 
+            # Write PyArrow tables efficiently using native CSV writer
+            if file.arrow_tables:
+                combined = pa.concat_tables(file.arrow_tables)
+                file.arrow_tables.clear()
+
+                # Use PyArrow&#39;s native CSV writer (much faster)
+                write_options = pa_csv.WriteOptions(
+                    include_header=not file.header_written
+                )
+
+                # Write to the underlying file
+                pa_csv.write_csv(combined, file.file, write_options=write_options)
+                file.header_written = True
+
+            # Write traditional queue rows
+            writer = csv.writer(file.file)
             row_size = len(file.write_queue)
             if row_size &gt; 0:
+                if not file.header_written:
+                    # First row is header for tabular messages
+                    pass
                 writer.writerows(list(file.write_queue))
             file.write_queue.clear()
 
@@ -209,13 +259,9 @@ class CSVFile:
 
         return super().__del__()</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-and provides additional functionality for handling and storing messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_store_config_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>A list of allowed store configuration types.</dd>
-</dl></div>
+<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p>
+<p>Optimized for high throughput - only sleeps when idle to avoid
+unnecessary latency in message processing.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -231,7 +277,7 @@ and provides additional functionality for handling and storing messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -261,10 +307,28 @@ and provides additional functionality for handling and storing messages.</p>
         if file.file.closed:
             files_to_delete.append(file_path)
             continue
-        writer = csv.writer(file.file)
 
+        # Write PyArrow tables efficiently using native CSV writer
+        if file.arrow_tables:
+            combined = pa.concat_tables(file.arrow_tables)
+            file.arrow_tables.clear()
+
+            # Use PyArrow&#39;s native CSV writer (much faster)
+            write_options = pa_csv.WriteOptions(
+                include_header=not file.header_written
+            )
+
+            # Write to the underlying file
+            pa_csv.write_csv(combined, file.file, write_options=write_options)
+            file.header_written = True
+
+        # Write traditional queue rows
+        writer = csv.writer(file.file)
         row_size = len(file.write_queue)
         if row_size &gt; 0:
+            if not file.header_written:
+                # First row is header for tabular messages
+                pass
             writer.writerows(list(file.write_queue))
         file.write_queue.clear()
 
@@ -286,7 +350,7 @@ and provides additional functionality for handling and storing messages.</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
@@ -296,7 +360,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSVConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreCSVConfig</span></span>
-<span>(</span><span>out_dir: str = 'out/',<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>out_dir: str = 'out/',<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -354,8 +418,10 @@ and provides additional functionality for handling and storing messages.</p>
 <ul>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile" href="#enrgdaq.daq.jobs.store.csv.CSVFile">CSVFile</a></code></h4>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.arrow_tables" href="#enrgdaq.daq.jobs.store.csv.CSVFile.arrow_tables">arrow_tables</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.file" href="#enrgdaq.daq.jobs.store.csv.CSVFile.file">file</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.header_written" href="#enrgdaq.daq.jobs.store.csv.CSVFile.header_written">header_written</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.last_flush_date" href="#enrgdaq.daq.jobs.store.csv.CSVFile.last_flush_date">last_flush_date</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.overwrite" href="#enrgdaq.daq.jobs.store.csv.CSVFile.overwrite">overwrite</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.csv.CSVFile.write_queue" href="#enrgdaq.daq.jobs.store.csv.CSVFile.write_queue">write_queue</a></code></li>
@@ -382,7 +448,7 @@ and provides additional functionality for handling and storing messages.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

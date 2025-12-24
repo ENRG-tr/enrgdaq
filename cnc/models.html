@@ -1,0 +1,1333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.cnc.models API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.cnc.models</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCClientInfo"><code class="flex name class">
+<span>class <span class="ident">CNCClientInfo</span></span>
+<span>(</span><span>identity: bytes | None = None,<br>last_seen: str = '',<br>info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCClientInfo(Struct):
+    &#34;&#34;&#34;Information about a connected client.&#34;&#34;&#34;
+
+    identity: Optional[bytes] = None
+    last_seen: str = &#34;&#34;
+    info: Optional[SupervisorInfo] = None</code></pre>
+</details>
+<div class="desc"><p>Information about a connected client.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCClientInfo.identity"><code class="name">var <span class="ident">identity</span> : bytes | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCClientInfo(Struct):
+    &#34;&#34;&#34;Information about a connected client.&#34;&#34;&#34;
+
+    identity: Optional[bytes] = None
+    last_seen: str = &#34;&#34;
+    info: Optional[SupervisorInfo] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCClientInfo.info"><code class="name">var <span class="ident">info</span> : <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCClientInfo(Struct):
+    &#34;&#34;&#34;Information about a connected client.&#34;&#34;&#34;
+
+    identity: Optional[bytes] = None
+    last_seen: str = &#34;&#34;
+    info: Optional[SupervisorInfo] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCClientInfo.last_seen"><code class="name">var <span class="ident">last_seen</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCClientInfo(Struct):
+    &#34;&#34;&#34;Information about a connected client.&#34;&#34;&#34;
+
+    identity: Optional[bytes] = None
+    last_seen: str = &#34;&#34;
+    info: Optional[SupervisorInfo] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessage"><code class="flex name class">
+<span>class <span class="ident">CNCMessage</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessage(Struct, tag=True, kw_only=True):
+    &#34;&#34;&#34;Base class for C&amp;C messages.&#34;&#34;&#34;
+
+    req_id: Optional[str] = None</code></pre>
+</details>
+<div class="desc"><p>Base class for C&amp;C messages.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessageHeartbeat" href="#enrgdaq.cnc.models.CNCMessageHeartbeat">CNCMessageHeartbeat</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageLog" href="#enrgdaq.cnc.models.CNCMessageLog">CNCMessageLog</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqListClients" href="#enrgdaq.cnc.models.CNCMessageReqListClients">CNCMessageReqListClients</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqPing" href="#enrgdaq.cnc.models.CNCMessageReqPing">CNCMessageReqPing</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqRestartDAQ" href="#enrgdaq.cnc.models.CNCMessageReqRestartDAQ">CNCMessageReqRestartDAQ</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob" href="#enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob">CNCMessageReqRunCustomDAQJob</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqSendMessage" href="#enrgdaq.cnc.models.CNCMessageReqSendMessage">CNCMessageReqSendMessage</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqStatus" href="#enrgdaq.cnc.models.CNCMessageReqStatus">CNCMessageReqStatus</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJob" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJob">CNCMessageReqStopDAQJob</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJobs" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJobs">CNCMessageReqStopDAQJobs</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResListClients" href="#enrgdaq.cnc.models.CNCMessageResListClients">CNCMessageResListClients</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResPing" href="#enrgdaq.cnc.models.CNCMessageResPing">CNCMessageResPing</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResRestartDAQ" href="#enrgdaq.cnc.models.CNCMessageResRestartDAQ">CNCMessageResRestartDAQ</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob" href="#enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob">CNCMessageResRunCustomDAQJob</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResSendMessage" href="#enrgdaq.cnc.models.CNCMessageResSendMessage">CNCMessageResSendMessage</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResStatus" href="#enrgdaq.cnc.models.CNCMessageResStatus">CNCMessageResStatus</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJob" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJob">CNCMessageResStopDAQJob</a></li>
+<li><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJobs" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJobs">CNCMessageResStopDAQJobs</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessage.req_id"><code class="name">var <span class="ident">req_id</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessage(Struct, tag=True, kw_only=True):
+    &#34;&#34;&#34;Base class for C&amp;C messages.&#34;&#34;&#34;
+
+    req_id: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageHeartbeat"><code class="flex name class">
+<span>class <span class="ident">CNCMessageHeartbeat</span></span>
+<span>(</span><span>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageHeartbeat(CNCMessage):
+    &#34;&#34;&#34;Heartbeat message sent by clients to the server.&#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo</code></pre>
+</details>
+<div class="desc"><p>Heartbeat message sent by clients to the server.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageHeartbeat.supervisor_info"><code class="name">var <span class="ident">supervisor_info</span> : <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageHeartbeat(CNCMessage):
+    &#34;&#34;&#34;Heartbeat message sent by clients to the server.&#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageLog"><code class="flex name class">
+<span>class <span class="ident">CNCMessageLog</span></span>
+<span>(</span><span>level: str,<br>message: str,<br>timestamp: str,<br>module: str,<br>client_id: str,<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"><p>Log message from client to server.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageLog.client_id"><code class="name">var <span class="ident">client_id</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageLog.level"><code class="name">var <span class="ident">level</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageLog.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageLog.module"><code class="name">var <span class="ident">module</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageLog.timestamp"><code class="name">var <span class="ident">timestamp</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageLog(CNCMessage):
+    &#34;&#34;&#34;Log message from client to server.&#34;&#34;&#34;
+
+    level: str  # e.g. &#39;INFO&#39;, &#39;WARNING&#39;, &#39;ERROR&#39;
+    message: str
+    timestamp: str
+    module: str  # module or component that generated the log
+    client_id: str  # ID of the client sending the log</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqListClients"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqListClients</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqListClients(CNCMessage):
+    &#34;&#34;&#34;Request to list connected clients.&#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Request to list connected clients.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqPing"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqPing</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqPing(CNCMessage):
+    &#34;&#34;&#34;Ping message.&#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Ping message.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqRestartDAQ"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqRestartDAQ</span></span>
+<span>(</span><span>update: bool = False, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqRestartDAQ(CNCMessage):
+    &#34;&#34;&#34;Request to restart ENRGDAQ.&#34;&#34;&#34;
+
+    update: bool = False
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Request to restart ENRGDAQ.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageReqRestartDAQ.update"><code class="name">var <span class="ident">update</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqRestartDAQ(CNCMessage):
+    &#34;&#34;&#34;Request to restart ENRGDAQ.&#34;&#34;&#34;
+
+    update: bool = False
+
+    pass</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqRunCustomDAQJob</span></span>
+<span>(</span><span>config: str, restart_on_crash: bool = True, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to run a custom DAQJob with config.&#34;&#34;&#34;
+
+    config: str  # TOML config as string
+    restart_on_crash: bool = True  # If False, job will not be restarted on crash</code></pre>
+</details>
+<div class="desc"><p>Request to run a custom DAQJob with config.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.config"><code class="name">var <span class="ident">config</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to run a custom DAQJob with config.&#34;&#34;&#34;
+
+    config: str  # TOML config as string
+    restart_on_crash: bool = True  # If False, job will not be restarted on crash</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.restart_on_crash"><code class="name">var <span class="ident">restart_on_crash</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to run a custom DAQJob with config.&#34;&#34;&#34;
+
+    config: str  # TOML config as string
+    restart_on_crash: bool = True  # If False, job will not be restarted on crash</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqSendMessage"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqSendMessage</span></span>
+<span>(</span><span>message_type: str,<br>payload: str,<br>target_daq_job_unique_id: str | None = None,<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqSendMessage(CNCMessage):
+    &#34;&#34;&#34;Request to send a custom message to DAQ job(s).&#34;&#34;&#34;
+
+    message_type: str  # The type name of the DAQJobMessage to send
+    payload: str  # JSON-encoded message payload
+    target_daq_job_unique_id: Optional[str] = (
+        None  # If specified, only send to this job
+    )</code></pre>
+</details>
+<div class="desc"><p>Request to send a custom message to DAQ job(s).</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageReqSendMessage.message_type"><code class="name">var <span class="ident">message_type</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqSendMessage(CNCMessage):
+    &#34;&#34;&#34;Request to send a custom message to DAQ job(s).&#34;&#34;&#34;
+
+    message_type: str  # The type name of the DAQJobMessage to send
+    payload: str  # JSON-encoded message payload
+    target_daq_job_unique_id: Optional[str] = (
+        None  # If specified, only send to this job
+    )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqSendMessage.payload"><code class="name">var <span class="ident">payload</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqSendMessage(CNCMessage):
+    &#34;&#34;&#34;Request to send a custom message to DAQ job(s).&#34;&#34;&#34;
+
+    message_type: str  # The type name of the DAQJobMessage to send
+    payload: str  # JSON-encoded message payload
+    target_daq_job_unique_id: Optional[str] = (
+        None  # If specified, only send to this job
+    )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqSendMessage.target_daq_job_unique_id"><code class="name">var <span class="ident">target_daq_job_unique_id</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqSendMessage(CNCMessage):
+    &#34;&#34;&#34;Request to send a custom message to DAQ job(s).&#34;&#34;&#34;
+
+    message_type: str  # The type name of the DAQJobMessage to send
+    payload: str  # JSON-encoded message payload
+    target_daq_job_unique_id: Optional[str] = (
+        None  # If specified, only send to this job
+    )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStatus"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqStatus</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStatus(CNCMessage):
+    &#34;&#34;&#34;Request for supervisor status.&#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Request for supervisor status.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStopDAQJob"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqStopDAQJob</span></span>
+<span>(</span><span>daq_job_name: str | None = None,<br>daq_job_unique_id: str | None = None,<br>remove: bool = False,<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to stop and remove a specific DAQJob by name.&#34;&#34;&#34;
+
+    daq_job_name: Optional[str] = None
+    daq_job_unique_id: Optional[str] = None
+    remove: bool = False</code></pre>
+</details>
+<div class="desc"><p>Request to stop and remove a specific DAQJob by name.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_name"><code class="name">var <span class="ident">daq_job_name</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to stop and remove a specific DAQJob by name.&#34;&#34;&#34;
+
+    daq_job_name: Optional[str] = None
+    daq_job_unique_id: Optional[str] = None
+    remove: bool = False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_unique_id"><code class="name">var <span class="ident">daq_job_unique_id</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to stop and remove a specific DAQJob by name.&#34;&#34;&#34;
+
+    daq_job_name: Optional[str] = None
+    daq_job_unique_id: Optional[str] = None
+    remove: bool = False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.remove"><code class="name">var <span class="ident">remove</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Request to stop and remove a specific DAQJob by name.&#34;&#34;&#34;
+
+    daq_job_name: Optional[str] = None
+    daq_job_unique_id: Optional[str] = None
+    remove: bool = False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageReqStopDAQJobs"><code class="flex name class">
+<span>class <span class="ident">CNCMessageReqStopDAQJobs</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageReqStopDAQJobs(CNCMessage):
+    &#34;&#34;&#34;Request to restart DAQJobs.&#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Request to restart DAQJobs.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResListClients"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResListClients</span></span>
+<span>(</span><span>clients: dict[str, <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None],<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResListClients(CNCMessage):
+    &#34;&#34;&#34;List of connected clients.&#34;&#34;&#34;
+
+    clients: dict[str, Optional[SupervisorInfo]]</code></pre>
+</details>
+<div class="desc"><p>List of connected clients.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResListClients.clients"><code class="name">var <span class="ident">clients</span> : dict[str, <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResListClients(CNCMessage):
+    &#34;&#34;&#34;List of connected clients.&#34;&#34;&#34;
+
+    clients: dict[str, Optional[SupervisorInfo]]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResPing"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResPing</span></span>
+<span>(</span><span>*, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResPing(CNCMessage):
+    &#34;&#34;&#34;Pong message.&#34;&#34;&#34;
+
+    pass</code></pre>
+</details>
+<div class="desc"><p>Pong message.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResRestartDAQ"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResRestartDAQ</span></span>
+<span>(</span><span>success: bool, message: str, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRestartDAQ(CNCMessage):
+    &#34;&#34;&#34;Response to update and restart request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"><p>Response to update and restart request.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResRestartDAQ.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRestartDAQ(CNCMessage):
+    &#34;&#34;&#34;Response to update and restart request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResRestartDAQ.success"><code class="name">var <span class="ident">success</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRestartDAQ(CNCMessage):
+    &#34;&#34;&#34;Response to update and restart request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResRunCustomDAQJob</span></span>
+<span>(</span><span>success: bool, message: str, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to run custom DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"><p>Response to run custom DAQJob request.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to run custom DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.success"><code class="name">var <span class="ident">success</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResRunCustomDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to run custom DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResSendMessage"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResSendMessage</span></span>
+<span>(</span><span>success: bool, message: str, jobs_notified: int = 0, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResSendMessage(CNCMessage):
+    &#34;&#34;&#34;Response to send custom message request.&#34;&#34;&#34;
+
+    success: bool
+    message: str
+    jobs_notified: int = 0</code></pre>
+</details>
+<div class="desc"><p>Response to send custom message request.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResSendMessage.jobs_notified"><code class="name">var <span class="ident">jobs_notified</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResSendMessage(CNCMessage):
+    &#34;&#34;&#34;Response to send custom message request.&#34;&#34;&#34;
+
+    success: bool
+    message: str
+    jobs_notified: int = 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResSendMessage.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResSendMessage(CNCMessage):
+    &#34;&#34;&#34;Response to send custom message request.&#34;&#34;&#34;
+
+    success: bool
+    message: str
+    jobs_notified: int = 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResSendMessage.success"><code class="name">var <span class="ident">success</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResSendMessage(CNCMessage):
+    &#34;&#34;&#34;Response to send custom message request.&#34;&#34;&#34;
+
+    success: bool
+    message: str
+    jobs_notified: int = 0</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResStatus"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResStatus</span></span>
+<span>(</span><span>status: <a title="enrgdaq.cnc.models.SupervisorStatus" href="#enrgdaq.cnc.models.SupervisorStatus">SupervisorStatus</a>,<br>*,<br>req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStatus(CNCMessage):
+    &#34;&#34;&#34;Supervisor status.&#34;&#34;&#34;
+
+    status: SupervisorStatus</code></pre>
+</details>
+<div class="desc"><p>Supervisor status.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResStatus.status"><code class="name">var <span class="ident">status</span> : <a title="enrgdaq.cnc.models.SupervisorStatus" href="#enrgdaq.cnc.models.SupervisorStatus">SupervisorStatus</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStatus(CNCMessage):
+    &#34;&#34;&#34;Supervisor status.&#34;&#34;&#34;
+
+    status: SupervisorStatus</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJob"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResStopDAQJob</span></span>
+<span>(</span><span>success: bool, message: str, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to stop and remove DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"><p>Response to stop and remove DAQJob request.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJob.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to stop and remove DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJob.success"><code class="name">var <span class="ident">success</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJob(CNCMessage):
+    &#34;&#34;&#34;Response to stop and remove DAQJob request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJobs"><code class="flex name class">
+<span>class <span class="ident">CNCMessageResStopDAQJobs</span></span>
+<span>(</span><span>success: bool, message: str, *, req_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJobs(CNCMessage):
+    &#34;&#34;&#34;Response to restart DAQJobs request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"><p>Response to restart DAQJobs request.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJobs.message"><code class="name">var <span class="ident">message</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJobs(CNCMessage):
+    &#34;&#34;&#34;Response to restart DAQJobs request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.CNCMessageResStopDAQJobs.success"><code class="name">var <span class="ident">success</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageResStopDAQJobs(CNCMessage):
+    &#34;&#34;&#34;Response to restart DAQJobs request.&#34;&#34;&#34;
+
+    success: bool
+    message: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.models.SupervisorStatus"><code class="flex name class">
+<span>class <span class="ident">SupervisorStatus</span></span>
+<span>(</span><span>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>daq_jobs: list[<a title="enrgdaq.daq.models.DAQJobInfo" href="../daq/models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>],<br>daq_job_stats: Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>daq_job_remote_stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="../daq/jobs/remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>restart_schedules: list[<a title="enrgdaq.models.RestartScheduleInfo" href="../models.html#enrgdaq.models.RestartScheduleInfo">RestartScheduleInfo</a>])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"><p>A class to represent the status of a supervisor.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.daq_job_remote_stats"><code class="name">var <span class="ident">daq_job_remote_stats</span> : dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="../daq/jobs/remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.daq_job_stats"><code class="name">var <span class="ident">daq_job_stats</span> : Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.daq_jobs"><code class="name">var <span class="ident">daq_jobs</span> : list[<a title="enrgdaq.daq.models.DAQJobInfo" href="../daq/models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.restart_schedules"><code class="name">var <span class="ident">restart_schedules</span> : list[<a title="enrgdaq.models.RestartScheduleInfo" href="../models.html#enrgdaq.models.RestartScheduleInfo">RestartScheduleInfo</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.supervisor_info"><code class="name">var <span class="ident">supervisor_info</span> : <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorStatus(Struct):
+    &#34;&#34;&#34;
+    A class to represent the status of a supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_info: SupervisorInfo
+    daq_jobs: list[DAQJobInfo]
+    daq_job_stats: DAQJobStatsDict
+    daq_job_remote_stats: DAQJobRemoteStatsDict
+    restart_schedules: list[RestartScheduleInfo]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.cnc" href="index.html">enrgdaq.cnc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCClientInfo" href="#enrgdaq.cnc.models.CNCClientInfo">CNCClientInfo</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCClientInfo.identity" href="#enrgdaq.cnc.models.CNCClientInfo.identity">identity</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCClientInfo.info" href="#enrgdaq.cnc.models.CNCClientInfo.info">info</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCClientInfo.last_seen" href="#enrgdaq.cnc.models.CNCClientInfo.last_seen">last_seen</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessage" href="#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessage.req_id" href="#enrgdaq.cnc.models.CNCMessage.req_id">req_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageHeartbeat" href="#enrgdaq.cnc.models.CNCMessageHeartbeat">CNCMessageHeartbeat</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageHeartbeat.supervisor_info" href="#enrgdaq.cnc.models.CNCMessageHeartbeat.supervisor_info">supervisor_info</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageLog" href="#enrgdaq.cnc.models.CNCMessageLog">CNCMessageLog</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageLog.client_id" href="#enrgdaq.cnc.models.CNCMessageLog.client_id">client_id</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageLog.level" href="#enrgdaq.cnc.models.CNCMessageLog.level">level</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageLog.message" href="#enrgdaq.cnc.models.CNCMessageLog.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageLog.module" href="#enrgdaq.cnc.models.CNCMessageLog.module">module</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageLog.timestamp" href="#enrgdaq.cnc.models.CNCMessageLog.timestamp">timestamp</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqListClients" href="#enrgdaq.cnc.models.CNCMessageReqListClients">CNCMessageReqListClients</a></code></h4>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqPing" href="#enrgdaq.cnc.models.CNCMessageReqPing">CNCMessageReqPing</a></code></h4>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqRestartDAQ" href="#enrgdaq.cnc.models.CNCMessageReqRestartDAQ">CNCMessageReqRestartDAQ</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqRestartDAQ.update" href="#enrgdaq.cnc.models.CNCMessageReqRestartDAQ.update">update</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob" href="#enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob">CNCMessageReqRunCustomDAQJob</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.config" href="#enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.config">config</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.restart_on_crash" href="#enrgdaq.cnc.models.CNCMessageReqRunCustomDAQJob.restart_on_crash">restart_on_crash</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqSendMessage" href="#enrgdaq.cnc.models.CNCMessageReqSendMessage">CNCMessageReqSendMessage</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqSendMessage.message_type" href="#enrgdaq.cnc.models.CNCMessageReqSendMessage.message_type">message_type</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqSendMessage.payload" href="#enrgdaq.cnc.models.CNCMessageReqSendMessage.payload">payload</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqSendMessage.target_daq_job_unique_id" href="#enrgdaq.cnc.models.CNCMessageReqSendMessage.target_daq_job_unique_id">target_daq_job_unique_id</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqStatus" href="#enrgdaq.cnc.models.CNCMessageReqStatus">CNCMessageReqStatus</a></code></h4>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJob" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJob">CNCMessageReqStopDAQJob</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_name" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_name">daq_job_name</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_unique_id" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJob.daq_job_unique_id">daq_job_unique_id</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJob.remove" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJob.remove">remove</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageReqStopDAQJobs" href="#enrgdaq.cnc.models.CNCMessageReqStopDAQJobs">CNCMessageReqStopDAQJobs</a></code></h4>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResListClients" href="#enrgdaq.cnc.models.CNCMessageResListClients">CNCMessageResListClients</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResListClients.clients" href="#enrgdaq.cnc.models.CNCMessageResListClients.clients">clients</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResPing" href="#enrgdaq.cnc.models.CNCMessageResPing">CNCMessageResPing</a></code></h4>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResRestartDAQ" href="#enrgdaq.cnc.models.CNCMessageResRestartDAQ">CNCMessageResRestartDAQ</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResRestartDAQ.message" href="#enrgdaq.cnc.models.CNCMessageResRestartDAQ.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResRestartDAQ.success" href="#enrgdaq.cnc.models.CNCMessageResRestartDAQ.success">success</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob" href="#enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob">CNCMessageResRunCustomDAQJob</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.message" href="#enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.success" href="#enrgdaq.cnc.models.CNCMessageResRunCustomDAQJob.success">success</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResSendMessage" href="#enrgdaq.cnc.models.CNCMessageResSendMessage">CNCMessageResSendMessage</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResSendMessage.jobs_notified" href="#enrgdaq.cnc.models.CNCMessageResSendMessage.jobs_notified">jobs_notified</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResSendMessage.message" href="#enrgdaq.cnc.models.CNCMessageResSendMessage.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResSendMessage.success" href="#enrgdaq.cnc.models.CNCMessageResSendMessage.success">success</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResStatus" href="#enrgdaq.cnc.models.CNCMessageResStatus">CNCMessageResStatus</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResStatus.status" href="#enrgdaq.cnc.models.CNCMessageResStatus.status">status</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJob" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJob">CNCMessageResStopDAQJob</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJob.message" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJob.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJob.success" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJob.success">success</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJobs" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJobs">CNCMessageResStopDAQJobs</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJobs.message" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJobs.message">message</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.CNCMessageResStopDAQJobs.success" href="#enrgdaq.cnc.models.CNCMessageResStopDAQJobs.success">success</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.models.SupervisorStatus" href="#enrgdaq.cnc.models.SupervisorStatus">SupervisorStatus</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.models.SupervisorStatus.daq_job_remote_stats" href="#enrgdaq.cnc.models.SupervisorStatus.daq_job_remote_stats">daq_job_remote_stats</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.SupervisorStatus.daq_job_stats" href="#enrgdaq.cnc.models.SupervisorStatus.daq_job_stats">daq_job_stats</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.SupervisorStatus.daq_jobs" href="#enrgdaq.cnc.models.SupervisorStatus.daq_jobs">daq_jobs</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.SupervisorStatus.restart_schedules" href="#enrgdaq.cnc.models.SupervisorStatus.restart_schedules">restart_schedules</a></code></li>
+<li><code><a title="enrgdaq.cnc.models.SupervisorStatus.supervisor_info" href="#enrgdaq.cnc.models.SupervisorStatus.supervisor_info">supervisor_info</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

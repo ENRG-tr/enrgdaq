@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.store.base API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.store.base.DAQJobStore"><code class="flex name class">
 <span>class <span class="ident">DAQJobStore</span></span>
-<span>(</span><span>config: Any,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -57,10 +57,10 @@ el.replaceWith(d);
 </summary>
 <pre><code class="python">class DAQJobStore(DAQJob):
     &#34;&#34;&#34;
-    DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-    and provides additional functionality for handling and storing messages.
-    Attributes:
-        allowed_store_config_types (list): A list of allowed store configuration types.
+    DAQJobStore is an abstract base class for data acquisition job stores.
+
+    Optimized for high throughput - only sleeps when idle to avoid
+    unnecessary latency in message processing.
     &#34;&#34;&#34;
 
     allowed_store_config_types: list
@@ -68,26 +68,26 @@ el.replaceWith(d);
     def start(self):
         &#34;&#34;&#34;
         Starts the continuous loop for consuming and storing data.
-        This method runs an infinite loop that repeatedly calls the `consume`
-        and `store_loop` methods.
         &#34;&#34;&#34;
-
         while True:
-            self.consume()
+            messages_processed = self.consume_all()
             self.store_loop()
-            time.sleep(STORE_LOOP_INTERVAL_SECONDS)
+
+            if not messages_processed:
+                time.sleep(STORE_IDLE_SLEEP_SECONDS)
 
     def store_loop(self):
-        raise NotImplementedError
+        pass
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
-        if not self.can_store(message):
+        if not self.can_handle_message(message):
             raise Exception(
                 f&#34;Invalid message type &#39;{type(message)}&#39; for DAQJob &#39;{type(self).__name__}&#39;&#34;
             )
         return super().handle_message(message)
 
-    def can_store(self, message: DAQJobMessage) -&gt; bool:
+    @classmethod
+    def can_handle_message(cls, message: DAQJobMessage) -&gt; bool:
         &#34;&#34;&#34;
         Determines if the given message can be stored based on its configuration.
         Args:
@@ -95,22 +95,19 @@ el.replaceWith(d);
         Returns:
             bool: True if the message can be stored, False otherwise.
         &#34;&#34;&#34;
-
+        if isinstance(message, DAQJobMessageStop):
+            return True
         if not isinstance(message, DAQJobMessageStore):
             return False
         is_message_allowed = False
-        for allowed_config_type in self.allowed_store_config_types:
+        for allowed_config_type in cls.allowed_store_config_types:
             if message.store_config.has_store_config(allowed_config_type):
                 is_message_allowed = True
         return is_message_allowed</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-and provides additional functionality for handling and storing messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_store_config_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>A list of allowed store configuration types.</dd>
-</dl></div>
+<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p>
+<p>Optimized for high throughput - only sleeps when idle to avoid
+unnecessary latency in message processing.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></li>
@@ -118,6 +115,8 @@ and provides additional functionality for handling and storing messages.</p>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV" href="../jobs/store/csv.html#enrgdaq.daq.jobs.store.csv.DAQJobStoreCSV">DAQJobStoreCSV</a></li>
+<li><a title="enrgdaq.daq.jobs.store.hdf5.DAQJobStoreHDF5" href="../jobs/store/hdf5.html#enrgdaq.daq.jobs.store.hdf5.DAQJobStoreHDF5">DAQJobStoreHDF5</a></li>
+<li><a title="enrgdaq.daq.jobs.store.memory.DAQJobStoreMemory" href="../jobs/store/memory.html#enrgdaq.daq.jobs.store.memory.DAQJobStoreMemory">DAQJobStoreMemory</a></li>
 <li><a title="enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL" href="../jobs/store/mysql.html#enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL">DAQJobStoreMySQL</a></li>
 <li><a title="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw" href="../jobs/store/raw.html#enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw">DAQJobStoreRaw</a></li>
 <li><a title="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis" href="../jobs/store/redis.html#enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis">DAQJobStoreRedis</a></li>
@@ -130,33 +129,12 @@ and provides additional functionality for handling and storing messages.</p>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Methods</h3>
+<h3>Static methods</h3>
 <dl>
-<dt id="enrgdaq.daq.store.base.DAQJobStore.can_store"><code class="name flex">
-<span>def <span class="ident">can_store</span></span>(<span>self,<br>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+<dt id="enrgdaq.daq.store.base.DAQJobStore.can_handle_message"><code class="name flex">
+<span>def <span class="ident">can_handle_message</span></span>(<span>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
 </code></dt>
 <dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def can_store(self, message: DAQJobMessage) -&gt; bool:
-    &#34;&#34;&#34;
-    Determines if the given message can be stored based on its configuration.
-    Args:
-        message (DAQJobMessage): The message to be checked.
-    Returns:
-        bool: True if the message can be stored, False otherwise.
-    &#34;&#34;&#34;
-
-    if not isinstance(message, DAQJobMessageStore):
-        return False
-    is_message_allowed = False
-    for allowed_config_type in self.allowed_store_config_types:
-        if message.store_config.has_store_config(allowed_config_type):
-            is_message_allowed = True
-    return is_message_allowed</code></pre>
-</details>
 <div class="desc"><p>Determines if the given message can be stored based on its configuration.</p>
 <h2 id="args">Args</h2>
 <dl>
@@ -169,6 +147,9 @@ and provides additional functionality for handling and storing messages.</p>
 <dd>True if the message can be stored, False otherwise.</dd>
 </dl></div>
 </dd>
+</dl>
+<h3>Methods</h3>
+<dl>
 <dt id="enrgdaq.daq.store.base.DAQJobStore.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
@@ -180,18 +161,15 @@ and provides additional functionality for handling and storing messages.</p>
 <pre><code class="python">def start(self):
     &#34;&#34;&#34;
     Starts the continuous loop for consuming and storing data.
-    This method runs an infinite loop that repeatedly calls the `consume`
-    and `store_loop` methods.
     &#34;&#34;&#34;
-
     while True:
-        self.consume()
+        messages_processed = self.consume_all()
         self.store_loop()
-        time.sleep(STORE_LOOP_INTERVAL_SECONDS)</code></pre>
+
+        if not messages_processed:
+            time.sleep(STORE_IDLE_SLEEP_SECONDS)</code></pre>
 </details>
-<div class="desc"><p>Starts the continuous loop for consuming and storing data.
-This method runs an infinite loop that repeatedly calls the <code>consume</code>
-and <code>store_loop</code> methods.</p></div>
+<div class="desc"><p>Starts the continuous loop for consuming and storing data.</p></div>
 </dd>
 <dt id="enrgdaq.daq.store.base.DAQJobStore.store_loop"><code class="name flex">
 <span>def <span class="ident">store_loop</span></span>(<span>self)</span>
@@ -202,7 +180,7 @@ and <code>store_loop</code> methods.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def store_loop(self):
-    raise NotImplementedError</code></pre>
+    pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -236,7 +214,7 @@ and <code>store_loop</code> methods.</p></div>
 <h4><code><a title="enrgdaq.daq.store.base.DAQJobStore" href="#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types" href="#enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types">allowed_store_config_types</a></code></li>
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.store_loop" href="#enrgdaq.daq.store.base.DAQJobStore.store_loop">store_loop</a></code></li>
 </ul>
@@ -247,7 +225,7 @@ and <code>store_loop</code> methods.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

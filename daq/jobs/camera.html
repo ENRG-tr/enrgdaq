@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.camera API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -63,34 +63,113 @@ el.replaceWith(d);
     allowed_message_in_types = []
     config_type = DAQJobCameraConfig
     config: DAQJobCameraConfig
+    multiprocessing_method = (
+        &#34;spawn&#34;  # Use spawn method to avoid AVCaptureDevice fork issues on macOS
+    )
     _cam: Optional[cv2.VideoCapture]
+    _previous_frame: Optional[cv2.typing.MatLike] = None
 
     def __init__(self, config: DAQJobCameraConfig, **kwargs):
         super().__init__(config, **kwargs)
         self._cam = None
+        self._previous_frame = None
+        if (
+            self.config.camera_device_index is None
+            and self.config.camera_device_name is None
+        ):
+            raise ValueError(
+                &#34;Either camera_device_index or camera_device_name must be set in the configuration.&#34;
+            )
 
     def start(self):
-        self._cam = cv2.VideoCapture(self.config.camera_device_index)
+        camera_index = self.config.camera_device_index
+        if self.config.camera_device_name is not None:
+            # We search for: /dev/v4l/by-id/usb-CAMERA_NAME-video-index0
+            dev_path = (
+                f&#34;/dev/v4l/by-id/usb-{self.config.camera_device_name}-video-index0&#34;
+            )
+            if not os.path.exists(dev_path):
+                raise ValueError(
+                    f&#34;Camera device with name {self.config.camera_device_name} not found.&#34;
+                )
+            # Get symbolic link to the camera device
+            camera_device_path = os.readlink(dev_path)
+            # Extract from: ../../video0, get index 0
+            camera_index = int(camera_device_path.split(&#34;video&#34;)[-1])
+        assert camera_index is not None, &#34;Camera not found&#34;
+        self._cam = cv2.VideoCapture(camera_index)
 
+        last_no_movement_capture_time = datetime.now()
         while True:
             start_time = datetime.now()
-            self.capture_image()
+            should_capture = False
+            movement_detected = self._detect_movement_from_camera()
+
+            if movement_detected:
+                should_capture = True
+            elif datetime.now() - last_no_movement_capture_time &gt;= timedelta(
+                seconds=self.config.store_interval_seconds_no_movement
+            ):
+                should_capture = True
+                last_no_movement_capture_time = datetime.now()
+
+            if should_capture:
+                self.capture_and_process_image()
+
             sleep_for(self.config.store_interval_seconds, start_time)
 
-    def capture_image(self):
+    def _detect_movement(self, current_frame: cv2.typing.MatLike) -&gt; bool:
+        &#34;&#34;&#34;Detects movement by comparing the current frame with the previous one.&#34;&#34;&#34;
+        aspect_ratio = current_frame.shape[0] / current_frame.shape[1]
+        new_width = self.config.movement_detection_frame_width
+        new_height = int(new_width * aspect_ratio)
+        resized_frame = cv2.resize(current_frame, (new_width, new_height))
+
+        gray_frame = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2GRAY)
+        gray_frame = cv2.GaussianBlur(gray_frame, (7, 7), 0)
+
+        if self._previous_frame is None:
+            self._previous_frame = gray_frame
+            return False
+
+        frame_delta = cv2.absdiff(self._previous_frame, gray_frame)
+        thresh = cv2.threshold(frame_delta, 30, 255, cv2.THRESH_BINARY)[1]
+        # Dilate the thresholded image to fill in holes
+        kernel = np.ones((3, 3), np.uint8)
+        thresh = cv2.dilate(thresh, kernel, iterations=2)
+
+        # The percentage of non-zero pixels in the thresholded image
+        change_percentage = cv2.countNonZero(thresh) / (
+            thresh.shape[0] * thresh.shape[1]
+        )
+
+        self._previous_frame = gray_frame
+
+        movement_detected = change_percentage &gt; self.config.movement_detection_threshold
+        if movement_detected:
+            self._logger.debug(f&#34;Movement detected: {change_percentage:.4f}&#34;)
+
+        return movement_detected
+
+    def _detect_movement_from_camera(self) -&gt; bool:
+        assert self._cam is not None
+        res, frame = self._cam.read()
+        assert res
+        return self._detect_movement(frame)
+
+    def capture_and_process_image(self):
         assert self._cam is not None
 
         self._logger.debug(&#34;Capturing image...&#34;)
         res, frame = self._cam.read()
         assert res
+
         if self.config.enable_time_text:
-            # insert date &amp; time
             frame = self._insert_date_and_time(frame)
-        # get bytes from frame
+
         res, buffer = cv2.imencode(&#34;.jpg&#34;, frame)
         assert res
         image_data = buffer.tobytes()
-
         self._put_message_out(
             DAQJobMessageStoreRaw(
                 data=image_data,
@@ -181,7 +260,7 @@ el.replaceWith(d);
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>Configuration class for DAQJobCamera.</p>
 <h2 id="attributes">Attributes</h2>
@@ -198,31 +277,34 @@ el.replaceWith(d);
 <dd>The opacity of the time text background.</dd>
 </dl></div>
 </dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.multiprocessing_method"><code class="name">var <span class="ident">multiprocessing_method</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image"><code class="name flex">
-<span>def <span class="ident">capture_image</span></span>(<span>self)</span>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_and_process_image"><code class="name flex">
+<span>def <span class="ident">capture_and_process_image</span></span>(<span>self)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def capture_image(self):
+<pre><code class="python">def capture_and_process_image(self):
     assert self._cam is not None
 
     self._logger.debug(&#34;Capturing image...&#34;)
     res, frame = self._cam.read()
     assert res
+
     if self.config.enable_time_text:
-        # insert date &amp; time
         frame = self._insert_date_and_time(frame)
-    # get bytes from frame
+
     res, buffer = cv2.imencode(&#34;.jpg&#34;, frame)
     assert res
     image_data = buffer.tobytes()
-
     self._put_message_out(
         DAQJobMessageStoreRaw(
             data=image_data,
@@ -242,11 +324,40 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start(self):
-    self._cam = cv2.VideoCapture(self.config.camera_device_index)
+    camera_index = self.config.camera_device_index
+    if self.config.camera_device_name is not None:
+        # We search for: /dev/v4l/by-id/usb-CAMERA_NAME-video-index0
+        dev_path = (
+            f&#34;/dev/v4l/by-id/usb-{self.config.camera_device_name}-video-index0&#34;
+        )
+        if not os.path.exists(dev_path):
+            raise ValueError(
+                f&#34;Camera device with name {self.config.camera_device_name} not found.&#34;
+            )
+        # Get symbolic link to the camera device
+        camera_device_path = os.readlink(dev_path)
+        # Extract from: ../../video0, get index 0
+        camera_index = int(camera_device_path.split(&#34;video&#34;)[-1])
+    assert camera_index is not None, &#34;Camera not found&#34;
+    self._cam = cv2.VideoCapture(camera_index)
 
+    last_no_movement_capture_time = datetime.now()
     while True:
         start_time = datetime.now()
-        self.capture_image()
+        should_capture = False
+        movement_detected = self._detect_movement_from_camera()
+
+        if movement_detected:
+            should_capture = True
+        elif datetime.now() - last_no_movement_capture_time &gt;= timedelta(
+            seconds=self.config.store_interval_seconds_no_movement
+        ):
+            should_capture = True
+            last_no_movement_capture_time = datetime.now()
+
+        if should_capture:
+            self.capture_and_process_image()
+
         sleep_for(self.config.store_interval_seconds, start_time)</code></pre>
 </details>
 <div class="desc"></div>
@@ -264,7 +375,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobCameraConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>camera_device_index: int = 0,<br>store_interval_seconds: int = 5,<br>enable_time_text: bool = True,<br>time_text_position: <a title="enrgdaq.daq.jobs.camera.TimeTextPosition" href="#enrgdaq.daq.jobs.camera.TimeTextPosition">TimeTextPosition</a> = TimeTextPosition.TOP_LEFT,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>camera_device_index: int | None = None,<br>camera_device_name: str | None = None,<br>store_interval_seconds: float = 1,<br>store_interval_seconds_no_movement: float = 5,<br>enable_time_text: bool = True,<br>time_text_position: <a title="enrgdaq.daq.jobs.camera.TimeTextPosition" href="#enrgdaq.daq.jobs.camera.TimeTextPosition">TimeTextPosition</a> = TimeTextPosition.TOP_LEFT,<br>movement_detection_threshold: float = 0.02,<br>movement_detection_frame_width: int = 500,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -282,11 +393,22 @@ el.replaceWith(d);
         time_text_background_opacity: The opacity of the time text background.
     &#34;&#34;&#34;
 
-    camera_device_index: int = 0
-    store_interval_seconds: int = 5
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
     enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
-    time_text_background_opacity = 0.7</code></pre>
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>Configuration class for DAQJobCamera.</p>
 <h2 id="attributes">Attributes</h2>
@@ -313,12 +435,12 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_background_opacity"><code class="name">var <span class="ident">time_text_background_opacity</span></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>The opacity of the time text overlay.</p></div>
 </dd>
 </dl>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index"><code class="name">var <span class="ident">camera_device_index</span> : int</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index"><code class="name">var <span class="ident">camera_device_index</span> : int | None</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -335,11 +457,58 @@ el.replaceWith(d);
         time_text_background_opacity: The opacity of the time text background.
     &#34;&#34;&#34;
 
-    camera_device_index: int = 0
-    store_interval_seconds: int = 5
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
     enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
-    time_text_background_opacity = 0.7</code></pre>
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_name"><code class="name">var <span class="ident">camera_device_name</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCameraConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobCamera.
+    Attributes:
+        camera_device_index: The index of the camera device to use.
+        store_interval_seconds: The interval in seconds to store images.
+        enable_time_text: Whether to enable the time text overlay.
+        time_text_position: The position of the time text on the image.
+        time_text_background_opacity: The opacity of the time text background.
+    &#34;&#34;&#34;
+
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
+    enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
+    time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -360,15 +529,26 @@ el.replaceWith(d);
         time_text_background_opacity: The opacity of the time text background.
     &#34;&#34;&#34;
 
-    camera_device_index: int = 0
-    store_interval_seconds: int = 5
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
     enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
-    time_text_background_opacity = 0.7</code></pre>
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>Whether to enable the time text overlay.</p></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds"><code class="name">var <span class="ident">store_interval_seconds</span> : int</code></dt>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_frame_width"><code class="name">var <span class="ident">movement_detection_frame_width</span> : int</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -385,13 +565,132 @@ el.replaceWith(d);
         time_text_background_opacity: The opacity of the time text background.
     &#34;&#34;&#34;
 
-    camera_device_index: int = 0
-    store_interval_seconds: int = 5
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
     enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
-    time_text_background_opacity = 0.7</code></pre>
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>The width of the frame used for movement detection.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_threshold"><code class="name">var <span class="ident">movement_detection_threshold</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCameraConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobCamera.
+    Attributes:
+        camera_device_index: The index of the camera device to use.
+        store_interval_seconds: The interval in seconds to store images.
+        enable_time_text: Whether to enable the time text overlay.
+        time_text_position: The position of the time text on the image.
+        time_text_background_opacity: The opacity of the time text background.
+    &#34;&#34;&#34;
+
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
+    enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
+    time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>The threshold for detecting movement.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds"><code class="name">var <span class="ident">store_interval_seconds</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCameraConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobCamera.
+    Attributes:
+        camera_device_index: The index of the camera device to use.
+        store_interval_seconds: The interval in seconds to store images.
+        enable_time_text: Whether to enable the time text overlay.
+        time_text_position: The position of the time text on the image.
+        time_text_background_opacity: The opacity of the time text background.
+    &#34;&#34;&#34;
+
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
+    enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
+    time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>The interval in seconds to store images when there is movement.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds_no_movement"><code class="name">var <span class="ident">store_interval_seconds_no_movement</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCameraConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for DAQJobCamera.
+    Attributes:
+        camera_device_index: The index of the camera device to use.
+        store_interval_seconds: The interval in seconds to store images.
+        enable_time_text: Whether to enable the time text overlay.
+        time_text_position: The position of the time text on the image.
+        time_text_background_opacity: The opacity of the time text background.
+    &#34;&#34;&#34;
+
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
+    enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
+    time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>The interval in seconds to check for images when there is no movement.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_position"><code class="name">var <span class="ident">time_text_position</span> : <a title="enrgdaq.daq.jobs.camera.TimeTextPosition" href="#enrgdaq.daq.jobs.camera.TimeTextPosition">TimeTextPosition</a></code></dt>
 <dd>
@@ -410,13 +709,24 @@ el.replaceWith(d);
         time_text_background_opacity: The opacity of the time text background.
     &#34;&#34;&#34;
 
-    camera_device_index: int = 0
-    store_interval_seconds: int = 5
+    camera_device_index: int | None = None
+    camera_device_name: str | None = None
+    store_interval_seconds: float = 1
+    &#34;&#34;&#34;The interval in seconds to store images when there is movement.&#34;&#34;&#34;
+    store_interval_seconds_no_movement: float = 5
+    &#34;&#34;&#34;The interval in seconds to check for images when there is no movement.&#34;&#34;&#34;
     enable_time_text: bool = True
+    &#34;&#34;&#34;Whether to enable the time text overlay.&#34;&#34;&#34;
     time_text_position: TimeTextPosition = TimeTextPosition.TOP_LEFT
-    time_text_background_opacity = 0.7</code></pre>
+    &#34;&#34;&#34;The position of the time text on the image.&#34;&#34;&#34;
+    time_text_background_opacity = 0.7
+    &#34;&#34;&#34;The opacity of the time text overlay.&#34;&#34;&#34;
+    movement_detection_threshold: float = 0.02
+    &#34;&#34;&#34;The threshold for detecting movement.&#34;&#34;&#34;
+    movement_detection_frame_width: int = 500
+    &#34;&#34;&#34;The width of the frame used for movement detection.&#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"></div>
+<div class="desc"><p>The position of the time text on the image.</p></div>
 </dd>
 </dl>
 </dd>
@@ -482,9 +792,10 @@ el.replaceWith(d);
 <h4><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera" href="#enrgdaq.daq.jobs.camera.DAQJobCamera">DAQJobCamera</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.allowed_message_in_types" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.allowed_message_in_types">allowed_message_in_types</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.capture_image">capture_image</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.capture_and_process_image" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.capture_and_process_image">capture_and_process_image</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.config" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.config_type" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.multiprocessing_method" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.multiprocessing_method">multiprocessing_method</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCamera.start" href="#enrgdaq.daq.jobs.camera.DAQJobCamera.start">start</a></code></li>
 </ul>
 </li>
@@ -492,8 +803,12 @@ el.replaceWith(d);
 <h4><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig">DAQJobCameraConfig</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_index">camera_device_index</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_name" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.camera_device_name">camera_device_name</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.enable_time_text" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.enable_time_text">enable_time_text</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_frame_width" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_frame_width">movement_detection_frame_width</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_threshold" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.movement_detection_threshold">movement_detection_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds">store_interval_seconds</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds_no_movement" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.store_interval_seconds_no_movement">store_interval_seconds_no_movement</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_background_opacity" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_background_opacity">time_text_background_opacity</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_position" href="#enrgdaq.daq.jobs.camera.DAQJobCameraConfig.time_text_position">time_text_position</a></code></li>
 </ul>
@@ -513,7 +828,7 @@ el.replaceWith(d);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

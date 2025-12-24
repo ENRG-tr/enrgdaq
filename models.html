@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.models API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -46,32 +46,172 @@ el.replaceWith(d);
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="enrgdaq.models.SupervisorConfig"><code class="flex name class">
-<span>class <span class="ident">SupervisorConfig</span></span>
-<span>(</span><span>supervisor_id: str)</span>
+<dt id="enrgdaq.models.LogVerbosity"><code class="flex name class">
+<span>class <span class="ident">LogVerbosity</span></span>
+<span>(</span><span>*args, **kwds)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SupervisorConfig(Struct):
+<pre><code class="python">class LogVerbosity(str, Enum):
     &#34;&#34;&#34;
-    A configuration class for a supervisor.
-    Attributes:
-        supervisor_id (str): The unique identifier for the supervisor that is going to be used primarily for DAQJobRemote.
+    Enum representing the verbosity levels for logging.
+
+    Used in DAQJobConfig.
     &#34;&#34;&#34;
 
-    supervisor_id: str
+    DEBUG = &#34;DEBUG&#34;
+    INFO = &#34;INFO&#34;
+    WARNING = &#34;WARNING&#34;
+    ERROR = &#34;ERROR&#34;
 
-    def clone(self):
-        return deepcopy(self)</code></pre>
+    def to_logging_level(self) -&gt; int:
+        return logging._nameToLevel[self.value]</code></pre>
 </details>
-<div class="desc"><p>A configuration class for a supervisor.</p>
+<div class="desc"><p>Enum representing the verbosity levels for logging.</p>
+<p>Used in DAQJobConfig.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.models.LogVerbosity.DEBUG"><code class="name">var <span class="ident">DEBUG</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.LogVerbosity.ERROR"><code class="name">var <span class="ident">ERROR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.LogVerbosity.INFO"><code class="name">var <span class="ident">INFO</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.LogVerbosity.WARNING"><code class="name">var <span class="ident">WARNING</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.models.LogVerbosity.to_logging_level"><code class="name flex">
+<span>def <span class="ident">to_logging_level</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_logging_level(self) -&gt; int:
+    return logging._nameToLevel[self.value]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.models.RestartScheduleInfo"><code class="flex name class">
+<span>class <span class="ident">RestartScheduleInfo</span></span>
+<span>(</span><span>job: str, restart_at: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RestartScheduleInfo(Struct):
+    &#34;&#34;&#34;Information about a restart schedule.&#34;&#34;&#34;
+
+    job: str
+    restart_at: str</code></pre>
+</details>
+<div class="desc"><p>Information about a restart schedule.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.models.RestartScheduleInfo.job"><code class="name">var <span class="ident">job</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RestartScheduleInfo(Struct):
+    &#34;&#34;&#34;Information about a restart schedule.&#34;&#34;&#34;
+
+    job: str
+    restart_at: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.RestartScheduleInfo.restart_at"><code class="name">var <span class="ident">restart_at</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RestartScheduleInfo(Struct):
+    &#34;&#34;&#34;Information about a restart schedule.&#34;&#34;&#34;
+
+    job: str
+    restart_at: str</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig"><code class="flex name class">
+<span>class <span class="ident">SupervisorCNCConfig</span></span>
+<span>(</span><span>verbosity: <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>is_server: bool = False,<br>server_host: str = 'localhost',<br>server_port: int = 1638,<br>rest_api_enabled: bool = False,<br>rest_api_host: str = 'localhost',<br>rest_api_port: int = 8000)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"><p>Configuration for the Command and Control (C&amp;C) system.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>supervisor_id</code></strong> :&ensp;<code>str</code></dt>
-<dd>The unique identifier for the supervisor that is going to be used primarily for DAQJobRemote.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code><a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a></code></dt>
+<dd>The verbosity level for logging.</dd>
+<dt><strong><code>is_server</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether this supervisor instance is the C&amp;C server.</dd>
+<dt><strong><code>server_host</code></strong> :&ensp;<code>str</code></dt>
+<dd>The hostname or IP address of the C&amp;C server.</dd>
+<dt><strong><code>rest_api_enabled</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to enable the REST API server.</dd>
+<dt><strong><code>rest_api_host</code></strong> :&ensp;<code>str</code></dt>
+<dd>The hostname or IP address for the REST API server.</dd>
+<dt><strong><code>rest_api_port</code></strong> :&ensp;<code>int</code></dt>
+<dd>The port for the REST API server.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -80,20 +220,326 @@ el.replaceWith(d);
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.models.SupervisorConfig.supervisor_id"><code class="name">var <span class="ident">supervisor_id</span> : str</code></dt>
+<dt id="enrgdaq.models.SupervisorCNCConfig.is_server"><code class="name">var <span class="ident">is_server</span> : bool</code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class SupervisorConfig(Struct):
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.rest_api_enabled"><code class="name">var <span class="ident">rest_api_enabled</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.rest_api_host"><code class="name">var <span class="ident">rest_api_host</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.rest_api_port"><code class="name">var <span class="ident">rest_api_port</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.server_host"><code class="name">var <span class="ident">server_host</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.server_port"><code class="name">var <span class="ident">server_port</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorCNCConfig.verbosity"><code class="name">var <span class="ident">verbosity</span> : <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNCConfig(Struct):
+    &#34;&#34;&#34;
+    Configuration for the Command and Control (C&amp;C) system.
+
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        is_server (bool): Whether this supervisor instance is the C&amp;C server.
+        server_host (str): The hostname or IP address of the C&amp;C server.
+        rest_api_enabled (bool): Whether to enable the REST API server.
+        rest_api_host (str): The hostname or IP address for the REST API server.
+        rest_api_port (int): The port for the REST API server.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+
+    is_server: bool = False
+    server_host: str = &#34;localhost&#34;
+    server_port: int = 1638
+    rest_api_enabled: bool = False
+    rest_api_host: str = &#34;localhost&#34;
+    rest_api_port: int = 8000</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.models.SupervisorConfig"><code class="flex name class">
+<span>class <span class="ident">SupervisorConfig</span></span>
+<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>info: <a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>cnc: <a title="enrgdaq.models.SupervisorCNCConfig" href="#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a> | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
     &#34;&#34;&#34;
     A configuration class for a supervisor.
     Attributes:
-        supervisor_id (str): The unique identifier for the supervisor that is going to be used primarily for DAQJobRemote.
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
     &#34;&#34;&#34;
 
-    supervisor_id: str
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
+
+    def clone(self):
+        return deepcopy(self)</code></pre>
+</details>
+<div class="desc"><p>A configuration class for a supervisor.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code><a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a></code></dt>
+<dd>The verbosity level for logging.</dd>
+<dt><strong><code>info</code></strong> :&ensp;<code><a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></dt>
+<dd>The information of the supervisor.</dd>
+<dt><strong><code>cnc</code></strong> :&ensp;<code>SupervisorCNCConfig | None</code></dt>
+<dd>The configuration for the Command and Control (C&amp;C) system.</dd>
+</dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.models.SupervisorConfig.cnc"><code class="name">var <span class="ident">cnc</span> : <a title="enrgdaq.models.SupervisorCNCConfig" href="#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    A configuration class for a supervisor.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
+
+    def clone(self):
+        return deepcopy(self)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorConfig.info"><code class="name">var <span class="ident">info</span> : <a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    A configuration class for a supervisor.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
+
+    def clone(self):
+        return deepcopy(self)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorConfig.verbosity"><code class="name">var <span class="ident">verbosity</span> : <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    A configuration class for a supervisor.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
 
     def clone(self):
         return deepcopy(self)</code></pre>
@@ -118,6 +564,76 @@ el.replaceWith(d);
 </dd>
 </dl>
 </dd>
+<dt id="enrgdaq.models.SupervisorInfo"><code class="flex name class">
+<span>class <span class="ident">SupervisorInfo</span></span>
+<span>(</span><span>supervisor_id: str, supervisor_tags: list[str] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorInfo(Struct):
+    &#34;&#34;&#34;
+    A class to represent the information of a supervisor.
+    Attributes:
+        supervisor_id (str): The unique identifier for the supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_id: str
+    supervisor_tags: list[str] = []</code></pre>
+</details>
+<div class="desc"><p>A class to represent the information of a supervisor.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>supervisor_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The unique identifier for the supervisor.</dd>
+</dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.models.SupervisorInfo.supervisor_id"><code class="name">var <span class="ident">supervisor_id</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorInfo(Struct):
+    &#34;&#34;&#34;
+    A class to represent the information of a supervisor.
+    Attributes:
+        supervisor_id (str): The unique identifier for the supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_id: str
+    supervisor_tags: list[str] = []</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorInfo.supervisor_tags"><code class="name">var <span class="ident">supervisor_tags</span> : list[str]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorInfo(Struct):
+    &#34;&#34;&#34;
+    A class to represent the information of a supervisor.
+    Attributes:
+        supervisor_id (str): The unique identifier for the supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_id: str
+    supervisor_tags: list[str] = []</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 </dl>
 </section>
 </article>
@@ -134,10 +650,48 @@ el.replaceWith(d);
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
+<h4><code><a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.models.LogVerbosity.DEBUG" href="#enrgdaq.models.LogVerbosity.DEBUG">DEBUG</a></code></li>
+<li><code><a title="enrgdaq.models.LogVerbosity.ERROR" href="#enrgdaq.models.LogVerbosity.ERROR">ERROR</a></code></li>
+<li><code><a title="enrgdaq.models.LogVerbosity.INFO" href="#enrgdaq.models.LogVerbosity.INFO">INFO</a></code></li>
+<li><code><a title="enrgdaq.models.LogVerbosity.WARNING" href="#enrgdaq.models.LogVerbosity.WARNING">WARNING</a></code></li>
+<li><code><a title="enrgdaq.models.LogVerbosity.to_logging_level" href="#enrgdaq.models.LogVerbosity.to_logging_level">to_logging_level</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.models.RestartScheduleInfo" href="#enrgdaq.models.RestartScheduleInfo">RestartScheduleInfo</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.models.RestartScheduleInfo.job" href="#enrgdaq.models.RestartScheduleInfo.job">job</a></code></li>
+<li><code><a title="enrgdaq.models.RestartScheduleInfo.restart_at" href="#enrgdaq.models.RestartScheduleInfo.restart_at">restart_at</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.models.SupervisorCNCConfig" href="#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.is_server" href="#enrgdaq.models.SupervisorCNCConfig.is_server">is_server</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.rest_api_enabled" href="#enrgdaq.models.SupervisorCNCConfig.rest_api_enabled">rest_api_enabled</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.rest_api_host" href="#enrgdaq.models.SupervisorCNCConfig.rest_api_host">rest_api_host</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.rest_api_port" href="#enrgdaq.models.SupervisorCNCConfig.rest_api_port">rest_api_port</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.server_host" href="#enrgdaq.models.SupervisorCNCConfig.server_host">server_host</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.server_port" href="#enrgdaq.models.SupervisorCNCConfig.server_port">server_port</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorCNCConfig.verbosity" href="#enrgdaq.models.SupervisorCNCConfig.verbosity">verbosity</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="enrgdaq.models.SupervisorConfig" href="#enrgdaq.models.SupervisorConfig">SupervisorConfig</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.models.SupervisorConfig.clone" href="#enrgdaq.models.SupervisorConfig.clone">clone</a></code></li>
-<li><code><a title="enrgdaq.models.SupervisorConfig.supervisor_id" href="#enrgdaq.models.SupervisorConfig.supervisor_id">supervisor_id</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorConfig.cnc" href="#enrgdaq.models.SupervisorConfig.cnc">cnc</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorConfig.info" href="#enrgdaq.models.SupervisorConfig.info">info</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorConfig.verbosity" href="#enrgdaq.models.SupervisorConfig.verbosity">verbosity</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.models.SupervisorInfo.supervisor_id" href="#enrgdaq.models.SupervisorInfo.supervisor_id">supervisor_id</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorInfo.supervisor_tags" href="#enrgdaq.models.SupervisorInfo.supervisor_tags">supervisor_tags</a></code></li>
 </ul>
 </li>
 </ul>
@@ -146,7 +700,7 @@ el.replaceWith(d);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

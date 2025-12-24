@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.remote API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsRemote</span></span>
-<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -120,14 +120,15 @@ el.replaceWith(d);
     _remote_message_ids: set[str]
     _receive_thread: threading.Thread
     _remote_stats: DAQJobRemoteStatsDict
+    _remote_stats_last_sent_at: float
+    _is_alive_check_interval: datetime
 
     def __init__(self, config: DAQJobRemoteConfig, **kwargs):
         super().__init__(config, **kwargs)
-
-        if config.zmq_proxy_pub_url is not None:
+        if self.config.zmq_proxy_pub_url is not None:
             self._zmq_pub_ctx = zmq.Context()
             self._zmq_pub = self._zmq_pub_ctx.socket(zmq.PUB)
-            self._zmq_pub.connect(config.zmq_proxy_pub_url)
+            self._zmq_pub.connect(self.config.zmq_proxy_pub_url)
         else:
             self._zmq_pub_ctx = None
             self._zmq_pub = None
@@ -135,7 +136,11 @@ el.replaceWith(d);
 
         self._receive_thread = threading.Thread(
             target=self._start_receive_thread,
-            args=(config.zmq_proxy_sub_urls,),
+            args=(self.config.zmq_proxy_sub_urls,),
+            daemon=True,
+        )
+        self._send_remote_stats_thread = threading.Thread(
+            target=self._start_send_remote_stats_thread,
             daemon=True,
         )
         self._message_class_cache = {}
@@ -145,13 +150,15 @@ el.replaceWith(d);
         }
         self._remote_message_ids = set()
         self._remote_stats = defaultdict(lambda: SupervisorRemoteStats())
+        self._remote_stats_last_sent_at = datetime.now().timestamp()
+        self._last_is_alive_check_time = datetime.now()
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if (
-            # Ignore if we already received the message
-            message.id in self._remote_message_ids
             # Ignore if the message is not allowed by the DAQ Job
-            or not super().handle_message(message)
+            not super().handle_message(message)
+            # Ignore if we already received the message
+            or message.id in self._remote_message_ids
             # Ignore if the message is remote, meaning it was sent by another Supervisor
             or message.is_remote
             # Ignore if we are not connected to the proxy
@@ -159,13 +166,23 @@ el.replaceWith(d);
         ):
             return True  # Silently ignore
 
-        if message.remote_config.remote_disable:
+        if message.remote_config.remote_disable and not isinstance(
+            message, SupervisorDAQJobMessage
+        ):
             return True
 
-        self._send_remote_message(message)
+        self._send_remote_pub_message(message)
         return True
 
-    def _send_remote_message(self, message: DAQJobMessage):
+    @classmethod
+    def can_handle_message(cls, message: DAQJobMessage) -&gt; bool:
+        if isinstance(message, SupervisorDAQJobMessage):
+            return True
+        if message.remote_config.remote_disable:
+            return False
+        return True
+
+    def _send_remote_pub_message(self, message: DAQJobMessage):
         if self._zmq_pub is None:
             return
 
@@ -175,9 +192,9 @@ el.replaceWith(d);
         self._zmq_pub.send_multipart([remote_topic_bytes, packed_message])
 
         # Update remote stats
-        if self._supervisor_config:
+        if self._supervisor_info:
             self._remote_stats[
-                self._supervisor_config.supervisor_id
+                self._supervisor_info.supervisor_id
             ].update_message_out_stats(len(packed_message) + len(remote_topic_bytes))
 
         self._logger.debug(
@@ -203,8 +220,8 @@ el.replaceWith(d);
             topics_to_subscribe = [DEFAULT_REMOTE_TOPIC]
             topics_to_subscribe.extend(self.config.topics)
             # Subscribe to the supervisor id if we have it
-            if self.info.supervisor_config is not None:
-                topics_to_subscribe.append(self.info.supervisor_config.supervisor_id)
+            if self.info.supervisor_info is not None:
+                topics_to_subscribe.append(self.info.supervisor_info.supervisor_id)
             for topic in topics_to_subscribe:
                 zmq_sub.subscribe(topic)
 
@@ -225,13 +242,19 @@ el.replaceWith(d);
                 topic, message = self._zmq_sub.recv_multipart()
             except zmq.ContextTerminated:
                 break
-            recv_message = self._unpack_message(message)
+            try:
+                recv_message = self._unpack_message(message)
+            except Exception as e:
+                self._logger.error(
+                    f&#34;Error while unpacking message sent in {topic}: {e}&#34;, exc_info=True
+                )
+                continue
             if (
                 recv_message.daq_job_info is not None
-                and recv_message.daq_job_info.supervisor_config is not None
-                and self.info.supervisor_config is not None
-                and recv_message.daq_job_info.supervisor_config.supervisor_id
-                == self.info.supervisor_config.supervisor_id
+                and recv_message.daq_job_info.supervisor_info is not None
+                and self.info.supervisor_info is not None
+                and recv_message.daq_job_info.supervisor_info.supervisor_id
+                == self.info.supervisor_info.supervisor_id
             ):
                 self._logger.warning(
                     f&#34;Received own message &#39;{type(recv_message).__name__}&#39; on topic &#39;{topic.decode()}&#39;, ignoring message. This should NOT happen. Check the config.&#34;
@@ -241,36 +264,52 @@ el.replaceWith(d);
                 f&#34;Received {len(message)} bytes for message &#39;{type(recv_message).__name__}&#39; on topic &#39;{topic.decode()}&#39;&#34;
             )
             recv_message.is_remote = True
-            # remote message_in -&gt; message_out
-            self.message_out.put(recv_message)
 
-            # Update remote stats
-            if self._supervisor_config:
+            # Update remote stats BEFORE forwarding - we want to track what we
+            # received from ZMQ, not what we successfully forwarded
+            if self._supervisor_info:
                 self._remote_stats[
-                    self._supervisor_config.supervisor_id
+                    self._supervisor_info.supervisor_id
                 ].update_message_in_stats(len(message))
-            if (
-                recv_message.daq_job_info
-                and recv_message.daq_job_info.supervisor_config
-            ):
+            if recv_message.daq_job_info and recv_message.daq_job_info.supervisor_info:
                 self._remote_stats[
-                    recv_message.daq_job_info.supervisor_config.supervisor_id
+                    recv_message.daq_job_info.supervisor_info.supervisor_id
                 ].update_message_out_stats(len(message))
+
+            # remote message_in -&gt; message_out
+            self._put_message_out(recv_message, modify_message_metadata=False)
+
+    def _start_send_remote_stats_thread(self):
+        while True:
+            self._send_remote_stats_message()
+            sleep_for(DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS)
 
     def start(self):
         &#34;&#34;&#34;
         Start the receive thread and the DAQ job.
         &#34;&#34;&#34;
         self._receive_thread.start()
+        self._send_remote_stats_thread.start()
 
         while True:
-            start_time = datetime.now()
-            if not self._receive_thread.is_alive():
-                raise RuntimeError(&#34;Receive thread died&#34;)
-            # message_in -&gt; remote message_out
-            self.consume()
-            self._send_remote_stats_message()
-            sleep_for(DAQ_JOB_REMOTE_SLEEP_INTERVAL, start_time)
+            # Consume all messages in the queue
+            while True:
+                try:
+                    self.consume(
+                        nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT
+                    )
+                except Empty:
+                    break
+
+            # Check thread healths
+            if datetime.now() - self._last_is_alive_check_time &gt; timedelta(
+                seconds=DAQ_JOB_REMOTE_IS_ALIVE_CHECK_INTERVAL_SECONDS
+            ):
+                if not self._receive_thread.is_alive():
+                    raise RuntimeError(&#34;Receive thread is dead&#34;)
+                if not self._send_remote_stats_thread.is_alive():
+                    raise RuntimeError(&#34;Send remote stats thread is dead&#34;)
+                self._last_is_alive_check_time = datetime.now()
 
     def _pack_message(self, message: DAQJobMessage, use_pickle: bool = True) -&gt; bytes:
         &#34;&#34;&#34;
@@ -374,7 +413,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>Configuration for DAQJobRemote.</p>
 <h2 id="attributes">Attributes</h2>
@@ -388,6 +427,15 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset"><code class="name">var <span class="ident">restart_offset</span> : datetime.timedelta</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message"><code class="name flex">
+<span>def <span class="ident">can_handle_message</span></span>(<span>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -407,15 +455,27 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
     Start the receive thread and the DAQ job.
     &#34;&#34;&#34;
     self._receive_thread.start()
+    self._send_remote_stats_thread.start()
 
     while True:
-        start_time = datetime.now()
-        if not self._receive_thread.is_alive():
-            raise RuntimeError(&#34;Receive thread died&#34;)
-        # message_in -&gt; remote message_out
-        self.consume()
-        self._send_remote_stats_message()
-        sleep_for(DAQ_JOB_REMOTE_SLEEP_INTERVAL, start_time)</code></pre>
+        # Consume all messages in the queue
+        while True:
+            try:
+                self.consume(
+                    nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT
+                )
+            except Empty:
+                break
+
+        # Check thread healths
+        if datetime.now() - self._last_is_alive_check_time &gt; timedelta(
+            seconds=DAQ_JOB_REMOTE_IS_ALIVE_CHECK_INTERVAL_SECONDS
+        ):
+            if not self._receive_thread.is_alive():
+                raise RuntimeError(&#34;Receive thread is dead&#34;)
+            if not self._send_remote_stats_thread.is_alive():
+                raise RuntimeError(&#34;Send remote stats thread is dead&#34;)
+            self._last_is_alive_check_time = datetime.now()</code></pre>
 </details>
 <div class="desc"><p>Start the receive thread and the DAQ job.</p></div>
 </dd>
@@ -432,7 +492,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobRemoteConfig</span></span>
-<span>(</span><span>zmq_proxy_sub_urls: list[str],<br>topics: list[str] = &lt;factory&gt;,<br>use_xsub: bool = False,<br>zmq_proxy_pub_url: str | None = None,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>zmq_proxy_sub_urls: list[str],<br>topics: list[str] = &lt;factory&gt;,<br>zmq_proxy_pub_url: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -451,7 +511,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 
     zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
-    use_xsub: bool = False
     zmq_proxy_pub_url: Optional[str] = None</code></pre>
 </details>
 <div class="desc"><p>Configuration for DAQJobRemote.</p>
@@ -490,30 +549,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 
     zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
-    use_xsub: bool = False
-    zmq_proxy_pub_url: Optional[str] = None</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.use_xsub"><code class="name">var <span class="ident">use_xsub</span> : bool</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobRemoteConfig(DAQJobConfig):
-    &#34;&#34;&#34;
-    Configuration for DAQJobRemote.
-
-    Attributes:
-        zmq_local_url (str): Local ZMQ URL.
-        zmq_remote_urls (list[str]): List of remote ZMQ URLs.
-        topics (list[str]): List of topics to subscribe to.
-    &#34;&#34;&#34;
-
-    zmq_proxy_sub_urls: list[str]
-    topics: list[str] = []
-    use_xsub: bool = False
     zmq_proxy_pub_url: Optional[str] = None</code></pre>
 </details>
 <div class="desc"></div>
@@ -536,7 +571,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 
     zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
-    use_xsub: bool = False
     zmq_proxy_pub_url: Optional[str] = None</code></pre>
 </details>
 <div class="desc"></div>
@@ -559,7 +593,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 
     zmq_proxy_sub_urls: list[str]
     topics: list[str] = []
-    use_xsub: bool = False
     zmq_proxy_pub_url: Optional[str] = None</code></pre>
 </details>
 <div class="desc"></div>
@@ -809,6 +842,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <h4><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote" href="#enrgdaq.daq.jobs.remote.DAQJobRemote">DAQJobRemote</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.config" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.config_type" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset">restart_offset</a></code></li>
@@ -819,7 +853,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <h4><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig">DAQJobRemoteConfig</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.topics" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.topics">topics</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.use_xsub" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.use_xsub">use_xsub</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_pub_url" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_pub_url">zmq_proxy_pub_url</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_sub_urls" href="#enrgdaq.daq.jobs.remote.DAQJobRemoteConfig.zmq_proxy_sub_urls">zmq_proxy_sub_urls</a></code></li>
 </ul>
@@ -842,7 +875,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

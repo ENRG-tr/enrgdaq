@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.store.redis API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -58,7 +58,7 @@ el.replaceWith(d);
 <pre><code class="python">class DAQJobStoreRedis(DAQJobStore):
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
-    allowed_message_in_types = [DAQJobMessageStoreTabular]
+    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStoreRaw]
 
     _write_queue: deque[RedisWriteQueueItem]
     _last_flush_date: datetime
@@ -87,19 +87,25 @@ el.replaceWith(d);
 
         super().start()
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStoreRaw
+    ) -&gt; bool:
         if not super().handle_message(message):
             return False
 
         store_config = cast(DAQJobStoreConfigRedis, message.store_config.redis)
 
         data = {}
-        # Add data to data dict that we can add to Redis
-        for i, row in enumerate(message.keys):
-            data[row] = [x[i] for x in message.data]
-
-        # Append rows to write_queue
-        for row in message.data:
+        if isinstance(message, DAQJobMessageStoreTabular):
+            # Add data to data dict that we can add to Redis
+            for i, row in enumerate(message.keys):
+                data[row] = [x[i] for x in message.data]
+            for row in message.data:
+                self._write_queue.append(
+                    RedisWriteQueueItem(store_config, data, message.tag)
+                )
+        else:
+            data = message.data
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
             )
@@ -120,45 +126,26 @@ el.replaceWith(d);
             if msg.store_config.key_expiration_days is not None:
                 key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
+            base_item_key = f&#34;{msg.store_config.key}{f&#34;.{msg.tag}&#34; if msg.tag else &#39;&#39;}&#34;
+            if isinstance(msg.data, bytes):
+                item_key = msg.store_config.key
+                data = base64.b64encode(msg.data).decode(&#34;utf-8&#34;)
+                self._connection.set(item_key, data, ex=key_expiration)
+                self._logger.debug(f&#34;Added {len(data)} bytes to {item_key}&#34;)
+                continue
+            if not isinstance(msg.data, dict):
+                self._logger.error(
+                    &#34;msg.data must be a dict or bytes, but got &#34; f&#34;{type(msg.data)}&#34;
+                )
+                continue
+
+            batched_adds = []
             # Append item to key in redis
-            for i, item in enumerate(msg.data.items()):
+            for item in msg.data.items():
                 key, values = item
-                tag = &#34;&#34; if msg.tag is None else f&#34;.{msg.tag}&#34;
-                item_key = f&#34;{msg.store_config.key}{tag}.{key}&#34;
+                item_key = f&#34;{base_item_key}.{key}&#34;
 
-                if msg.store_config.use_timeseries:
-                    # Use Redis TimeSeries if requested
-                    assert self._ts is not None
-
-                    # Create TimeSeries key if it doesn&#39;t exist
-                    if not self._connection.exists(item_key) and key != &#34;timestamp&#34;:
-                        retention_msecs = None
-                        if msg.store_config.key_expiration_days is not None:
-                            retention_msecs = int(
-                                timedelta(
-                                    days=msg.store_config.key_expiration_days
-                                ).total_seconds()
-                                * 1000
-                            )
-                        self._ts.create(
-                            item_key,
-                            retention_msecs=retention_msecs,
-                            labels={&#34;key&#34;: msg.store_config.key}
-                            | ({&#34;tag&#34;: msg.tag} if msg.tag else {}),
-                        )
-                    if &#34;timestamp&#34; not in msg.data:
-                        self._logger.warning(
-                            &#34;Message data does not contain a timestamp, skipping&#34;
-                        )
-                        return
-
-                    self._ts.madd(
-                        [
-                            (item_key, msg.data[&#34;timestamp&#34;][i], value)
-                            for i, value in enumerate(values)
-                        ]
-                    )
-                else:
+                if not msg.store_config.use_timeseries:
                     # Add date to key if expiration is set
                     if key_expiration is not None:
                         item_key += &#34;:&#34; + datetime.now().strftime(&#34;%Y-%m-%d&#34;)
@@ -170,6 +157,44 @@ el.replaceWith(d);
                     if not item_exists and key_expiration is not None:
                         self._connection.expire(item_key, key_expiration)
 
+                    self._logger.debug(f&#34;Added {len(values)} values to {item_key}&#34;)
+                    continue
+
+                # Save it via Redis TimeSeries
+                assert self._ts is not None
+
+                # Create TimeSeries key if it doesn&#39;t exist
+                if not self._connection.exists(item_key) and key != &#34;timestamp&#34;:
+                    retention_msecs = None
+                    if msg.store_config.key_expiration_days is not None:
+                        retention_msecs = int(
+                            timedelta(
+                                days=msg.store_config.key_expiration_days
+                            ).total_seconds()
+                            * 1000
+                        )
+                    self._ts.create(
+                        item_key,
+                        retention_msecs=retention_msecs,
+                        labels={&#34;key&#34;: msg.store_config.key}
+                        | ({&#34;tag&#34;: msg.tag} if msg.tag else {}),
+                    )
+                if &#34;timestamp&#34; not in msg.data:
+                    self._logger.warning(
+                        &#34;Message data does not contain a timestamp, skipping&#34;
+                    )
+                    return
+
+                batched_adds.extend(
+                    [
+                        (item_key, msg.data[&#34;timestamp&#34;][i], value)
+                        for i, value in enumerate(values)
+                    ]
+                )
+
+            if self._ts is not None and len(batched_adds) &gt; 0:
+                self._ts.madd(batched_adds)
+
     def __del__(self):
         try:
             if self._connection is not None:
@@ -179,13 +204,9 @@ el.replaceWith(d);
 
         return super().__del__()</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-and provides additional functionality for handling and storing messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_store_config_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>A list of allowed store configuration types.</dd>
-</dl></div>
+<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p>
+<p>Optimized for high throughput - only sleeps when idle to avoid
+unnecessary latency in message processing.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -201,7 +222,7 @@ and provides additional functionality for handling and storing messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -239,45 +260,26 @@ and provides additional functionality for handling and storing messages.</p>
         if msg.store_config.key_expiration_days is not None:
             key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
+        base_item_key = f&#34;{msg.store_config.key}{f&#34;.{msg.tag}&#34; if msg.tag else &#39;&#39;}&#34;
+        if isinstance(msg.data, bytes):
+            item_key = msg.store_config.key
+            data = base64.b64encode(msg.data).decode(&#34;utf-8&#34;)
+            self._connection.set(item_key, data, ex=key_expiration)
+            self._logger.debug(f&#34;Added {len(data)} bytes to {item_key}&#34;)
+            continue
+        if not isinstance(msg.data, dict):
+            self._logger.error(
+                &#34;msg.data must be a dict or bytes, but got &#34; f&#34;{type(msg.data)}&#34;
+            )
+            continue
+
+        batched_adds = []
         # Append item to key in redis
-        for i, item in enumerate(msg.data.items()):
+        for item in msg.data.items():
             key, values = item
-            tag = &#34;&#34; if msg.tag is None else f&#34;.{msg.tag}&#34;
-            item_key = f&#34;{msg.store_config.key}{tag}.{key}&#34;
+            item_key = f&#34;{base_item_key}.{key}&#34;
 
-            if msg.store_config.use_timeseries:
-                # Use Redis TimeSeries if requested
-                assert self._ts is not None
-
-                # Create TimeSeries key if it doesn&#39;t exist
-                if not self._connection.exists(item_key) and key != &#34;timestamp&#34;:
-                    retention_msecs = None
-                    if msg.store_config.key_expiration_days is not None:
-                        retention_msecs = int(
-                            timedelta(
-                                days=msg.store_config.key_expiration_days
-                            ).total_seconds()
-                            * 1000
-                        )
-                    self._ts.create(
-                        item_key,
-                        retention_msecs=retention_msecs,
-                        labels={&#34;key&#34;: msg.store_config.key}
-                        | ({&#34;tag&#34;: msg.tag} if msg.tag else {}),
-                    )
-                if &#34;timestamp&#34; not in msg.data:
-                    self._logger.warning(
-                        &#34;Message data does not contain a timestamp, skipping&#34;
-                    )
-                    return
-
-                self._ts.madd(
-                    [
-                        (item_key, msg.data[&#34;timestamp&#34;][i], value)
-                        for i, value in enumerate(values)
-                    ]
-                )
-            else:
+            if not msg.store_config.use_timeseries:
                 # Add date to key if expiration is set
                 if key_expiration is not None:
                     item_key += &#34;:&#34; + datetime.now().strftime(&#34;%Y-%m-%d&#34;)
@@ -287,7 +289,45 @@ and provides additional functionality for handling and storing messages.</p>
 
                 # Set expiration if it was newly created
                 if not item_exists and key_expiration is not None:
-                    self._connection.expire(item_key, key_expiration)</code></pre>
+                    self._connection.expire(item_key, key_expiration)
+
+                self._logger.debug(f&#34;Added {len(values)} values to {item_key}&#34;)
+                continue
+
+            # Save it via Redis TimeSeries
+            assert self._ts is not None
+
+            # Create TimeSeries key if it doesn&#39;t exist
+            if not self._connection.exists(item_key) and key != &#34;timestamp&#34;:
+                retention_msecs = None
+                if msg.store_config.key_expiration_days is not None:
+                    retention_msecs = int(
+                        timedelta(
+                            days=msg.store_config.key_expiration_days
+                        ).total_seconds()
+                        * 1000
+                    )
+                self._ts.create(
+                    item_key,
+                    retention_msecs=retention_msecs,
+                    labels={&#34;key&#34;: msg.store_config.key}
+                    | ({&#34;tag&#34;: msg.tag} if msg.tag else {}),
+                )
+            if &#34;timestamp&#34; not in msg.data:
+                self._logger.warning(
+                    &#34;Message data does not contain a timestamp, skipping&#34;
+                )
+                return
+
+            batched_adds.extend(
+                [
+                    (item_key, msg.data[&#34;timestamp&#34;][i], value)
+                    for i, value in enumerate(values)
+                ]
+            )
+
+        if self._ts is not None and len(batched_adds) &gt; 0:
+            self._ts.madd(batched_adds)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -296,7 +336,7 @@ and provides additional functionality for handling and storing messages.</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
@@ -306,7 +346,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedisConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreRedisConfig</span></span>
-<span>(</span><span>host: str,<br>port: int = 6379,<br>db: int = 0,<br>password: str | None = None,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>host: str,<br>port: int = 6379,<br>db: int = 0,<br>password: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -397,7 +437,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.store.redis.RedisWriteQueueItem"><code class="flex name class">
 <span>class <span class="ident">RedisWriteQueueItem</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a>,<br>data: dict[str, list[typing.Any]],<br>tag: str | None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a>,<br>data: dict[str, list[typing.Any]] | bytes,<br>tag: str | None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -407,13 +447,13 @@ and provides additional functionality for handling and storing messages.</p>
 <pre><code class="python">@dataclass
 class RedisWriteQueueItem:
     store_config: DAQJobStoreConfigRedis
-    data: dict[str, list[Any]]
+    data: dict[str, list[Any]] | bytes
     tag: Optional[str]</code></pre>
 </details>
-<div class="desc"><p>RedisWriteQueueItem(store_config: enrgdaq.daq.store.models.DAQJobStoreConfigRedis, data: dict[str, list[typing.Any]], tag: Optional[str])</p></div>
-<h3>Class variables</h3>
+<div class="desc"><p>RedisWriteQueueItem(store_config: enrgdaq.daq.store.models.DAQJobStoreConfigRedis, data: dict[str, list[typing.Any]] | bytes, tag: Optional[str])</p></div>
+<h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.redis.RedisWriteQueueItem.data"><code class="name">var <span class="ident">data</span> : dict[str, list[typing.Any]]</code></dt>
+<dt id="enrgdaq.daq.jobs.store.redis.RedisWriteQueueItem.data"><code class="name">var <span class="ident">data</span> : dict[str, list[typing.Any]] | bytes</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -474,7 +514,7 @@ class RedisWriteQueueItem:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

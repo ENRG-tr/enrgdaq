@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.daq_job API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -45,14 +45,14 @@ el.replaceWith(d);
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="enrgdaq.daq.daq_job.build_daq_job"><code class="name flex">
-<span>def <span class="ident">build_daq_job</span></span>(<span>toml_config: bytes,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>) ‑> <a title="enrgdaq.daq.base.DAQJob" href="base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></span>
+<span>def <span class="ident">build_daq_job</span></span>(<span>toml_config: bytes,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>) ‑> <a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def build_daq_job(toml_config: bytes, supervisor_config: SupervisorConfig) -&gt; DAQJob:
+<pre><code class="python">def build_daq_job(toml_config: bytes, supervisor_info: SupervisorInfo) -&gt; DAQJobProcess:
     generic_daq_job_config = msgspec.toml.decode(toml_config, type=DAQJobConfig)
     daq_job_class = get_daq_job_class(
         generic_daq_job_config.daq_job_type, warn_deprecated=True
@@ -62,17 +62,19 @@ el.replaceWith(d);
         raise Exception(f&#34;Invalid DAQ job type: {generic_daq_job_config.daq_job_type}&#34;)
 
     # Get DAQ config clase based on daq_job_type
-    daq_job_config_class: DAQJobConfig = daq_job_class.config_type
+    daq_job_config_class: type[DAQJobConfig] = daq_job_class.config_type
 
     # Load the config in
     config = msgspec.toml.decode(toml_config, type=daq_job_config_class)
 
-    return daq_job_class(config, supervisor_config=supervisor_config.clone())</code></pre>
+    return _create_daq_job_process(
+        daq_job_class, config, supervisor_info, toml_config.decode()
+    )</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.daq_job.load_daq_jobs"><code class="name flex">
-<span>def <span class="ident">load_daq_jobs</span></span>(<span>job_config_dir: str,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>) ‑> list[<a title="enrgdaq.daq.base.DAQJob" href="base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>]</span>
+<span>def <span class="ident">load_daq_jobs</span></span>(<span>job_config_dir: str,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>) ‑> list[<a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a>]</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -80,78 +82,107 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_daq_jobs(
-    job_config_dir: str, supervisor_config: SupervisorConfig
-) -&gt; list[DAQJob]:
+    job_config_dir: str, supervisor_info: SupervisorInfo
+) -&gt; list[DAQJobProcess]:
     jobs = []
     job_files = glob.glob(os.path.join(job_config_dir, &#34;*.toml&#34;))
     for job_file in job_files:
         # Skip the supervisor config file
-        if Path(job_file) == Path(SUPERVISOR_CONFIG_FILE_PATH):
+        if os.path.basename(job_file) == SUPERVISOR_CONFIG_FILE_NAME:
             continue
 
         with open(job_file, &#34;rb&#34;) as f:
             job_config_raw = f.read()
 
-        jobs.append(build_daq_job(job_config_raw, supervisor_config))
+        jobs.append(build_daq_job(job_config_raw, supervisor_info))
 
     return jobs</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.daq_job.restart_daq_job"><code class="name flex">
-<span>def <span class="ident">restart_daq_job</span></span>(<span>daq_job_type: type[<a title="enrgdaq.daq.base.DAQJob" href="base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>daq_job_config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a>) ‑> <a title="enrgdaq.daq.base.DAQJobThread" href="base.html#enrgdaq.daq.base.DAQJobThread">DAQJobThread</a></span>
+<dt id="enrgdaq.daq.daq_job.rebuild_daq_job"><code class="name flex">
+<span>def <span class="ident">rebuild_daq_job</span></span>(<span>daq_job_process: <a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>) ‑> <a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def restart_daq_job(
-    daq_job_type: type[DAQJob],
-    daq_job_config: DAQJobConfig,
-    supervisor_config: SupervisorConfig,
-) -&gt; DAQJobThread:
-    logging.info(f&#34;Restarting {daq_job_type.__name__}&#34;)
-    new_daq_job = daq_job_type(
-        daq_job_config, supervisor_config=supervisor_config.clone()
-    )
-    thread = threading.Thread(target=new_daq_job.start, daemon=True)
-    thread.start()
-    return DAQJobThread(new_daq_job, thread)</code></pre>
+<pre><code class="python">def rebuild_daq_job(
+    daq_job_process: DAQJobProcess, supervisor_info: SupervisorInfo
+) -&gt; DAQJobProcess:
+    return _create_daq_job_process(
+        daq_job_process.daq_job_cls,
+        daq_job_process.config,
+        supervisor_info,
+        log_queue=daq_job_process.log_queue,
+    )</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.daq_job.start_daq_job"><code class="name flex">
-<span>def <span class="ident">start_daq_job</span></span>(<span>daq_job: <a title="enrgdaq.daq.base.DAQJob" href="base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>) ‑> <a title="enrgdaq.daq.base.DAQJobThread" href="base.html#enrgdaq.daq.base.DAQJobThread">DAQJobThread</a></span>
+<span>def <span class="ident">start_daq_job</span></span>(<span>daq_job_process: <a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a>) ‑> <a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a></span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_daq_job(daq_job: DAQJob) -&gt; DAQJobThread:
-    logging.info(f&#34;Starting {type(daq_job).__name__}&#34;)
-    thread = threading.Thread(target=daq_job.start, daemon=True)
-    thread.start()
+<pre><code class="python">def start_daq_job(daq_job_process: DAQJobProcess) -&gt; DAQJobProcess:
+    logging.info(f&#34;Starting {daq_job_process.daq_job_cls.__name__}&#34;)
 
-    return DAQJobThread(daq_job, thread)</code></pre>
+    job_multiprocessing_method = getattr(
+        daq_job_process.daq_job_cls, &#34;multiprocessing_method&#34;, &#34;default&#34;
+    )
+    # Use &#39;fork&#39; method on Unix systems (including macOS) by default to avoid semaphore lock issues
+    # when pickling/unpickling Queue objects during process spawn, but allow individual jobs to override
+    if platform.system() in [&#34;Darwin&#34;, &#34;Linux&#34;]:
+        if job_multiprocessing_method == &#34;spawn&#34;:
+            # Use default Process (which will use spawn on macOS)
+            process = Process(target=daq_job_process.start, daemon=True)
+        elif job_multiprocessing_method == &#34;fork&#34;:
+            # Explicitly use fork context
+            ctx = get_context(&#34;fork&#34;)
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+        else:  # default behavior
+            # Use fork for better compatibility with most DAQ jobs
+            ctx = get_context(&#34;fork&#34;)
+            process = ctx.Process(target=daq_job_process.start, daemon=True)
+    else:
+        # Use default Process on Windows (which doesn&#39;t support fork)
+        process = Process(target=daq_job_process.start, daemon=True)
+
+    process.start()
+    daq_job_process.process = process
+    try:
+        daq_job_info_message = daq_job_process.message_out.get(timeout=5000)
+        if isinstance(daq_job_info_message, DAQJobMessageJobStarted):
+            daq_job_process.daq_job_info = daq_job_info_message.daq_job_info
+        else:
+            raise Exception(&#34;Initial message of DAQJob was not DAQJobMessageJobStarted&#34;)
+    except Exception as e:
+        logging.error(
+            f&#34;Could not get DAQ job info for {daq_job_process.daq_job_cls.__name__}: {e}&#34;,
+            exc_info=True,
+        )
+    return daq_job_process</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.daq_job.start_daq_jobs"><code class="name flex">
-<span>def <span class="ident">start_daq_jobs</span></span>(<span>daq_jobs: list[<a title="enrgdaq.daq.base.DAQJob" href="base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>]) ‑> list[<a title="enrgdaq.daq.base.DAQJobThread" href="base.html#enrgdaq.daq.base.DAQJobThread">DAQJobThread</a>]</span>
+<span>def <span class="ident">start_daq_jobs</span></span>(<span>daq_job_processes: list[<a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a>]) ‑> list[<a title="enrgdaq.daq.base.DAQJobProcess" href="base.html#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a>]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start_daq_jobs(daq_jobs: list[DAQJob]) -&gt; list[DAQJobThread]:
-    threads = []
-    for daq_job in daq_jobs:
-        threads.append(start_daq_job(daq_job))
+<pre><code class="python">def start_daq_jobs(daq_job_processes: list[DAQJobProcess]) -&gt; list[DAQJobProcess]:
+    processes = []
+    for daq_job in daq_job_processes:
+        processes.append(start_daq_job(daq_job))
 
-    return threads</code></pre>
+    return processes</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -174,7 +205,7 @@ el.replaceWith(d);
 <ul class="">
 <li><code><a title="enrgdaq.daq.daq_job.build_daq_job" href="#enrgdaq.daq.daq_job.build_daq_job">build_daq_job</a></code></li>
 <li><code><a title="enrgdaq.daq.daq_job.load_daq_jobs" href="#enrgdaq.daq.daq_job.load_daq_jobs">load_daq_jobs</a></code></li>
-<li><code><a title="enrgdaq.daq.daq_job.restart_daq_job" href="#enrgdaq.daq.daq_job.restart_daq_job">restart_daq_job</a></code></li>
+<li><code><a title="enrgdaq.daq.daq_job.rebuild_daq_job" href="#enrgdaq.daq.daq_job.rebuild_daq_job">rebuild_daq_job</a></code></li>
 <li><code><a title="enrgdaq.daq.daq_job.start_daq_job" href="#enrgdaq.daq.daq_job.start_daq_job">start_daq_job</a></code></li>
 <li><code><a title="enrgdaq.daq.daq_job.start_daq_jobs" href="#enrgdaq.daq.daq_job.start_daq_jobs">start_daq_jobs</a></code></li>
 </ul>
@@ -183,7 +214,7 @@ el.replaceWith(d);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

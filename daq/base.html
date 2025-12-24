@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.base API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.base.DAQJob"><code class="flex name class">
 <span>class <span class="ident">DAQJob</span></span>
-<span>(</span><span>config: Any,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -71,66 +71,107 @@ el.replaceWith(d);
         info (DAQJobInfo): Information about the job.
         _has_been_freed (bool): Flag indicating if the job has been freed.
         _logger (logging.Logger): Logger instance for the job.
+        multiprocessing_method (str): The multiprocessing method to use (&#39;fork&#39; or &#39;spawn&#39;).
     &#34;&#34;&#34;
 
     allowed_message_in_types: list[type[DAQJobMessage]] = []
-    config_type: Any
-    config: Any
-    message_in: Queue[DAQJobMessage]
-    message_out: Queue[DAQJobMessage]
+    config_type: type[DAQJobConfig]  # pyright: ignore[reportUninitializedInstanceVariable]
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
     instance_id: int
     unique_id: str
-    restart_offset: timedelta
+    restart_offset: timedelta  # pyright: ignore[reportUninitializedInstanceVariable]
     info: &#34;DAQJobInfo&#34;
     _has_been_freed: bool
     _logger: logging.Logger
+    multiprocessing_method: str = &#34;default&#34;  # Can be &#39;fork&#39;, &#39;spawn&#39;, or &#39;default&#39;
+    watchdog_timeout_seconds: float = 0  # Watchdog timeout in seconds, 0 = disabled
+    watchdog_force_exit: bool = (
+        False  # If True, force exit on timeout (for blocking calls)
+    )
+    _watchdog: Watchdog
+    _supervisor_info: SupervisorInfo | None
+    _routes: RouteMapping | None = None
 
     def __init__(
-        self, config: Any, supervisor_config: Optional[SupervisorConfig] = None
+        self,
+        config: DAQJobConfig,
+        supervisor_info: SupervisorInfo | None = None,
+        instance_id: int | None = None,
+        message_in: Any = None,
+        message_out: Any = None,
+        raw_config: str | None = None,
     ):
-        global daq_job_instance_id, daq_job_instance_id_lock
-
-        with daq_job_instance_id_lock:
-            self.instance_id = daq_job_instance_id
-            daq_job_instance_id += 1
+        self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f&#34;{type(self).__name__}({self.instance_id})&#34;)
-        if isinstance(config, DAQJobConfig):
+
+        # TODO: In some tests config is a dict, so we need to check for this
+        if isinstance(config, DAQJobConfig):  # pyright: ignore[reportUnnecessaryIsInstance]
             self._logger.setLevel(config.verbosity.to_logging_level())
 
         self.config = config
-        self.message_in = Queue()
-        self.message_out = Queue()
+        self.message_in = message_in or _create_queue()
+        self.message_out = message_out or _create_queue()
 
         self._has_been_freed = False
-        self.unique_id = str(uuid.uuid4())
+        self.unique_id = getattr(config, &#34;daq_job_unique_id&#34;, None) or str(uuid.uuid4())
 
-        if supervisor_config is not None:
-            self._supervisor_config = supervisor_config
+        if supervisor_info is not None:
+            self._supervisor_info = supervisor_info
         else:
-            self._supervisor_config = None
-        self.info = self._create_info()
+            self._supervisor_info = None
+        self.info = self._create_info(raw_config)
+        self._logger.debug(f&#34;DAQ job {self.info.unique_id} created&#34;)
 
-    def consume(self, nowait=True):
+        self._watchdog = Watchdog(
+            timeout_seconds=self.watchdog_timeout_seconds,
+            force_exit=self.watchdog_force_exit,
+            logger=self._logger,
+        )
+
+        self._put_message_out(DAQJobMessageJobStarted())
+
+    def consume(self, nowait: bool = True, timeout: float | None = None):
         &#34;&#34;&#34;
         Consumes messages from the message_in queue.
         If nowait is True, it will consume the message immediately.
         Otherwise, it will wait until a message is available.
         &#34;&#34;&#34;
 
-        def _process_message(message):
-            if not self.handle_message(message):
-                self.message_in.put(message)
-
         # Return immediately after consuming the message
         if not nowait:
-            _process_message(self.message_in.get())
+            msg = self.message_in.get(timeout=timeout)
+            msg = self._unwrap_message(msg)
+            self.handle_message(msg)
             return
 
         while True:
             try:
-                _process_message(self.message_in.get_nowait())
-            except Empty:
+                msg = self.message_in.get_nowait()
+                msg = self._unwrap_message(msg)
+                self.handle_message(msg)
+            except (Empty, FileNotFoundError):
                 break
+
+    def consume_all(self):
+        processed_any = False
+        while True:
+            try:
+                msg = self.message_in.get_nowait()
+                msg = self._unwrap_message(msg)
+                if self.handle_message(msg):
+                    processed_any = True
+            except (Empty, FileNotFoundError):
+                break
+        return processed_any
+
+    def _unwrap_message(self, message: DAQJobMessage) -&gt; DAQJobMessage:
+        if isinstance(message, DAQJobMessageSHM) or isinstance(
+            message, DAQJobMessageStoreSHM
+        ):
+            return message.shm.load()
+        return message
 
     def handle_message(self, message: &#34;DAQJobMessage&#34;) -&gt; bool:
         &#34;&#34;&#34;
@@ -149,6 +190,10 @@ el.replaceWith(d);
 
         if isinstance(message, DAQJobMessageStop):
             raise DAQJobStopError(message.reason)
+
+        if isinstance(message, DAQJobMessageRoutes):
+            self._routes = message.routes
+            return True
         # check if the message is accepted
         is_message_type_accepted = False
         for accepted_message_type in self.allowed_message_in_types:
@@ -160,9 +205,9 @@ el.replaceWith(d);
             )
         # Drop remote messages silently if configured to do so
         if self.config.remote_config.drop_remote_messages:
-            if message.daq_job_info and message.daq_job_info.supervisor_config:
+            if message.daq_job_info and message.daq_job_info.supervisor_info:
                 remote_supervisor_id = (
-                    message.daq_job_info.supervisor_config.supervisor_id
+                    message.daq_job_info.supervisor_info.supervisor_id
                 )
             else:
                 remote_supervisor_id = &#34;unknown&#34;
@@ -175,7 +220,7 @@ el.replaceWith(d);
     def start(self):
         raise NotImplementedError
 
-    def _create_info(self) -&gt; &#34;DAQJobInfo&#34;:
+    def _create_info(self, raw_config: Optional[str] = None) -&gt; &#34;DAQJobInfo&#34;:
         &#34;&#34;&#34;
         Creates a DAQJobInfo object for the job.
 
@@ -187,13 +232,15 @@ el.replaceWith(d);
             daq_job_type=self.config.daq_job_type
             if isinstance(self.config, DAQJobConfig)
             else self.config[&#34;daq_job_type&#34;],
-            daq_job_class_name=type(self).__name__,
             unique_id=self.unique_id,
             instance_id=self.instance_id,
-            supervisor_config=getattr(self, &#34;_supervisor_config&#34;, None),
+            supervisor_info=getattr(self, &#34;_supervisor_info&#34;, None),
+            config=raw_config or &#34;# No config&#34;,
         )
 
-    def _put_message_out(self, message: DAQJobMessage):
+    def _put_message_out(
+        self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
+    ):
         &#34;&#34;&#34;
         Puts a message in the message_out queue.
 
@@ -203,19 +250,65 @@ el.replaceWith(d);
             message (DAQJobMessage): The message to put in the queue.
         &#34;&#34;&#34;
 
-        message.daq_job_info = self.info
-        message.remote_config = self.config.remote_config
+        if modify_message_metadata:
+            message.daq_job_info = self.info
+            message.remote_config = self.config.remote_config
 
-        # Get the remote config from the store config if it exists
-        if isinstance(message, DAQJobMessageStore):
-            store_remote_config = message.get_remote_config()
-            if store_remote_config is not None:
-                message.remote_config = store_remote_config
+            # Get the remote config from the store config if it exists
+            if isinstance(message, DAQJobMessageStore):
+                store_remote_config = message.get_remote_config()
+                if store_remote_config is not None:
+                    message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
-            msg_json = msgspec.json.encode(message)
-            self._logger.debug(f&#34;Message out: {msg_json}&#34;)
-        self.message_out.put(message)
+            self._logger.debug(f&#34;Message out: {message}&#34;)
+
+        if use_shm and sys.platform != &#34;win32&#34;:
+            original_message = message
+            # Pickle message
+            message_bytes = pickle.dumps(message)
+            # Create shared memory object
+            shm = SharedMemory(create=True, size=len(message_bytes))
+            assert shm.buf is not None, &#34;Shared memory buffer is None&#34;
+            # Write message to shared memory
+            shm.buf[: len(message_bytes)] = message_bytes
+            shm.close()
+            shm_handle = SHMHandle(shm_name=shm.name, shm_size=shm.size)
+            if isinstance(message, DAQJobMessageStore):
+                message = DAQJobMessageStoreSHM(
+                    store_config=getattr(original_message, &#34;store_config&#34;),
+                    tag=getattr(original_message, &#34;tag&#34;, None),
+                    shm=shm_handle,
+                )
+            else:
+                message = DAQJobMessageSHM(
+                    shm=shm_handle,
+                )
+            message.daq_job_info = self.info
+            message.remote_config = self.config.remote_config
+            message.route_keys = original_message.route_keys
+
+        if False and self.supervisor_id != &#34;benchmark_client_0&#34;:
+            print(
+                &#34;***&#34;,
+                self.supervisor_id,
+                type(self).__name__,
+                &#34;putting message&#34;,
+                type(message),
+                self._routes,
+            )
+        message_routed = False
+        # print(type(self).__name__, self._routes, message.route_keys)
+        if self._routes is not None:
+            for route_key in message.route_keys:
+                if route_key in self._routes:
+                    for queue in self._routes[route_key]:
+                        queue.put(message)
+                        message_routed = True
+                        break
+
+        if not message_routed:
+            self.message_out.put(message)
 
     def __del__(self):
         self._logger.info(&#34;DAQ job is being deleted&#34;)
@@ -223,7 +316,8 @@ el.replaceWith(d);
 
     @property
     def supervisor_id(self):
-        return self.info.supervisor_config.supervisor_id
+        assert self.info.supervisor_info is not None
+        return self.info.supervisor_info.supervisor_id
 
     def free(self):
         if self._has_been_freed:
@@ -257,11 +351,15 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>Flag indicating if the job has been freed.</dd>
 <dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
 <dd>Logger instance for the job.</dd>
+<dt><strong><code>multiprocessing_method</code></strong> :&ensp;<code>str</code></dt>
+<dd>The multiprocessing method to use ('fork' or 'spawn').</dd>
 </dl></div>
 <h3>Subclasses</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.alert.base.DAQJobAlert" href="alert/base.html#enrgdaq.daq.alert.base.DAQJobAlert">DAQJobAlert</a></li>
-<li><a title="enrgdaq.daq.jobs.caen.n1081b.DAQJobN1081B" href="jobs/caen/n1081b.html#enrgdaq.daq.jobs.caen.n1081b.DAQJobN1081B">DAQJobN1081B</a></li>
+<li><a title="enrgdaq.daq.jobs.benchmark.DAQJobBenchmark" href="jobs/benchmark.html#enrgdaq.daq.jobs.benchmark.DAQJobBenchmark">DAQJobBenchmark</a></li>
+<li><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer" href="jobs/caen/digitizer.html#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer">DAQJobCAENDigitizer</a></li>
+<li><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV" href="jobs/caen/hv.html#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV">DAQJobCAENHV</a></li>
 <li><a title="enrgdaq.daq.jobs.caen.toolbox.DAQJobCAENToolbox" href="jobs/caen/toolbox.html#enrgdaq.daq.jobs.caen.toolbox.DAQJobCAENToolbox">DAQJobCAENToolbox</a></li>
 <li><a title="enrgdaq.daq.jobs.camera.DAQJobCamera" href="jobs/camera.html#enrgdaq.daq.jobs.camera.DAQJobCamera">DAQJobCamera</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts" href="jobs/handle_alerts.html#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts">DAQJobHandleAlerts</a></li>
@@ -270,6 +368,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <li><a title="enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics" href="jobs/pc_metrics.html#enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics">DAQJobPCMetrics</a></li>
 <li><a title="enrgdaq.daq.jobs.remote.DAQJobRemote" href="jobs/remote.html#enrgdaq.daq.jobs.remote.DAQJobRemote">DAQJobRemote</a></li>
 <li><a title="enrgdaq.daq.jobs.remote_proxy.DAQJobRemoteProxy" href="jobs/remote_proxy.html#enrgdaq.daq.jobs.remote_proxy.DAQJobRemoteProxy">DAQJobRemoteProxy</a></li>
+<li><a title="enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia" href="jobs/sensor/xiaomi_mijia.html#enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia">DAQJobXiaomiMijia</a></li>
 <li><a title="enrgdaq.daq.jobs.serve_http.DAQJobServeHTTP" href="jobs/serve_http.html#enrgdaq.daq.jobs.serve_http.DAQJobServeHTTP">DAQJobServeHTTP</a></li>
 <li><a title="enrgdaq.daq.jobs.test_job.DAQJobTest" href="jobs/test_job.html#enrgdaq.daq.jobs.test_job.DAQJobTest">DAQJobTest</a></li>
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -280,11 +379,11 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJob.config"><code class="name">var <span class="ident">config</span> : Any</code></dt>
+<dt id="enrgdaq.daq.base.DAQJob.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJob.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.base.DAQJob.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -296,11 +395,15 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJob.message_in"><code class="name">var <span class="ident">message_in</span> : queue.Queue[<a title="enrgdaq.daq.models.DAQJobMessage" href="models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]</code></dt>
+<dt id="enrgdaq.daq.base.DAQJob.message_in"><code class="name">var <span class="ident">message_in</span> : Any</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJob.message_out"><code class="name">var <span class="ident">message_out</span> : queue.Queue[<a title="enrgdaq.daq.models.DAQJobMessage" href="models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]</code></dt>
+<dt id="enrgdaq.daq.base.DAQJob.message_out"><code class="name">var <span class="ident">message_out</span> : Any</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.multiprocessing_method"><code class="name">var <span class="ident">multiprocessing_method</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -309,6 +412,14 @@ message queues, and provides methods for consuming and handling messages.</p>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.unique_id"><code class="name">var <span class="ident">unique_id</span> : str</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.watchdog_force_exit"><code class="name">var <span class="ident">watchdog_force_exit</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds"><code class="name">var <span class="ident">watchdog_timeout_seconds</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -323,7 +434,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 </summary>
 <pre><code class="python">@property
 def supervisor_id(self):
-    return self.info.supervisor_config.supervisor_id</code></pre>
+    assert self.info.supervisor_info is not None
+    return self.info.supervisor_info.supervisor_id</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -331,38 +443,60 @@ def supervisor_id(self):
 <h3>Methods</h3>
 <dl>
 <dt id="enrgdaq.daq.base.DAQJob.consume"><code class="name flex">
-<span>def <span class="ident">consume</span></span>(<span>self, nowait=True)</span>
+<span>def <span class="ident">consume</span></span>(<span>self, nowait: bool = True, timeout: float | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def consume(self, nowait=True):
+<pre><code class="python">def consume(self, nowait: bool = True, timeout: float | None = None):
     &#34;&#34;&#34;
     Consumes messages from the message_in queue.
     If nowait is True, it will consume the message immediately.
     Otherwise, it will wait until a message is available.
     &#34;&#34;&#34;
 
-    def _process_message(message):
-        if not self.handle_message(message):
-            self.message_in.put(message)
-
     # Return immediately after consuming the message
     if not nowait:
-        _process_message(self.message_in.get())
+        msg = self.message_in.get(timeout=timeout)
+        msg = self._unwrap_message(msg)
+        self.handle_message(msg)
         return
 
     while True:
         try:
-            _process_message(self.message_in.get_nowait())
-        except Empty:
+            msg = self.message_in.get_nowait()
+            msg = self._unwrap_message(msg)
+            self.handle_message(msg)
+        except (Empty, FileNotFoundError):
             break</code></pre>
 </details>
 <div class="desc"><p>Consumes messages from the message_in queue.
 If nowait is True, it will consume the message immediately.
 Otherwise, it will wait until a message is available.</p></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJob.consume_all"><code class="name flex">
+<span>def <span class="ident">consume_all</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def consume_all(self):
+    processed_any = False
+    while True:
+        try:
+            msg = self.message_in.get_nowait()
+            msg = self._unwrap_message(msg)
+            if self.handle_message(msg):
+                processed_any = True
+        except (Empty, FileNotFoundError):
+            break
+    return processed_any</code></pre>
+</details>
+<div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.free"><code class="name flex">
 <span>def <span class="ident">free</span></span>(<span>self)</span>
@@ -405,6 +539,10 @@ Otherwise, it will wait until a message is available.</p></div>
 
     if isinstance(message, DAQJobMessageStop):
         raise DAQJobStopError(message.reason)
+
+    if isinstance(message, DAQJobMessageRoutes):
+        self._routes = message.routes
+        return True
     # check if the message is accepted
     is_message_type_accepted = False
     for accepted_message_type in self.allowed_message_in_types:
@@ -416,9 +554,9 @@ Otherwise, it will wait until a message is available.</p></div>
         )
     # Drop remote messages silently if configured to do so
     if self.config.remote_config.drop_remote_messages:
-        if message.daq_job_info and message.daq_job_info.supervisor_config:
+        if message.daq_job_info and message.daq_job_info.supervisor_info:
             remote_supervisor_id = (
-                message.daq_job_info.supervisor_config.supervisor_id
+                message.daq_job_info.supervisor_info.supervisor_id
             )
         else:
             remote_supervisor_id = &#34;unknown&#34;
@@ -462,34 +600,732 @@ Otherwise, it will wait until a message is available.</p></div>
 </dd>
 </dl>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobThread"><code class="flex name class">
-<span>class <span class="ident">DAQJobThread</span></span>
-<span>(</span><span>daq_job: <a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>,<br>thread: threading.Thread,<br>start_time: datetime.datetime = &lt;factory&gt;)</span>
+<dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
+<span>class <span class="ident">DAQJobProcess</span></span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>message_in: Any,<br>message_out: Any,<br>process: multiprocessing.context.Process | multiprocessing.context.ForkProcess | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">@dataclass
-class DAQJobThread:
-    daq_job: DAQJob
-    thread: threading.Thread
-    start_time: datetime = field(default_factory=datetime.now)</code></pre>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
 </details>
-<div class="desc"><p>DAQJobThread(daq_job: enrgdaq.daq.base.DAQJob, thread: threading.Thread, start_time: datetime.datetime = <factory>)</p></div>
-<h3>Class variables</h3>
+<div class="desc"><p>A base class for defining efficient serializable objects.</p>
+<p>Fields are defined using type annotations. Fields may optionally have
+default values, which result in keyword parameters to the constructor.</p>
+<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
+<code>__copy__</code> methods. Additional methods can be defined on the class as
+needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
+methods can. A tuple of the field names is available on the class via the
+<code>__struct_fields__</code> attribute if needed.</p>
+<p>Additional class options can be enabled by passing keywords to the class
+definition (see example below). These configuration options may also be
+inspected at runtime through the <code>__struct_config__</code> attribute.</p>
+<h2 id="configuration">Configuration</h2>
+<p>frozen: bool, default False
+Whether instances of this type are pseudo-immutable. If true, attribute
+assignment is disabled and a corresponding <code>__hash__</code> is defined.
+order: bool, default False
+If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
+will be generated for this type.
+eq: bool, default True
+If True (the default), an <code>__eq__</code> method will be generated for this
+type. Set to False to compare based on instance identity alone.
+kw_only: bool, default False
+If True, all fields will be treated as keyword-only arguments in the
+generated <code>__init__</code> method. Default is False.
+omit_defaults: bool, default False
+Whether fields should be omitted from encoding if the corresponding value
+is the default for that field. Enabling this may reduce message size, and
+often also improve encoding &amp; decoding performance.
+forbid_unknown_fields: bool, default False
+If True, an error is raised if an unknown field is encountered while
+decoding structs of this type. If False (the default), no error is raised
+and the unknown field is skipped.
+tag: str, int, bool, callable, or None, default None
+Used along with <code>tag_field</code> for configuring tagged union support. If
+either are non-None, then the struct is considered "tagged". In this case,
+an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
+encoded message, which can be used to differentiate message types during
+decoding.</p>
+<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
+is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
+a string (or less commonly int) value directly to be used as the tag
+(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
+takes the class qualname and returns a valid tag value (e.g.
+<code>tag=str.lower</code>). See the docs for more information.
+tag_field: str or None, default None
+The field name to use for tagged union support. If <code>tag</code> is non-None,
+then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
+information.
+rename: str, mapping, callable, or None, default None
+Controls renaming the field names used when encoding/decoding the struct.
+May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
+<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
+or kebab-case respectively. May also be a mapping from field names to the
+renamed names (missing fields are not renamed). Alternatively, may be a
+callable that takes the field name and returns a new name or <code>None</code> to
+not rename that field. Default is <code>None</code> for no field renaming.
+repr_omit_defaults: bool, default False
+Whether fields should be omitted from the generated repr if the
+corresponding value is the default for that field.
+array_like: bool, default False
+If True, this struct type will be treated as an array-like type during
+encoding/decoding, rather than a dict-like type (the default). This may
+improve performance, at the cost of a more inscrutable message encoding.
+gc: bool, default True
+Whether garbage collection is enabled for this type. Disabling this <em>may</em>
+help reduce GC pressure, but will prevent reference cycles composed of only
+<code>gc=False</code> from being collected. It is the user's responsibility to ensure
+that reference cycles don't occur when setting <code>gc=False</code>.
+weakref: bool, default False
+Whether instances of this type support weak references. Defaults to False.
+dict: bool, default False
+Whether instances of this type will include a <code>__dict__</code>. Setting this to
+True will allow adding additional undeclared attributes to a struct instance,
+which may be useful for holding private runtime state. Defaults to False.
+cache_hash: bool, default False
+If enabled, the hash of a frozen struct instance will be computed at most
+once, and then cached on the instance for further reuse. For expensive
+hash values this can improve performance at the cost of a small amount of
+memory usage.</p>
+<h2 id="examples">Examples</h2>
+<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
+two required and one optional.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
+...     name: str
+...     breed: str
+...     is_good_boy: bool = True
+...
+&gt;&gt;&gt; Dog('snickers', breed='corgi')
+Dog(name='snickers', breed='corgi', is_good_boy=True)
+</code></pre>
+<p>Additional struct options can be set as part of the class definition. Here
+we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
+...     x: float
+...     y: float
+...
+&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
+{Point(x=1.5, y=2.0): 1}
+</code></pre></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.base.DAQJobThread.daq_job"><code class="name">var <span class="ident">daq_job</span> : <a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a></code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a></code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobThread.start_time"><code class="name">var <span class="ident">start_time</span> : datetime.datetime</code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.daq_job_cls"><code class="name">var <span class="ident">daq_job_cls</span> : type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>]</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobThread.thread"><code class="name">var <span class="ident">thread</span> : threading.Thread</code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.daq_job_info"><code class="name">var <span class="ident">daq_job_info</span> : <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None</code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.instance_id"><code class="name">var <span class="ident">instance_id</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.log_queue"><code class="name">var <span class="ident">log_queue</span> : typing.Any | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.message_in"><code class="name">var <span class="ident">message_in</span> : Any</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.message_out"><code class="name">var <span class="ident">message_out</span> : Any</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.process"><code class="name">var <span class="ident">process</span> : multiprocessing.context.Process | multiprocessing.context.ForkProcess | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.raw_config"><code class="name">var <span class="ident">raw_config</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.restart_on_crash"><code class="name">var <span class="ident">restart_on_crash</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.start_time"><code class="name">var <span class="ident">start_time</span> : datetime.datetime</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.supervisor_info"><code class="name">var <span class="ident">supervisor_info</span> : <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    message_in: Any
+    message_out: Any
+    process: Process | ForkProcess | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            message_in=self.message_in,
+            message_out=self.message_out,
+            raw_config=self.raw_config,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.base.DAQJobProcess.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    if self.log_queue:
+        root_logger = logging.getLogger()
+        root_logger.handlers.clear()
+        root_logger.addHandler(QueueHandler(self.log_queue))
+        root_logger.setLevel(logging.DEBUG)
+
+    instance = self.daq_job_cls(
+        self.config,
+        supervisor_info=self.supervisor_info,
+        instance_id=self.instance_id,
+        message_in=self.message_in,
+        message_out=self.message_out,
+        raw_config=self.raw_config,
+    )
+    try:
+        instance.start()
+    except Exception as e:
+        logging.error(
+            f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+        )
+        raise e</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -516,24 +1352,38 @@ class DAQJobThread:
 <li><code><a title="enrgdaq.daq.base.DAQJob.config" href="#enrgdaq.daq.base.DAQJob.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config_type" href="#enrgdaq.daq.base.DAQJob.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.consume_all" href="#enrgdaq.daq.base.DAQJob.consume_all">consume_all</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.free" href="#enrgdaq.daq.base.DAQJob.free">free</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.info" href="#enrgdaq.daq.base.DAQJob.info">info</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.instance_id" href="#enrgdaq.daq.base.DAQJob.instance_id">instance_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_in" href="#enrgdaq.daq.base.DAQJob.message_in">message_in</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_out" href="#enrgdaq.daq.base.DAQJob.message_out">message_out</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.multiprocessing_method" href="#enrgdaq.daq.base.DAQJob.multiprocessing_method">multiprocessing_method</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.restart_offset" href="#enrgdaq.daq.base.DAQJob.restart_offset">restart_offset</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.start" href="#enrgdaq.daq.base.DAQJob.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.supervisor_id" href="#enrgdaq.daq.base.DAQJob.supervisor_id">supervisor_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.unique_id" href="#enrgdaq.daq.base.DAQJob.unique_id">unique_id</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.watchdog_force_exit" href="#enrgdaq.daq.base.DAQJob.watchdog_force_exit">watchdog_force_exit</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds" href="#enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds">watchdog_timeout_seconds</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="enrgdaq.daq.base.DAQJobThread" href="#enrgdaq.daq.base.DAQJobThread">DAQJobThread</a></code></h4>
-<ul class="">
-<li><code><a title="enrgdaq.daq.base.DAQJobThread.daq_job" href="#enrgdaq.daq.base.DAQJobThread.daq_job">daq_job</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJobThread.start_time" href="#enrgdaq.daq.base.DAQJobThread.start_time">start_time</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJobThread.thread" href="#enrgdaq.daq.base.DAQJobThread.thread">thread</a></code></li>
+<h4><code><a title="enrgdaq.daq.base.DAQJobProcess" href="#enrgdaq.daq.base.DAQJobProcess">DAQJobProcess</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.config" href="#enrgdaq.daq.base.DAQJobProcess.config">config</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.daq_job_cls" href="#enrgdaq.daq.base.DAQJobProcess.daq_job_cls">daq_job_cls</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.daq_job_info" href="#enrgdaq.daq.base.DAQJobProcess.daq_job_info">daq_job_info</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.instance_id" href="#enrgdaq.daq.base.DAQJobProcess.instance_id">instance_id</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.log_queue" href="#enrgdaq.daq.base.DAQJobProcess.log_queue">log_queue</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.message_in" href="#enrgdaq.daq.base.DAQJobProcess.message_in">message_in</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.message_out" href="#enrgdaq.daq.base.DAQJobProcess.message_out">message_out</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.process" href="#enrgdaq.daq.base.DAQJobProcess.process">process</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.raw_config" href="#enrgdaq.daq.base.DAQJobProcess.raw_config">raw_config</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.restart_on_crash" href="#enrgdaq.daq.base.DAQJobProcess.restart_on_crash">restart_on_crash</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.start" href="#enrgdaq.daq.base.DAQJobProcess.start">start</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.start_time" href="#enrgdaq.daq.base.DAQJobProcess.start_time">start_time</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.supervisor_info" href="#enrgdaq.daq.base.DAQJobProcess.supervisor_info">supervisor_info</a></code></li>
 </ul>
 </li>
 </ul>
@@ -542,7 +1392,7 @@ class DAQJobThread:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

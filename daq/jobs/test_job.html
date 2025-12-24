@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.test_job API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.test_job.DAQJobTest"><code class="flex name class">
 <span>class <span class="ident">DAQJobTest</span></span>
-<span>(</span><span>config: Any,<br>supervisor_config: <a title="enrgdaq.models.SupervisorConfig" href="../../models.html#enrgdaq.models.SupervisorConfig">SupervisorConfig</a> | None = None)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -61,12 +61,10 @@ el.replaceWith(d);
 
     Attributes:
         config_type (type): The configuration class type.
-        device (N1081B): The device used for data acquisition.
         config (DAQJobTestConfig): The configuration instance.
     &#34;&#34;&#34;
 
     config_type = DAQJobTestConfig
-    device: N1081B
     config: DAQJobTestConfig
 
     def start(self):
@@ -108,8 +106,6 @@ el.replaceWith(d);
 <dl>
 <dt><strong><code>config_type</code></strong> :&ensp;<code>type</code></dt>
 <dd>The configuration class type.</dd>
-<dt><strong><code>device</code></strong> :&ensp;<code>N1081B</code></dt>
-<dd>The device used for data acquisition.</dd>
 <dt><strong><code>config</code></strong> :&ensp;<code><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></code></dt>
 <dd>The configuration instance.</dd>
 </dl></div>
@@ -123,7 +119,7 @@ el.replaceWith(d);
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>Configuration class for DAQJobTest.</p>
 <h2 id="attributes">Attributes</h2>
@@ -133,10 +129,6 @@ el.replaceWith(d);
 <dt><strong><code>rand_max</code></strong> :&ensp;<code>int</code></dt>
 <dd>Maximum random integer value.</dd>
 </dl></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.test_job.DAQJobTest.device"><code class="name">var <span class="ident">device</span> : N1081B.N1081B</code></dt>
-<dd>
-<div class="desc"></div>
 </dd>
 </dl>
 <h3>Methods</h3>
@@ -174,7 +166,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.daq.jobs.test_job.DAQJobTestConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobTestConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>rand_min: int,<br>rand_max: int,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>rand_min: int,<br>rand_max: int,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -272,7 +264,6 @@ el.replaceWith(d);
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.config" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.config_type" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.config_type">config_type</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.device" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.device">device</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.test_job.DAQJobTest.start" href="#enrgdaq.daq.jobs.test_job.DAQJobTest.start">start</a></code></li>
 </ul>
 </li>
@@ -289,7 +280,7 @@ el.replaceWith(d);
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

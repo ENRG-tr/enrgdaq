@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.handle_stats API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -68,7 +68,7 @@ el.replaceWith(d);
     config: DAQJobHandleStatsConfig
 
     _stats: dict[str, DAQJobStatsDict]
-    _remote_stats: dict[str, DAQJobRemoteStatsDict]
+    _remote_stats: DAQJobRemoteStatsDict  # type:ignore
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
         super().__init__(config, **kwargs)
@@ -90,7 +90,7 @@ el.replaceWith(d);
             return False
 
         # Ignore if the message has no supervisor info
-        if not message.daq_job_info or not message.daq_job_info.supervisor_config:
+        if not message.daq_job_info or not message.daq_job_info.supervisor_info:
             return True
 
         if isinstance(message, DAQJobMessageStats):
@@ -119,6 +119,8 @@ el.replaceWith(d);
             &#34;message_in_count&#34;,
             &#34;last_message_out_date&#34;,
             &#34;message_out_count&#34;,
+            &#34;message_in_queue_size&#34;,
+            &#34;message_out_queue_size&#34;,
             &#34;last_restart_date&#34;,
             &#34;restart_count&#34;,
         ]
@@ -129,10 +131,12 @@ el.replaceWith(d);
                 data_to_send.append(
                     [
                         supervisor_id,
-                        daq_job_type.__name__,
+                        daq_job_type,
                         str(msg.is_alive).lower(),
                         *unpack_record(msg.message_in_stats),
                         *unpack_record(msg.message_out_stats),
+                        msg.message_in_queue_stats.count,
+                        msg.message_out_queue_stats.count,
                         *unpack_record(msg.restart_stats),
                     ]
                 )
@@ -160,11 +164,11 @@ el.replaceWith(d);
         # Combine remote stats from all supervisors
         remote_stats_combined = defaultdict(lambda: SupervisorRemoteStats())
         if (
-            self._supervisor_config
-            and self._supervisor_config.supervisor_id in self._remote_stats
+            self._supervisor_info
+            and self._supervisor_info.supervisor_id in self._remote_stats
         ):
             for supervisor_id, remote_stats in self._remote_stats[
-                self._supervisor_config.supervisor_id
+                self._supervisor_info.supervisor_id
             ].items():
                 remote_stats_combined[supervisor_id] = remote_stats
 
@@ -177,8 +181,8 @@ el.replaceWith(d);
                 # Skip if the remote supervisor id is the same as the local supervisor id or
                 # other supervisors try to overwrite other supervisors
                 if supervisor_id != remote_supervisor_id or (
-                    self._supervisor_config
-                    and self._supervisor_config.supervisor_id == remote_supervisor_id
+                    self._supervisor_info
+                    and self._supervisor_info.supervisor_id == remote_supervisor_id
                 ):
                     continue
                 # Convert the supervisor remote stats to a dict
@@ -235,7 +239,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>Configuration class for DAQJobHandleStats.</p></div>
 </dd>
@@ -273,7 +277,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleStatsConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -296,7 +300,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStats</span></span>
-<span>(</span><span>stats: Dict[type[<a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>], <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;)</span>
+<span>(</span><span>stats: Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -317,7 +321,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats.stats"><code class="name">var <span class="ident">stats</span> : Dict[type[<a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a>], <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]</code></dt>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats.stats"><code class="name">var <span class="ident">stats</span> : Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -371,7 +375,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

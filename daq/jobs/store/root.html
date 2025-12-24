@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.store.root API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -56,72 +56,207 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobStoreROOT(DAQJobStore):
+    &#34;&#34;&#34;
+    ROOT file store with buffered writes for high throughput.
+
+    Buffers incoming data and writes to ROOT in batches to minimize
+    TBasket overhead. Per uproot docs, each extend() should be at least
+    100 kB per branch for efficient writing.
+    &#34;&#34;&#34;
+
     config_type = DAQJobStoreROOTConfig
+    config: DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
-    allowed_message_in_types = [DAQJobMessageStoreTabular]
-    _open_files: dict[str, Any]
+    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStorePyArrow]
+
+    _open_files: dict[str, uproot.WritableDirectory]
+    _open_trees: dict[str, dict[str, uproot.WritableTree]]
+    _buffers: dict[tuple[str, str], TreeBuffer]  # (file_path, tree_name) -&gt; buffer
 
     def __init__(self, config: Any, **kwargs):
         super().__init__(config, **kwargs)
 
         self._open_files = {}
+        self._open_trees = {}
+        self._buffers = {}
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -&gt; bool:
+    def start(self):
+        while True:
+            messages_processed = self.consume_all()
+            self._flush_ready_buffers()
+
+            if not messages_processed:
+                time.sleep(0.001)
+
+    def handle_message(
+        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
+    ) -&gt; bool:
         super().handle_message(message)
-        store_config = cast(DAQJobStoreConfigROOT, message.store_config)
+
+        # Convert message to PyArrow table
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.table
+            if table is None or table.num_rows == 0:
+                return True
+        else:
+            # Convert tabular data to PyArrow table
+            data_columns = message.data_columns
+            if not data_columns:
+                self._logger.warning(
+                    &#34;Received tabular message with no data_column, DAQJobStoreROOT does not support that.&#34;
+                )
+                return True
+            table = pa.table(data_columns)
+
+        store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
         file_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
+        file_path = os.path.join(self.config.out_dir, file_path)
+        tree_name = store_config.tree_name
 
-        if file_path not in self._open_files:
-            file_exists = os.path.exists(file_path)
-            # Create the file if it doesn&#39;t exist
-            if not file_exists:
-                # If file was newly created, do not commit it, close it and
-                # switch to update mode on the next iteration
-                root_file = uproot.recreate(file_path)
-            else:
-                root_file = uproot.update(file_path)
-                self._open_files[file_path] = root_file
-        else:
-            file_exists = True
-            root_file = self._open_files[file_path]
+        # Get or create buffer for this file/tree
+        buffer_key = (file_path, tree_name)
+        if buffer_key not in self._buffers:
+            self._buffers[buffer_key] = TreeBuffer(store_config=store_config)
 
-        data_to_write = {}
-        for idx, key in enumerate(message.keys):
-            for data in message.data:
-                if key not in data_to_write:
-                    data_to_write[key] = []
-                data_to_write[key].append(data[idx])
+        buffer = self._buffers[buffer_key]
 
-        # TODO: This creates a new tree every time we commit. We should probably create tree
-        # once and only once, preferably when everything we needed to save is available
-        # This kind of depends on the task so it will have to wait
-        root_file[&#34;tree&#34;] = {key: data_to_write[key] for key in message.keys}
-        root_file.file.sink.flush()
+        # Add table to buffer
+        buffer.tables.append(table)
+        buffer.total_bytes += table.nbytes
 
-        # Close the file if it was newly created
-        if not file_exists:
-            root_file.file.sink.close()
+        # Check if we should flush immediately (buffer too large)
+        if buffer.total_bytes &gt;= self.config.buffer_size_bytes:
+            self._flush_buffer(file_path, tree_name)
 
         return True
 
-    def __del__(self):
-        # Close all open files
-        for root_file in self._open_files.values():
-            if root_file.closed:
-                continue
-            root_file.file.close()
+    def _flush_ready_buffers(self):
+        &#34;&#34;&#34;Flush buffers that have exceeded the time threshold.&#34;&#34;&#34;
+        now = datetime.now()
+        buffers_to_flush = []
 
-        return super().__del__()</code></pre>
+        for (file_path, tree_name), buffer in self._buffers.items():
+            if not buffer.tables:
+                continue
+
+            time_since_flush = (now - buffer.last_flush_time).total_seconds()
+            if time_since_flush &gt;= self.config.flush_interval_seconds:
+                buffers_to_flush.append((file_path, tree_name))
+
+        for file_path, tree_name in buffers_to_flush:
+            self._flush_buffer(file_path, tree_name)
+
+    def _flush_buffer(self, file_path: str, tree_name: str):
+        &#34;&#34;&#34;Flush buffered data to ROOT file.&#34;&#34;&#34;
+        buffer_key = (file_path, tree_name)
+        if buffer_key not in self._buffers:
+            return
+
+        buffer = self._buffers[buffer_key]
+        if not buffer.tables:
+            return
+
+        store_config = buffer.store_config
+        assert store_config is not None, &#34;Buffer has no store_config&#34;
+
+        # Combine all buffered tables into one
+        combined_table = pa.concat_tables(buffer.tables)
+
+        # Convert to dict of numpy arrays for uproot
+        data_to_write = {
+            col_name: combined_table.column(col_name).to_numpy()
+            for col_name in combined_table.column_names
+        }
+
+        # Open or get ROOT file
+        if file_path not in self._open_files or self._open_files[file_path].closed:
+            dir_name = os.path.dirname(file_path)
+            if dir_name:
+                os.makedirs(dir_name, exist_ok=True)
+
+            if os.path.exists(file_path):
+                root_file = uproot.update(file_path)
+            else:
+                root_file = uproot.recreate(
+                    file_path,
+                    compression=ROOT_COMPRESSION_TYPES[store_config.compression_type](
+                        level=store_config.compression_level
+                    ),
+                )
+
+            self._open_files[file_path] = root_file
+            self._logger.debug(f&#34;Opened file {file_path}&#34;)
+        else:
+            root_file = self._open_files[file_path]
+
+        # Create or get tree
+        # Check our cache first - if we have the tree cached, use it
+        if file_path in self._open_trees and tree_name in self._open_trees[file_path]:
+            tree = self._open_trees[file_path][tree_name]
+        elif tree_name not in root_file:
+            # Tree doesn&#39;t exist, create it
+            tree = root_file.mktree(
+                tree_name,
+                {
+                    k: v.dtype
+                    for k, v in data_to_write.items()
+                    if isinstance(v, ndarray)
+                },
+            )
+            self._logger.debug(f&#34;Created tree {tree_name}&#34;)
+            if file_path not in self._open_trees:
+                self._open_trees[file_path] = {}
+            self._open_trees[file_path][tree_name] = tree
+        else:
+            # Tree exists in file but not in our cache - this shouldn&#39;t happen
+            # in normal operation. It can occur if a file was left from a previous
+            # run. The caller should clean up output files before starting.
+            raise RuntimeError(
+                f&#34;Tree &#39;{tree_name}&#39; already exists in file &#39;{file_path}&#39; but was not created &#34;
+                f&#34;by this process. Please remove the file and try again.&#34;
+            )
+
+        # Write the combined data in one extend() call
+        start_time = time.time()
+        tree.extend(data_to_write)
+        write_time = time.time() - start_time
+
+        self._logger.debug(
+            f&#34;Flushed {len(buffer.tables)} messages ({buffer.total_bytes / 1_000_000:.2f} MB, &#34;
+            f&#34;{combined_table.num_rows} rows) to {tree_name} in {write_time:.3f}s&#34;
+        )
+
+        # Clear buffer
+        buffer.tables.clear()
+        buffer.total_bytes = 0
+        buffer.last_flush_time = datetime.now()
+
+    def _flush_all_buffers(self):
+        &#34;&#34;&#34;Flush all buffers regardless of thresholds.&#34;&#34;&#34;
+        for file_path, tree_name in list(self._buffers.keys()):
+            self._flush_buffer(file_path, tree_name)
+
+    def __del__(self):
+        # Flush any remaining buffered data
+        try:
+            self._flush_all_buffers()
+        except Exception:
+            pass
+
+        # Ensure all files are properly closed on exit
+        for root_file in self._open_files.values():
+            if not root_file.closed:
+                root_file.close()
+        self._open_files.clear()
+
+        super().__del__()</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-and provides additional functionality for handling and storing messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_store_config_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>A list of allowed store configuration types.</dd>
-</dl></div>
+<div class="desc"><p>ROOT file store with buffered writes for high throughput.</p>
+<p>Buffers incoming data and writes to ROOT in batches to minimize
+TBasket overhead. Per uproot docs, each extend() should be at least
+100 kB per branch for efficient writing.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -137,7 +272,11 @@ and provides additional functionality for handling and storing messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig">DAQJobStoreROOTConfig</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -155,7 +294,7 @@ and provides additional functionality for handling and storing messages.</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
@@ -165,7 +304,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreROOTConfig</span></span>
-<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>out_dir: str = 'out/',<br>buffer_size_bytes: int = 5000000,<br>flush_interval_seconds: float = 1.0,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -173,7 +312,9 @@ and provides additional functionality for handling and storing messages.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class DAQJobStoreROOTConfig(DAQJobConfig):
-    pass</code></pre>
+    out_dir: str = &#34;out/&#34;
+    buffer_size_bytes: int = BUFFER_SIZE_THRESHOLD_BYTES
+    flush_interval_seconds: float = BUFFER_FLUSH_INTERVAL_SECONDS</code></pre>
 </details>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -191,6 +332,87 @@ and provides additional functionality for handling and storing messages.</p>
 <li>msgspec.Struct</li>
 <li>msgspec._core._StructMixin</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.buffer_size_bytes"><code class="name">var <span class="ident">buffer_size_bytes</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStoreROOTConfig(DAQJobConfig):
+    out_dir: str = &#34;out/&#34;
+    buffer_size_bytes: int = BUFFER_SIZE_THRESHOLD_BYTES
+    flush_interval_seconds: float = BUFFER_FLUSH_INTERVAL_SECONDS</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.flush_interval_seconds"><code class="name">var <span class="ident">flush_interval_seconds</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStoreROOTConfig(DAQJobConfig):
+    out_dir: str = &#34;out/&#34;
+    buffer_size_bytes: int = BUFFER_SIZE_THRESHOLD_BYTES
+    flush_interval_seconds: float = BUFFER_FLUSH_INTERVAL_SECONDS</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.out_dir"><code class="name">var <span class="ident">out_dir</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStoreROOTConfig(DAQJobConfig):
+    out_dir: str = &#34;out/&#34;
+    buffer_size_bytes: int = BUFFER_SIZE_THRESHOLD_BYTES
+    flush_interval_seconds: float = BUFFER_FLUSH_INTERVAL_SECONDS</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.TreeBuffer"><code class="flex name class">
+<span>class <span class="ident">TreeBuffer</span></span>
+<span>(</span><span>tables: list[pyarrow.lib.Table] = &lt;factory&gt;,<br>total_bytes: int = 0,<br>last_flush_time: datetime.datetime = &lt;factory&gt;,<br>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a> | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class TreeBuffer:
+    &#34;&#34;&#34;Buffer for accumulating data before writing to ROOT tree.&#34;&#34;&#34;
+
+    tables: list[pa.Table] = field(default_factory=list)
+    total_bytes: int = 0
+    last_flush_time: datetime = field(default_factory=datetime.now)
+    store_config: DAQJobStoreConfigROOT | None = None</code></pre>
+</details>
+<div class="desc"><p>Buffer for accumulating data before writing to ROOT tree.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.store.root.TreeBuffer.last_flush_time"><code class="name">var <span class="ident">last_flush_time</span> : datetime.datetime</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.TreeBuffer.store_config"><code class="name">var <span class="ident">store_config</span> : <a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a> | None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.TreeBuffer.tables"><code class="name">var <span class="ident">tables</span> : list[pyarrow.lib.Table]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.store.root.TreeBuffer.total_bytes"><code class="name">var <span class="ident">total_bytes</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -212,11 +434,26 @@ and provides additional functionality for handling and storing messages.</p>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.allowed_message_in_types" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.allowed_message_in_types">allowed_message_in_types</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.allowed_store_config_types" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.allowed_store_config_types">allowed_store_config_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config_type" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT.config_type">config_type</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig">DAQJobStoreROOTConfig</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.buffer_size_bytes" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.buffer_size_bytes">buffer_size_bytes</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.flush_interval_seconds" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.flush_interval_seconds">flush_interval_seconds</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.out_dir" href="#enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig.out_dir">out_dir</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.store.root.TreeBuffer" href="#enrgdaq.daq.jobs.store.root.TreeBuffer">TreeBuffer</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.store.root.TreeBuffer.last_flush_time" href="#enrgdaq.daq.jobs.store.root.TreeBuffer.last_flush_time">last_flush_time</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.TreeBuffer.store_config" href="#enrgdaq.daq.jobs.store.root.TreeBuffer.store_config">store_config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.TreeBuffer.tables" href="#enrgdaq.daq.jobs.store.root.TreeBuffer.tables">tables</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.store.root.TreeBuffer.total_bytes" href="#enrgdaq.daq.jobs.store.root.TreeBuffer.total_bytes">total_bytes</a></code></li>
+</ul>
 </li>
 </ul>
 </li>
@@ -224,7 +461,7 @@ and provides additional functionality for handling and storing messages.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

@@ -1,0 +1,1935 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.daq.jobs.caen.hv API documentation</title>
+<meta name="description" content="CAEN HV DAQ Job for controlling CAEN High Voltage power supplies …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.daq.jobs.caen.hv</code></h1>
+</header>
+<section id="section-intro">
+<p>CAEN HV DAQ Job for controlling CAEN High Voltage power supplies.</p>
+<p>Uses the caen_libs caenhvwrapper library to communicate with CAEN HV devices.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV"><code class="flex name class">
+<span>class <span class="ident">DAQJobCAENHV</span></span>
+<span>(</span><span>config: <a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig">DAQJobCAENHVConfig</a>,<br>**kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHV(DAQJob):
+    &#34;&#34;&#34;
+    DAQJob for CAEN High Voltage power supplies.
+
+    This job connects to a CAEN HV device and:
+    - Periodically polls channel parameters and stores them as tabular data
+    - Accepts messages to set channel parameters (voltage, current limits, etc.)
+
+    Supported devices include SY4527, SY5527, N1470, DT55XX series, and others.
+    &#34;&#34;&#34;
+
+    config_type = DAQJobCAENHVConfig
+    config: DAQJobCAENHVConfig
+    allowed_message_in_types = [DAQJobMessageCAENHVSetChParam]
+    restart_offset = timedelta(seconds=5)
+    watchdog_timeout_seconds = 60
+    watchdog_force_exit = True  # CAEN library calls can hang, force exit if stuck
+
+    _device: Optional[hv.Device] = None
+
+    def __init__(self, config: DAQJobCAENHVConfig, **kwargs):
+        super().__init__(config, **kwargs)
+        self._device = None
+
+    def start(self):
+        self._logger.info(&#34;Opening CAEN HV device...&#34;)
+
+        system_type = hv.SystemType[self.config.system_type]
+        link_type = hv.LinkType[self.config.link_type]
+
+        try:
+            with hv.Device.open(
+                system_type,
+                link_type,
+                self.config.connection_arg,
+                self.config.username,
+                self.config.password,
+            ) as device:
+                self._device = device
+                self._logger.info(
+                    f&#34;Connected to CAEN HV device (lib version {hv.lib.sw_release()})&#34;
+                )
+
+                # Initialize internal crate map
+                slots = device.get_crate_map()
+                self._logger.info(
+                    f&#34;Found {len([s for s in slots if s is not None])} board(s)&#34;
+                )
+
+                self._run_loop(device, slots)
+
+        except Exception as e:
+            self._logger.error(
+                f&#34;Error connecting to CAEN HV device: {e}&#34;, exc_info=True
+            )
+            raise
+
+    def _run_loop(self, device: hv.Device, slots):
+        &#34;&#34;&#34;Main loop that polls parameters and handles messages.&#34;&#34;&#34;
+        if self._watchdog.is_enabled:
+            self._logger.info(
+                f&#34;Watchdog enabled with {self._watchdog.timeout_seconds}s timeout&#34;
+            )
+
+        try:
+            while not self._watchdog.is_triggered():
+                start_time = datetime.now()
+
+                # Start/reset watchdog timer at the beginning of each iteration
+                self._watchdog.reset()
+
+                # Consume incoming messages
+                self.consume()
+
+                # Poll channel parameters
+                try:
+                    self._poll_channel_params(device, slots)
+                except Exception as e:
+                    self._logger.error(
+                        f&#34;Error polling channel parameters: {e}&#34;, exc_info=True
+                    )
+
+                # Sleep for the remaining time of the poll interval
+                sleep_for(self.config.poll_interval_seconds, start_time)
+
+            # If we exited due to watchdog, log and let the job end
+            if self._watchdog.is_triggered():
+                self._logger.warning(&#34;Loop exiting due to watchdog timeout&#34;)
+        finally:
+            # Clean up watchdog on exit
+            self._watchdog.stop()
+
+    def _poll_channel_params(self, device: hv.Device, slots):
+        &#34;&#34;&#34;Poll channel parameters and send store messages.&#34;&#34;&#34;
+        has_store_config = self.config.store_config is not None
+        has_timeseries_config = self.config.timeseries_store_config is not None
+
+        if not has_store_config and not has_timeseries_config:
+            return
+
+        timestamp = get_now_unix_timestamp_ms()
+
+        # Per-channel data: {(slot, channel): {param_name: value}}
+        channel_params: dict[tuple[int, int], dict[str, float | int | str]] = {}
+
+        for board in slots:
+            if board is None:
+                continue
+
+            # Check if we should monitor this slot
+            if self.config.channels_to_monitor is not None:
+                slot_config = next(
+                    (
+                        c
+                        for c in self.config.channels_to_monitor
+                        if c.get(&#34;slot&#34;) == board.slot
+                    ),
+                    None,
+                )
+                if slot_config is None:
+                    continue
+                channels_to_poll = slot_config.get(&#34;channels&#34;, range(board.n_channel))
+            else:
+                channels_to_poll = range(board.n_channel)
+
+            for ch in channels_to_poll:
+                if ch &gt;= board.n_channel:
+                    continue
+
+                try:
+                    ch_params = device.get_ch_param_info(board.slot, ch)
+                except Exception as e:
+                    self._logger.warning(
+                        f&#34;Failed to get param info for slot {board.slot} ch {ch}: {e}&#34;
+                    )
+                    continue
+
+                # Initialize per-channel dict
+                channel_params[(board.slot, ch)] = {}
+
+                for param_name in ch_params:
+                    # Filter by params_to_monitor if specified
+                    if self.config.params_to_monitor is not None:
+                        if param_name not in self.config.params_to_monitor:
+                            continue
+
+                    try:
+                        param_prop = device.get_ch_param_prop(
+                            board.slot, ch, param_name
+                        )
+
+                        # Skip write-only parameters
+                        if param_prop.mode is hv.ParamMode.WRONLY:
+                            continue
+
+                        param_value = device.get_ch_param(board.slot, [ch], param_name)
+                        # get_ch_param returns a list, get first value
+                        value = param_value[0] if param_value else None
+
+                        if value is not None:
+                            channel_params[(board.slot, ch)][param_name] = value
+
+                    except Exception as e:
+                        self._logger.debug(
+                            f&#34;Failed to read {param_name} for slot {board.slot} ch {ch}: {e}&#34;
+                        )
+
+        # Build all unique param names for consistent columns
+        all_param_names: set[str] = set()
+        for params in channel_params.values():
+            all_param_names.update(params.keys())
+        sorted_param_names = sorted(all_param_names)
+
+        # Send bulk store message (CSV dump) - one row per channel
+        if has_store_config and channel_params and sorted_param_names:
+            keys = [&#34;timestamp&#34;, &#34;slot&#34;, &#34;channel&#34;, *sorted_param_names]
+            data_rows = []
+
+            for (slot, ch), params in channel_params.items():
+                # Skip channels with no data
+                if not params:
+                    continue
+                row = [
+                    timestamp,
+                    slot,
+                    ch,
+                    *[params.get(pn) for pn in sorted_param_names],
+                ]
+                data_rows.append(row)
+
+            if data_rows:
+                self._put_message_out(
+                    DAQJobMessageStoreTabular(
+                        store_config=self.config.store_config,
+                        tag=&#34;ch_param&#34;,
+                        keys=keys,
+                        data=data_rows,
+                    )
+                )
+                self._logger.debug(f&#34;Sent {len(data_rows)} channel parameter readings&#34;)
+
+        # Send per-param timeseries messages
+        # Structure: tag=param_name, keys=[timestamp, slot_X_channel_Y, ...]
+        # This gives Redis keys like: hv.IMon.slot_3_channel_0
+        if has_timeseries_config and sorted_param_names:
+            # Build sorted channel identifiers
+            sorted_channels = sorted(channel_params.keys())
+            channel_keys = [f&#34;slot_{s}_channel_{c}&#34; for s, c in sorted_channels]
+
+            for param_name in sorted_param_names:
+                # Collect values for this param across all channels
+                values_for_param = []
+                has_any_value = False
+
+                for slot, ch in sorted_channels:
+                    value = channel_params.get((slot, ch), {}).get(param_name)
+                    values_for_param.append(value)
+                    if value is not None:
+                        has_any_value = True
+
+                # Only send if at least one channel has a value for this param
+                if not has_any_value:
+                    continue
+
+                # Tag = param name, keys = timestamp + channel identifiers
+                keys = [&#34;timestamp&#34;, *channel_keys]
+                values = [timestamp, *values_for_param]
+
+                self._put_message_out(
+                    DAQJobMessageStoreTabular(
+                        store_config=self.config.timeseries_store_config,
+                        tag=param_name,
+                        keys=keys,
+                        data=[values],
+                    )
+                )
+
+            self._logger.debug(
+                f&#34;Sent timeseries data for {len(sorted_param_names)} params&#34;
+            )
+
+    def handle_message(self, message: DAQJobMessage) -&gt; bool:
+        &#34;&#34;&#34;Handle incoming messages.&#34;&#34;&#34;
+        if not super().handle_message(message):
+            return False
+
+        if isinstance(message, DAQJobMessageCAENHVSetChParam):
+            return self._handle_set_ch_param(message)
+
+        return True
+
+    def _handle_set_ch_param(self, message: DAQJobMessageCAENHVSetChParam) -&gt; bool:
+        &#34;&#34;&#34;Handle a set channel parameter message.&#34;&#34;&#34;
+        if self._device is None:
+            self._logger.error(&#34;Cannot set parameter: device not connected&#34;)
+            return True
+
+        try:
+            self._logger.info(
+                f&#34;Setting {message.param_name}={message.value} on slot {message.slot} &#34;
+                f&#34;channels {message.channel_list}&#34;
+            )
+
+            self._device.set_ch_param(
+                message.slot,
+                message.channel_list,
+                message.param_name,
+                int(message.value),
+            )
+
+            self._logger.info(
+                f&#34;Successfully set {message.param_name} on slot {message.slot} &#34;
+                f&#34;channels {message.channel_list}&#34;
+            )
+            return True
+
+        except Exception as e:
+            self._logger.error(
+                f&#34;Failed to set {message.param_name} on slot {message.slot}: {e}&#34;,
+                exc_info=True,
+            )
+            return True
+
+    def __del__(self):
+        self._logger.info(&#34;CAEN HV DAQ job shutting down&#34;)
+        self._device = None
+        return super().__del__()</code></pre>
+</details>
+<div class="desc"><p>DAQJob for CAEN High Voltage power supplies.</p>
+<p>This job connects to a CAEN HV device and:
+- Periodically polls channel parameters and stores them as tabular data
+- Accepts messages to set channel parameters (voltage, current limits, etc.)</p>
+<p>Supported devices include SY4527, SY5527, N1470, DT55XX series, and others.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.base.DAQJob" href="../../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig">DAQJobCAENHVConfig</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
+<dd>
+<div class="desc"><p>Configuration for the CAEN HV DAQ Job.</p>
+<p>Connects to a CAEN HV power supply and periodically polls channel parameters.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.restart_offset"><code class="name">var <span class="ident">restart_offset</span> : datetime.timedelta</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_force_exit"><code class="name">var <span class="ident">watchdog_force_exit</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_timeout_seconds"><code class="name">var <span class="ident">watchdog_timeout_seconds</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.handle_message"><code class="name flex">
+<span>def <span class="ident">handle_message</span></span>(<span>self,<br>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_message(self, message: DAQJobMessage) -&gt; bool:
+    &#34;&#34;&#34;Handle incoming messages.&#34;&#34;&#34;
+    if not super().handle_message(message):
+        return False
+
+    if isinstance(message, DAQJobMessageCAENHVSetChParam):
+        return self._handle_set_ch_param(message)
+
+    return True</code></pre>
+</details>
+<div class="desc"><p>Handle incoming messages.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    self._logger.info(&#34;Opening CAEN HV device...&#34;)
+
+    system_type = hv.SystemType[self.config.system_type]
+    link_type = hv.LinkType[self.config.link_type]
+
+    try:
+        with hv.Device.open(
+            system_type,
+            link_type,
+            self.config.connection_arg,
+            self.config.username,
+            self.config.password,
+        ) as device:
+            self._device = device
+            self._logger.info(
+                f&#34;Connected to CAEN HV device (lib version {hv.lib.sw_release()})&#34;
+            )
+
+            # Initialize internal crate map
+            slots = device.get_crate_map()
+            self._logger.info(
+                f&#34;Found {len([s for s in slots if s is not None])} board(s)&#34;
+            )
+
+            self._run_loop(device, slots)
+
+    except Exception as e:
+        self._logger.error(
+            f&#34;Error connecting to CAEN HV device: {e}&#34;, exc_info=True
+        )
+        raise</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
+<ul class="hlist">
+<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig"><code class="flex name class">
+<span>class <span class="ident">DAQJobCAENHVConfig</span></span>
+<span>(</span><span>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>system_type: Literal['SY1527', 'SY2527', 'SY4527', 'SY5527', 'N568E', 'V65XX', 'N1470', 'V8100', 'N568B', 'SMARTHV', 'NGPS', 'N1068', 'DT55XXE', 'DT55XX'],<br>link_type: Literal['TCPIP', 'RS232', 'USB', 'OPTLINK', 'USB_VCP'],<br>connection_arg: str,<br>username: str = '',<br>password: str = '',<br>poll_interval_seconds: float = 1,<br>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>timeseries_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>channels_to_monitor: list[dict] | None = None,<br>params_to_monitor: list[str] | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Configuration for the CAEN HV DAQ Job.</p>
+<p>Connects to a CAEN HV power supply and periodically polls channel parameters.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.channels_to_monitor"><code class="name">var <span class="ident">channels_to_monitor</span> : list[dict] | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Optional list of specific channels to monitor.
+Each dict should have 'slot' and 'channels' keys.
+If None, all available channels on all boards will be monitored.
+Example: [{"slot": 0, "channels": [0, 1, 2]}, {"slot": 1, "channels": [0]}]</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.connection_arg"><code class="name">var <span class="ident">connection_arg</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Connection argument depending on system_type and link_type.
+For TCPIP: IP address or hostname.
+For USB: Device path or index.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.link_type"><code class="name">var <span class="ident">link_type</span> : Literal['TCPIP', 'RS232', 'USB', 'OPTLINK', 'USB_VCP']</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Connection type to use.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.params_to_monitor"><code class="name">var <span class="ident">params_to_monitor</span> : list[str] | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Optional list of specific parameter names to monitor.
+If None, all readable parameters will be monitored.
+Example: ["VMon", "IMon", "V0Set", "Pw", "Status"]</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.password"><code class="name">var <span class="ident">password</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Password for authentication (if required).</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.poll_interval_seconds"><code class="name">var <span class="ident">poll_interval_seconds</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Interval in seconds between polling channel parameters.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.store_config"><code class="name">var <span class="ident">store_config</span> : <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Configuration for storing all channel parameter data in a single dump.
+Data is stored with all parameters in one tabular format.
+Recommended for CSV storage with overwrite=True for a snapshot view.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.system_type"><code class="name">var <span class="ident">system_type</span> : Literal['SY1527', 'SY2527', 'SY4527', 'SY5527', 'N568E', 'V65XX', 'N1470', 'V8100', 'N568B', 'SMARTHV', 'NGPS', 'N1068', 'DT55XXE', 'DT55XX']</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>CAEN system type (e.g., 'SY4527', 'N1470', 'DT55XX').</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.timeseries_store_config"><code class="name">var <span class="ident">timeseries_store_config</span> : <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Configuration for storing channel parameters as timeseries data.
+Each parameter gets its own tag (e.g., 'VMon', 'IMon') with channel
+identifiers as keys (e.g., 'slot_1_channel_7', 'slot_3_channel_0').
+Recommended for Redis timeseries storage.</p>
+<p>Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7,
+enrgdaq2.hv.IMon.slot_3_channel_0, etc.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.username"><code class="name">var <span class="ident">username</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENHVConfig(DAQJobConfig, kw_only=True):
+    &#34;&#34;&#34;
+    Configuration for the CAEN HV DAQ Job.
+
+    Connects to a CAEN HV power supply and periodically polls channel parameters.
+    &#34;&#34;&#34;
+
+    system_type: Literal[
+        &#34;SY1527&#34;,
+        &#34;SY2527&#34;,
+        &#34;SY4527&#34;,
+        &#34;SY5527&#34;,
+        &#34;N568E&#34;,
+        &#34;V65XX&#34;,
+        &#34;N1470&#34;,
+        &#34;V8100&#34;,
+        &#34;N568B&#34;,
+        &#34;SMARTHV&#34;,
+        &#34;NGPS&#34;,
+        &#34;N1068&#34;,
+        &#34;DT55XXE&#34;,
+        &#34;DT55XX&#34;,
+    ]
+    &#34;&#34;&#34;CAEN system type (e.g., &#39;SY4527&#39;, &#39;N1470&#39;, &#39;DT55XX&#39;).&#34;&#34;&#34;
+
+    link_type: Literal[&#34;TCPIP&#34;, &#34;RS232&#34;, &#34;USB&#34;, &#34;OPTLINK&#34;, &#34;USB_VCP&#34;]
+    &#34;&#34;&#34;Connection type to use.&#34;&#34;&#34;
+
+    connection_arg: str
+    &#34;&#34;&#34;
+    Connection argument depending on system_type and link_type.
+    For TCPIP: IP address or hostname.
+    For USB: Device path or index.
+    &#34;&#34;&#34;
+
+    username: str = &#34;&#34;
+    &#34;&#34;&#34;Username for authentication (if required).&#34;&#34;&#34;
+
+    password: str = &#34;&#34;
+    &#34;&#34;&#34;Password for authentication (if required).&#34;&#34;&#34;
+
+    poll_interval_seconds: float = CAEN_HV_POLL_INTERVAL_SECONDS
+    &#34;&#34;&#34;Interval in seconds between polling channel parameters.&#34;&#34;&#34;
+
+    store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing all channel parameter data in a single dump.
+    Data is stored with all parameters in one tabular format.
+    Recommended for CSV storage with overwrite=True for a snapshot view.
+    &#34;&#34;&#34;
+
+    timeseries_store_config: Optional[DAQJobStoreConfig] = None
+    &#34;&#34;&#34;
+    Configuration for storing channel parameters as timeseries data.
+    Each parameter gets its own tag (e.g., &#39;VMon&#39;, &#39;IMon&#39;) with channel
+    identifiers as keys (e.g., &#39;slot_1_channel_7&#39;, &#39;slot_3_channel_0&#39;).
+    Recommended for Redis timeseries storage.
+    
+    Example Redis keys: enrgdaq2.hv.VMon.slot_1_channel_7, 
+                        enrgdaq2.hv.IMon.slot_3_channel_0, etc.
+    &#34;&#34;&#34;
+
+    channels_to_monitor: Optional[list[dict]] = None
+    &#34;&#34;&#34;
+    Optional list of specific channels to monitor.
+    Each dict should have &#39;slot&#39; and &#39;channels&#39; keys.
+    If None, all available channels on all boards will be monitored.
+    Example: [{&#34;slot&#34;: 0, &#34;channels&#34;: [0, 1, 2]}, {&#34;slot&#34;: 1, &#34;channels&#34;: [0]}]
+    &#34;&#34;&#34;
+
+    params_to_monitor: Optional[list[str]] = None
+    &#34;&#34;&#34;
+    Optional list of specific parameter names to monitor.
+    If None, all readable parameters will be monitored.
+    Example: [&#34;VMon&#34;, &#34;IMon&#34;, &#34;V0Set&#34;, &#34;Pw&#34;, &#34;Status&#34;]
+    &#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Username for authentication (if required).</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageCAENHVSetChParam</span></span>
+<span>(</span><span>slot: int,<br>channel_list: list[int],<br>param_name: str,<br>value: int,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
+    &#34;&#34;&#34;
+    Message to set a channel parameter on a CAEN HV device.
+
+    Use this message to set voltage (V0Set, V1Set), current limits, or other
+    channel parameters on CAEN HV power supplies.
+
+    Common parameter names:
+    - V0Set: Set V0 voltage limit (float, in Volts)
+    - V1Set: Set V1 voltage limit (float, in Volts)
+    - I0Set: Set I0 current limit (float, in microamps)
+    - I1Set: Set I1 current limit (float, in microamps)
+    - Pw: Power on/off (int, 0=off, 1=on)
+    - RUp: Ramp up rate (float, V/s)
+    - RDwn: Ramp down rate (float, V/s)
+
+    Note: Available parameters depend on your specific HV board model.
+    &#34;&#34;&#34;
+
+    slot: int
+    &#34;&#34;&#34;The slot number of the board.&#34;&#34;&#34;
+
+    channel_list: list[int]
+    &#34;&#34;&#34;List of channel numbers to set the parameter on.&#34;&#34;&#34;
+
+    param_name: str
+    &#34;&#34;&#34;Name of the parameter to set (e.g., &#39;V0Set&#39;, &#39;V1Set&#39;, &#39;I0Set&#39;, &#39;Pw&#39;).&#34;&#34;&#34;
+
+    value: int
+    &#34;&#34;&#34;The value to set.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Message to set a channel parameter on a CAEN HV device.</p>
+<p>Use this message to set voltage (V0Set, V1Set), current limits, or other
+channel parameters on CAEN HV power supplies.</p>
+<p>Common parameter names:
+- V0Set: Set V0 voltage limit (float, in Volts)
+- V1Set: Set V1 voltage limit (float, in Volts)
+- I0Set: Set I0 current limit (float, in microamps)
+- I1Set: Set I1 current limit (float, in microamps)
+- Pw: Power on/off (int, 0=off, 1=on)
+- RUp: Ramp up rate (float, V/s)
+- RDwn: Ramp down rate (float, V/s)</p>
+<p>Note: Available parameters depend on your specific HV board model.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.channel_list"><code class="name">var <span class="ident">channel_list</span> : list[int]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
+    &#34;&#34;&#34;
+    Message to set a channel parameter on a CAEN HV device.
+
+    Use this message to set voltage (V0Set, V1Set), current limits, or other
+    channel parameters on CAEN HV power supplies.
+
+    Common parameter names:
+    - V0Set: Set V0 voltage limit (float, in Volts)
+    - V1Set: Set V1 voltage limit (float, in Volts)
+    - I0Set: Set I0 current limit (float, in microamps)
+    - I1Set: Set I1 current limit (float, in microamps)
+    - Pw: Power on/off (int, 0=off, 1=on)
+    - RUp: Ramp up rate (float, V/s)
+    - RDwn: Ramp down rate (float, V/s)
+
+    Note: Available parameters depend on your specific HV board model.
+    &#34;&#34;&#34;
+
+    slot: int
+    &#34;&#34;&#34;The slot number of the board.&#34;&#34;&#34;
+
+    channel_list: list[int]
+    &#34;&#34;&#34;List of channel numbers to set the parameter on.&#34;&#34;&#34;
+
+    param_name: str
+    &#34;&#34;&#34;Name of the parameter to set (e.g., &#39;V0Set&#39;, &#39;V1Set&#39;, &#39;I0Set&#39;, &#39;Pw&#39;).&#34;&#34;&#34;
+
+    value: int
+    &#34;&#34;&#34;The value to set.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>List of channel numbers to set the parameter on.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.param_name"><code class="name">var <span class="ident">param_name</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
+    &#34;&#34;&#34;
+    Message to set a channel parameter on a CAEN HV device.
+
+    Use this message to set voltage (V0Set, V1Set), current limits, or other
+    channel parameters on CAEN HV power supplies.
+
+    Common parameter names:
+    - V0Set: Set V0 voltage limit (float, in Volts)
+    - V1Set: Set V1 voltage limit (float, in Volts)
+    - I0Set: Set I0 current limit (float, in microamps)
+    - I1Set: Set I1 current limit (float, in microamps)
+    - Pw: Power on/off (int, 0=off, 1=on)
+    - RUp: Ramp up rate (float, V/s)
+    - RDwn: Ramp down rate (float, V/s)
+
+    Note: Available parameters depend on your specific HV board model.
+    &#34;&#34;&#34;
+
+    slot: int
+    &#34;&#34;&#34;The slot number of the board.&#34;&#34;&#34;
+
+    channel_list: list[int]
+    &#34;&#34;&#34;List of channel numbers to set the parameter on.&#34;&#34;&#34;
+
+    param_name: str
+    &#34;&#34;&#34;Name of the parameter to set (e.g., &#39;V0Set&#39;, &#39;V1Set&#39;, &#39;I0Set&#39;, &#39;Pw&#39;).&#34;&#34;&#34;
+
+    value: int
+    &#34;&#34;&#34;The value to set.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Name of the parameter to set (e.g., 'V0Set', 'V1Set', 'I0Set', 'Pw').</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.slot"><code class="name">var <span class="ident">slot</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
+    &#34;&#34;&#34;
+    Message to set a channel parameter on a CAEN HV device.
+
+    Use this message to set voltage (V0Set, V1Set), current limits, or other
+    channel parameters on CAEN HV power supplies.
+
+    Common parameter names:
+    - V0Set: Set V0 voltage limit (float, in Volts)
+    - V1Set: Set V1 voltage limit (float, in Volts)
+    - I0Set: Set I0 current limit (float, in microamps)
+    - I1Set: Set I1 current limit (float, in microamps)
+    - Pw: Power on/off (int, 0=off, 1=on)
+    - RUp: Ramp up rate (float, V/s)
+    - RDwn: Ramp down rate (float, V/s)
+
+    Note: Available parameters depend on your specific HV board model.
+    &#34;&#34;&#34;
+
+    slot: int
+    &#34;&#34;&#34;The slot number of the board.&#34;&#34;&#34;
+
+    channel_list: list[int]
+    &#34;&#34;&#34;List of channel numbers to set the parameter on.&#34;&#34;&#34;
+
+    param_name: str
+    &#34;&#34;&#34;Name of the parameter to set (e.g., &#39;V0Set&#39;, &#39;V1Set&#39;, &#39;I0Set&#39;, &#39;Pw&#39;).&#34;&#34;&#34;
+
+    value: int
+    &#34;&#34;&#34;The value to set.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>The slot number of the board.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.value"><code class="name">var <span class="ident">value</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCAENHVSetChParam(DAQJobMessage):
+    &#34;&#34;&#34;
+    Message to set a channel parameter on a CAEN HV device.
+
+    Use this message to set voltage (V0Set, V1Set), current limits, or other
+    channel parameters on CAEN HV power supplies.
+
+    Common parameter names:
+    - V0Set: Set V0 voltage limit (float, in Volts)
+    - V1Set: Set V1 voltage limit (float, in Volts)
+    - I0Set: Set I0 current limit (float, in microamps)
+    - I1Set: Set I1 current limit (float, in microamps)
+    - Pw: Power on/off (int, 0=off, 1=on)
+    - RUp: Ramp up rate (float, V/s)
+    - RDwn: Ramp down rate (float, V/s)
+
+    Note: Available parameters depend on your specific HV board model.
+    &#34;&#34;&#34;
+
+    slot: int
+    &#34;&#34;&#34;The slot number of the board.&#34;&#34;&#34;
+
+    channel_list: list[int]
+    &#34;&#34;&#34;List of channel numbers to set the parameter on.&#34;&#34;&#34;
+
+    param_name: str
+    &#34;&#34;&#34;Name of the parameter to set (e.g., &#39;V0Set&#39;, &#39;V1Set&#39;, &#39;I0Set&#39;, &#39;Pw&#39;).&#34;&#34;&#34;
+
+    value: int
+    &#34;&#34;&#34;The value to set.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>The value to set.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType"><code class="flex name class">
+<span>class <span class="ident">LinkType</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class LinkType(str, Enum):
+    TCPIP = &#34;TCPIP&#34;
+    RS232 = &#34;RS232&#34;
+    USB = &#34;USB&#34;
+    OPTLINK = &#34;OPTLINK&#34;
+    USB_VCP = &#34;USB_VCP&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType.OPTLINK"><code class="name">var <span class="ident">OPTLINK</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType.RS232"><code class="name">var <span class="ident">RS232</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType.TCPIP"><code class="name">var <span class="ident">TCPIP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType.USB"><code class="name">var <span class="ident">USB</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.LinkType.USB_VCP"><code class="name">var <span class="ident">USB_VCP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.ParamMode"><code class="flex name class">
+<span>class <span class="ident">ParamMode</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ParamMode(str, Enum):
+    RDONLY = &#34;RDONLY&#34;
+    WRONLY = &#34;WRONLY&#34;
+    RDWR = &#34;RDWR&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.ParamMode.RDONLY"><code class="name">var <span class="ident">RDONLY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.ParamMode.RDWR"><code class="name">var <span class="ident">RDWR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.ParamMode.WRONLY"><code class="name">var <span class="ident">WRONLY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType"><code class="flex name class">
+<span>class <span class="ident">SystemType</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SystemType(str, Enum):
+    SY1527 = &#34;SY1527&#34;
+    SY2527 = &#34;SY2527&#34;
+    SY4527 = &#34;SY4527&#34;
+    SY5527 = &#34;SY5527&#34;
+    N568E = &#34;N568E&#34;
+    V65XX = &#34;V65XX&#34;
+    N1470 = &#34;N1470&#34;
+    V8100 = &#34;V8100&#34;
+    N568B = &#34;N568B&#34;
+    SMARTHV = &#34;SMARTHV&#34;
+    NGPS = &#34;NGPS&#34;
+    N1068 = &#34;N1068&#34;
+    DT55XXE = &#34;DT55XXE&#34;
+    DT55XX = &#34;DT55XX&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.DT55XX"><code class="name">var <span class="ident">DT55XX</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.DT55XXE"><code class="name">var <span class="ident">DT55XXE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.N1068"><code class="name">var <span class="ident">N1068</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.N1470"><code class="name">var <span class="ident">N1470</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.N568B"><code class="name">var <span class="ident">N568B</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.N568E"><code class="name">var <span class="ident">N568E</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.NGPS"><code class="name">var <span class="ident">NGPS</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.SMARTHV"><code class="name">var <span class="ident">SMARTHV</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.SY1527"><code class="name">var <span class="ident">SY1527</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.SY2527"><code class="name">var <span class="ident">SY2527</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.SY4527"><code class="name">var <span class="ident">SY4527</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.SY5527"><code class="name">var <span class="ident">SY5527</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.V65XX"><code class="name">var <span class="ident">V65XX</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.hv.SystemType.V8100"><code class="name">var <span class="ident">V8100</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.daq.jobs.caen" href="index.html">enrgdaq.daq.jobs.caen</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV">DAQJobCAENHV</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.allowed_message_in_types" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config">config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config_type" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.handle_message" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.handle_message">handle_message</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.restart_offset" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.restart_offset">restart_offset</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.start" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.start">start</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_force_exit" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_force_exit">watchdog_force_exit</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_timeout_seconds" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHV.watchdog_timeout_seconds">watchdog_timeout_seconds</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig">DAQJobCAENHVConfig</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.channels_to_monitor" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.channels_to_monitor">channels_to_monitor</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.connection_arg" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.connection_arg">connection_arg</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.link_type" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.link_type">link_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.params_to_monitor" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.params_to_monitor">params_to_monitor</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.password" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.password">password</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.poll_interval_seconds" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.poll_interval_seconds">poll_interval_seconds</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.store_config" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.store_config">store_config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.system_type" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.system_type">system_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.timeseries_store_config" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.timeseries_store_config">timeseries_store_config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.username" href="#enrgdaq.daq.jobs.caen.hv.DAQJobCAENHVConfig.username">username</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam" href="#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam">DAQJobMessageCAENHVSetChParam</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.channel_list" href="#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.channel_list">channel_list</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.param_name" href="#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.param_name">param_name</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.slot" href="#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.slot">slot</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.value" href="#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam.value">value</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType" href="#enrgdaq.daq.jobs.caen.hv.LinkType">LinkType</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType.OPTLINK" href="#enrgdaq.daq.jobs.caen.hv.LinkType.OPTLINK">OPTLINK</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType.RS232" href="#enrgdaq.daq.jobs.caen.hv.LinkType.RS232">RS232</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType.TCPIP" href="#enrgdaq.daq.jobs.caen.hv.LinkType.TCPIP">TCPIP</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType.USB" href="#enrgdaq.daq.jobs.caen.hv.LinkType.USB">USB</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.LinkType.USB_VCP" href="#enrgdaq.daq.jobs.caen.hv.LinkType.USB_VCP">USB_VCP</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.ParamMode" href="#enrgdaq.daq.jobs.caen.hv.ParamMode">ParamMode</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.ParamMode.RDONLY" href="#enrgdaq.daq.jobs.caen.hv.ParamMode.RDONLY">RDONLY</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.ParamMode.RDWR" href="#enrgdaq.daq.jobs.caen.hv.ParamMode.RDWR">RDWR</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.ParamMode.WRONLY" href="#enrgdaq.daq.jobs.caen.hv.ParamMode.WRONLY">WRONLY</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType" href="#enrgdaq.daq.jobs.caen.hv.SystemType">SystemType</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.DT55XX" href="#enrgdaq.daq.jobs.caen.hv.SystemType.DT55XX">DT55XX</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.DT55XXE" href="#enrgdaq.daq.jobs.caen.hv.SystemType.DT55XXE">DT55XXE</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.N1068" href="#enrgdaq.daq.jobs.caen.hv.SystemType.N1068">N1068</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.N1470" href="#enrgdaq.daq.jobs.caen.hv.SystemType.N1470">N1470</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.N568B" href="#enrgdaq.daq.jobs.caen.hv.SystemType.N568B">N568B</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.N568E" href="#enrgdaq.daq.jobs.caen.hv.SystemType.N568E">N568E</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.NGPS" href="#enrgdaq.daq.jobs.caen.hv.SystemType.NGPS">NGPS</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.SMARTHV" href="#enrgdaq.daq.jobs.caen.hv.SystemType.SMARTHV">SMARTHV</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.SY1527" href="#enrgdaq.daq.jobs.caen.hv.SystemType.SY1527">SY1527</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.SY2527" href="#enrgdaq.daq.jobs.caen.hv.SystemType.SY2527">SY2527</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.SY4527" href="#enrgdaq.daq.jobs.caen.hv.SystemType.SY4527">SY4527</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.SY5527" href="#enrgdaq.daq.jobs.caen.hv.SystemType.SY5527">SY5527</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.V65XX" href="#enrgdaq.daq.jobs.caen.hv.SystemType.V65XX">V65XX</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.hv.SystemType.V8100" href="#enrgdaq.daq.jobs.caen.hv.SystemType.V8100">V8100</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

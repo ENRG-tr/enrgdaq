@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.jobs.store.raw API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -121,6 +121,7 @@ el.replaceWith(d);
         ).total_seconds() &lt; DAQ_JOB_STORE_RAW_FLUSH_INTERVAL_SECONDS:
             return False
 
+        self._logger.debug(&#34;Flushing raw file&#34;)
         file.file.flush()
         file.last_flush_date = datetime.now()
         return True
@@ -133,7 +134,9 @@ el.replaceWith(d);
                 continue
 
             while file.write_queue:
-                file.file.write(file.write_queue.popleft())
+                item = file.write_queue.popleft()
+                self._logger.debug(&#34;Writing raw file &#34; + str(len(item)))
+                file.file.write(item)
 
             if file.overwrite:
                 file.file.close()
@@ -157,13 +160,9 @@ el.replaceWith(d);
 
         return super().__del__()</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores. It extends the DAQJob class
-and provides additional functionality for handling and storing messages.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>allowed_store_config_types</code></strong> :&ensp;<code>list</code></dt>
-<dd>A list of allowed store configuration types.</dd>
-</dl></div>
+<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p>
+<p>Optimized for high throughput - only sleeps when idle to avoid
+unnecessary latency in message processing.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -179,7 +178,7 @@ and provides additional functionality for handling and storing messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRaw.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -211,7 +210,9 @@ and provides additional functionality for handling and storing messages.</p>
             continue
 
         while file.write_queue:
-            file.file.write(file.write_queue.popleft())
+            item = file.write_queue.popleft()
+            self._logger.debug(&#34;Writing raw file &#34; + str(len(item)))
+            file.file.write(item)
 
         if file.overwrite:
             file.file.close()
@@ -231,7 +232,7 @@ and provides additional functionality for handling and storing messages.</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_store" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_store">can_store</a></code></li>
+<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
@@ -241,7 +242,7 @@ and provides additional functionality for handling and storing messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.store.raw.DAQJobStoreRawConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreRawConfig</span></span>
-<span>(</span><span>out_dir: str = 'out/',<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>out_dir: str = 'out/',<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -299,7 +300,7 @@ class RawFile:
     overwrite: Optional[bool] = None</code></pre>
 </details>
 <div class="desc"><p>RawFile(file: Any, last_flush_date: datetime.datetime, write_queue: collections.deque[bytes], overwrite: Optional[bool] = None)</p></div>
-<h3>Class variables</h3>
+<h3>Instance variables</h3>
 <dl>
 <dt id="enrgdaq.daq.jobs.store.raw.RawFile.file"><code class="name">var <span class="ident">file</span> : Any</code></dt>
 <dd>
@@ -364,7 +365,7 @@ class RawFile:
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

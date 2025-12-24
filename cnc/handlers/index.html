@@ -1,0 +1,1774 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.cnc.handlers API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.cnc.handlers</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+<h2 class="section-title" id="header-submodules">Sub-modules</h2>
+<dl>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.base" href="base.html">enrgdaq.cnc.handlers.base</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.heartbeat" href="heartbeat.html">enrgdaq.cnc.handlers.heartbeat</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_list_clients" href="req_list_clients.html">enrgdaq.cnc.handlers.req_list_clients</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_log" href="req_log.html">enrgdaq.cnc.handlers.req_log</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_ping" href="req_ping.html">enrgdaq.cnc.handlers.req_ping</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_restart_daq" href="req_restart_daq.html">enrgdaq.cnc.handlers.req_restart_daq</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_restart_daqjobs" href="req_restart_daqjobs.html">enrgdaq.cnc.handlers.req_restart_daqjobs</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_run_custom_daqjob" href="req_run_custom_daqjob.html">enrgdaq.cnc.handlers.req_run_custom_daqjob</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_send_message" href="req_send_message.html">enrgdaq.cnc.handlers.req_send_message</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_status" href="req_status.html">enrgdaq.cnc.handlers.req_status</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.req_stop_daqjob" href="req_stop_daqjob.html">enrgdaq.cnc.handlers.req_stop_daqjob</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.res_ping" href="res_ping.html">enrgdaq.cnc.handlers.res_ping</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt><code class="name"><a title="enrgdaq.cnc.handlers.res_status" href="res_status.html">enrgdaq.cnc.handlers.res_status</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.cnc.handlers.CNCMessageHandler"><code class="flex name class">
+<span>class <span class="ident">CNCMessageHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CNCMessageHandler(ABC):
+    &#34;&#34;&#34;
+    Abstract base class for C&amp;C message handlers.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        self.cnc = cnc
+        self._logger = cnc._logger
+
+    @abstractmethod
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessage
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles an incoming C&amp;C message.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The C&amp;C message to handle.
+        :return: An optional tuple containing the response message and a boolean
+                 indicating if it&#39;s a forward reply.
+        &#34;&#34;&#34;
+        pass</code></pre>
+</details>
+<div class="desc"><p>Abstract base class for C&amp;C message handlers.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>abc.ABC</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.heartbeat.HeartbeatHandler" href="heartbeat.html#enrgdaq.cnc.handlers.heartbeat.HeartbeatHandler">HeartbeatHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_list_clients.ReqListClientsHandler" href="req_list_clients.html#enrgdaq.cnc.handlers.req_list_clients.ReqListClientsHandler">ReqListClientsHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_log.ReqLogHandler" href="req_log.html#enrgdaq.cnc.handlers.req_log.ReqLogHandler">ReqLogHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_ping.ReqPingHandler" href="req_ping.html#enrgdaq.cnc.handlers.req_ping.ReqPingHandler">ReqPingHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_restart_daq.ReqRestartHandler" href="req_restart_daq.html#enrgdaq.cnc.handlers.req_restart_daq.ReqRestartHandler">ReqRestartHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_restart_daqjobs.ReqStopDAQJobsHandler" href="req_restart_daqjobs.html#enrgdaq.cnc.handlers.req_restart_daqjobs.ReqStopDAQJobsHandler">ReqStopDAQJobsHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_run_custom_daqjob.ReqRunCustomDAQJobHandler" href="req_run_custom_daqjob.html#enrgdaq.cnc.handlers.req_run_custom_daqjob.ReqRunCustomDAQJobHandler">ReqRunCustomDAQJobHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_send_message.ReqSendMessageHandler" href="req_send_message.html#enrgdaq.cnc.handlers.req_send_message.ReqSendMessageHandler">ReqSendMessageHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_status.ReqStatusHandler" href="req_status.html#enrgdaq.cnc.handlers.req_status.ReqStatusHandler">ReqStatusHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.req_stop_daqjob.ReqStopDAQJobHandler" href="req_stop_daqjob.html#enrgdaq.cnc.handlers.req_stop_daqjob.ReqStopDAQJobHandler">ReqStopDAQJobHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.res_ping.ResPingHandler" href="res_ping.html#enrgdaq.cnc.handlers.res_ping.ResPingHandler">ResPingHandler</a></li>
+<li><a title="enrgdaq.cnc.handlers.res_status.ResStatusHandler" href="res_status.html#enrgdaq.cnc.handlers.res_status.ResStatusHandler">ResStatusHandler</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.CNCMessageHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessage) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def handle(
+    self, sender_identity: bytes, msg: CNCMessage
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles an incoming C&amp;C message.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The C&amp;C message to handle.
+    :return: An optional tuple containing the response message and a boolean
+             indicating if it&#39;s a forward reply.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<div class="desc"><p>Handles an incoming C&amp;C message.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The C&amp;C message to handle.
+:return: An optional tuple containing the response message and a boolean
+indicating if it's a forward reply.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.HeartbeatHandler"><code class="flex name class">
+<span>class <span class="ident">HeartbeatHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class HeartbeatHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageHeartbeat messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageHeartbeat
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a heartbeat message.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The heartbeat message.
+        :return: None
+        &#34;&#34;&#34;
+        sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+        self._logger.debug(f&#34;Received heartbeat from {sender_id_str}&#34;)
+        self.cnc.clients[sender_id_str] = CNCClientInfo(
+            identity=sender_identity,
+            last_seen=datetime.now().isoformat(),
+            info=msg.supervisor_info,
+        )
+        return None</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageHeartbeat messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.HeartbeatHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageHeartbeat) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageHeartbeat
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a heartbeat message.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The heartbeat message.
+    :return: None
+    &#34;&#34;&#34;
+    sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+    self._logger.debug(f&#34;Received heartbeat from {sender_id_str}&#34;)
+    self.cnc.clients[sender_id_str] = CNCClientInfo(
+        identity=sender_identity,
+        last_seen=datetime.now().isoformat(),
+        info=msg.supervisor_info,
+    )
+    return None</code></pre>
+</details>
+<div class="desc"><p>Handles a heartbeat message.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The heartbeat message.
+:return: None</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqListClientsHandler"><code class="flex name class">
+<span>class <span class="ident">ReqListClientsHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqListClientsHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqListClients messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqListClients
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a list clients request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The list clients request message.
+        :return: A list clients response message.
+        &#34;&#34;&#34;
+        sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+        self._logger.debug(f&#34;Received list clients request from {sender_id_str}&#34;)
+        client_list = {cid: cinfo.info for cid, cinfo in self.cnc.clients.items()}
+        return CNCMessageResListClients(clients=client_list), False</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqListClients messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqListClientsHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqListClients) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqListClients
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a list clients request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The list clients request message.
+    :return: A list clients response message.
+    &#34;&#34;&#34;
+    sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+    self._logger.debug(f&#34;Received list clients request from {sender_id_str}&#34;)
+    client_list = {cid: cinfo.info for cid, cinfo in self.cnc.clients.items()}
+    return CNCMessageResListClients(clients=client_list), False</code></pre>
+</details>
+<div class="desc"><p>Handles a list clients request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The list clients request message.
+:return: A list clients response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqLogHandler"><code class="flex name class">
+<span>class <span class="ident">ReqLogHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqLogHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageLog messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageLog
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a log message from a client.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The log message.
+        :return: None
+        &#34;&#34;&#34;
+        self.cnc.add_client_log(sender_identity.decode(&#34;utf-8&#34;), msg)
+        return None</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageLog messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqLogHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageLog) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageLog
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a log message from a client.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The log message.
+    :return: None
+    &#34;&#34;&#34;
+    self.cnc.add_client_log(sender_identity.decode(&#34;utf-8&#34;), msg)
+    return None</code></pre>
+</details>
+<div class="desc"><p>Handles a log message from a client.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The log message.
+:return: None</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqPingHandler"><code class="flex name class">
+<span>class <span class="ident">ReqPingHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqPingHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqPing messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqPing
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a ping request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The ping request message.
+        :return: A pong response message.
+        &#34;&#34;&#34;
+        self._logger.debug(&#34;Received ping, sending pong.&#34;)
+        return CNCMessageResPing(), True</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqPing messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqPingHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqPing) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqPing
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a ping request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The ping request message.
+    :return: A pong response message.
+    &#34;&#34;&#34;
+    self._logger.debug(&#34;Received ping, sending pong.&#34;)
+    return CNCMessageResPing(), True</code></pre>
+</details>
+<div class="desc"><p>Handles a ping request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The ping request message.
+:return: A pong response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqRestartHandler"><code class="flex name class">
+<span>class <span class="ident">ReqRestartHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqRestartHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqUpdateAndRestart messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqRestartDAQ
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles an update and restart request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The update and restart request message.
+        :return: An update and restart response message.
+        &#34;&#34;&#34;
+        self._logger.info(&#34;Received update and restart request.&#34;)
+
+        try:
+            if msg.update:
+                # Run git pull
+                git_result = subprocess.run(
+                    [&#34;git&#34;, &#34;pull&#34;], check=True, capture_output=True, text=True
+                )
+                self._logger.info(f&#34;Git pull output: {git_result.stdout}&#34;)
+
+                # Run uv sync
+                sync_result = subprocess.run(
+                    [&#34;uv&#34;, &#34;sync&#34;], check=True, capture_output=True, text=True
+                )
+                self._logger.info(f&#34;uv sync output: {sync_result.stdout}&#34;)
+
+                message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
+            else:
+                message = &#34;Restart requested via CNC&#34;
+            success = True
+            self._logger.info(message)
+
+            # Schedule exit
+            threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+        except subprocess.CalledProcessError as e:
+            success = False
+            message = f&#34;Error during update: {str(e)}&#34;
+            self._logger.error(message)
+        except Exception as e:
+            success = False
+            message = f&#34;Unexpected error during update: {str(e)}&#34;
+            self._logger.error(message)
+
+        return CNCMessageResRestartDAQ(success=success, message=message), True
+
+    def _exit(self):
+        self.cnc.supervisor.stop()</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqUpdateAndRestart messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqRestartHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqRestartDAQ) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqRestartDAQ
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles an update and restart request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The update and restart request message.
+    :return: An update and restart response message.
+    &#34;&#34;&#34;
+    self._logger.info(&#34;Received update and restart request.&#34;)
+
+    try:
+        if msg.update:
+            # Run git pull
+            git_result = subprocess.run(
+                [&#34;git&#34;, &#34;pull&#34;], check=True, capture_output=True, text=True
+            )
+            self._logger.info(f&#34;Git pull output: {git_result.stdout}&#34;)
+
+            # Run uv sync
+            sync_result = subprocess.run(
+                [&#34;uv&#34;, &#34;sync&#34;], check=True, capture_output=True, text=True
+            )
+            self._logger.info(f&#34;uv sync output: {sync_result.stdout}&#34;)
+
+            message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
+        else:
+            message = &#34;Restart requested via CNC&#34;
+        success = True
+        self._logger.info(message)
+
+        # Schedule exit
+        threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+    except subprocess.CalledProcessError as e:
+        success = False
+        message = f&#34;Error during update: {str(e)}&#34;
+        self._logger.error(message)
+    except Exception as e:
+        success = False
+        message = f&#34;Unexpected error during update: {str(e)}&#34;
+        self._logger.error(message)
+
+    return CNCMessageResRestartDAQ(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handles an update and restart request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The update and restart request message.
+:return: An update and restart response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler"><code class="flex name class">
+<span>class <span class="ident">ReqRunCustomDAQJobHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqRunCustomDAQJobHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqRunCustomDAQJob messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqRunCustomDAQJob
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a run custom DAQJob request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The run custom DAQJob request message.
+        :return: A run custom DAQJob response message.
+        &#34;&#34;&#34;
+        self._logger.info(&#34;Received run custom DAQJob request.&#34;)
+
+        try:
+            from enrgdaq.daq.daq_job import build_daq_job
+            from enrgdaq.models import SupervisorInfo
+
+            # Create a basic supervisor info for the custom job
+            supervisor_info = SupervisorInfo(supervisor_id=&#34;remote_custom&#34;)
+
+            # Write the config to a temporary file
+            with tempfile.NamedTemporaryFile(
+                mode=&#34;w&#34;, suffix=&#34;.toml&#34;, delete=False
+            ) as temp_config:
+                temp_config.write(msg.config)
+                config_path = temp_config.name
+
+            # Read the config from the temporary file as bytes
+            with open(config_path, &#34;rb&#34;) as f:
+                config_data = f.read()
+
+            try:
+                # Build the DAQ job from the config
+                daq_job_process = build_daq_job(config_data, supervisor_info)
+                daq_job_process.restart_on_crash = msg.restart_on_crash
+
+                self._logger.info(
+                    f&#34;Starting DAQ job: {daq_job_process.daq_job_cls.__name__} (restart_on_crash={msg.restart_on_crash})&#34;
+                )
+
+                # Start the DAQ job
+                self.cnc.supervisor.start_daq_job_processes([daq_job_process])
+
+                success = True
+                message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
+                self._logger.info(message)
+
+            except Exception as e:
+                success = False
+                message = f&#34;Error starting DAQ job: {str(e)}&#34;
+                self._logger.error(message)
+            finally:
+                # Clean up the temporary file
+                import os
+
+                os.unlink(config_path)
+
+        except Exception as e:
+            success = False
+            message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
+            self._logger.error(message)
+
+        return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqRunCustomDAQJob messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqRunCustomDAQJob) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqRunCustomDAQJob
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a run custom DAQJob request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The run custom DAQJob request message.
+    :return: A run custom DAQJob response message.
+    &#34;&#34;&#34;
+    self._logger.info(&#34;Received run custom DAQJob request.&#34;)
+
+    try:
+        from enrgdaq.daq.daq_job import build_daq_job
+        from enrgdaq.models import SupervisorInfo
+
+        # Create a basic supervisor info for the custom job
+        supervisor_info = SupervisorInfo(supervisor_id=&#34;remote_custom&#34;)
+
+        # Write the config to a temporary file
+        with tempfile.NamedTemporaryFile(
+            mode=&#34;w&#34;, suffix=&#34;.toml&#34;, delete=False
+        ) as temp_config:
+            temp_config.write(msg.config)
+            config_path = temp_config.name
+
+        # Read the config from the temporary file as bytes
+        with open(config_path, &#34;rb&#34;) as f:
+            config_data = f.read()
+
+        try:
+            # Build the DAQ job from the config
+            daq_job_process = build_daq_job(config_data, supervisor_info)
+            daq_job_process.restart_on_crash = msg.restart_on_crash
+
+            self._logger.info(
+                f&#34;Starting DAQ job: {daq_job_process.daq_job_cls.__name__} (restart_on_crash={msg.restart_on_crash})&#34;
+            )
+
+            # Start the DAQ job
+            self.cnc.supervisor.start_daq_job_processes([daq_job_process])
+
+            success = True
+            message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
+            self._logger.info(message)
+
+        except Exception as e:
+            success = False
+            message = f&#34;Error starting DAQ job: {str(e)}&#34;
+            self._logger.error(message)
+        finally:
+            # Clean up the temporary file
+            import os
+
+            os.unlink(config_path)
+
+    except Exception as e:
+        success = False
+        message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
+        self._logger.error(message)
+
+    return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handles a run custom DAQJob request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The run custom DAQJob request message.
+:return: A run custom DAQJob response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqSendMessageHandler"><code class="flex name class">
+<span>class <span class="ident">ReqSendMessageHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqSendMessageHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqSendMessage messages.
+    Sends a custom message to DAQ job(s).
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqSendMessage
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a send custom message request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The send custom message request message.
+        :return: A send custom message response message.
+        &#34;&#34;&#34;
+        self._logger.info(
+            f&#34;Received send message request: type={msg.message_type}, &#34;
+            f&#34;target={msg.target_daq_job_unique_id or &#39;all&#39;}&#34;
+        )
+
+        try:
+            # Get all registered DAQJobMessage types
+            message_types = self._get_message_types()
+
+            # Find the requested message type
+            if msg.message_type not in message_types:
+                return CNCMessageResSendMessage(
+                    success=False,
+                    message=f&#34;Unknown message type: {msg.message_type}. &#34;
+                    f&#34;Available types: {list(message_types.keys())}&#34;,
+                    jobs_notified=0,
+                ), True
+
+            message_cls = message_types[msg.message_type]
+
+            # Decode the JSON payload
+            try:
+                message_instance = msgspec.json.decode(
+                    msg.payload.encode(), type=message_cls
+                )
+            except Exception as e:
+                return CNCMessageResSendMessage(
+                    success=False,
+                    message=f&#34;Failed to decode payload as {msg.message_type}: {str(e)}&#34;,
+                    jobs_notified=0,
+                ), True
+
+            supervisor = self.cnc.supervisor
+            if not supervisor:
+                return CNCMessageResSendMessage(
+                    success=False,
+                    message=&#34;Supervisor not available&#34;,
+                    jobs_notified=0,
+                ), True
+
+            jobs_notified = 0
+
+            # Send to specific job or all jobs
+            for daq_job_process in supervisor.daq_job_processes:
+                # If a target is specified, only send to that job
+                if msg.target_daq_job_unique_id:
+                    if (
+                        daq_job_process.daq_job_info
+                        and daq_job_process.daq_job_info.unique_id
+                        != msg.target_daq_job_unique_id
+                    ):
+                        continue
+
+                # Check if the job accepts this message type
+                daq_job_cls = daq_job_process.daq_job_cls
+                accepts_message = any(
+                    isinstance(message_instance, msg_type)
+                    for msg_type in daq_job_cls.allowed_message_in_types
+                )
+
+                if not accepts_message:
+                    continue
+
+                # Send the message
+                try:
+                    daq_job_process.message_in.put_nowait(message_instance)
+                    jobs_notified += 1
+                    self._logger.debug(
+                        f&#34;Sent {msg.message_type} to {daq_job_cls.__name__}&#34;
+                    )
+                except Exception as e:
+                    self._logger.warning(
+                        f&#34;Failed to send message to {daq_job_cls.__name__}: {e}&#34;
+                    )
+
+            if jobs_notified == 0:
+                return CNCMessageResSendMessage(
+                    success=False,
+                    message=f&#34;No jobs accepted message type {msg.message_type}&#34;
+                    + (
+                        f&#34; (target: {msg.target_daq_job_unique_id})&#34;
+                        if msg.target_daq_job_unique_id
+                        else &#34;&#34;
+                    ),
+                    jobs_notified=0,
+                ), True
+
+            return CNCMessageResSendMessage(
+                success=True,
+                message=f&#34;Message sent to {jobs_notified} job(s)&#34;,
+                jobs_notified=jobs_notified,
+            ), True
+
+        except Exception as e:
+            self._logger.error(f&#34;Error sending custom message: {e}&#34;, exc_info=True)
+            return CNCMessageResSendMessage(
+                success=False,
+                message=f&#34;Error sending message: {str(e)}&#34;,
+                jobs_notified=0,
+            ), True
+
+    def _get_message_types(self) -&gt; dict[str, type]:
+        &#34;&#34;&#34;
+        Gets all registered DAQJobMessage types.
+        Returns a dict mapping type name to type class.
+        &#34;&#34;&#34;
+        from enrgdaq.daq.jobs.caen.hv import DAQJobMessageCAENHVSetChParam
+        from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats
+        from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote
+        from enrgdaq.daq.models import (
+            DAQJobMessage,
+            DAQJobMessageHeartbeat,
+            DAQJobMessageStop,
+        )
+        from enrgdaq.daq.store.models import (
+            DAQJobMessageStore,
+            DAQJobMessageStoreRaw,
+            DAQJobMessageStoreTabular,
+        )
+
+        # Build a dictionary of all known message types
+        types: dict[str, type] = {
+            &#34;DAQJobMessage&#34;: DAQJobMessage,
+            &#34;DAQJobMessageHeartbeat&#34;: DAQJobMessageHeartbeat,
+            &#34;DAQJobMessageStop&#34;: DAQJobMessageStop,
+            &#34;DAQJobMessageStore&#34;: DAQJobMessageStore,
+            &#34;DAQJobMessageStoreRaw&#34;: DAQJobMessageStoreRaw,
+            &#34;DAQJobMessageStoreTabular&#34;: DAQJobMessageStoreTabular,
+            &#34;DAQJobMessageStats&#34;: DAQJobMessageStats,
+            &#34;DAQJobMessageStatsRemote&#34;: DAQJobMessageStatsRemote,
+            &#34;DAQJobMessageCAENHVSetChParam&#34;: DAQJobMessageCAENHVSetChParam,
+        }
+
+        return types</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqSendMessage messages.
+Sends a custom message to DAQ job(s).</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqSendMessageHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqSendMessage) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqSendMessage
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a send custom message request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The send custom message request message.
+    :return: A send custom message response message.
+    &#34;&#34;&#34;
+    self._logger.info(
+        f&#34;Received send message request: type={msg.message_type}, &#34;
+        f&#34;target={msg.target_daq_job_unique_id or &#39;all&#39;}&#34;
+    )
+
+    try:
+        # Get all registered DAQJobMessage types
+        message_types = self._get_message_types()
+
+        # Find the requested message type
+        if msg.message_type not in message_types:
+            return CNCMessageResSendMessage(
+                success=False,
+                message=f&#34;Unknown message type: {msg.message_type}. &#34;
+                f&#34;Available types: {list(message_types.keys())}&#34;,
+                jobs_notified=0,
+            ), True
+
+        message_cls = message_types[msg.message_type]
+
+        # Decode the JSON payload
+        try:
+            message_instance = msgspec.json.decode(
+                msg.payload.encode(), type=message_cls
+            )
+        except Exception as e:
+            return CNCMessageResSendMessage(
+                success=False,
+                message=f&#34;Failed to decode payload as {msg.message_type}: {str(e)}&#34;,
+                jobs_notified=0,
+            ), True
+
+        supervisor = self.cnc.supervisor
+        if not supervisor:
+            return CNCMessageResSendMessage(
+                success=False,
+                message=&#34;Supervisor not available&#34;,
+                jobs_notified=0,
+            ), True
+
+        jobs_notified = 0
+
+        # Send to specific job or all jobs
+        for daq_job_process in supervisor.daq_job_processes:
+            # If a target is specified, only send to that job
+            if msg.target_daq_job_unique_id:
+                if (
+                    daq_job_process.daq_job_info
+                    and daq_job_process.daq_job_info.unique_id
+                    != msg.target_daq_job_unique_id
+                ):
+                    continue
+
+            # Check if the job accepts this message type
+            daq_job_cls = daq_job_process.daq_job_cls
+            accepts_message = any(
+                isinstance(message_instance, msg_type)
+                for msg_type in daq_job_cls.allowed_message_in_types
+            )
+
+            if not accepts_message:
+                continue
+
+            # Send the message
+            try:
+                daq_job_process.message_in.put_nowait(message_instance)
+                jobs_notified += 1
+                self._logger.debug(
+                    f&#34;Sent {msg.message_type} to {daq_job_cls.__name__}&#34;
+                )
+            except Exception as e:
+                self._logger.warning(
+                    f&#34;Failed to send message to {daq_job_cls.__name__}: {e}&#34;
+                )
+
+        if jobs_notified == 0:
+            return CNCMessageResSendMessage(
+                success=False,
+                message=f&#34;No jobs accepted message type {msg.message_type}&#34;
+                + (
+                    f&#34; (target: {msg.target_daq_job_unique_id})&#34;
+                    if msg.target_daq_job_unique_id
+                    else &#34;&#34;
+                ),
+                jobs_notified=0,
+            ), True
+
+        return CNCMessageResSendMessage(
+            success=True,
+            message=f&#34;Message sent to {jobs_notified} job(s)&#34;,
+            jobs_notified=jobs_notified,
+        ), True
+
+    except Exception as e:
+        self._logger.error(f&#34;Error sending custom message: {e}&#34;, exc_info=True)
+        return CNCMessageResSendMessage(
+            success=False,
+            message=f&#34;Error sending message: {str(e)}&#34;,
+            jobs_notified=0,
+        ), True</code></pre>
+</details>
+<div class="desc"><p>Handles a send custom message request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The send custom message request message.
+:return: A send custom message response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqStatusHandler"><code class="flex name class">
+<span>class <span class="ident">ReqStatusHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqStatusHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqStatus messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqStatus
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a status request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The status request message.
+        :return: A status response message.
+        &#34;&#34;&#34;
+        status = self.cnc.supervisor.get_status()
+        return CNCMessageResStatus(status=status), True</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqStatus messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqStatusHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqStatus) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqStatus
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a status request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The status request message.
+    :return: A status response message.
+    &#34;&#34;&#34;
+    status = self.cnc.supervisor.get_status()
+    return CNCMessageResStatus(status=status), True</code></pre>
+</details>
+<div class="desc"><p>Handles a status request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The status request message.
+:return: A status response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqStopDAQJobHandler"><code class="flex name class">
+<span>class <span class="ident">ReqStopDAQJobHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqStopDAQJobHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqStopDAQJob messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqStopDAQJob
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a stop and remove DAQJob request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The stop and remove DAQJob request message.
+        :return: A stop and remove DAQJob response message.
+        &#34;&#34;&#34;
+        if not msg.daq_job_name and not msg.daq_job_unique_id:
+            raise Exception(
+                &#34;Either daq_job_name or daq_job_unique_id must be specified&#34;
+            )
+        self._logger.info(
+            f&#34;Received stop and remove DAQJob request for job: {msg.daq_job_unique_id}&#34;
+        )
+
+        try:
+            supervisor = self.cnc.supervisor
+            if supervisor:
+                # Find the DAQ job process with the specified name
+                target_process = None
+                for daq_job_process in supervisor.daq_job_processes:
+                    # If daq_job_unique_id is specified
+                    if (
+                        msg.daq_job_unique_id
+                        and daq_job_process.daq_job_info
+                        and daq_job_process.daq_job_info.unique_id
+                        == msg.daq_job_unique_id
+                    ):
+                        target_process = daq_job_process
+                        break
+                    # If daq_job_name is specified
+                    elif (
+                        msg.daq_job_name
+                        and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
+                    ):
+                        target_process = daq_job_process
+                        break
+
+                if target_process:
+                    # Send a stop message to the DAQ job process
+                    try:
+                        target_process.message_in.put(
+                            DAQJobMessageStop(
+                                reason=&#34;Stop and remove requested via CNC&#34;
+                            )
+                        )
+
+                        # Remove the process from the supervisor&#39;s list
+                        supervisor.daq_job_processes.remove(target_process)
+                        if msg.remove:
+                            supervisor.daq_job_stats.pop(
+                                target_process.daq_job_cls.__name__
+                            )
+
+                        success = True
+                        message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
+                            &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
+                        )
+                        self._logger.info(message)
+                    except Exception as e:
+                        success = False
+                        message = f&#34;Error during Stop DAQJob for &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
+                        self._logger.error(message, exc_info=True)
+                else:
+                    success = False
+                    message = (
+                        f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
+                    )
+                    self._logger.warning(message)
+            else:
+                success = False
+                message = &#34;Supervisor not available&#34;
+                self._logger.error(message)
+
+        except Exception as e:
+            success = False
+            message = f&#34;Error stopping and removing DAQJob &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
+            self._logger.error(message, exc_info=True)
+
+        return CNCMessageResStopDAQJob(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqStopDAQJob messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqStopDAQJobHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqStopDAQJob) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqStopDAQJob
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a stop and remove DAQJob request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The stop and remove DAQJob request message.
+    :return: A stop and remove DAQJob response message.
+    &#34;&#34;&#34;
+    if not msg.daq_job_name and not msg.daq_job_unique_id:
+        raise Exception(
+            &#34;Either daq_job_name or daq_job_unique_id must be specified&#34;
+        )
+    self._logger.info(
+        f&#34;Received stop and remove DAQJob request for job: {msg.daq_job_unique_id}&#34;
+    )
+
+    try:
+        supervisor = self.cnc.supervisor
+        if supervisor:
+            # Find the DAQ job process with the specified name
+            target_process = None
+            for daq_job_process in supervisor.daq_job_processes:
+                # If daq_job_unique_id is specified
+                if (
+                    msg.daq_job_unique_id
+                    and daq_job_process.daq_job_info
+                    and daq_job_process.daq_job_info.unique_id
+                    == msg.daq_job_unique_id
+                ):
+                    target_process = daq_job_process
+                    break
+                # If daq_job_name is specified
+                elif (
+                    msg.daq_job_name
+                    and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
+                ):
+                    target_process = daq_job_process
+                    break
+
+            if target_process:
+                # Send a stop message to the DAQ job process
+                try:
+                    target_process.message_in.put(
+                        DAQJobMessageStop(
+                            reason=&#34;Stop and remove requested via CNC&#34;
+                        )
+                    )
+
+                    # Remove the process from the supervisor&#39;s list
+                    supervisor.daq_job_processes.remove(target_process)
+                    if msg.remove:
+                        supervisor.daq_job_stats.pop(
+                            target_process.daq_job_cls.__name__
+                        )
+
+                    success = True
+                    message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
+                        &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
+                    )
+                    self._logger.info(message)
+                except Exception as e:
+                    success = False
+                    message = f&#34;Error during Stop DAQJob for &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
+                    self._logger.error(message, exc_info=True)
+            else:
+                success = False
+                message = (
+                    f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
+                )
+                self._logger.warning(message)
+        else:
+            success = False
+            message = &#34;Supervisor not available&#34;
+            self._logger.error(message)
+
+    except Exception as e:
+        success = False
+        message = f&#34;Error stopping and removing DAQJob &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
+        self._logger.error(message, exc_info=True)
+
+    return CNCMessageResStopDAQJob(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handles a stop and remove DAQJob request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The stop and remove DAQJob request message.
+:return: A stop and remove DAQJob response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ReqStopDAQJobsHandler"><code class="flex name class">
+<span>class <span class="ident">ReqStopDAQJobsHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ReqStopDAQJobsHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageReqStopDAQJobs messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageReqStopDAQJobs
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a restart DAQJobs request.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The restart DAQJobs request message.
+        :return: A restart DAQJobs response message.
+        &#34;&#34;&#34;
+        self._logger.info(&#34;Received restart DAQJobs request.&#34;)
+
+        try:
+            # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
+            # by stopping all current processes which will trigger restart logic
+            supervisor = self.cnc.supervisor
+            if supervisor:
+                # Send stop messages to all DAQ job processes to trigger restart
+                for daq_job_process in supervisor.daq_job_processes:
+                    try:
+                        # Send a stop message to each DAQ job process via its message_in queue
+                        daq_job_process.message_in.put(
+                            DAQJobMessageStop(reason=&#34;Restart requested via CNC&#34;)
+                        )
+                    except Exception as e:
+                        self._logger.warning(
+                            f&#34;Error sending stop message to DAQ job: {e}&#34;
+                        )
+
+                success = True
+                message = &#34;Stop signals sent to all DAQ jobs.&#34;
+                self._logger.info(message)
+            else:
+                success = False
+                message = &#34;Supervisor not available&#34;
+                self._logger.error(message)
+
+        except Exception as e:
+            success = False
+            message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
+            self._logger.error(message)
+
+        return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageReqStopDAQJobs messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ReqStopDAQJobsHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageReqStopDAQJobs) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageReqStopDAQJobs
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a restart DAQJobs request.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The restart DAQJobs request message.
+    :return: A restart DAQJobs response message.
+    &#34;&#34;&#34;
+    self._logger.info(&#34;Received restart DAQJobs request.&#34;)
+
+    try:
+        # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
+        # by stopping all current processes which will trigger restart logic
+        supervisor = self.cnc.supervisor
+        if supervisor:
+            # Send stop messages to all DAQ job processes to trigger restart
+            for daq_job_process in supervisor.daq_job_processes:
+                try:
+                    # Send a stop message to each DAQ job process via its message_in queue
+                    daq_job_process.message_in.put(
+                        DAQJobMessageStop(reason=&#34;Restart requested via CNC&#34;)
+                    )
+                except Exception as e:
+                    self._logger.warning(
+                        f&#34;Error sending stop message to DAQ job: {e}&#34;
+                    )
+
+            success = True
+            message = &#34;Stop signals sent to all DAQ jobs.&#34;
+            self._logger.info(message)
+        else:
+            success = False
+            message = &#34;Supervisor not available&#34;
+            self._logger.error(message)
+
+    except Exception as e:
+        success = False
+        message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
+        self._logger.error(message)
+
+    return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+</details>
+<div class="desc"><p>Handles a restart DAQJobs request.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The restart DAQJobs request message.
+:return: A restart DAQJobs response message.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ResPingHandler"><code class="flex name class">
+<span>class <span class="ident">ResPingHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ResPingHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageResPing messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageResPing
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a pong response.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The pong response message.
+        :return: None
+        &#34;&#34;&#34;
+        sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+        self._logger.info(f&#34;Received pong from {sender_id_str}&#34;)
+        return None</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageResPing messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ResPingHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageResPing) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageResPing
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a pong response.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The pong response message.
+    :return: None
+    &#34;&#34;&#34;
+    sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+    self._logger.info(f&#34;Received pong from {sender_id_str}&#34;)
+    return None</code></pre>
+</details>
+<div class="desc"><p>Handles a pong response.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The pong response message.
+:return: None</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.cnc.handlers.ResStatusHandler"><code class="flex name class">
+<span>class <span class="ident">ResStatusHandler</span></span>
+<span>(</span><span>cnc: SupervisorCNC)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class ResStatusHandler(CNCMessageHandler):
+    &#34;&#34;&#34;
+    Handler for CNCMessageResStatus messages.
+    &#34;&#34;&#34;
+
+    def __init__(self, cnc: SupervisorCNC):
+        &#34;&#34;&#34;
+        Initialize the handler.
+        :param cnc: The SupervisorCNC instance.
+        &#34;&#34;&#34;
+        super().__init__(cnc)
+
+    def handle(
+        self, sender_identity: bytes, msg: CNCMessageResStatus
+    ) -&gt; Optional[Tuple[CNCMessage, bool]]:
+        &#34;&#34;&#34;
+        Handles a status response.
+        :param sender_identity: The ZMQ identity of the message sender.
+        :param msg: The status response message.
+        :return: None
+        &#34;&#34;&#34;
+        sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+        self._logger.debug(f&#34;Received status from {sender_id_str}: {msg.status}&#34;)
+        return None</code></pre>
+</details>
+<div class="desc"><p>Handler for CNCMessageResStatus messages.</p>
+<p>Initialize the handler.
+:param cnc: The SupervisorCNC instance.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.cnc.handlers.base.CNCMessageHandler" href="base.html#enrgdaq.cnc.handlers.base.CNCMessageHandler">CNCMessageHandler</a></li>
+<li>abc.ABC</li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.handlers.ResStatusHandler.handle"><code class="name flex">
+<span>def <span class="ident">handle</span></span>(<span>self, sender_identity: bytes, msg: CNCMessageResStatus) ‑> Tuple[<a title="enrgdaq.cnc.models.CNCMessage" href="../models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>, bool] | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle(
+    self, sender_identity: bytes, msg: CNCMessageResStatus
+) -&gt; Optional[Tuple[CNCMessage, bool]]:
+    &#34;&#34;&#34;
+    Handles a status response.
+    :param sender_identity: The ZMQ identity of the message sender.
+    :param msg: The status response message.
+    :return: None
+    &#34;&#34;&#34;
+    sender_id_str = sender_identity.decode(&#34;utf-8&#34;)
+    self._logger.debug(f&#34;Received status from {sender_id_str}: {msg.status}&#34;)
+    return None</code></pre>
+</details>
+<div class="desc"><p>Handles a status response.
+:param sender_identity: The ZMQ identity of the message sender.
+:param msg: The status response message.
+:return: None</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.cnc" href="../index.html">enrgdaq.cnc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-submodules">Sub-modules</a></h3>
+<ul>
+<li><code><a title="enrgdaq.cnc.handlers.base" href="base.html">enrgdaq.cnc.handlers.base</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.heartbeat" href="heartbeat.html">enrgdaq.cnc.handlers.heartbeat</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_list_clients" href="req_list_clients.html">enrgdaq.cnc.handlers.req_list_clients</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_log" href="req_log.html">enrgdaq.cnc.handlers.req_log</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_ping" href="req_ping.html">enrgdaq.cnc.handlers.req_ping</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_restart_daq" href="req_restart_daq.html">enrgdaq.cnc.handlers.req_restart_daq</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_restart_daqjobs" href="req_restart_daqjobs.html">enrgdaq.cnc.handlers.req_restart_daqjobs</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_run_custom_daqjob" href="req_run_custom_daqjob.html">enrgdaq.cnc.handlers.req_run_custom_daqjob</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_send_message" href="req_send_message.html">enrgdaq.cnc.handlers.req_send_message</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_status" href="req_status.html">enrgdaq.cnc.handlers.req_status</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.req_stop_daqjob" href="req_stop_daqjob.html">enrgdaq.cnc.handlers.req_stop_daqjob</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.res_ping" href="res_ping.html">enrgdaq.cnc.handlers.res_ping</a></code></li>
+<li><code><a title="enrgdaq.cnc.handlers.res_status" href="res_status.html">enrgdaq.cnc.handlers.res_status</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.CNCMessageHandler" href="#enrgdaq.cnc.handlers.CNCMessageHandler">CNCMessageHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.CNCMessageHandler.handle" href="#enrgdaq.cnc.handlers.CNCMessageHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.HeartbeatHandler" href="#enrgdaq.cnc.handlers.HeartbeatHandler">HeartbeatHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.HeartbeatHandler.handle" href="#enrgdaq.cnc.handlers.HeartbeatHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqListClientsHandler" href="#enrgdaq.cnc.handlers.ReqListClientsHandler">ReqListClientsHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqListClientsHandler.handle" href="#enrgdaq.cnc.handlers.ReqListClientsHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqLogHandler" href="#enrgdaq.cnc.handlers.ReqLogHandler">ReqLogHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqLogHandler.handle" href="#enrgdaq.cnc.handlers.ReqLogHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqPingHandler" href="#enrgdaq.cnc.handlers.ReqPingHandler">ReqPingHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqPingHandler.handle" href="#enrgdaq.cnc.handlers.ReqPingHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqRestartHandler" href="#enrgdaq.cnc.handlers.ReqRestartHandler">ReqRestartHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqRestartHandler.handle" href="#enrgdaq.cnc.handlers.ReqRestartHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler" href="#enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler">ReqRunCustomDAQJobHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler.handle" href="#enrgdaq.cnc.handlers.ReqRunCustomDAQJobHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqSendMessageHandler" href="#enrgdaq.cnc.handlers.ReqSendMessageHandler">ReqSendMessageHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqSendMessageHandler.handle" href="#enrgdaq.cnc.handlers.ReqSendMessageHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqStatusHandler" href="#enrgdaq.cnc.handlers.ReqStatusHandler">ReqStatusHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqStatusHandler.handle" href="#enrgdaq.cnc.handlers.ReqStatusHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqStopDAQJobHandler" href="#enrgdaq.cnc.handlers.ReqStopDAQJobHandler">ReqStopDAQJobHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqStopDAQJobHandler.handle" href="#enrgdaq.cnc.handlers.ReqStopDAQJobHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ReqStopDAQJobsHandler" href="#enrgdaq.cnc.handlers.ReqStopDAQJobsHandler">ReqStopDAQJobsHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ReqStopDAQJobsHandler.handle" href="#enrgdaq.cnc.handlers.ReqStopDAQJobsHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ResPingHandler" href="#enrgdaq.cnc.handlers.ResPingHandler">ResPingHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ResPingHandler.handle" href="#enrgdaq.cnc.handlers.ResPingHandler.handle">handle</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.cnc.handlers.ResStatusHandler" href="#enrgdaq.cnc.handlers.ResStatusHandler">ResStatusHandler</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.handlers.ResStatusHandler.handle" href="#enrgdaq.cnc.handlers.ResStatusHandler.handle">handle</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

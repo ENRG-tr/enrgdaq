@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.daq.jobs.caen.digitizer API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.daq.jobs.caen.digitizer</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcqMode"><code class="flex name class">
+<span>class <span class="ident">AcqMode</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcqMode(str, Enum):
+    SW_CONTROLLED = &#34;SW_CONTROLLED&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcqMode.SW_CONTROLLED"><code class="name">var <span class="ident">SW_CONTROLLED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats"><code class="flex name class">
+<span>class <span class="ident">AcquisitionStats</span></span>
+<span>(</span><span>acq_events: int, acq_samples: int)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    acq_events: int
+    acq_samples: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+        )</code></pre>
+</details>
+<div class="desc"><p>A base class for defining efficient serializable objects.</p>
+<p>Fields are defined using type annotations. Fields may optionally have
+default values, which result in keyword parameters to the constructor.</p>
+<p>Structs automatically define <code>__init__</code>, <code>__eq__</code>, <code>__repr__</code>, and
+<code>__copy__</code> methods. Additional methods can be defined on the class as
+needed. Note that <code>__init__</code>/<code>__new__</code> cannot be overridden, but other
+methods can. A tuple of the field names is available on the class via the
+<code>__struct_fields__</code> attribute if needed.</p>
+<p>Additional class options can be enabled by passing keywords to the class
+definition (see example below). These configuration options may also be
+inspected at runtime through the <code>__struct_config__</code> attribute.</p>
+<h2 id="configuration">Configuration</h2>
+<p>frozen: bool, default False
+Whether instances of this type are pseudo-immutable. If true, attribute
+assignment is disabled and a corresponding <code>__hash__</code> is defined.
+order: bool, default False
+If True, <code>__lt__</code>, `<strong>le</strong><code>, </code><strong>gt</strong><code>, and </code><strong>ge</strong>`` methods
+will be generated for this type.
+eq: bool, default True
+If True (the default), an <code>__eq__</code> method will be generated for this
+type. Set to False to compare based on instance identity alone.
+kw_only: bool, default False
+If True, all fields will be treated as keyword-only arguments in the
+generated <code>__init__</code> method. Default is False.
+omit_defaults: bool, default False
+Whether fields should be omitted from encoding if the corresponding value
+is the default for that field. Enabling this may reduce message size, and
+often also improve encoding &amp; decoding performance.
+forbid_unknown_fields: bool, default False
+If True, an error is raised if an unknown field is encountered while
+decoding structs of this type. If False (the default), no error is raised
+and the unknown field is skipped.
+tag: str, int, bool, callable, or None, default None
+Used along with <code>tag_field</code> for configuring tagged union support. If
+either are non-None, then the struct is considered "tagged". In this case,
+an extra field (the <code>tag_field</code>) and value (the <code>tag</code>) are added to the
+encoded message, which can be used to differentiate message types during
+decoding.</p>
+<p>Set <code>tag=True</code> to enable the default tagged configuration (<code>tag_field</code>
+is <code>"type"</code>, <code>tag</code> is the class name). Alternatively, you can provide
+a string (or less commonly int) value directly to be used as the tag
+(e.g. <code>tag="my-tag-value"</code>).<code>tag</code> can also be passed a callable that
+takes the class qualname and returns a valid tag value (e.g.
+<code>tag=str.lower</code>). See the docs for more information.
+tag_field: str or None, default None
+The field name to use for tagged union support. If <code>tag</code> is non-None,
+then this defaults to <code>"type"</code>. See the <code>tag</code> docs above for more
+information.
+rename: str, mapping, callable, or None, default None
+Controls renaming the field names used when encoding/decoding the struct.
+May be one of <code>"lower"</code>, <code>"upper"</code>, <code>"camel"</code>, <code>"pascal"</code>, or
+<code>"kebab"</code> to rename in lowercase, UPPERCASE, camelCase, PascalCase,
+or kebab-case respectively. May also be a mapping from field names to the
+renamed names (missing fields are not renamed). Alternatively, may be a
+callable that takes the field name and returns a new name or <code>None</code> to
+not rename that field. Default is <code>None</code> for no field renaming.
+repr_omit_defaults: bool, default False
+Whether fields should be omitted from the generated repr if the
+corresponding value is the default for that field.
+array_like: bool, default False
+If True, this struct type will be treated as an array-like type during
+encoding/decoding, rather than a dict-like type (the default). This may
+improve performance, at the cost of a more inscrutable message encoding.
+gc: bool, default True
+Whether garbage collection is enabled for this type. Disabling this <em>may</em>
+help reduce GC pressure, but will prevent reference cycles composed of only
+<code>gc=False</code> from being collected. It is the user's responsibility to ensure
+that reference cycles don't occur when setting <code>gc=False</code>.
+weakref: bool, default False
+Whether instances of this type support weak references. Defaults to False.
+dict: bool, default False
+Whether instances of this type will include a <code>__dict__</code>. Setting this to
+True will allow adding additional undeclared attributes to a struct instance,
+which may be useful for holding private runtime state. Defaults to False.
+cache_hash: bool, default False
+If enabled, the hash of a frozen struct instance will be computed at most
+once, and then cached on the instance for further reuse. For expensive
+hash values this can improve performance at the cost of a small amount of
+memory usage.</p>
+<h2 id="examples">Examples</h2>
+<p>Here we define a new <code>Struct</code> type for describing a dog. It has three fields;
+two required and one optional.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; class Dog(Struct):
+...     name: str
+...     breed: str
+...     is_good_boy: bool = True
+...
+&gt;&gt;&gt; Dog('snickers', breed='corgi')
+Dog(name='snickers', breed='corgi', is_good_boy=True)
+</code></pre>
+<p>Additional struct options can be set as part of the class definition. Here
+we define a new <code>Struct</code> type for a frozen <code>Point</code> object.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; class Point(Struct, frozen=True):
+...     x: float
+...     y: float
+...
+&gt;&gt;&gt; {Point(1.5, 2.0): 1}  # frozen structs are hashable
+{Point(x=1.5, y=2.0): 1}
+</code></pre></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Static methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw"><code class="name flex">
+<span>def <span class="ident">from_raw</span></span>(<span>raw: <a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw">AcquisitionStatsRaw</a>)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_events"><code class="name">var <span class="ident">acq_events</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    acq_events: int
+    acq_samples: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples"><code class="name">var <span class="ident">acq_samples</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    acq_events: int
+    acq_samples: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw"><code class="flex name class">
+<span>class <span class="ident">AcquisitionStatsRaw</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStatsRaw(ct.Structure):
+    _fields_ = [
+        (&#34;acq_events&#34;, ct.c_long),
+        (&#34;acq_samples&#34;, ct.c_long),
+    ]</code></pre>
+</details>
+<div class="desc"><p>Structure base class</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>_ctypes.Structure</li>
+<li>_ctypes._CData</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_events"><code class="name">var <span class="ident">acq_events</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples"><code class="name">var <span class="ident">acq_samples</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer"><code class="flex name class">
+<span>class <span class="ident">DAQJobCAENDigitizer</span></span>
+<span>(</span><span>config: <a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig">DAQJobCAENDigitizerConfig</a>,<br>**kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizer(DAQJob):
+    &#34;&#34;&#34;
+    DAQJob for CAEN Digitizers using high-performance C library.
+    &#34;&#34;&#34;
+
+    config_type = DAQJobCAENDigitizerConfig
+    config: DAQJobCAENDigitizerConfig
+    board_info: Optional[dgtz.BoardInfo] = None
+    restart_offset = timedelta(seconds=5)
+
+    _msg_buffer: bytearray
+    _device: Optional[dgtz.Device] = None
+
+    def __init__(self, config: DAQJobCAENDigitizerConfig, **kwargs):
+        super().__init__(config, **kwargs)
+        self._msg_buffer = bytearray()
+        self._msg_buffer_lock = threading.Lock()
+
+        self._writer_queue = None
+        self._writer_thread = None
+        if self.config.save_npy_lz4:
+            assert (
+                self.config.output_filename is not None
+            ), &#34;output_filename is required when save_npy_lz4 is True&#34;
+            os.makedirs(os.path.dirname(self.config.output_filename), exist_ok=True)
+            self._writer_queue = queue.Queue()
+            self._writer_thread = threading.Thread(
+                target=self._writer_thread_func, daemon=True
+            )
+
+        self._device = None
+        self.ctr = 0
+
+        # Compile if .so does not exist
+        if True or not os.path.exists(DIGITIZER_C_DLL_PATH):
+            self._logger.info(&#34;Compiling C library...&#34;)
+            ret = subprocess.run(
+                [&#34;make&#34;, &#34;-C&#34;, os.path.dirname(DIGITIZER_C_DLL_PATH)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if ret.returncode != 0:
+                self._logger.error(
+                    f&#34;Failed to compile with error code: {ret.returncode}&#34;
+                )
+                self._logger.error(f&#34;stdout: {ret.stdout}&#34;)
+                self._logger.error(f&#34;stderr: {ret.stderr}&#34;)
+        self._lib = ct.CDLL(DIGITIZER_C_DLL_PATH)
+        self._lib.run_acquisition.argtypes = [ct.c_void_p]
+        self._lib.stop_acquisition.argtypes = []
+
+        self._waveform_callback_delegate = WAVEFORM_CALLBACK_FUNC(
+            self._waveform_callback
+        )
+        self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
+        self._converting_npy_lz4 = False
+
+    def start(self):
+        if self._writer_thread:
+            self._writer_thread.start()
+
+        try:
+            self._logger.info(&#34;Opening Digitizer...&#34;)
+            with dgtz.Device.open(
+                dgtz.ConnectionType[self.config.connection_type],
+                self.config.link_number,
+                self.config.conet_node,
+                self.config.vme_base_address,
+            ) as device:
+                self._device = device
+                self._logger.info(&#34;Connected to Digitizer&#34;)
+                self._run_acquisition(device)
+        except Exception as e:
+            self._logger.error(f&#34;Error during acquisition: {e}&#34;, exc_info=True)
+
+    def handle_message(self, message: DAQJobMessage) -&gt; bool:
+        if not isinstance(message, DAQJobMessageStop):
+            return super().handle_message(message)
+        if not self.config.save_npy_lz4 or self._converting_npy_lz4:
+            return super().handle_message(message)
+
+        self._converting_npy_lz4 = True
+        # Convert npy.lz4 to root
+        assert self.config.output_filename is not None
+
+        npy_path = Path(self.config.output_filename)
+        if not npy_path.exists():
+            self._logger.warning(
+                f&#34;Npy file does not exist: {npy_path}, skipping conversion&#34;
+            )
+            return super().handle_message(message)
+
+        root_path = npy_path.parent / (npy_path.stem + &#34;.root&#34;)
+        self._logger.info(f&#34;Running npy2root: {npy_path} -&gt; {root_path}&#34;)
+        subprocess.run(
+            [
+                sys.executable,
+                &#34;-m&#34;,
+                &#34;enrgdaq.tools.npy2root&#34;,
+                str(npy_path),
+                str(root_path),
+            ],
+            check=True,
+        )
+
+        return super().handle_message(message)
+
+    def _run_acquisition(self, device: dgtz.Device):
+        try:
+            self.board_info = device.get_info()
+            self._configure_device(device, self.board_info)
+
+            args = RunAcquisitionArgs()
+            args.handle = device.handle
+            args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
+            args.filter_threshold = self.config.peak_threshold
+            args.waveform_callback = self._waveform_callback_delegate
+            args.stats_callback = self._stats_callback_delegate
+
+            self._lib.run_acquisition(ct.pointer(args))
+        except Exception as e:
+            self._logger.error(
+                f&#34;Error during C-based acquisition setup: {e}&#34;, exc_info=True
+            )
+
+    def _configure_device(self, device: dgtz.Device, info: dgtz.BoardInfo):
+        &#34;&#34;&#34;
+        Configures the digitizer based on the job configuration.
+        &#34;&#34;&#34;
+        device.reset()
+        device.set_record_length(self.config.record_length)
+        device.set_channel_enable_mask(self.config.channel_enable_mask)
+        for channel in range(info.channels):
+            device.set_channel_trigger_threshold(
+                channel,
+                self.config.channel_self_trigger_threshold,
+            )
+            device.set_trigger_polarity(
+                channel,
+                dgtz.TriggerPolarity.ON_RISING_EDGE,
+            )
+            device.set_channel_self_trigger(
+                dgtz.TriggerMode.ACQ_ONLY
+                if (self.config.channel_self_trigger_channel_mask &amp; (1 &lt;&lt; channel))
+                else dgtz.TriggerMode.DISABLED,
+                (1 &lt;&lt; channel),
+            )
+            if channel in self.config.channel_dc_offsets:
+                device.set_channel_dc_offset(
+                    channel, self.config.channel_dc_offsets[channel]
+                )
+        device.set_sw_trigger_mode(self.config.sw_trigger_mode)
+        device.set_max_num_events_blt(self.config.max_num_events_blt)
+        device.set_acquisition_mode(self.config.acquisition_mode)
+        device.set_io_level(self.config.io_level)
+        device.set_post_trigger_size(self.config.post_trigger_size)
+        device.calibrate()
+
+    def _waveform_callback(self, buffer_ptr: ct.c_void_p):
+        assert (
+            self.config.waveform_store_config is not None or self.config.save_npy_lz4
+        ), &#34;waveform_store_config is None and save_npy_lz4 is False&#34;
+        waveform_ptr = ct.cast(buffer_ptr, ct.POINTER(WaveformSamplesRaw)).contents
+
+        keys_to_send = [
+            field[0] for field in WaveformSamplesRaw._fields_ if field[0] != &#34;len&#34;
+        ]
+        data_columns = {}
+
+        for field in keys_to_send:
+            data_columns[field] = np.ctypeslib.as_array(
+                getattr(waveform_ptr, field), shape=(waveform_ptr.len,)
+            ).copy()
+
+        if self.config.save_npy_lz4:
+            assert self._writer_queue is not None
+
+            if self._writer_queue.qsize() &gt; 100:
+                self._logger.warning(
+                    f&#34;Writer queue size high: {self._writer_queue.qsize()}&#34;
+                )
+
+            self._writer_queue.put_nowait(data_columns)
+            return
+
+        assert self.config.waveform_store_config is not None
+
+        # Create PyArrow table from numpy arrays
+        table = pa.table(data_columns)
+
+        self._put_message_out(
+            DAQJobMessageStorePyArrow(
+                store_config=self.config.waveform_store_config,
+                tag=&#34;waveform&#34;,
+                table=table,
+            ),
+            use_shm=True,
+        )
+
+    def _writer_thread_func(self):
+        assert (
+            self.config.output_filename is not None and self._writer_queue is not None
+        )
+
+        while True:
+            try:
+                data = self._writer_queue.get()
+                if data is None:
+                    self._writer_queue.task_done()
+                    break
+
+                start_time = time.time()
+                self._save_waveform_to_npy_lz4(data, self.config.output_filename)
+
+                # Only log debug if it takes significant time to avoid log spam
+                elapsed = time.time() - start_time
+                if elapsed &gt; 0.001:
+                    self._logger.debug(
+                        f&#34;Took {elapsed:.6f} seconds to write to the npy.lz4 file&#34;
+                    )
+
+                self._writer_queue.task_done()
+            except Exception as e:
+                self._logger.error(f&#34;Error in writer thread: {e}&#34;, exc_info=True)
+
+    def _stats_callback(self, buffer_ptr: ct.c_void_p):
+        assert self.config.stats_store_config is not None, &#34;stats_store_config is None&#34;
+        stats_raw = ct.cast(buffer_ptr, ct.POINTER(AcquisitionStatsRaw)).contents
+        stats = AcquisitionStats.from_raw(stats_raw)
+
+        # Create PyArrow table for stats
+        table = pa.table(
+            {
+                &#34;timestamp&#34;: [get_now_unix_timestamp_ms()],
+                &#34;acq_events&#34;: [stats.acq_events],
+                &#34;acq_samples&#34;: [stats.acq_samples],
+            }
+        )
+
+        self._put_message_out(
+            DAQJobMessageStorePyArrow(
+                store_config=self.config.stats_store_config,
+                tag=&#34;stats&#34;,
+                table=table,
+            )
+        )
+
+    def _stop_acquisition(self):
+        if self._writer_thread and self._writer_queue:
+            self._logger.info(&#34;Stopping writer thread...&#34;)
+            self._writer_queue.put(None)
+            self._writer_thread.join()
+        self._logger.info(&#34;Stopping acquisition...&#34;)
+        if self._lib:
+            self._lib.stop_acquisition()
+        if self._device:
+            self._logger.info(&#34;Closing Digitizer...&#34;)
+            self._device.__exit__(None, None, None)
+
+    def __del__(self):
+        self._stop_acquisition()
+        return super().__del__()
+
+    def _save_waveform_to_npy_lz4(self, data_columns: dict, path: str):
+        &#34;&#34;&#34;
+        Saves waveform data by appending to a lz4 compressed npy file.
+        &#34;&#34;&#34;
+        # Save the numpy array to a in-memory buffer
+        with io.BytesIO() as bio:
+            np.save(bio, data_columns)
+            frame = bio.getvalue()
+
+        # Compress the frame
+        compressed = lz4.frame.compress(frame, compression_level=-1)
+
+        # Append the compressed frame to the file
+        with open(path, &#34;ab&#34;) as f:
+            # Write the size of the compressed frame first
+            f.write(len(compressed).to_bytes(4, &#34;little&#34;))
+            # Write the compressed frame
+            f.write(compressed)</code></pre>
+</details>
+<div class="desc"><p>DAQJob for CAEN Digitizers using high-performance C library.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.base.DAQJob" href="../../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.board_info"><code class="name">var <span class="ident">board_info</span> : None</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config"><code class="name">var <span class="ident">config</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig">DAQJobCAENDigitizerConfig</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
+<dd>
+<div class="desc"><p>Configuration class for the CAEN Digitizer DAQ Job.</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.restart_offset"><code class="name">var <span class="ident">restart_offset</span> : datetime.timedelta</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    if self._writer_thread:
+        self._writer_thread.start()
+
+    try:
+        self._logger.info(&#34;Opening Digitizer...&#34;)
+        with dgtz.Device.open(
+            dgtz.ConnectionType[self.config.connection_type],
+            self.config.link_number,
+            self.config.conet_node,
+            self.config.vme_base_address,
+        ) as device:
+            self._device = device
+            self._logger.info(&#34;Connected to Digitizer&#34;)
+            self._run_acquisition(device)
+    except Exception as e:
+        self._logger.error(f&#34;Error during acquisition: {e}&#34;, exc_info=True)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
+<ul class="hlist">
+<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig"><code class="flex name class">
+<span>class <span class="ident">DAQJobCAENDigitizerConfig</span></span>
+<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold: int = 32768,<br>channel_self_trigger_channel_mask: int = 0,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.ACQ_ONLY,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>peak_threshold: int = 750,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"><p>Configuration class for the CAEN Digitizer DAQ Job.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobConfig" href="../../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.acquisition_mode"><code class="name">var <span class="ident">acquisition_mode</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_dc_offsets"><code class="name">var <span class="ident">channel_dc_offsets</span> : dict[int, int]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_enable_mask"><code class="name">var <span class="ident">channel_enable_mask</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_channel_mask"><code class="name">var <span class="ident">channel_self_trigger_channel_mask</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold"><code class="name">var <span class="ident">channel_self_trigger_threshold</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node"><code class="name">var <span class="ident">conet_node</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type"><code class="name">var <span class="ident">connection_type</span> : Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK']</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level"><code class="name">var <span class="ident">io_level</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number"><code class="name">var <span class="ident">link_number</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt"><code class="name">var <span class="ident">max_num_events_blt</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename"><code class="name">var <span class="ident">output_filename</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold"><code class="name">var <span class="ident">peak_threshold</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.post_trigger_size"><code class="name">var <span class="ident">post_trigger_size</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.record_length"><code class="name">var <span class="ident">record_length</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4"><code class="name">var <span class="ident">save_npy_lz4</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config"><code class="name">var <span class="ident">stats_store_config</span> : <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode"><code class="name">var <span class="ident">sw_trigger_mode</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address"><code class="name">var <span class="ident">vme_base_address</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.waveform_store_config"><code class="name">var <span class="ident">waveform_store_config</span> : <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_channel_mask: int = 0
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    peak_threshold: int = 750
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.IOLevel"><code class="flex name class">
+<span>class <span class="ident">IOLevel</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class IOLevel(str, Enum):
+    NIM = &#34;NIM&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM"><code class="name">var <span class="ident">NIM</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs"><code class="flex name class">
+<span>class <span class="ident">RunAcquisitionArgs</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RunAcquisitionArgs(ct.Structure):
+    _fields_ = [
+        (&#34;handle&#34;, ct.c_int),
+        (&#34;is_debug_verbosity&#34;, ct.c_int),
+        (&#34;filter_threshold&#34;, ct.c_int),
+        (&#34;waveform_callback&#34;, WAVEFORM_CALLBACK_FUNC),
+        (&#34;stats_callback&#34;, STATS_CALLBACK_FUNC),
+        (&#34;channel_dc_offsets&#34;, ct.c_void_p),
+    ]</code></pre>
+</details>
+<div class="desc"><p>Structure base class</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>_ctypes.Structure</li>
+<li>_ctypes._CData</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets"><code class="name">var <span class="ident">channel_dc_offsets</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold"><code class="name">var <span class="ident">filter_threshold</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle"><code class="name">var <span class="ident">handle</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.is_debug_verbosity"><code class="name">var <span class="ident">is_debug_verbosity</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.stats_callback"><code class="name">var <span class="ident">stats_callback</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.waveform_callback"><code class="name">var <span class="ident">waveform_callback</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode"><code class="flex name class">
+<span>class <span class="ident">TriggerMode</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TriggerMode(str, Enum):
+    ACQ_ONLY = &#34;ACQ_ONLY&#34;
+    DISABLED = &#34;DISABLED&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY"><code class="name">var <span class="ident">ACQ_ONLY</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED"><code class="name">var <span class="ident">DISABLED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity"><code class="flex name class">
+<span>class <span class="ident">TriggerPolarity</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TriggerPolarity(str, Enum):
+    ON_RISING_EDGE = &#34;ON_RISING_EDGE&#34;</code></pre>
+</details>
+<div class="desc"><p>str(object='') -&gt; str
+str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
+<p>Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.<strong>str</strong>() (if defined)
+or repr(object).
+encoding defaults to sys.getdefaultencoding().
+errors defaults to 'strict'.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE"><code class="name">var <span class="ident">ON_RISING_EDGE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw"><code class="flex name class">
+<span>class <span class="ident">WaveformSamplesRaw</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class WaveformSamplesRaw(ct.Structure):
+    _fields_ = [
+        (&#34;len&#34;, ct.c_uint32),
+        # (&#34;pc_unix_ms_timestamp&#34;, ct.POINTER(ct.c_uint64)),
+        (&#34;real_ns_timestamp&#34;, ct.POINTER(ct.c_uint64)),
+        (&#34;event_counter&#34;, ct.POINTER(ct.c_uint32)),
+        # (&#34;trigger_time_tag&#34;, ct.POINTER(ct.c_uint32)),
+        (&#34;channel&#34;, ct.POINTER(ct.c_uint8)),
+        (&#34;sample_index&#34;, ct.POINTER(ct.c_uint16)),
+        # (&#34;value_lsb&#34;, ct.POINTER(ct.c_uint16)),
+        (&#34;value_mv&#34;, ct.POINTER(ct.c_int16)),
+    ]</code></pre>
+</details>
+<div class="desc"><p>Structure base class</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>_ctypes.Structure</li>
+<li>_ctypes._CData</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.channel"><code class="name">var <span class="ident">channel</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.event_counter"><code class="name">var <span class="ident">event_counter</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.len"><code class="name">var <span class="ident">len</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.real_ns_timestamp"><code class="name">var <span class="ident">real_ns_timestamp</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.sample_index"><code class="name">var <span class="ident">sample_index</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.value_mv"><code class="name">var <span class="ident">value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.daq.jobs.caen" href="index.html">enrgdaq.daq.jobs.caen</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode.SW_CONTROLLED" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode.SW_CONTROLLED">SW_CONTROLLED</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats">AcquisitionStats</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_events">acq_events</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples">acq_samples</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw">from_raw</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw">AcquisitionStatsRaw</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_events">acq_events</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples">acq_samples</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer">DAQJobCAENDigitizer</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.board_info" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.board_info">board_info</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config">config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config_type" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.restart_offset" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.restart_offset">restart_offset</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.start" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizer.start">start</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig">DAQJobCAENDigitizerConfig</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.acquisition_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.acquisition_mode">acquisition_mode</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_dc_offsets" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_dc_offsets">channel_dc_offsets</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_enable_mask" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_enable_mask">channel_enable_mask</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_channel_mask" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_channel_mask">channel_self_trigger_channel_mask</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold">channel_self_trigger_threshold</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node">conet_node</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type">connection_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level">io_level</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number">link_number</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt">max_num_events_blt</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename">output_filename</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold">peak_threshold</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.post_trigger_size" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.post_trigger_size">post_trigger_size</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.record_length" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.record_length">record_length</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4">save_npy_lz4</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config">stats_store_config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode">sw_trigger_mode</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address">vme_base_address</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.waveform_store_config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.waveform_store_config">waveform_store_config</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM">NIM</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs">RunAcquisitionArgs</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets">channel_dc_offsets</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold">filter_threshold</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle">handle</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.is_debug_verbosity" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.is_debug_verbosity">is_debug_verbosity</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.stats_callback" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.stats_callback">stats_callback</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.waveform_callback" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.waveform_callback">waveform_callback</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY">ACQ_ONLY</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED">DISABLED</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE">ON_RISING_EDGE</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw">WaveformSamplesRaw</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.channel" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.channel">channel</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.event_counter" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.event_counter">event_counter</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.len" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.len">len</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.real_ns_timestamp" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.real_ns_timestamp">real_ns_timestamp</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.sample_index" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.sample_index">sample_index</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.WaveformSamplesRaw.value_mv">value_mv</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.utils.watchdog API documentation</title>
+<meta name="description" content="Watchdog timer for detecting hung loops …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.utils.watchdog</code></h1>
+</header>
+<section id="section-intro">
+<p>Watchdog timer for detecting hung loops.</p>
+<p>Provides a reusable watchdog mechanism that can be used by any component
+to detect if a loop has stopped making progress.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.utils.watchdog.Watchdog"><code class="flex name class">
+<span>class <span class="ident">Watchdog</span></span>
+<span>(</span><span>timeout_seconds: float = 0.0,<br>force_exit: bool = False,<br>logger: logging.Logger | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Watchdog:
+    &#34;&#34;&#34;
+    A watchdog timer that detects hung loops.
+
+    The watchdog should be reset at the beginning of each loop iteration.
+    If the loop doesn&#39;t reset the watchdog within the timeout period,
+    the watchdog triggers and either signals the loop to exit or forces
+    the process to terminate.
+
+    Usage:
+        # For loops that can check is_triggered():
+        watchdog = Watchdog(timeout_seconds=60.0, logger=self._logger)
+
+        try:
+            while not watchdog.is_triggered():
+                watchdog.reset()  # Reset at start of each iteration
+
+                # Do work...
+
+        finally:
+            watchdog.stop()
+
+        # For loops with blocking calls that may hang:
+        watchdog = Watchdog(timeout_seconds=60.0, force_exit=True, logger=self._logger)
+
+    Args:
+        timeout_seconds: Time in seconds before the watchdog triggers.
+            Set to 0 or negative to disable the watchdog.
+        force_exit: If True, call os._exit(1) on timeout to force process
+            termination. Use this when the main thread may be blocked in
+            a call that never returns. Default: False.
+        logger: Optional logger for logging timeout events.
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        timeout_seconds: float = 0.0,
+        force_exit: bool = False,
+        logger: Optional[logging.Logger] = None,
+    ):
+        self._timeout_seconds = timeout_seconds
+        self._force_exit = force_exit
+        self._logger = logger or logging.getLogger(__name__)
+        self._timer: Optional[threading.Timer] = None
+        self._triggered = threading.Event()
+
+    @property
+    def timeout_seconds(self) -&gt; float:
+        &#34;&#34;&#34;Get the configured timeout in seconds.&#34;&#34;&#34;
+        return self._timeout_seconds
+
+    @property
+    def is_enabled(self) -&gt; bool:
+        &#34;&#34;&#34;Check if the watchdog is enabled (timeout &gt; 0).&#34;&#34;&#34;
+        return self._timeout_seconds &gt; 0
+
+    @property
+    def force_exit(self) -&gt; bool:
+        &#34;&#34;&#34;Check if force_exit mode is enabled.&#34;&#34;&#34;
+        return self._force_exit
+
+    def reset(self) -&gt; None:
+        &#34;&#34;&#34;
+        Reset the watchdog timer.
+
+        Call this at the beginning of each loop iteration to prevent
+        the watchdog from triggering.
+        &#34;&#34;&#34;
+        self._cancel_timer()
+        if self.is_enabled:
+            self._timer = threading.Timer(self._timeout_seconds, self._on_timeout)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def stop(self) -&gt; None:
+        &#34;&#34;&#34;
+        Stop and clean up the watchdog.
+
+        Call this when exiting the loop (e.g., in a finally block).
+        &#34;&#34;&#34;
+        self._cancel_timer()
+
+    def is_triggered(self) -&gt; bool:
+        &#34;&#34;&#34;
+        Check if the watchdog has been triggered.
+
+        Use this as the loop exit condition.
+
+        Returns:
+            True if the watchdog has triggered and the loop should exit.
+        &#34;&#34;&#34;
+        return self._triggered.is_set()
+
+    def _cancel_timer(self) -&gt; None:
+        &#34;&#34;&#34;Cancel the current timer if running.&#34;&#34;&#34;
+        if self._timer is not None:
+            self._timer.cancel()
+            self._timer = None
+
+    def _on_timeout(self) -&gt; None:
+        &#34;&#34;&#34;Called when the watchdog timer expires.&#34;&#34;&#34;
+        self._logger.error(
+            f&#34;Watchdog timeout! Loop has not completed in &#34;
+            f&#34;{self._timeout_seconds} seconds. &#34;
+            f&#34;{&#39;Forcing exit...&#39; if self._force_exit else &#39;Signaling exit...&#39;}&#34;
+        )
+        self._triggered.set()
+
+        if self._force_exit:
+            # Use os._exit() to terminate immediately without cleanup.
+            # This is necessary when the main thread is blocked in a call
+            # that will never return. The supervisor will restart the job.
+            os._exit(1)</code></pre>
+</details>
+<div class="desc"><p>A watchdog timer that detects hung loops.</p>
+<p>The watchdog should be reset at the beginning of each loop iteration.
+If the loop doesn't reset the watchdog within the timeout period,
+the watchdog triggers and either signals the loop to exit or forces
+the process to terminate.</p>
+<h2 id="usage">Usage</h2>
+<h1 id="for-loops-that-can-check-is_triggered">For loops that can check is_triggered():</h1>
+<p>watchdog = Watchdog(timeout_seconds=60.0, logger=self._logger)</p>
+<p>try:
+while not watchdog.is_triggered():
+watchdog.reset()
+# Reset at start of each iteration</p>
+<pre><code>    # Do work...
+</code></pre>
+<p>finally:
+watchdog.stop()</p>
+<h1 id="for-loops-with-blocking-calls-that-may-hang">For loops with blocking calls that may hang:</h1>
+<p>watchdog = Watchdog(timeout_seconds=60.0, force_exit=True, logger=self._logger)</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>timeout_seconds</code></strong></dt>
+<dd>Time in seconds before the watchdog triggers.
+Set to 0 or negative to disable the watchdog.</dd>
+<dt><strong><code>force_exit</code></strong></dt>
+<dd>If True, call os._exit(1) on timeout to force process
+termination. Use this when the main thread may be blocked in
+a call that never returns. Default: False.</dd>
+<dt><strong><code>logger</code></strong></dt>
+<dd>Optional logger for logging timeout events.</dd>
+</dl></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.utils.watchdog.Watchdog.force_exit"><code class="name">prop <span class="ident">force_exit</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def force_exit(self) -&gt; bool:
+    &#34;&#34;&#34;Check if force_exit mode is enabled.&#34;&#34;&#34;
+    return self._force_exit</code></pre>
+</details>
+<div class="desc"><p>Check if force_exit mode is enabled.</p></div>
+</dd>
+<dt id="enrgdaq.utils.watchdog.Watchdog.is_enabled"><code class="name">prop <span class="ident">is_enabled</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def is_enabled(self) -&gt; bool:
+    &#34;&#34;&#34;Check if the watchdog is enabled (timeout &gt; 0).&#34;&#34;&#34;
+    return self._timeout_seconds &gt; 0</code></pre>
+</details>
+<div class="desc"><p>Check if the watchdog is enabled (timeout &gt; 0).</p></div>
+</dd>
+<dt id="enrgdaq.utils.watchdog.Watchdog.timeout_seconds"><code class="name">prop <span class="ident">timeout_seconds</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def timeout_seconds(self) -&gt; float:
+    &#34;&#34;&#34;Get the configured timeout in seconds.&#34;&#34;&#34;
+    return self._timeout_seconds</code></pre>
+</details>
+<div class="desc"><p>Get the configured timeout in seconds.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.utils.watchdog.Watchdog.is_triggered"><code class="name flex">
+<span>def <span class="ident">is_triggered</span></span>(<span>self) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_triggered(self) -&gt; bool:
+    &#34;&#34;&#34;
+    Check if the watchdog has been triggered.
+
+    Use this as the loop exit condition.
+
+    Returns:
+        True if the watchdog has triggered and the loop should exit.
+    &#34;&#34;&#34;
+    return self._triggered.is_set()</code></pre>
+</details>
+<div class="desc"><p>Check if the watchdog has been triggered.</p>
+<p>Use this as the loop exit condition.</p>
+<h2 id="returns">Returns</h2>
+<p>True if the watchdog has triggered and the loop should exit.</p></div>
+</dd>
+<dt id="enrgdaq.utils.watchdog.Watchdog.reset"><code class="name flex">
+<span>def <span class="ident">reset</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reset(self) -&gt; None:
+    &#34;&#34;&#34;
+    Reset the watchdog timer.
+
+    Call this at the beginning of each loop iteration to prevent
+    the watchdog from triggering.
+    &#34;&#34;&#34;
+    self._cancel_timer()
+    if self.is_enabled:
+        self._timer = threading.Timer(self._timeout_seconds, self._on_timeout)
+        self._timer.daemon = True
+        self._timer.start()</code></pre>
+</details>
+<div class="desc"><p>Reset the watchdog timer.</p>
+<p>Call this at the beginning of each loop iteration to prevent
+the watchdog from triggering.</p></div>
+</dd>
+<dt id="enrgdaq.utils.watchdog.Watchdog.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self) -&gt; None:
+    &#34;&#34;&#34;
+    Stop and clean up the watchdog.
+
+    Call this when exiting the loop (e.g., in a finally block).
+    &#34;&#34;&#34;
+    self._cancel_timer()</code></pre>
+</details>
+<div class="desc"><p>Stop and clean up the watchdog.</p>
+<p>Call this when exiting the loop (e.g., in a finally block).</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.utils" href="index.html">enrgdaq.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.utils.watchdog.Watchdog" href="#enrgdaq.utils.watchdog.Watchdog">Watchdog</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.force_exit" href="#enrgdaq.utils.watchdog.Watchdog.force_exit">force_exit</a></code></li>
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.is_enabled" href="#enrgdaq.utils.watchdog.Watchdog.is_enabled">is_enabled</a></code></li>
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.is_triggered" href="#enrgdaq.utils.watchdog.Watchdog.is_triggered">is_triggered</a></code></li>
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.reset" href="#enrgdaq.utils.watchdog.Watchdog.reset">reset</a></code></li>
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.stop" href="#enrgdaq.utils.watchdog.Watchdog.stop">stop</a></code></li>
+<li><code><a title="enrgdaq.utils.watchdog.Watchdog.timeout_seconds" href="#enrgdaq.utils.watchdog.Watchdog.timeout_seconds">timeout_seconds</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

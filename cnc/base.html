@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.cnc.base API documentation</title>
+<meta name="description" content="">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.cnc.base</code></h1>
+</header>
+<section id="section-intro">
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.cnc.base.start_supervisor_cnc"><code class="name flex">
+<span>def <span class="ident">start_supervisor_cnc</span></span>(<span>supervisor,<br>config: <a title="enrgdaq.models.SupervisorCNCConfig" href="../models.html#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a>) ‑> <a title="enrgdaq.cnc.base.SupervisorCNC" href="#enrgdaq.cnc.base.SupervisorCNC">SupervisorCNC</a> | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_supervisor_cnc(
+    supervisor, config: SupervisorCNCConfig
+) -&gt; Optional[SupervisorCNC]:
+    try:
+        cnc = SupervisorCNC(supervisor, config)
+        cnc.start()
+        return cnc
+    except Exception as e:
+        logging.getLogger(__name__).error(
+            f&#34;Failed to start SupervisorCNC: {e}&#34;, exc_info=True
+        )
+        return None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.cnc.base.SupervisorCNC"><code class="flex name class">
+<span>class <span class="ident">SupervisorCNC</span></span>
+<span>(</span><span>supervisor,<br>config: <a title="enrgdaq.models.SupervisorCNCConfig" href="../models.html#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorCNC:
+    &#34;&#34;&#34;
+    Simplified Command and Control.
+    Handles ZMQ communication and provides a direct interface for the REST API.
+    &#34;&#34;&#34;
+
+    def __init__(self, supervisor, config: SupervisorCNCConfig):
+        from enrgdaq.supervisor import Supervisor
+
+        self.supervisor: Supervisor = supervisor
+        self.config = config
+        self.is_server = config.is_server
+        self.supervisor_info = supervisor.config.info
+
+        self.context = zmq.Context()
+        self.poller = zmq.Poller()
+        self.socket: Optional[zmq.Socket] = None
+
+        self.clients: Dict[str, CNCClientInfo] = {}
+        self._pending_responses: Dict[str, Future] = {}
+        self._command_queue: queue.Queue = queue.Queue()
+        self.client_logs: defaultdict[str, deque[CNCMessageLog]] = defaultdict(deque)
+        self._server_client_id: Optional[str] = None
+
+        self._stop_event = threading.Event()
+        self._thread = threading.Thread(target=self.run, daemon=True)
+
+        # Set up CNC logging to automatically capture and send logs
+        self._logger = logging.getLogger(f&#34;{__name__}.{self.__class__.__name__}&#34;)
+        self._logger.setLevel(config.verbosity.to_logging_level())
+
+        if not self.is_server:
+            from .log_util import CNCLogHandler
+
+            cnc_handler = CNCLogHandler(self)
+            cnc_handler.setLevel(config.verbosity.to_logging_level())
+
+            self._logger.addHandler(cnc_handler)
+            self._logger.propagate = False
+
+        self.message_handlers = {
+            CNCMessageHeartbeat: HeartbeatHandler(self),
+            CNCMessageLog: ReqLogHandler(self),
+            CNCMessageReqPing: ReqPingHandler(self),
+            CNCMessageResPing: ResPingHandler(self),
+            CNCMessageReqStatus: ReqStatusHandler(self),
+            CNCMessageResStatus: ResStatusHandler(self),
+            CNCMessageReqListClients: ReqListClientsHandler(self),
+            CNCMessageReqRestartDAQ: ReqRestartHandler(self),
+            CNCMessageReqStopDAQJobs: ReqStopDAQJobsHandler(self),
+            CNCMessageReqRunCustomDAQJob: ReqRunCustomDAQJobHandler(self),
+            CNCMessageReqStopDAQJob: ReqStopDAQJobHandler(self),
+            CNCMessageReqSendMessage: ReqSendMessageHandler(self),
+        }
+
+        if self.is_server:
+            self.socket = self.context.socket(zmq.ROUTER)
+            self.socket.bind(f&#34;tcp://*:{config.server_port}&#34;)
+            self._logger.info(f&#34;C&amp;C Server started on port {config.server_port}&#34;)
+
+            # Register the server as its own client
+            self._server_client_id = self.supervisor_info.supervisor_id
+            self.clients[self._server_client_id] = CNCClientInfo(
+                identity=None,  # No ZMQ identity for local processing
+                last_seen=datetime.now().isoformat(),
+                info=self.supervisor_info,
+            )
+
+            if config.rest_api_enabled:
+                start_rest_api(self)
+        else:
+            self.socket = self.context.socket(zmq.DEALER)
+            self.socket.setsockopt_string(
+                zmq.IDENTITY, self.supervisor_info.supervisor_id
+            )
+            self.socket.connect(f&#34;tcp://{config.server_host}:{config.server_port}&#34;)
+            self._logger.info(
+                f&#34;C&amp;C Client connected to {config.server_host}:{config.server_port}&#34;
+            )
+
+        self.poller.register(self.socket, zmq.POLLIN)
+
+    def start(self):
+        self._thread.start()
+
+    def stop(self):
+        self._stop_event.set()
+        if self.socket:
+            self.socket.setsockopt(zmq.LINGER, 0)
+            self.socket.close()
+        self._thread.join(timeout=2)
+        self.context.term()
+
+    def send_command_sync(
+        self, target_client_id: str, msg: CNCMessage, timeout: int = 2
+    ) -&gt; CNCMessage:
+        &#34;&#34;&#34;
+        Thread-safe method called by REST API to send a command and wait for a reply.
+        &#34;&#34;&#34;
+        if not self.is_server:
+            raise RuntimeError(&#34;Only server can send commands to clients.&#34;)
+
+        # Handle self-targeting: process locally without ZMQ
+        if target_client_id == self._server_client_id:
+            return self._process_local_command(msg)
+
+        # Generate request ID
+        req_id = str(uuid.uuid4())
+        msg.req_id = req_id
+
+        future = Future()
+        # Map the ID to the Future
+        self._pending_responses[req_id] = future
+
+        # Queue the send operation
+        self._command_queue.put((target_client_id, msg))
+
+        try:
+            return future.result(timeout=timeout)
+        except Exception as e:
+            # Cleanup on timeout
+            self._pending_responses.pop(req_id, None)
+            raise e
+
+    def _process_local_command(self, msg: CNCMessage) -&gt; CNCMessage:
+        &#34;&#34;&#34;
+        Process a command locally (for self-targeting).
+        This allows the server to send commands to itself.
+        &#34;&#34;&#34;
+        handler = self.message_handlers.get(type(msg))
+        if handler:
+            # Use a placeholder identity for local processing
+            result = handler.handle(self._server_client_id.encode(&#34;utf-8&#34;), msg)
+            if result:
+                response_msg, _ = result
+                return response_msg
+
+        raise RuntimeError(f&#34;No handler found for message type: {type(msg).__name__}&#34;)
+
+    def run(self):
+        last_heartbeat = 0
+        while not self._stop_event.is_set():
+            try:
+                # 1. Process outgoing commands from REST API
+                while not self._command_queue.empty():
+                    target_id, msg = self._command_queue.get()
+                    self._send_zmq_message(target_id.encode(&#34;utf-8&#34;), msg)
+
+                # 2. Poll for incoming ZMQ messages
+                socks = dict(self.poller.poll(timeout=50))
+                if self.socket in socks:
+                    self.handle_incoming_message()
+
+                # 3. Client Heartbeat / Server self-update
+                if not self.is_server:
+                    if time.time() - last_heartbeat &gt;= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                        self._send_zmq_message(
+                            None,
+                            CNCMessageHeartbeat(supervisor_info=self.supervisor_info),
+                        )
+                        last_heartbeat = time.time()
+                else:
+                    # Update the server&#39;s own client entry periodically
+                    if time.time() - last_heartbeat &gt;= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                        self.clients[self._server_client_id] = CNCClientInfo(
+                            identity=None,
+                            last_seen=datetime.now().isoformat(),
+                            info=self.supervisor_info,
+                        )
+                        last_heartbeat = time.time()
+
+            except zmq.ZMQError:
+                if self._stop_event.is_set():
+                    break
+            except Exception as e:
+                self._logger.error(f&#34;Error in CNC loop: {e}&#34;, exc_info=True)
+
+    def handle_incoming_message(self):
+        assert self.socket is not None
+        try:
+            frames = self.socket.recv_multipart()
+        except zmq.ZMQError:
+            return
+
+        if not frames:
+            return
+
+        # Router: [SenderID, Body]
+        # Dealer: [Body]
+        if self.is_server:
+            if len(frames) != 2:
+                return
+            sender_id_bytes, body = frames[0], frames[1]
+            sender_id_str = sender_id_bytes.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)
+        else:
+            if len(frames) != 1:
+                return
+            sender_id_bytes = None
+            sender_id_str = &#34;server&#34;
+            body = frames[0]
+
+        try:
+            msg = msgspec.msgpack.decode(body, type=CNCMessageType)
+
+            if self.is_server and sender_id_str:
+                # Update Registry
+                existing_info = self.clients.get(sender_id_str)
+                self.clients[sender_id_str] = CNCClientInfo(
+                    identity=sender_id_bytes,
+                    last_seen=datetime.now().isoformat(),
+                    info=msg.supervisor_info
+                    if hasattr(msg, &#34;supervisor_info&#34;)
+                    else existing_info.info
+                    if existing_info
+                    else None,
+                )
+
+                # Only if the message actually has a req_id and it&#39;s in our pending map
+                if (
+                    hasattr(msg, &#34;req_id&#34;)
+                    and msg.req_id
+                    and msg.req_id in self._pending_responses
+                ):
+                    future = self._pending_responses.pop(msg.req_id)
+                    if not future.done():
+                        future.set_result(msg)
+
+            self._process_payload(msg, sender_id_bytes)
+
+        except Exception as e:
+            self._logger.error(f&#34;Error processing payload: {e}&#34;, exc_info=True)
+
+    def _process_payload(self, msg: CNCMessage, sender_id_bytes: Optional[bytes]):
+        handler = self.message_handlers.get(type(msg))
+        if handler:
+            identity_arg = sender_id_bytes if self.is_server else b&#34;server&#34;
+            result = handler.handle(identity_arg, msg)
+            if result:
+                response_msg, _ = result
+
+                # Copy the request id from Request to Response
+                # This ensures the Server knows which request this response belongs to.
+                if hasattr(msg, &#34;req_id&#34;) and hasattr(response_msg, &#34;req_id&#34;):
+                    response_msg.req_id = msg.req_id
+
+                self._send_zmq_message(sender_id_bytes, response_msg)
+
+    def _send_zmq_message(self, identity: Optional[bytes], msg: CNCMessage):
+        assert self.socket is not None
+        packed = msgspec.msgpack.encode(msg)
+        if self.is_server:
+            if identity:
+                self.socket.send_multipart([identity, packed])
+        else:
+            self.socket.send(packed)
+
+    def add_client_log(self, client_id: str, msg: CNCMessageLog):
+        self.client_logs[client_id].append(msg)
+        if len(self.client_logs[client_id]) &gt; CNC_MAX_CLIENT_LOGS:
+            self.client_logs[client_id].popleft()</code></pre>
+</details>
+<div class="desc"><p>Simplified Command and Control.
+Handles ZMQ communication and provides a direct interface for the REST API.</p></div>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.add_client_log"><code class="name flex">
+<span>def <span class="ident">add_client_log</span></span>(<span>self,<br>client_id: str,<br>msg: <a title="enrgdaq.cnc.models.CNCMessageLog" href="models.html#enrgdaq.cnc.models.CNCMessageLog">CNCMessageLog</a>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_client_log(self, client_id: str, msg: CNCMessageLog):
+    self.client_logs[client_id].append(msg)
+    if len(self.client_logs[client_id]) &gt; CNC_MAX_CLIENT_LOGS:
+        self.client_logs[client_id].popleft()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.handle_incoming_message"><code class="name flex">
+<span>def <span class="ident">handle_incoming_message</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def handle_incoming_message(self):
+    assert self.socket is not None
+    try:
+        frames = self.socket.recv_multipart()
+    except zmq.ZMQError:
+        return
+
+    if not frames:
+        return
+
+    # Router: [SenderID, Body]
+    # Dealer: [Body]
+    if self.is_server:
+        if len(frames) != 2:
+            return
+        sender_id_bytes, body = frames[0], frames[1]
+        sender_id_str = sender_id_bytes.decode(&#34;utf-8&#34;, errors=&#34;ignore&#34;)
+    else:
+        if len(frames) != 1:
+            return
+        sender_id_bytes = None
+        sender_id_str = &#34;server&#34;
+        body = frames[0]
+
+    try:
+        msg = msgspec.msgpack.decode(body, type=CNCMessageType)
+
+        if self.is_server and sender_id_str:
+            # Update Registry
+            existing_info = self.clients.get(sender_id_str)
+            self.clients[sender_id_str] = CNCClientInfo(
+                identity=sender_id_bytes,
+                last_seen=datetime.now().isoformat(),
+                info=msg.supervisor_info
+                if hasattr(msg, &#34;supervisor_info&#34;)
+                else existing_info.info
+                if existing_info
+                else None,
+            )
+
+            # Only if the message actually has a req_id and it&#39;s in our pending map
+            if (
+                hasattr(msg, &#34;req_id&#34;)
+                and msg.req_id
+                and msg.req_id in self._pending_responses
+            ):
+                future = self._pending_responses.pop(msg.req_id)
+                if not future.done():
+                    future.set_result(msg)
+
+        self._process_payload(msg, sender_id_bytes)
+
+    except Exception as e:
+        self._logger.error(f&#34;Error processing payload: {e}&#34;, exc_info=True)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self):
+    last_heartbeat = 0
+    while not self._stop_event.is_set():
+        try:
+            # 1. Process outgoing commands from REST API
+            while not self._command_queue.empty():
+                target_id, msg = self._command_queue.get()
+                self._send_zmq_message(target_id.encode(&#34;utf-8&#34;), msg)
+
+            # 2. Poll for incoming ZMQ messages
+            socks = dict(self.poller.poll(timeout=50))
+            if self.socket in socks:
+                self.handle_incoming_message()
+
+            # 3. Client Heartbeat / Server self-update
+            if not self.is_server:
+                if time.time() - last_heartbeat &gt;= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                    self._send_zmq_message(
+                        None,
+                        CNCMessageHeartbeat(supervisor_info=self.supervisor_info),
+                    )
+                    last_heartbeat = time.time()
+            else:
+                # Update the server&#39;s own client entry periodically
+                if time.time() - last_heartbeat &gt;= CNC_HEARTBEAT_INTERVAL_SECONDS:
+                    self.clients[self._server_client_id] = CNCClientInfo(
+                        identity=None,
+                        last_seen=datetime.now().isoformat(),
+                        info=self.supervisor_info,
+                    )
+                    last_heartbeat = time.time()
+
+        except zmq.ZMQError:
+            if self._stop_event.is_set():
+                break
+        except Exception as e:
+            self._logger.error(f&#34;Error in CNC loop: {e}&#34;, exc_info=True)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.send_command_sync"><code class="name flex">
+<span>def <span class="ident">send_command_sync</span></span>(<span>self,<br>target_client_id: str,<br>msg: <a title="enrgdaq.cnc.models.CNCMessage" href="models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a>,<br>timeout: int = 2) ‑> <a title="enrgdaq.cnc.models.CNCMessage" href="models.html#enrgdaq.cnc.models.CNCMessage">CNCMessage</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_command_sync(
+    self, target_client_id: str, msg: CNCMessage, timeout: int = 2
+) -&gt; CNCMessage:
+    &#34;&#34;&#34;
+    Thread-safe method called by REST API to send a command and wait for a reply.
+    &#34;&#34;&#34;
+    if not self.is_server:
+        raise RuntimeError(&#34;Only server can send commands to clients.&#34;)
+
+    # Handle self-targeting: process locally without ZMQ
+    if target_client_id == self._server_client_id:
+        return self._process_local_command(msg)
+
+    # Generate request ID
+    req_id = str(uuid.uuid4())
+    msg.req_id = req_id
+
+    future = Future()
+    # Map the ID to the Future
+    self._pending_responses[req_id] = future
+
+    # Queue the send operation
+    self._command_queue.put((target_client_id, msg))
+
+    try:
+        return future.result(timeout=timeout)
+    except Exception as e:
+        # Cleanup on timeout
+        self._pending_responses.pop(req_id, None)
+        raise e</code></pre>
+</details>
+<div class="desc"><p>Thread-safe method called by REST API to send a command and wait for a reply.</p></div>
+</dd>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start(self):
+    self._thread.start()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.cnc.base.SupervisorCNC.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self):
+    self._stop_event.set()
+    if self.socket:
+        self.socket.setsockopt(zmq.LINGER, 0)
+        self.socket.close()
+    self._thread.join(timeout=2)
+    self.context.term()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.cnc" href="index.html">enrgdaq.cnc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.base.start_supervisor_cnc" href="#enrgdaq.cnc.base.start_supervisor_cnc">start_supervisor_cnc</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.cnc.base.SupervisorCNC" href="#enrgdaq.cnc.base.SupervisorCNC">SupervisorCNC</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.add_client_log" href="#enrgdaq.cnc.base.SupervisorCNC.add_client_log">add_client_log</a></code></li>
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.handle_incoming_message" href="#enrgdaq.cnc.base.SupervisorCNC.handle_incoming_message">handle_incoming_message</a></code></li>
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.run" href="#enrgdaq.cnc.base.SupervisorCNC.run">run</a></code></li>
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.send_command_sync" href="#enrgdaq.cnc.base.SupervisorCNC.send_command_sync">send_command_sync</a></code></li>
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.start" href="#enrgdaq.cnc.base.SupervisorCNC.start">start</a></code></li>
+<li><code><a title="enrgdaq.cnc.base.SupervisorCNC.stop" href="#enrgdaq.cnc.base.SupervisorCNC.stop">stop</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

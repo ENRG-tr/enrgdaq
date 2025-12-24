@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.5">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.daq.alert.alert_slack API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
@@ -80,13 +80,13 @@ el.replaceWith(d);
                 {
                     &#34;fallback&#34;: alert.alert_info.message,
                     &#34;color&#34;: ALERT_SEVERITY_TO_SLACK_COLOR[alert.alert_info.severity],
-                    &#34;author_name&#34;: alert.daq_job_info.daq_job_class_name,
+                    &#34;author_name&#34;: alert.daq_job_info.daq_job_type,
                     &#34;title&#34;: &#34;Alert!&#34;,
                     &#34;fields&#34;: [
                         {
                             &#34;title&#34;: &#34;Supervisor ID&#34;,
-                            &#34;value&#34;: alert.daq_job_info.supervisor_config.supervisor_id
-                            if alert.daq_job_info.supervisor_config
+                            &#34;value&#34;: alert.daq_job_info.supervisor_info.supervisor_id
+                            if alert.daq_job_info.supervisor_info
                             else &#34;-&#34;,
                             &#34;short&#34;: True,
                         },
@@ -143,6 +143,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>Flag indicating if the job has been freed.</dd>
 <dt><strong><code>_logger</code></strong> :&ensp;<code>logging.Logger</code></dt>
 <dd>Logger instance for the job.</dd>
+<dt><strong><code>multiprocessing_method</code></strong> :&ensp;<code>str</code></dt>
+<dd>The multiprocessing method to use ('fork' or 'spawn').</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -155,7 +157,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.alert.alert_slack.DAQJobAlertSlack.config_type"><code class="name">var <span class="ident">config_type</span> : Any</code></dt>
+<dt id="enrgdaq.daq.alert.alert_slack.DAQJobAlertSlack.config_type"><code class="name">var <span class="ident">config_type</span> : type[<a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>]</code></dt>
 <dd>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -189,13 +191,13 @@ message queues, and provides methods for consuming and handling messages.</p>
             {
                 &#34;fallback&#34;: alert.alert_info.message,
                 &#34;color&#34;: ALERT_SEVERITY_TO_SLACK_COLOR[alert.alert_info.severity],
-                &#34;author_name&#34;: alert.daq_job_info.daq_job_class_name,
+                &#34;author_name&#34;: alert.daq_job_info.daq_job_type,
                 &#34;title&#34;: &#34;Alert!&#34;,
                 &#34;fields&#34;: [
                     {
                         &#34;title&#34;: &#34;Supervisor ID&#34;,
-                        &#34;value&#34;: alert.daq_job_info.supervisor_config.supervisor_id
-                        if alert.daq_job_info.supervisor_config
+                        &#34;value&#34;: alert.daq_job_info.supervisor_info.supervisor_id
+                        if alert.daq_job_info.supervisor_info
                         else &#34;-&#34;,
                         &#34;short&#34;: True,
                     },
@@ -241,7 +243,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.alert.alert_slack.DAQJobAlertSlackConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobAlertSlackConfig</span></span>
-<span>(</span><span>slack_webhook_url: str,<br>*,<br>verbosity: <a title="enrgdaq.daq.models.LogVerbosity" href="../models.html#enrgdaq.daq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = &lt;factory&gt;,<br>daq_job_type: str)</span>
+<span>(</span><span>slack_webhook_url: str,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -317,7 +319,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.5</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>
