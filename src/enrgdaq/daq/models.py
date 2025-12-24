@@ -2,9 +2,8 @@ import pickle
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from multiprocessing.queues import Queue
 from multiprocessing.shared_memory import SharedMemory
-from typing import Optional
+from typing import Any, Optional
 
 from msgspec import Struct, field
 
@@ -16,7 +15,7 @@ DEFAULT_REMOTE_TOPIC = "DAQ"
 REMOTE_TOPIC_VOID = "@void_message"
 
 RouteKey = str
-RouteMapping = dict[RouteKey, list[Queue["DAQJobMessage"]]]
+RouteMapping = dict[RouteKey, list[Any]]
 
 
 @dataclass

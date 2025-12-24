@@ -2,11 +2,12 @@ import glob
 import logging
 import os
 import platform
-from multiprocessing import Process, Queue, get_context
+from multiprocessing import Process, get_context
+from typing import Any
 
 import msgspec
 
-from enrgdaq.daq.base import DAQJob, DAQJobProcess
+from enrgdaq.daq.base import DAQJob, DAQJobProcess, _create_queue
 from enrgdaq.daq.models import DAQJobConfig, DAQJobMessageJobStarted
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorInfo
@@ -23,15 +24,15 @@ def _create_daq_job_process(
     config: DAQJobConfig,
     supervisor_info: SupervisorInfo,
     raw_config: str = "",
-    log_queue: "Queue | None" = None,  # pyright: ignore[reportMissingTypeArgument]
+    log_queue: Any = None,
 ) -> DAQJobProcess:
     global daq_job_instance_id
     process = DAQJobProcess(
         daq_job_cls=daq_job_cls,
         supervisor_info=supervisor_info,
         config=config,
-        message_in=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
-        message_out=Queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
+        message_in=_create_queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
+        message_out=_create_queue(maxsize=DAQ_JOB_PROCESS_QUEUE_MAX_SIZE),
         process=None,
         instance_id=daq_job_instance_id,
         raw_config=raw_config,

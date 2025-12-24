@@ -20,13 +20,14 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from multiprocessing import Event, Process, Queue, Value
+from multiprocessing import Event, Process, Value
 from statistics import fmean
 from threading import Thread
-from typing import Optional
+from typing import Any, Optional
 
 import psutil
 
+from enrgdaq.daq.base import _create_queue
 from enrgdaq.daq.daq_job import _create_daq_job_process
 from enrgdaq.daq.jobs.benchmark import DAQJobBenchmark, DAQJobBenchmarkConfig
 from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats, DAQJobHandleStatsConfig
@@ -140,12 +141,10 @@ def cleanup_supervisor(supervisor: Supervisor):
 
 def run_main_supervisor(
     config: BenchmarkConfig,
-    stats_queue: "Queue[dict]",
+    stats_queue: Any,
     stop_flag: Value,
 ):
     """Run the main supervisor that collects stats and runs the proxy."""
-    # Suppress logging in child process
-    os.environ["ENRGDAQ_IS_UNIT_TESTING"] = "True"
 
     # Create temporary config directory for the supervisor
     temp_config_dir = tempfile.mkdtemp(prefix="enrgdaq_benchmark_")
@@ -230,8 +229,6 @@ def run_client_supervisor(
     ready_event: Event,
 ):
     """Run a client supervisor that generates benchmark data."""
-    # Suppress logging in child process
-    os.environ["ENRGDAQ_IS_UNIT_TESTING"] = "True"
 
     # Create temporary config directory for the supervisor
     temp_config_dir = tempfile.mkdtemp(prefix="enrgdaq_benchmark_client_")
@@ -291,7 +288,7 @@ def run_client_supervisor(
 def run_supervisor_with_stats(
     supervisor: Supervisor,
     config: BenchmarkConfig,
-    stats_queue: Optional["Queue[dict]"],
+    stats_queue: Any,
     stop_flag: Value,
     collect_stats: bool = True,
     skip_init: bool = False,
@@ -397,7 +394,7 @@ class BenchmarkRunner:
 
     def __init__(self, config: BenchmarkConfig):
         self.config = config
-        self._stats_queue: "Queue[dict]" = Queue()
+        self._stats_queue: Any = _create_queue()
         self._stop_flag = Value("b", False)
         self._processes: list[Process] = []
         self._stats_history: list[BenchmarkStats] = []

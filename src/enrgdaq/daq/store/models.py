@@ -1,3 +1,5 @@
+from collections import defaultdict
+from functools import cache
 from typing import Optional
 
 import pyarrow as pa
@@ -10,6 +12,28 @@ from enrgdaq.daq.models import (
     DAQRemoteConfig,
     SHMHandle,
 )
+
+
+@cache
+def _get_store_config_base_to_store_job_mapping():
+    """
+    Returns a mapping of store config base types to store job types,
+    used to route messages to the correct store job.
+    """
+    from enrgdaq.daq.store.base import DAQJobStore
+    from enrgdaq.daq.types import get_all_daq_job_types
+
+    res = defaultdict(list)
+    store_jobs = [
+        job
+        for job in get_all_daq_job_types()
+        if issubclass(job, DAQJobStore) and job is not DAQJobStore
+    ]
+
+    for store_job in store_jobs:
+        for store_config_type in store_job.allowed_store_config_types:
+            res[store_config_type].append(store_job)
+    return res
 
 
 class DAQJobStoreConfig(Struct, dict=True):
@@ -68,9 +92,10 @@ class DAQJobMessageStore(DAQJobMessage):
         return None
 
     def __post_init__(self):
-        self.route_keys.extend(
-            [store_type.__name__ for store_type in self.store_config.store_types]
-        )
+        mappings = _get_store_config_base_to_store_job_mapping()
+        for store_type in self.store_config.store_types:
+            for store_job in mappings[store_type]:
+                self.route_keys.append(store_job.__name__)
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):

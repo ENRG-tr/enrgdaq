@@ -45,13 +45,16 @@ class SupervisorCNCConfig(Struct):
     rest_api_port: int = 8000
 
 
-class SupervisorConfig(Struct):
+class SupervisorConfig(Struct, kw_only=True):
     """
     A configuration class for a supervisor.
     Attributes:
-        supervisor_id (str): The unique identifier for the supervisor that is going to be used primarily for DAQJobRemote.
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&C) system.
     """
 
+    verbosity: LogVerbosity = LogVerbosity.INFO
     info: "SupervisorInfo"
     cnc: Optional[SupervisorCNCConfig] = None
 

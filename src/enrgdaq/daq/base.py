@@ -3,11 +3,13 @@ import pickle
 import sys
 import uuid
 from datetime import datetime, timedelta
+from functools import cache
 from logging.handlers import QueueHandler
-from multiprocessing import Process, Queue
+from multiprocessing import Manager, Process
 from multiprocessing.context import ForkProcess
 from multiprocessing.shared_memory import SharedMemory
 from queue import Empty
+from queue import Queue as ThreadQueue
 from typing import Any, Optional
 
 import msgspec
@@ -30,7 +32,24 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreSHM,
 )
 from enrgdaq.models import SupervisorInfo
+from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
+
+
+@cache
+def _get_manager():
+    return Manager()
+
+
+def _create_queue(maxsize: int = 0) -> Any:
+    """Create a queue appropriate for the current context.
+
+    In unit testing, uses queue.Queue to avoid pickle issues with MagicMock.
+    In production, uses Manager().Queue() for cross-process communication.
+    """
+    if is_unit_testing():
+        return ThreadQueue(maxsize=maxsize)
+    return _get_manager().Queue(maxsize=maxsize)
 
 
 class DAQJob:
@@ -55,8 +74,8 @@ class DAQJob:
     allowed_message_in_types: list[type[DAQJobMessage]] = []
     config_type: type[DAQJobConfig]  # pyright: ignore[reportUninitializedInstanceVariable]
     config: DAQJobConfig
-    message_in: "Queue[DAQJobMessage]"
-    message_out: "Queue[DAQJobMessage]"
+    message_in: Any
+    message_out: Any
     instance_id: int
     unique_id: str
     restart_offset: timedelta  # pyright: ignore[reportUninitializedInstanceVariable]
@@ -77,8 +96,8 @@ class DAQJob:
         config: DAQJobConfig,
         supervisor_info: SupervisorInfo | None = None,
         instance_id: int | None = None,
-        message_in: "Queue[DAQJobMessage] | None" = None,
-        message_out: "Queue[DAQJobMessage] | None" = None,
+        message_in: Any = None,
+        message_out: Any = None,
         raw_config: str | None = None,
     ):
         self.instance_id = instance_id or 0
@@ -89,8 +108,8 @@ class DAQJob:
             self._logger.setLevel(config.verbosity.to_logging_level())
 
         self.config = config
-        self.message_in = message_in or Queue()
-        self.message_out = message_out or Queue()
+        self.message_in = message_in or _create_queue()
+        self.message_out = message_out or _create_queue()
 
         self._has_been_freed = False
         self.unique_id = getattr(config, "daq_job_unique_id", None) or str(uuid.uuid4())
@@ -264,14 +283,16 @@ class DAQJob:
             message.daq_job_info = self.info
             message.remote_config = self.config.remote_config
 
+        message_routed = False
         if self._routes is not None:
             for route_key, queue_list in self._routes.items():
                 if route_key in message.route_keys:
-                    self._logger.info("Routing through " + route_key)
                     for queue in queue_list:
                         queue.put(message)
+                        message_routed = True
 
-        self.message_out.put(message)
+        if not message_routed:
+            self.message_out.put(message)
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")
@@ -293,8 +314,8 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: "Queue[DAQJobMessage]"
-    message_out: "Queue[DAQJobMessage]"
+    message_in: Any
+    message_out: Any
     process: Process | ForkProcess | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int

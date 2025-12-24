@@ -7,8 +7,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
 from logging.handlers import QueueListener
-from multiprocessing import Queue
 from queue import Empty, Full
+from typing import Any
 
 import msgspec
 
@@ -19,7 +19,7 @@ from enrgdaq.cnc.base import (
 from enrgdaq.cnc.log_util import CNCLogHandler
 from enrgdaq.cnc.models import SupervisorStatus
 from enrgdaq.daq.alert.base import DAQJobAlert
-from enrgdaq.daq.base import DAQJob, DAQJobProcess
+from enrgdaq.daq.base import DAQJob, DAQJobProcess, _create_queue
 from enrgdaq.daq.daq_job import (
     SUPERVISOR_CONFIG_FILE_NAME,
     load_daq_jobs,
@@ -105,7 +105,7 @@ class Supervisor:
     _last_stats_message_time: datetime
     _last_heartbeat_message_time: datetime
     _last_routes_message_time: datetime
-    _log_queue: "Queue[logging.LogRecord]"
+    _log_queue: Any
     _log_listener: QueueListener | None = None
     _is_stopped: bool
     _daq_jobs_to_load: list[DAQJobProcess] | None
@@ -130,7 +130,7 @@ class Supervisor:
             )
         self._is_stopped = False
 
-        self._log_queue = Queue()
+        self._log_queue = _create_queue()
         self._log_listener = None
         self._logger = logging.getLogger()
 
@@ -148,10 +148,15 @@ class Supervisor:
         if not self.config:
             self.config = self._load_supervisor_config()
 
+        self._logger.setLevel(
+            self.config.verbosity.to_logging_level() if self.config else logging.INFO
+        )
+
         # Change logging name based on supervisor id
         self._logger.name = f"Supervisor({self.config.info.supervisor_id})"
 
         if self.config.cnc is not None:
+            self._logger.debug("Starting CNC instance...")
             self._cnc_instance = start_supervisor_cnc(
                 supervisor=self,
                 config=self.config.cnc,
@@ -183,7 +188,9 @@ class Supervisor:
 
         self.restart_schedules = []
         self.daq_job_processes = []
+        self._logger.debug("Starting DAQ job processes...")
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
+        self._logger.debug(f"Started {len(self.daq_job_processes)} DAQ job processes")
         self.daq_job_stats.update(
             {
                 thread.daq_job_cls.__name__: DAQJobStats()
@@ -465,6 +472,9 @@ class Supervisor:
                     ).message_out_stats.increase()
             except Empty:
                 pass
+
+        if len(res) > 0:
+            self._logger.debug(f"Got {len(res)} messages from DAQ jobs: {res}")
         return res
 
     def send_messages_to_daq_jobs(self, daq_messages: list[DAQJobMessage]):
