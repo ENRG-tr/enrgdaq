@@ -130,6 +130,22 @@ class DAQJobMessageStorePyArrow(DAQJobMessageStore, kw_only=True):
 
     table: pa.Table
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Convert table to bytes using Arrow IPC
+        sink = pa.BufferOutputStream()
+        with pa.ipc.new_stream(sink, self.table.schema) as writer:
+            writer.write_table(self.table)
+        state["table"] = sink.getvalue().to_pybytes()
+        return state
+
+    def __setstate__(self, state):
+        # Restore table from bytes
+        table_bytes = state["table"]
+        with pa.ipc.open_stream(table_bytes) as reader:
+            state["table"] = reader.read_all()
+        self.__dict__.update(state)
+
 
 class DAQJobMessageStoreRaw(DAQJobMessageStore, kw_only=True):
     """

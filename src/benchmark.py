@@ -57,7 +57,7 @@ DEFAULT_ZMQ_XPUB_URL = "tcp://localhost:10002"
 DEFAULT_NUM_CLIENTS = 5
 DEFAULT_PAYLOAD_SIZE = 1000
 DEFAULT_DURATION_SECONDS = 60
-DEFAULT_STATS_INTERVAL_SECONDS = 0.25
+DEFAULT_STATS_INTERVAL_SECONDS = 1
 
 
 @dataclass
@@ -268,7 +268,7 @@ def run_client_supervisor(
             DAQJobBenchmarkConfig(
                 daq_job_type="DAQJobBenchmark",
                 payload_size=config.payload_size,
-                use_shm=False,
+                use_shm=True,
                 store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory())
                 if config.use_memory_store
                 else DAQJobStoreConfig(

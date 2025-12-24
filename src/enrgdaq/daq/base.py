@@ -3,9 +3,8 @@ import pickle
 import sys
 import uuid
 from datetime import datetime, timedelta
-from functools import cache
 from logging.handlers import QueueHandler
-from multiprocessing import Manager, Process
+from multiprocessing import Process
 from multiprocessing.context import ForkProcess
 from multiprocessing.shared_memory import SharedMemory
 from queue import Empty
@@ -32,24 +31,20 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreSHM,
 )
 from enrgdaq.models import SupervisorInfo
+from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
-
-
-@cache
-def _get_manager():
-    return Manager()
 
 
 def _create_queue(maxsize: int = 0) -> Any:
     """Create a queue appropriate for the current context.
 
     In unit testing, uses queue.Queue to avoid pickle issues with MagicMock.
-    In production, uses Manager().Queue() for cross-process communication.
+    In production, uses ZMQQueue for fast cross-process communication.
     """
     if is_unit_testing():
         return ThreadQueue(maxsize=maxsize)
-    return _get_manager().Queue(maxsize=maxsize)
+    return ZMQQueue(maxsize=maxsize)
 
 
 class DAQJob:

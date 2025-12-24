@@ -167,14 +167,23 @@ class DAQJobRemote(DAQJob):
 
         remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
         remote_topic_bytes = remote_topic.encode()
-        packed_message = self._pack_message(message)
-        self._zmq_pub.send_multipart([remote_topic_bytes, packed_message])
+
+        # Use multipart for zero-copy if using pickle
+        buffers = []
+        header = pickle.dumps(message, protocol=5, buffer_callback=buffers.append)
+
+        payload = [remote_topic_bytes, header] + [zmq.Frame(b) for b in buffers]
+        self._zmq_pub.send_multipart(payload)
 
         # Update remote stats
         if self._supervisor_info:
+            # Estimate size: header + sum of buffer lengths
+            total_size = len(header)
+            for b in buffers:
+                total_size += b.raw().nbytes
             self._remote_stats[
                 self._supervisor_info.supervisor_id
-            ].update_message_out_stats(len(packed_message) + len(remote_topic_bytes))
+            ].update_message_out_stats(total_size + len(remote_topic_bytes))
 
         self._logger.debug(
             f"Sent message '{type(message).__name__}' to topic '{remote_topic}'"
@@ -218,11 +227,18 @@ class DAQJobRemote(DAQJob):
 
         while True:
             try:
-                topic, message = self._zmq_sub.recv_multipart()
+                parts = self._zmq_sub.recv_multipart()
+                topic = parts[0]
+                header = parts[1]
+                buffers = parts[2:]
+                recv_message = pickle.loads(header, buffers=buffers)
+
+                message_len = len(header)
+                for b in buffers:
+                    # buffers here are memoryviews/bytes from zmq
+                    message_len += len(b)
             except zmq.ContextTerminated:
                 break
-            try:
-                recv_message = self._unpack_message(message)
             except Exception as e:
                 self._logger.error(
                     f"Error while unpacking message sent in {topic}: {e}", exc_info=True
@@ -240,20 +256,19 @@ class DAQJobRemote(DAQJob):
                 )
                 continue
             self._logger.debug(
-                f"Received {len(message)} bytes for message '{type(recv_message).__name__}' on topic '{topic.decode()}'"
+                f"Received {message_len} bytes for message '{type(recv_message).__name__}' on topic '{topic.decode()}'"
             )
             recv_message.is_remote = True
 
-            # Update remote stats BEFORE forwarding - we want to track what we
-            # received from ZMQ, not what we successfully forwarded
+            # Update remote stats BEFORE forwarding
             if self._supervisor_info:
                 self._remote_stats[
                     self._supervisor_info.supervisor_id
-                ].update_message_in_stats(len(message))
+                ].update_message_in_stats(message_len)
             if recv_message.daq_job_info and recv_message.daq_job_info.supervisor_info:
                 self._remote_stats[
                     recv_message.daq_job_info.supervisor_info.supervisor_id
-                ].update_message_out_stats(len(message))
+                ].update_message_out_stats(message_len)
 
             # remote message_in -> message_out
             self._put_message_out(recv_message, modify_message_metadata=False)
