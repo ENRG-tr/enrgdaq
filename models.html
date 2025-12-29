@@ -434,7 +434,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.models.SupervisorConfig"><code class="flex name class">
 <span>class <span class="ident">SupervisorConfig</span></span>
-<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>info: <a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>cnc: <a title="enrgdaq.models.SupervisorCNCConfig" href="#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a> | None = None)</span>
+<span>(</span><span>*,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>info: <a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>cnc: <a title="enrgdaq.models.SupervisorCNCConfig" href="#enrgdaq.models.SupervisorCNCConfig">SupervisorCNCConfig</a> | None = None,<br>ring_buffer_size_mb: int = 256,<br>ring_buffer_slot_size_kb: int = 10240)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -448,11 +448,17 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging.
         info (SupervisorInfo): The information of the supervisor.
         cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
     &#34;&#34;&#34;
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     info: &#34;SupervisorInfo&#34;
     cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
 
     def clone(self):
         return deepcopy(self)</code></pre>
@@ -466,6 +472,10 @@ el.replaceWith(d);
 <dd>The information of the supervisor.</dd>
 <dt><strong><code>cnc</code></strong> :&ensp;<code>SupervisorCNCConfig | None</code></dt>
 <dd>The configuration for the Command and Control (C&amp;C) system.</dd>
+<dt><strong><code>ring_buffer_size_mb</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of the shared memory ring buffer in MB for zero-copy message transfer.</dd>
+<dt><strong><code>ring_buffer_slot_size_kb</code></strong> :&ensp;<code>int</code></dt>
+<dd>Size of each slot in the ring buffer in KB.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -487,11 +497,17 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging.
         info (SupervisorInfo): The information of the supervisor.
         cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
     &#34;&#34;&#34;
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     info: &#34;SupervisorInfo&#34;
     cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
 
     def clone(self):
         return deepcopy(self)</code></pre>
@@ -511,11 +527,77 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging.
         info (SupervisorInfo): The information of the supervisor.
         cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
     &#34;&#34;&#34;
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     info: &#34;SupervisorInfo&#34;
     cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
+
+    def clone(self):
+        return deepcopy(self)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorConfig.ring_buffer_size_mb"><code class="name">var <span class="ident">ring_buffer_size_mb</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    A configuration class for a supervisor.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
+
+    def clone(self):
+        return deepcopy(self)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorConfig.ring_buffer_slot_size_kb"><code class="name">var <span class="ident">ring_buffer_slot_size_kb</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    A configuration class for a supervisor.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging.
+        info (SupervisorInfo): The information of the supervisor.
+        cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
+    &#34;&#34;&#34;
+
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    info: &#34;SupervisorInfo&#34;
+    cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
 
     def clone(self):
         return deepcopy(self)</code></pre>
@@ -535,11 +617,17 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging.
         info (SupervisorInfo): The information of the supervisor.
         cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&amp;C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
     &#34;&#34;&#34;
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     info: &#34;SupervisorInfo&#34;
     cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
 
     def clone(self):
         return deepcopy(self)</code></pre>
@@ -684,6 +772,8 @@ el.replaceWith(d);
 <li><code><a title="enrgdaq.models.SupervisorConfig.clone" href="#enrgdaq.models.SupervisorConfig.clone">clone</a></code></li>
 <li><code><a title="enrgdaq.models.SupervisorConfig.cnc" href="#enrgdaq.models.SupervisorConfig.cnc">cnc</a></code></li>
 <li><code><a title="enrgdaq.models.SupervisorConfig.info" href="#enrgdaq.models.SupervisorConfig.info">info</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorConfig.ring_buffer_size_mb" href="#enrgdaq.models.SupervisorConfig.ring_buffer_size_mb">ring_buffer_size_mb</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorConfig.ring_buffer_slot_size_kb" href="#enrgdaq.models.SupervisorConfig.ring_buffer_slot_size_kb">ring_buffer_slot_size_kb</a></code></li>
 <li><code><a title="enrgdaq.models.SupervisorConfig.verbosity" href="#enrgdaq.models.SupervisorConfig.verbosity">verbosity</a></code></li>
 </ul>
 </li>

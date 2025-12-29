@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.utils.shared_ring_buffer API documentation</title>
+<meta name="description" content="Shared Memory Ring Buffer for zero-copy inter-process communication …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.utils.shared_ring_buffer</code></h1>
+</header>
+<section id="section-intro">
+<p>Shared Memory Ring Buffer for zero-copy inter-process communication.</p>
+<p>This module provides a pre-allocated shared memory circular buffer with slot-based
+allocation, designed for high-throughput data transfer between processes with
+minimal memory copies.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.utils.shared_ring_buffer.attach_to_ring_buffer"><code class="name flex">
+<span>def <span class="ident">attach_to_ring_buffer</span></span>(<span>name: str = 'enrgdaq_ring_buffer',<br>total_size: int = 268435456,<br>slot_size: int = 10485760) ‑> <a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer">SharedMemoryRingBuffer</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def attach_to_ring_buffer(
+    name: str = &#34;enrgdaq_ring_buffer&#34;,
+    total_size: int = DEFAULT_RING_BUFFER_SIZE,
+    slot_size: int = DEFAULT_SLOT_SIZE,
+) -&gt; SharedMemoryRingBuffer:
+    &#34;&#34;&#34;
+    Attach to an existing ring buffer (for use in child processes).
+
+    Args:
+        name: Name of the shared memory region.
+        total_size: Total buffer size.
+        slot_size: Size per slot.
+
+    Returns:
+        A SharedMemoryRingBuffer attached to the existing shared memory.
+    &#34;&#34;&#34;
+    return SharedMemoryRingBuffer(
+        name=name,
+        total_size=total_size,
+        slot_size=slot_size,
+        create=False,
+    )</code></pre>
+</details>
+<div class="desc"><p>Attach to an existing ring buffer (for use in child processes).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Name of the shared memory region.</dd>
+<dt><strong><code>total_size</code></strong></dt>
+<dd>Total buffer size.</dd>
+<dt><strong><code>slot_size</code></strong></dt>
+<dd>Size per slot.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A SharedMemoryRingBuffer attached to the existing shared memory.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.cleanup_global_ring_buffer"><code class="name flex">
+<span>def <span class="ident">cleanup_global_ring_buffer</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cleanup_global_ring_buffer():
+    &#34;&#34;&#34;Clean up the global ring buffer. Call at supervisor shutdown.&#34;&#34;&#34;
+    global _global_ring_buffer
+
+    if _global_ring_buffer is not None:
+        with _global_ring_buffer_lock:
+            if _global_ring_buffer is not None:
+                _global_ring_buffer.cleanup()
+                _global_ring_buffer = None</code></pre>
+</details>
+<div class="desc"><p>Clean up the global ring buffer. Call at supervisor shutdown.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer"><code class="name flex">
+<span>def <span class="ident">get_global_ring_buffer</span></span>(<span>name: str = 'enrgdaq_ring_buffer',<br>total_size: int = 268435456,<br>slot_size: int = 10485760) ‑> <a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer">SharedMemoryRingBuffer</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_global_ring_buffer(
+    name: str = &#34;enrgdaq_ring_buffer&#34;,
+    total_size: int = DEFAULT_RING_BUFFER_SIZE,
+    slot_size: int = DEFAULT_SLOT_SIZE,
+) -&gt; SharedMemoryRingBuffer:
+    &#34;&#34;&#34;
+    Get or create the global ring buffer singleton.
+
+    This is lazily initialized on first access.
+
+    Args:
+        name: Name for the shared memory region.
+        total_size: Total buffer size (only used on first call).
+        slot_size: Size per slot (only used on first call).
+
+    Returns:
+        The global SharedMemoryRingBuffer instance.
+    &#34;&#34;&#34;
+    global _global_ring_buffer
+
+    if _global_ring_buffer is None:
+        with _global_ring_buffer_lock:
+            if _global_ring_buffer is None:
+                _global_ring_buffer = SharedMemoryRingBuffer(
+                    name=name,
+                    total_size=total_size,
+                    slot_size=slot_size,
+                    create=True,
+                )
+
+    return _global_ring_buffer</code></pre>
+</details>
+<div class="desc"><p>Get or create the global ring buffer singleton.</p>
+<p>This is lazily initialized on first access.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Name for the shared memory region.</dd>
+<dt><strong><code>total_size</code></strong></dt>
+<dd>Total buffer size (only used on first call).</dd>
+<dt><strong><code>slot_size</code></strong></dt>
+<dd>Size per slot (only used on first call).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The global SharedMemoryRingBuffer instance.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer_stats"><code class="name flex">
+<span>def <span class="ident">get_global_ring_buffer_stats</span></span>(<span>) ‑> tuple[int, int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_global_ring_buffer_stats() -&gt; tuple[int, int]:
+    &#34;&#34;&#34;Get stats from the global ring buffer (bytes_written, bytes_read).&#34;&#34;&#34;
+    global _global_ring_buffer
+    if _global_ring_buffer is not None:
+        return _global_ring_buffer.get_stats()
+    return (0, 0)</code></pre>
+</details>
+<div class="desc"><p>Get stats from the global ring buffer (bytes_written, bytes_read).</p></div>
+</dd>
+</dl>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot"><code class="flex name class">
+<span>class <span class="ident">RingBufferSlot</span></span>
+<span>(</span><span>buffer: <a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer">SharedMemoryRingBuffer</a>,<br>index: int,<br>offset: int,<br>max_size: int)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@dataclass
+class RingBufferSlot:
+    &#34;&#34;&#34;Handle to a slot in the ring buffer.&#34;&#34;&#34;
+
+    buffer: &#34;SharedMemoryRingBuffer&#34;
+    index: int
+    offset: int
+    max_size: int
+    _memoryview: Optional[memoryview] = None
+
+    @property
+    def view(self) -&gt; memoryview:
+        &#34;&#34;&#34;Get a memoryview into this slot for reading/writing.&#34;&#34;&#34;
+        if self._memoryview is None:
+            self._memoryview = self.buffer.get_slot_view(self.index)
+        return self._memoryview
+
+    def release(self):
+        &#34;&#34;&#34;Release this slot back to the buffer pool.&#34;&#34;&#34;
+        if self._memoryview is not None:
+            self._memoryview.release()
+            self._memoryview = None
+        self.buffer.release(self.index)</code></pre>
+</details>
+<div class="desc"><p>Handle to a slot in the ring buffer.</p></div>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.buffer"><code class="name">var <span class="ident">buffer</span> : <a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer">SharedMemoryRingBuffer</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.index"><code class="name">var <span class="ident">index</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.max_size"><code class="name">var <span class="ident">max_size</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.offset"><code class="name">var <span class="ident">offset</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.view"><code class="name">prop <span class="ident">view</span> : memoryview</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def view(self) -&gt; memoryview:
+    &#34;&#34;&#34;Get a memoryview into this slot for reading/writing.&#34;&#34;&#34;
+    if self._memoryview is None:
+        self._memoryview = self.buffer.get_slot_view(self.index)
+    return self._memoryview</code></pre>
+</details>
+<div class="desc"><p>Get a memoryview into this slot for reading/writing.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.release"><code class="name flex">
+<span>def <span class="ident">release</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def release(self):
+    &#34;&#34;&#34;Release this slot back to the buffer pool.&#34;&#34;&#34;
+    if self._memoryview is not None:
+        self._memoryview.release()
+        self._memoryview = None
+    self.buffer.release(self.index)</code></pre>
+</details>
+<div class="desc"><p>Release this slot back to the buffer pool.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer"><code class="flex name class">
+<span>class <span class="ident">SharedMemoryRingBuffer</span></span>
+<span>(</span><span>name: str,<br>total_size: int = 268435456,<br>slot_size: int = 10485760,<br>create: bool = True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SharedMemoryRingBuffer:
+    &#34;&#34;&#34;
+    A pre-allocated shared memory ring buffer with fixed-size slots.
+
+    This buffer divides a large shared memory region into fixed-size slots
+    that can be allocated and released for zero-copy data transfer between
+    processes.
+
+    The buffer is designed for single-producer, single-consumer scenarios
+    but supports multiple consumers through reference counting.
+    &#34;&#34;&#34;
+
+    def __init__(
+        self,
+        name: str,
+        total_size: int = DEFAULT_RING_BUFFER_SIZE,
+        slot_size: int = DEFAULT_SLOT_SIZE,
+        create: bool = True,
+    ):
+        &#34;&#34;&#34;
+        Initialize or attach to a shared memory ring buffer.
+
+        Args:
+            name: Unique name for the shared memory region.
+            total_size: Total size of the buffer in bytes.
+            slot_size: Size of each slot in bytes.
+            create: If True, create the buffer. If False, attach to existing.
+        &#34;&#34;&#34;
+        self.name = name
+        self.slot_size = slot_size
+        self.slot_count = total_size // slot_size
+        self.total_size = self.slot_count * slot_size  # Align to slot boundaries
+
+        self._create = create
+        self._shm: Optional[SharedMemory] = None
+        self._slot_states: Any = None  # RawArray[ctypes.c_int]
+        self._write_index: Any = None  # RawValue[ctypes.c_int]
+        self._bytes_written: Any = None  # RawValue[ctypes.c_longlong]
+        self._bytes_read: Any = None  # RawValue[ctypes.c_longlong]
+        self._lock = threading.Lock()
+        self._initialized = False
+
+    def _ensure_initialized(self):
+        &#34;&#34;&#34;Lazy initialization of shared memory resources.&#34;&#34;&#34;
+        if self._initialized:
+            return
+
+        with self._lock:
+            if self._initialized:
+                return
+
+            try:
+                if self._create:
+                    # Create new shared memory
+                    try:
+                        self._shm = SharedMemory(
+                            name=self.name, create=True, size=self.total_size
+                        )
+                        logger.info(
+                            f&#34;Created shared memory ring buffer &#39;{self.name}&#39; &#34;
+                            f&#34;with {self.slot_count} slots of {self.slot_size} bytes each&#34;
+                        )
+                    except FileExistsError:
+                        # Already exists, attach to it
+                        self._shm = SharedMemory(name=self.name, create=False)
+                        logger.info(
+                            f&#34;Attached to existing shared memory ring buffer &#39;{self.name}&#39;&#34;
+                        )
+                else:
+                    # Attach to existing shared memory
+                    self._shm = SharedMemory(name=self.name, create=False)
+
+                # Slot states array: one int per slot for reference counting
+                # Using ctypes shared array for cross-process access
+                self._slot_states = RawArray(ctypes.c_int, self.slot_count)
+
+                # Write index for round-robin allocation
+                self._write_index = RawValue(ctypes.c_int, 0)
+
+                # Byte counters for throughput measurement
+                self._bytes_written = RawValue(ctypes.c_longlong, 0)
+                self._bytes_read = RawValue(ctypes.c_longlong, 0)
+
+                self._initialized = True
+
+            except Exception as e:
+                logger.error(f&#34;Failed to initialize ring buffer: {e}&#34;)
+                raise
+
+    def allocate(self, required_size: int) -&gt; Optional[RingBufferSlot]:
+        &#34;&#34;&#34;
+        Allocate a slot that can hold the required size.
+
+        Args:
+            required_size: Minimum size needed in bytes.
+
+        Returns:
+            RingBufferSlot if allocation successful, None if no slots available
+            or size too large.
+        &#34;&#34;&#34;
+        self._ensure_initialized()
+
+        if required_size &gt; self.slot_size:
+            logger.warning(
+                f&#34;Requested size {required_size} exceeds slot size {self.slot_size}&#34;
+            )
+            return None
+
+        assert self._slot_states is not None
+        assert self._write_index is not None
+
+        # Try to find a free slot using round-robin starting from write_index
+        start_index = self._write_index.value
+        for i in range(self.slot_count):
+            slot_index = (start_index + i) % self.slot_count
+
+            # Try to atomically set slot from FREE to WRITING
+            if self._slot_states[slot_index] == SLOT_FREE:
+                # Simple compare-and-swap using the GIL
+                # For truly lock-free, we&#39;d need atomics from a C extension
+                with self._lock:
+                    if self._slot_states[slot_index] == SLOT_FREE:
+                        self._slot_states[slot_index] = SLOT_WRITING
+                        self._write_index.value = (slot_index + 1) % self.slot_count
+
+                        return RingBufferSlot(
+                            buffer=self,
+                            index=slot_index,
+                            offset=slot_index * self.slot_size,
+                            max_size=self.slot_size,
+                        )
+
+        # No free slots - overwrite oldest READY slot (true ring buffer behavior)
+        # This drops old data if consumer can&#39;t keep up
+        for i in range(self.slot_count):
+            slot_index = (start_index + i) % self.slot_count
+
+            if self._slot_states[slot_index] == SLOT_READY:
+                with self._lock:
+                    # Only overwrite if still READY (not being read)
+                    if self._slot_states[slot_index] == SLOT_READY:
+                        self._slot_states[slot_index] = SLOT_WRITING
+                        self._write_index.value = (slot_index + 1) % self.slot_count
+                        # logger.debug(
+                        #    f&#34;Overwriting slot {slot_index} (consumer too slow)&#34;
+                        # )
+
+                        return RingBufferSlot(
+                            buffer=self,
+                            index=slot_index,
+                            offset=slot_index * self.slot_size,
+                            max_size=self.slot_size,
+                        )
+
+        # All slots are either WRITING or READING - can&#39;t allocate
+        logger.warning(&#34;No free or overwritable slots available in ring buffer&#34;)
+        return None
+
+    def mark_ready(self, slot_index: int, bytes_written: int = 0):
+        &#34;&#34;&#34;Mark a slot as ready for reading (after writing is complete).&#34;&#34;&#34;
+        self._ensure_initialized()
+        assert self._slot_states is not None
+
+        if self._slot_states[slot_index] == SLOT_WRITING:
+            self._slot_states[slot_index] = SLOT_READY
+            if bytes_written &gt; 0 and self._bytes_written is not None:
+                self._bytes_written.value += bytes_written
+
+    def acquire_for_read(self, slot_index: int, bytes_to_read: int = 0) -&gt; bool:
+        &#34;&#34;&#34;
+        Acquire a slot for reading (increment reference count).
+
+        Returns True if successful, False if slot is not ready.
+        &#34;&#34;&#34;
+        self._ensure_initialized()
+        assert self._slot_states is not None
+
+        with self._lock:
+            state = self._slot_states[slot_index]
+            if state &gt;= SLOT_READY:
+                self._slot_states[slot_index] = state + 1
+                if bytes_to_read &gt; 0 and self._bytes_read is not None:
+                    self._bytes_read.value += bytes_to_read
+                return True
+        return False
+
+    def release(self, slot_index: int):
+        &#34;&#34;&#34;
+        Release a slot (decrement reference count, free if zero).
+        &#34;&#34;&#34;
+        self._ensure_initialized()
+        assert self._slot_states is not None
+
+        with self._lock:
+            state = self._slot_states[slot_index]
+            if state == SLOT_READY:
+                # Last reference, free the slot
+                self._slot_states[slot_index] = SLOT_FREE
+            elif state &gt; SLOT_READY:
+                # Decrement reference count
+                self._slot_states[slot_index] = state - 1
+            elif state == SLOT_WRITING:
+                # Writing was aborted, free the slot
+                self._slot_states[slot_index] = SLOT_FREE
+
+    def get_stats(self) -&gt; tuple[int, int]:
+        &#34;&#34;&#34;Get (bytes_written, bytes_read) stats.&#34;&#34;&#34;
+        self._ensure_initialized()
+        return (
+            self._bytes_written.value if self._bytes_written else 0,
+            self._bytes_read.value if self._bytes_read else 0,
+        )
+
+    def get_slot_view(self, slot_index: int) -&gt; memoryview:
+        &#34;&#34;&#34;Get a memoryview into a specific slot.&#34;&#34;&#34;
+        self._ensure_initialized()
+        assert self._shm is not None
+
+        offset = slot_index * self.slot_size
+        buf = self._shm.buf
+        assert buf is not None, &#34;Shared memory buffer is None&#34;
+        return memoryview(buf)[offset : offset + self.slot_size]
+
+    def get_slot_address(self, slot_index: int) -&gt; int:
+        &#34;&#34;&#34;Get the memory address of a slot (for pa.foreign_buffer).&#34;&#34;&#34;
+        self._ensure_initialized()
+        assert self._shm is not None
+
+        # Get base address of the shared memory buffer
+        buf = self._shm.buf
+        assert buf is not None, &#34;Shared memory buffer is None&#34;
+        offset = slot_index * self.slot_size
+
+        # Create a ctypes pointer to get the address
+        c_buf = (ctypes.c_char * len(buf)).from_buffer(buf)
+        base_addr = ctypes.addressof(c_buf)
+        return base_addr + offset
+
+    def cleanup(self):
+        &#34;&#34;&#34;Clean up resources. Only call from the creating process at shutdown.&#34;&#34;&#34;
+        if self._shm is not None:
+            try:
+                self._shm.close()
+                if self._create:
+                    self._shm.unlink()
+                    logger.info(f&#34;Unlinked shared memory ring buffer &#39;{self.name}&#39;&#34;)
+            except Exception as e:
+                logger.warning(f&#34;Error during ring buffer cleanup: {e}&#34;)
+            self._shm = None
+
+        self._initialized = False
+
+    def __del__(self):
+        try:
+            if self._shm is not None:
+                self._shm.close()
+        except Exception:
+            pass</code></pre>
+</details>
+<div class="desc"><p>A pre-allocated shared memory ring buffer with fixed-size slots.</p>
+<p>This buffer divides a large shared memory region into fixed-size slots
+that can be allocated and released for zero-copy data transfer between
+processes.</p>
+<p>The buffer is designed for single-producer, single-consumer scenarios
+but supports multiple consumers through reference counting.</p>
+<p>Initialize or attach to a shared memory ring buffer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the shared memory region.</dd>
+<dt><strong><code>total_size</code></strong></dt>
+<dd>Total size of the buffer in bytes.</dd>
+<dt><strong><code>slot_size</code></strong></dt>
+<dd>Size of each slot in bytes.</dd>
+<dt><strong><code>create</code></strong></dt>
+<dd>If True, create the buffer. If False, attach to existing.</dd>
+</dl></div>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.acquire_for_read"><code class="name flex">
+<span>def <span class="ident">acquire_for_read</span></span>(<span>self, slot_index: int, bytes_to_read: int = 0) ‑> bool</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def acquire_for_read(self, slot_index: int, bytes_to_read: int = 0) -&gt; bool:
+    &#34;&#34;&#34;
+    Acquire a slot for reading (increment reference count).
+
+    Returns True if successful, False if slot is not ready.
+    &#34;&#34;&#34;
+    self._ensure_initialized()
+    assert self._slot_states is not None
+
+    with self._lock:
+        state = self._slot_states[slot_index]
+        if state &gt;= SLOT_READY:
+            self._slot_states[slot_index] = state + 1
+            if bytes_to_read &gt; 0 and self._bytes_read is not None:
+                self._bytes_read.value += bytes_to_read
+            return True
+    return False</code></pre>
+</details>
+<div class="desc"><p>Acquire a slot for reading (increment reference count).</p>
+<p>Returns True if successful, False if slot is not ready.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.allocate"><code class="name flex">
+<span>def <span class="ident">allocate</span></span>(<span>self, required_size: int) ‑> <a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot">RingBufferSlot</a> | None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def allocate(self, required_size: int) -&gt; Optional[RingBufferSlot]:
+    &#34;&#34;&#34;
+    Allocate a slot that can hold the required size.
+
+    Args:
+        required_size: Minimum size needed in bytes.
+
+    Returns:
+        RingBufferSlot if allocation successful, None if no slots available
+        or size too large.
+    &#34;&#34;&#34;
+    self._ensure_initialized()
+
+    if required_size &gt; self.slot_size:
+        logger.warning(
+            f&#34;Requested size {required_size} exceeds slot size {self.slot_size}&#34;
+        )
+        return None
+
+    assert self._slot_states is not None
+    assert self._write_index is not None
+
+    # Try to find a free slot using round-robin starting from write_index
+    start_index = self._write_index.value
+    for i in range(self.slot_count):
+        slot_index = (start_index + i) % self.slot_count
+
+        # Try to atomically set slot from FREE to WRITING
+        if self._slot_states[slot_index] == SLOT_FREE:
+            # Simple compare-and-swap using the GIL
+            # For truly lock-free, we&#39;d need atomics from a C extension
+            with self._lock:
+                if self._slot_states[slot_index] == SLOT_FREE:
+                    self._slot_states[slot_index] = SLOT_WRITING
+                    self._write_index.value = (slot_index + 1) % self.slot_count
+
+                    return RingBufferSlot(
+                        buffer=self,
+                        index=slot_index,
+                        offset=slot_index * self.slot_size,
+                        max_size=self.slot_size,
+                    )
+
+    # No free slots - overwrite oldest READY slot (true ring buffer behavior)
+    # This drops old data if consumer can&#39;t keep up
+    for i in range(self.slot_count):
+        slot_index = (start_index + i) % self.slot_count
+
+        if self._slot_states[slot_index] == SLOT_READY:
+            with self._lock:
+                # Only overwrite if still READY (not being read)
+                if self._slot_states[slot_index] == SLOT_READY:
+                    self._slot_states[slot_index] = SLOT_WRITING
+                    self._write_index.value = (slot_index + 1) % self.slot_count
+                    # logger.debug(
+                    #    f&#34;Overwriting slot {slot_index} (consumer too slow)&#34;
+                    # )
+
+                    return RingBufferSlot(
+                        buffer=self,
+                        index=slot_index,
+                        offset=slot_index * self.slot_size,
+                        max_size=self.slot_size,
+                    )
+
+    # All slots are either WRITING or READING - can&#39;t allocate
+    logger.warning(&#34;No free or overwritable slots available in ring buffer&#34;)
+    return None</code></pre>
+</details>
+<div class="desc"><p>Allocate a slot that can hold the required size.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>required_size</code></strong></dt>
+<dd>Minimum size needed in bytes.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>RingBufferSlot if allocation successful, None if no slots available
+or size too large.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup"><code class="name flex">
+<span>def <span class="ident">cleanup</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cleanup(self):
+    &#34;&#34;&#34;Clean up resources. Only call from the creating process at shutdown.&#34;&#34;&#34;
+    if self._shm is not None:
+        try:
+            self._shm.close()
+            if self._create:
+                self._shm.unlink()
+                logger.info(f&#34;Unlinked shared memory ring buffer &#39;{self.name}&#39;&#34;)
+        except Exception as e:
+            logger.warning(f&#34;Error during ring buffer cleanup: {e}&#34;)
+        self._shm = None
+
+    self._initialized = False</code></pre>
+</details>
+<div class="desc"><p>Clean up resources. Only call from the creating process at shutdown.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_address"><code class="name flex">
+<span>def <span class="ident">get_slot_address</span></span>(<span>self, slot_index: int) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_slot_address(self, slot_index: int) -&gt; int:
+    &#34;&#34;&#34;Get the memory address of a slot (for pa.foreign_buffer).&#34;&#34;&#34;
+    self._ensure_initialized()
+    assert self._shm is not None
+
+    # Get base address of the shared memory buffer
+    buf = self._shm.buf
+    assert buf is not None, &#34;Shared memory buffer is None&#34;
+    offset = slot_index * self.slot_size
+
+    # Create a ctypes pointer to get the address
+    c_buf = (ctypes.c_char * len(buf)).from_buffer(buf)
+    base_addr = ctypes.addressof(c_buf)
+    return base_addr + offset</code></pre>
+</details>
+<div class="desc"><p>Get the memory address of a slot (for pa.foreign_buffer).</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view"><code class="name flex">
+<span>def <span class="ident">get_slot_view</span></span>(<span>self, slot_index: int) ‑> memoryview</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_slot_view(self, slot_index: int) -&gt; memoryview:
+    &#34;&#34;&#34;Get a memoryview into a specific slot.&#34;&#34;&#34;
+    self._ensure_initialized()
+    assert self._shm is not None
+
+    offset = slot_index * self.slot_size
+    buf = self._shm.buf
+    assert buf is not None, &#34;Shared memory buffer is None&#34;
+    return memoryview(buf)[offset : offset + self.slot_size]</code></pre>
+</details>
+<div class="desc"><p>Get a memoryview into a specific slot.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_stats"><code class="name flex">
+<span>def <span class="ident">get_stats</span></span>(<span>self) ‑> tuple[int, int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_stats(self) -&gt; tuple[int, int]:
+    &#34;&#34;&#34;Get (bytes_written, bytes_read) stats.&#34;&#34;&#34;
+    self._ensure_initialized()
+    return (
+        self._bytes_written.value if self._bytes_written else 0,
+        self._bytes_read.value if self._bytes_read else 0,
+    )</code></pre>
+</details>
+<div class="desc"><p>Get (bytes_written, bytes_read) stats.</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.mark_ready"><code class="name flex">
+<span>def <span class="ident">mark_ready</span></span>(<span>self, slot_index: int, bytes_written: int = 0)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def mark_ready(self, slot_index: int, bytes_written: int = 0):
+    &#34;&#34;&#34;Mark a slot as ready for reading (after writing is complete).&#34;&#34;&#34;
+    self._ensure_initialized()
+    assert self._slot_states is not None
+
+    if self._slot_states[slot_index] == SLOT_WRITING:
+        self._slot_states[slot_index] = SLOT_READY
+        if bytes_written &gt; 0 and self._bytes_written is not None:
+            self._bytes_written.value += bytes_written</code></pre>
+</details>
+<div class="desc"><p>Mark a slot as ready for reading (after writing is complete).</p></div>
+</dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.release"><code class="name flex">
+<span>def <span class="ident">release</span></span>(<span>self, slot_index: int)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def release(self, slot_index: int):
+    &#34;&#34;&#34;
+    Release a slot (decrement reference count, free if zero).
+    &#34;&#34;&#34;
+    self._ensure_initialized()
+    assert self._slot_states is not None
+
+    with self._lock:
+        state = self._slot_states[slot_index]
+        if state == SLOT_READY:
+            # Last reference, free the slot
+            self._slot_states[slot_index] = SLOT_FREE
+        elif state &gt; SLOT_READY:
+            # Decrement reference count
+            self._slot_states[slot_index] = state - 1
+        elif state == SLOT_WRITING:
+            # Writing was aborted, free the slot
+            self._slot_states[slot_index] = SLOT_FREE</code></pre>
+</details>
+<div class="desc"><p>Release a slot (decrement reference count, free if zero).</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.utils" href="index.html">enrgdaq.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.attach_to_ring_buffer" href="#enrgdaq.utils.shared_ring_buffer.attach_to_ring_buffer">attach_to_ring_buffer</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.cleanup_global_ring_buffer" href="#enrgdaq.utils.shared_ring_buffer.cleanup_global_ring_buffer">cleanup_global_ring_buffer</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer" href="#enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer">get_global_ring_buffer</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer_stats" href="#enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer_stats">get_global_ring_buffer_stats</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot">RingBufferSlot</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.buffer" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.buffer">buffer</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.index" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.index">index</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.max_size" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.max_size">max_size</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.offset" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.offset">offset</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.release" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.release">release</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.RingBufferSlot.view" href="#enrgdaq.utils.shared_ring_buffer.RingBufferSlot.view">view</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer">SharedMemoryRingBuffer</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.acquire_for_read" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.acquire_for_read">acquire_for_read</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.allocate" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.allocate">allocate</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup">cleanup</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_address" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_address">get_slot_address</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view">get_slot_view</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_stats" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_stats">get_stats</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.mark_ready" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.mark_ready">mark_ready</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.release" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.release">release</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

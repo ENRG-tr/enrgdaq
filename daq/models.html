@@ -1663,6 +1663,510 @@ def remote_config(self) -&gt; DAQRemoteConfig:
 </dd>
 </dl>
 </dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle"><code class="flex name class">
+<span>class <span class="ident">RingBufferHandle</span></span>
+<span>(</span><span>buffer_name: str,<br>slot_index: int,<br>data_size: int,<br>is_pyarrow: bool = True,<br>total_size: int = 268435456,<br>slot_size: int = 10485760)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"><p>Handle to data stored in a shared memory ring buffer slot.</p>
+<p>This is used for zero-copy transfer of PyArrow data between processes.
+The handle contains only metadata; the actual data remains in shared memory.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.models.RingBufferHandle.buffer_name"><code class="name">var <span class="ident">buffer_name</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.data_size"><code class="name">var <span class="ident">data_size</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.is_pyarrow"><code class="name">var <span class="ident">is_pyarrow</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.slot_index"><code class="name">var <span class="ident">slot_index</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.slot_size"><code class="name">var <span class="ident">slot_size</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.total_size"><code class="name">var <span class="ident">total_size</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class RingBufferHandle(Struct):
+    &#34;&#34;&#34;
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    &#34;&#34;&#34;
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        &#34;&#34;&#34;
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        &#34;&#34;&#34;
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.models.RingBufferHandle.load_pyarrow"><code class="name flex">
+<span>def <span class="ident">load_pyarrow</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_pyarrow(self):
+    &#34;&#34;&#34;
+    Load PyArrow table from the ring buffer slot using zero-copy.
+
+    Returns:
+        pa.Table: The PyArrow table (references shared memory directly).
+    &#34;&#34;&#34;
+    from enrgdaq.utils.arrow_ipc import read_table_from_address
+    from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+    ring_buffer = attach_to_ring_buffer(
+        name=self.buffer_name,
+        total_size=self.total_size,
+        slot_size=self.slot_size,
+    )
+
+    # Acquire for reading (increment ref count) and track bytes
+    ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+    # Get the address and read zero-copy
+    address = ring_buffer.get_slot_address(self.slot_index)
+    table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+    return table</code></pre>
+</details>
+<div class="desc"><p>Load PyArrow table from the ring buffer slot using zero-copy.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.Table</code></dt>
+<dd>The PyArrow table (references shared memory directly).</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.daq.models.RingBufferHandle.release"><code class="name flex">
+<span>def <span class="ident">release</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def release(self):
+    &#34;&#34;&#34;Release the slot back to the ring buffer pool.&#34;&#34;&#34;
+    from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+    ring_buffer = attach_to_ring_buffer(
+        name=self.buffer_name,
+        total_size=self.total_size,
+        slot_size=self.slot_size,
+    )
+    ring_buffer.release(self.slot_index)</code></pre>
+</details>
+<div class="desc"><p>Release the slot back to the ring buffer pool.</p></div>
+</dd>
+</dl>
+</dd>
 <dt id="enrgdaq.daq.models.SHMHandle"><code class="flex name class">
 <span>class <span class="ident">SHMHandle</span></span>
 <span>(</span><span>shm_name: str, shm_size: int)</span>
@@ -2062,6 +2566,19 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages" href="#enrgdaq.daq.models.DAQRemoteConfig.drop_remote_messages">drop_remote_messages</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.remote_disable" href="#enrgdaq.daq.models.DAQRemoteConfig.remote_disable">remote_disable</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQRemoteConfig.remote_topic" href="#enrgdaq.daq.models.DAQRemoteConfig.remote_topic">remote_topic</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.models.RingBufferHandle" href="#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.buffer_name" href="#enrgdaq.daq.models.RingBufferHandle.buffer_name">buffer_name</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.data_size" href="#enrgdaq.daq.models.RingBufferHandle.data_size">data_size</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.is_pyarrow" href="#enrgdaq.daq.models.RingBufferHandle.is_pyarrow">is_pyarrow</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.load_pyarrow" href="#enrgdaq.daq.models.RingBufferHandle.load_pyarrow">load_pyarrow</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.release" href="#enrgdaq.daq.models.RingBufferHandle.release">release</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.slot_index" href="#enrgdaq.daq.models.RingBufferHandle.slot_index">slot_index</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.slot_size" href="#enrgdaq.daq.models.RingBufferHandle.slot_size">slot_size</a></code></li>
+<li><code><a title="enrgdaq.daq.models.RingBufferHandle.total_size" href="#enrgdaq.daq.models.RingBufferHandle.total_size">total_size</a></code></li>
 </ul>
 </li>
 <li>

@@ -257,7 +257,7 @@ of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgda
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStorePyArrow</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table | None = None,<br>handle: <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -270,33 +270,72 @@ of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgda
     columnar format. Optimized for numerical data with zero-copy reads.
 
     Attributes:
-        table (pa.Table): A PyArrow Table containing the columnar data.
+        table (pa.Table | None): A PyArrow Table containing the columnar data.
+            None when using zero-copy mode (handle is set instead).
+        handle (RingBufferHandle | None): Handle to PyArrow data in shared memory.
+            When set, the table is loaded from shared memory using zero-copy.
     &#34;&#34;&#34;
 
-    table: pa.Table
+    table: pa.Table | None = None
+    handle: RingBufferHandle | None = None
+
+    def get_table(self) -&gt; pa.Table:
+        &#34;&#34;&#34;
+        Get the PyArrow table, loading from shared memory if using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            return self.handle.load_pyarrow()
+        if self.table is not None:
+            return self.table
+        raise ValueError(&#34;Neither table nor handle is set&#34;)
+
+    def release(self):
+        &#34;&#34;&#34;
+        Release the ring buffer slot back to the pool (if using zero-copy).
+
+        Call this after you&#39;re done with the table to allow the slot to be reused.
+        No-op if not using zero-copy mode.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            self.handle.release()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Convert table to bytes using Arrow IPC
-        sink = pa.BufferOutputStream()
-        with pa.ipc.new_stream(sink, self.table.schema) as writer:
-            writer.write_table(self.table)
-        state[&#34;table&#34;] = sink.getvalue().to_pybytes()
+        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        if self.handle is not None:
+            # Load table from handle for serialization
+            state[&#34;table&#34;] = self.handle.load_pyarrow()
+            state[&#34;handle&#34;] = None
+        if state.get(&#34;table&#34;) is not None:
+            # Convert table to bytes using Arrow IPC
+            sink = pa.BufferOutputStream()
+            with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
+                writer.write_table(state[&#34;table&#34;])
+            state[&#34;table&#34;] = sink.getvalue().to_pybytes()
         return state
 
     def __setstate__(self, state):
         # Restore table from bytes
-        table_bytes = state[&#34;table&#34;]
-        with pa.ipc.open_stream(table_bytes) as reader:
-            state[&#34;table&#34;] = reader.read_all()
+        table_bytes = state.get(&#34;table&#34;)
+        if table_bytes is not None and isinstance(table_bytes, bytes):
+            with pa.ipc.open_stream(table_bytes) as reader:
+                state[&#34;table&#34;] = reader.read_all()
+        state[&#34;handle&#34;] = None  # Handle is never deserialized
         self.__dict__.update(state)</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStorePyArrow is a high-performance message store using PyArrow's
 columnar format. Optimized for numerical data with zero-copy reads.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
-<dt><strong><code>table</code></strong> :&ensp;<code>pa.Table</code></dt>
-<dd>A PyArrow Table containing the columnar data.</dd>
+<dt><strong><code>table</code></strong> :&ensp;<code>pa.Table | None</code></dt>
+<dd>A PyArrow Table containing the columnar data.
+None when using zero-copy mode (handle is set instead).</dd>
+<dt><strong><code>handle</code></strong> :&ensp;<code>RingBufferHandle | None</code></dt>
+<dd>Handle to PyArrow data in shared memory.
+When set, the table is loaded from shared memory using zero-copy.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -307,7 +346,7 @@ columnar format. Optimized for numerical data with zero-copy reads.</p>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.table"><code class="name">var <span class="ident">table</span> : pyarrow.lib.Table</code></dt>
+<dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.handle"><code class="name">var <span class="ident">handle</span> : <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -319,28 +358,186 @@ columnar format. Optimized for numerical data with zero-copy reads.</p>
     columnar format. Optimized for numerical data with zero-copy reads.
 
     Attributes:
-        table (pa.Table): A PyArrow Table containing the columnar data.
+        table (pa.Table | None): A PyArrow Table containing the columnar data.
+            None when using zero-copy mode (handle is set instead).
+        handle (RingBufferHandle | None): Handle to PyArrow data in shared memory.
+            When set, the table is loaded from shared memory using zero-copy.
     &#34;&#34;&#34;
 
-    table: pa.Table
+    table: pa.Table | None = None
+    handle: RingBufferHandle | None = None
+
+    def get_table(self) -&gt; pa.Table:
+        &#34;&#34;&#34;
+        Get the PyArrow table, loading from shared memory if using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            return self.handle.load_pyarrow()
+        if self.table is not None:
+            return self.table
+        raise ValueError(&#34;Neither table nor handle is set&#34;)
+
+    def release(self):
+        &#34;&#34;&#34;
+        Release the ring buffer slot back to the pool (if using zero-copy).
+
+        Call this after you&#39;re done with the table to allow the slot to be reused.
+        No-op if not using zero-copy mode.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            self.handle.release()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Convert table to bytes using Arrow IPC
-        sink = pa.BufferOutputStream()
-        with pa.ipc.new_stream(sink, self.table.schema) as writer:
-            writer.write_table(self.table)
-        state[&#34;table&#34;] = sink.getvalue().to_pybytes()
+        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        if self.handle is not None:
+            # Load table from handle for serialization
+            state[&#34;table&#34;] = self.handle.load_pyarrow()
+            state[&#34;handle&#34;] = None
+        if state.get(&#34;table&#34;) is not None:
+            # Convert table to bytes using Arrow IPC
+            sink = pa.BufferOutputStream()
+            with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
+                writer.write_table(state[&#34;table&#34;])
+            state[&#34;table&#34;] = sink.getvalue().to_pybytes()
         return state
 
     def __setstate__(self, state):
         # Restore table from bytes
-        table_bytes = state[&#34;table&#34;]
-        with pa.ipc.open_stream(table_bytes) as reader:
-            state[&#34;table&#34;] = reader.read_all()
+        table_bytes = state.get(&#34;table&#34;)
+        if table_bytes is not None and isinstance(table_bytes, bytes):
+            with pa.ipc.open_stream(table_bytes) as reader:
+                state[&#34;table&#34;] = reader.read_all()
+        state[&#34;handle&#34;] = None  # Handle is never deserialized
         self.__dict__.update(state)</code></pre>
 </details>
 <div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.table"><code class="name">var <span class="ident">table</span> : pyarrow.lib.Table | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStorePyArrow(DAQJobMessageStore, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessageStorePyArrow is a high-performance message store using PyArrow&#39;s
+    columnar format. Optimized for numerical data with zero-copy reads.
+
+    Attributes:
+        table (pa.Table | None): A PyArrow Table containing the columnar data.
+            None when using zero-copy mode (handle is set instead).
+        handle (RingBufferHandle | None): Handle to PyArrow data in shared memory.
+            When set, the table is loaded from shared memory using zero-copy.
+    &#34;&#34;&#34;
+
+    table: pa.Table | None = None
+    handle: RingBufferHandle | None = None
+
+    def get_table(self) -&gt; pa.Table:
+        &#34;&#34;&#34;
+        Get the PyArrow table, loading from shared memory if using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            return self.handle.load_pyarrow()
+        if self.table is not None:
+            return self.table
+        raise ValueError(&#34;Neither table nor handle is set&#34;)
+
+    def release(self):
+        &#34;&#34;&#34;
+        Release the ring buffer slot back to the pool (if using zero-copy).
+
+        Call this after you&#39;re done with the table to allow the slot to be reused.
+        No-op if not using zero-copy mode.
+        &#34;&#34;&#34;
+        if self.handle is not None:
+            self.handle.release()
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        if self.handle is not None:
+            # Load table from handle for serialization
+            state[&#34;table&#34;] = self.handle.load_pyarrow()
+            state[&#34;handle&#34;] = None
+        if state.get(&#34;table&#34;) is not None:
+            # Convert table to bytes using Arrow IPC
+            sink = pa.BufferOutputStream()
+            with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
+                writer.write_table(state[&#34;table&#34;])
+            state[&#34;table&#34;] = sink.getvalue().to_pybytes()
+        return state
+
+    def __setstate__(self, state):
+        # Restore table from bytes
+        table_bytes = state.get(&#34;table&#34;)
+        if table_bytes is not None and isinstance(table_bytes, bytes):
+            with pa.ipc.open_stream(table_bytes) as reader:
+                state[&#34;table&#34;] = reader.read_all()
+        state[&#34;handle&#34;] = None  # Handle is never deserialized
+        self.__dict__.update(state)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.get_table"><code class="name flex">
+<span>def <span class="ident">get_table</span></span>(<span>self) ‑> pyarrow.lib.Table</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_table(self) -&gt; pa.Table:
+    &#34;&#34;&#34;
+    Get the PyArrow table, loading from shared memory if using zero-copy.
+
+    Returns:
+        pa.Table: The PyArrow table.
+    &#34;&#34;&#34;
+    if self.handle is not None:
+        return self.handle.load_pyarrow()
+    if self.table is not None:
+        return self.table
+    raise ValueError(&#34;Neither table nor handle is set&#34;)</code></pre>
+</details>
+<div class="desc"><p>Get the PyArrow table, loading from shared memory if using zero-copy.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>pa.Table</code></dt>
+<dd>The PyArrow table.</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.release"><code class="name flex">
+<span>def <span class="ident">release</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def release(self):
+    &#34;&#34;&#34;
+    Release the ring buffer slot back to the pool (if using zero-copy).
+
+    Call this after you&#39;re done with the table to allow the slot to be reused.
+    No-op if not using zero-copy mode.
+    &#34;&#34;&#34;
+    if self.handle is not None:
+        self.handle.release()</code></pre>
+</details>
+<div class="desc"><p>Release the ring buffer slot back to the pool (if using zero-copy).</p>
+<p>Call this after you're done with the table to allow the slot to be reused.
+No-op if not using zero-copy mode.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -1703,6 +1900,9 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li>
 <h4><code><a title="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow" href="#enrgdaq.daq.store.models.DAQJobMessageStorePyArrow">DAQJobMessageStorePyArrow</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.get_table" href="#enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.get_table">get_table</a></code></li>
+<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.handle" href="#enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.handle">handle</a></code></li>
+<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.release" href="#enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.release">release</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.table" href="#enrgdaq.daq.store.models.DAQJobMessageStorePyArrow.table">table</a></code></li>
 </ul>
 </li>

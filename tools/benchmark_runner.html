@@ -235,7 +235,7 @@ Examples:
 <div class="desc"><p>Parse command line arguments.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_client_supervisor"><code class="name flex">
-<span>def <span class="ident">run_client_supervisor</span></span>(<span>client_id: int,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f02ec1b0290>>,<br>ready_event: <bound method BaseContext.Event of <multiprocessing.context.DefaultContext object at 0x7f02ec1b0290>>)</span>
+<span>def <span class="ident">run_client_supervisor</span></span>(<span>client_id: int,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>,<br>ready_event: <bound method BaseContext.Event of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -247,6 +247,7 @@ Examples:
     config: BenchmarkConfig,
     stop_flag: Value,
     ready_event: Event,
+    shm_bytes_counter: Array,
 ):
     &#34;&#34;&#34;Run a client supervisor that generates benchmark data.&#34;&#34;&#34;
 
@@ -256,6 +257,8 @@ Examples:
     supervisor_id = f&#34;benchmark_client_{client_id}&#34;
     supervisor_info = create_supervisor_info(supervisor_id)
     supervisor_config = create_supervisor_config(supervisor_id)
+    supervisor_config.ring_buffer_size_mb = 1024  # 1GB for clients
+    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024  # 10MB slots
 
     daq_job_processes = [
         # Benchmark job that generates data
@@ -303,13 +306,20 @@ Examples:
     ready_event.set()  # Signal that this client is ready
 
     run_supervisor_with_stats(
-        supervisor, config, None, stop_flag, collect_stats=False, skip_init=True
+        supervisor,
+        config,
+        None,
+        stop_flag,
+        collect_stats=False,
+        skip_init=True,
+        shm_bytes_counter=shm_bytes_counter,
+        client_id=client_id,
     )</code></pre>
 </details>
 <div class="desc"><p>Run a client supervisor that generates benchmark data.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_main_supervisor"><code class="name flex">
-<span>def <span class="ident">run_main_supervisor</span></span>(<span>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f02ec1b0290>>)</span>
+<span>def <span class="ident">run_main_supervisor</span></span>(<span>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -320,6 +330,7 @@ Examples:
     config: BenchmarkConfig,
     stats_queue: Any,
     stop_flag: Value,
+    client_shm_bytes: Array,
 ):
     &#34;&#34;&#34;Run the main supervisor that collects stats and runs the proxy.&#34;&#34;&#34;
 
@@ -329,6 +340,8 @@ Examples:
     supervisor_id = &#34;benchmark_supervisor&#34;
     supervisor_info = create_supervisor_info(supervisor_id)
     supervisor_config = create_supervisor_config(supervisor_id)
+    supervisor_config.ring_buffer_size_mb = 1024
+    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024
 
     # Create DAQ job processes using the proper factory function
     daq_job_processes = []
@@ -412,12 +425,14 @@ Examples:
     # Register cleanup on exit
     atexit.register(cleanup_supervisor, supervisor)
 
-    run_supervisor_with_stats(supervisor, config, stats_queue, stop_flag)</code></pre>
+    run_supervisor_with_stats(
+        supervisor, config, stats_queue, stop_flag, client_shm_bytes=client_shm_bytes
+    )</code></pre>
 </details>
 <div class="desc"><p>Run the main supervisor that collects stats and runs the proxy.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_supervisor_with_stats"><code class="name flex">
-<span>def <span class="ident">run_supervisor_with_stats</span></span>(<span>supervisor: <a title="enrgdaq.supervisor.Supervisor" href="../supervisor.html#enrgdaq.supervisor.Supervisor">Supervisor</a>,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f02ec1b0290>>,<br>collect_stats: bool = True,<br>skip_init: bool = False)</span>
+<span>def <span class="ident">run_supervisor_with_stats</span></span>(<span>supervisor: <a title="enrgdaq.supervisor.Supervisor" href="../supervisor.html#enrgdaq.supervisor.Supervisor">Supervisor</a>,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>>,<br>collect_stats: bool = True,<br>skip_init: bool = False,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>> | None = None,<br>client_id: int | None = None,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f4d4dfcb3b0>> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -431,6 +446,9 @@ Examples:
     stop_flag: Value,
     collect_stats: bool = True,
     skip_init: bool = False,
+    shm_bytes_counter: Optional[Array] = None,
+    client_id: Optional[int] = None,
+    client_shm_bytes: Optional[Array] = None,
 ):
     &#34;&#34;&#34;Run a supervisor and optionally collect stats.&#34;&#34;&#34;
     assert supervisor.config is not None
@@ -532,6 +550,16 @@ Examples:
                 latency_p95 = max(p95_latencies) if p95_latencies else 0.0
                 latency_p99 = max(p99_latencies) if p99_latencies else 0.0
 
+                # Calculate data throughput from message count (more reliable than ring buffer stats)
+                # Each message contains payload_size * 2 float64 columns (timestamp + value) = 16 bytes/row
+                msg_size_bytes = config.payload_size * 16
+                if last_stats and elapsed &gt; 0:
+                    msg_diff = msg_in_count - last_stats.get(&#34;msg_in_count&#34;, 0)
+                    data_mb_per_s = (msg_diff * msg_size_bytes) / elapsed / 10**6
+                else:
+                    data_mb_per_s = 0.0
+                total_data_mb = msg_in_count * msg_size_bytes / 10**6
+
                 current_stats = {
                     &#34;timestamp&#34;: now.isoformat(),
                     &#34;supervisor_id&#34;: supervisor.config.info.supervisor_id,
@@ -545,6 +573,8 @@ Examples:
                     &#34;rss_mb&#34;: rss_mb_total,
                     &#34;latency_p95_ms&#34;: latency_p95,
                     &#34;latency_p99_ms&#34;: latency_p99,
+                    &#34;shm_bytes_written&#34;: int(total_data_mb * 10**6),
+                    &#34;shm_mb_per_s&#34;: data_mb_per_s,
                 }
 
                 try:
@@ -676,13 +706,15 @@ class BenchmarkConfig:
             rss_mb=d.get(&#34;rss_mb&#34;, 0.0),
             latency_p95_ms=d.get(&#34;latency_p95_ms&#34;, 0.0),
             latency_p99_ms=d.get(&#34;latency_p99_ms&#34;, 0.0),
+            shm_bytes_written=d.get(&#34;shm_bytes_written&#34;, 0),
+            shm_mb_per_s=d.get(&#34;shm_mb_per_s&#34;, 0.0),
         )
 
     def _print_stats(self, stats: BenchmarkStats):
         &#34;&#34;&#34;Print statistics to console.&#34;&#34;&#34;
         print(
             f&#34;[{stats.timestamp.strftime(&#39;%H:%M:%S&#39;)}] &#34;
-            f&#34;Throughput: {stats.msg_in_out_mb_per_s:7.2f} MB/s | &#34;
+            f&#34;SHM: {stats.shm_mb_per_s:7.2f} MB/s | &#34;
             f&#34;CPU: {stats.cpu_usage_percent:5.1f}% | &#34;
             f&#34;p95 Latency: {stats.latency_p95_ms:5.2f}ms | &#34;
             f&#34;Active Jobs: {stats.active_job_count:3d}&#34;
@@ -759,11 +791,19 @@ class BenchmarkConfig:
                 os.remove(output_file)
                 print(f&#34;Removed existing output file: {output_file}&#34;)
 
+        # Create shared array to track client ring buffer bytes (one c_longlong per client)
+        self._client_shm_bytes = Array(&#34;q&#34;, self.config.num_clients)  # &#39;q&#39; = c_longlong
+
         # Start main supervisor process
         print(&#34;Starting main supervisor...&#34;)
         main_process = Process(
             target=run_main_supervisor,
-            args=(self.config, self._stats_queue, self._stop_flag),
+            args=(
+                self.config,
+                self._stats_queue,
+                self._stop_flag,
+                self._client_shm_bytes,
+            ),
         )
         main_process.start()
         self._processes.append(main_process)
@@ -779,7 +819,13 @@ class BenchmarkConfig:
         for i in range(self.config.num_clients):
             client_process = Process(
                 target=run_client_supervisor,
-                args=(i, self.config, self._stop_flag, ready_events[i]),
+                args=(
+                    i,
+                    self.config,
+                    self._stop_flag,
+                    ready_events[i],
+                    self._client_shm_bytes,
+                ),
             )
             client_process.start()
             self._processes.append(client_process)
@@ -862,15 +908,19 @@ class BenchmarkConfig:
             total_duration = 1.0
 
         avg_throughput = fmean([s.msg_in_out_mb_per_s for s in data_stats])
-        max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
-        total_mb = data_stats[-1].msg_in_out_mb
+        # max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
+        avg_shm_throughput = fmean([s.shm_mb_per_s for s in data_stats])
+        max_shm_throughput = max([s.shm_mb_per_s for s in data_stats])
+        total_shm_mb = data_stats[-1].shm_bytes_written / 10**6
+        # total_mb = data_stats[-1].msg_in_out_mb
         total_msgs = data_stats[-1].msg_in_count
         avg_queue = fmean([s.avg_queue_size for s in data_stats])
 
         print(f&#34;Duration:              {total_duration:.1f} seconds&#34;)
-        print(f&#34;Average Throughput:    {avg_throughput:.2f} MB/s&#34;)
-        print(f&#34;Peak Throughput:       {max_throughput:.2f} MB/s&#34;)
-        print(f&#34;Total Data:            {total_mb:.2f} MB&#34;)
+        print(f&#34;Avg SHM Throughput:    {avg_shm_throughput:.2f} MB/s&#34;)
+        print(f&#34;Peak SHM Throughput:   {max_shm_throughput:.2f} MB/s&#34;)
+        print(f&#34;Total SHM Data:        {total_shm_mb:.2f} MB&#34;)
+        print(f&#34;ZMQ Throughput:        {avg_throughput:.2f} MB/s (handles only)&#34;)
         print(f&#34;Total Messages:        {total_msgs:,}&#34;)
         print(f&#34;Average Queue Size:    {avg_queue:.1f}&#34;)
         print(f&#34;Messages/Second:       {total_msgs / total_duration:,.0f}&#34;)
@@ -924,11 +974,19 @@ class BenchmarkConfig:
             os.remove(output_file)
             print(f&#34;Removed existing output file: {output_file}&#34;)
 
+    # Create shared array to track client ring buffer bytes (one c_longlong per client)
+    self._client_shm_bytes = Array(&#34;q&#34;, self.config.num_clients)  # &#39;q&#39; = c_longlong
+
     # Start main supervisor process
     print(&#34;Starting main supervisor...&#34;)
     main_process = Process(
         target=run_main_supervisor,
-        args=(self.config, self._stats_queue, self._stop_flag),
+        args=(
+            self.config,
+            self._stats_queue,
+            self._stop_flag,
+            self._client_shm_bytes,
+        ),
     )
     main_process.start()
     self._processes.append(main_process)
@@ -944,7 +1002,13 @@ class BenchmarkConfig:
     for i in range(self.config.num_clients):
         client_process = Process(
             target=run_client_supervisor,
-            args=(i, self.config, self._stop_flag, ready_events[i]),
+            args=(
+                i,
+                self.config,
+                self._stop_flag,
+                ready_events[i],
+                self._client_shm_bytes,
+            ),
         )
         client_process.start()
         self._processes.append(client_process)
@@ -1008,7 +1072,7 @@ class BenchmarkConfig:
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.BenchmarkStats"><code class="flex name class">
 <span>class <span class="ident">BenchmarkStats</span></span>
-<span>(</span><span>timestamp: datetime.datetime,<br>supervisor_id: str,<br>msg_in_out_mb: float,<br>msg_in_count: int,<br>msg_out_count: int,<br>msg_in_out_mb_per_s: float,<br>avg_queue_size: float,<br>active_job_count: int,<br>cpu_usage_percent: float,<br>rss_mb: float,<br>latency_p95_ms: float,<br>latency_p99_ms: float)</span>
+<span>(</span><span>timestamp: datetime.datetime,<br>supervisor_id: str,<br>msg_in_out_mb: float,<br>msg_in_count: int,<br>msg_out_count: int,<br>msg_in_out_mb_per_s: float,<br>avg_queue_size: float,<br>active_job_count: int,<br>cpu_usage_percent: float,<br>rss_mb: float,<br>latency_p95_ms: float,<br>latency_p99_ms: float,<br>shm_bytes_written: int = 0,<br>shm_mb_per_s: float = 0.0)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1030,7 +1094,9 @@ class BenchmarkStats:
     cpu_usage_percent: float
     rss_mb: float
     latency_p95_ms: float
-    latency_p99_ms: float</code></pre>
+    latency_p99_ms: float
+    shm_bytes_written: int = 0
+    shm_mb_per_s: float = 0.0</code></pre>
 </details>
 <div class="desc"><p>Statistics collected during benchmark run.</p></div>
 <h3>Instance variables</h3>
@@ -1072,6 +1138,14 @@ class BenchmarkStats:
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.BenchmarkStats.rss_mb"><code class="name">var <span class="ident">rss_mb</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_bytes_written"><code class="name">var <span class="ident">shm_bytes_written</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_mb_per_s"><code class="name">var <span class="ident">shm_mb_per_s</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1147,6 +1221,8 @@ class BenchmarkStats:
 <li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.msg_in_out_mb_per_s" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.msg_in_out_mb_per_s">msg_in_out_mb_per_s</a></code></li>
 <li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.msg_out_count" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.msg_out_count">msg_out_count</a></code></li>
 <li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.rss_mb" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.rss_mb">rss_mb</a></code></li>
+<li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_bytes_written" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_bytes_written">shm_bytes_written</a></code></li>
+<li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_mb_per_s" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.shm_mb_per_s">shm_mb_per_s</a></code></li>
 <li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.supervisor_id" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.supervisor_id">supervisor_id</a></code></li>
 <li><code><a title="enrgdaq.tools.benchmark_runner.BenchmarkStats.timestamp" href="#enrgdaq.tools.benchmark_runner.BenchmarkStats.timestamp">timestamp</a></code></li>
 </ul>

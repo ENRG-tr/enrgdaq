@@ -307,7 +307,7 @@ el.replaceWith(d);
         color=COLORS[&#34;secondary&#34;],
         lw=4,
         markersize=10,
-        label=&#34;Sustained Throughput&#34;,
+        label=&#34;Sustained SHM Throughput&#34;,
     )
     ax.plot(
         payloads,
@@ -316,7 +316,19 @@ el.replaceWith(d);
         color=COLORS[&#34;primary&#34;],
         lw=2,
         alpha=0.5,
-        label=&#34;Peak Capability&#34;,
+        label=&#34;Peak SHM Capability&#34;,
+    )
+
+    # Added: ZMQ Throughput (Management Overhead)
+    zmq = [r[&#34;zmq_throughput_mbs&#34;] for r in data]
+    ax.plot(
+        payloads,
+        zmq,
+        &#34;x:&#34;,
+        color=COLORS[&#34;dark&#34;],
+        lw=1,
+        alpha=0.8,
+        label=&#34;ZMQ Management Overhead&#34;,
     )
 
     # 11.4 Gbps Ceiling (based on latest tests)
@@ -345,7 +357,7 @@ el.replaceWith(d);
     ax.set_xlabel(&#34;Payload Size (Values per Message)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
     ax.set_ylabel(&#34;Data Throughput (MB/s)&#34;, fontsize=12, fontweight=&#34;bold&#34;)
     ax.set_title(
-        &#34;ENRGDAQ Throughput Scaling\n(Arrow IPC + Zero-Copy ZMQ)&#34;,
+        &#34;ENRGDAQ Throughput Scaling\n(Arrow IPC + Zero-Copy SHM)&#34;,
         fontsize=16,
         pad=20,
         fontweight=&#34;bold&#34;,
@@ -487,8 +499,9 @@ el.replaceWith(d);
 ) -&gt; Optional[BenchmarkResult]:
     &#34;&#34;&#34;Run a single benchmark configuration and return results.&#34;&#34;&#34;
     cmd = [
-        &#34;python3&#34;,
-        &#34;src/benchmark.py&#34;,
+        &#34;uv&#34;,
+        &#34;run&#34;,
+        &#34;src/enrgdaq/tools/benchmark_runner.py&#34;,
         &#34;--clients&#34;,
         str(clients),
         &#34;--payload-size&#34;,
@@ -516,12 +529,16 @@ el.replaceWith(d);
         lines = stdout.split(&#34;\n&#34;)
         data = {}
         for line in lines:
-            if &#34;Average Throughput:&#34; in line:
+            if &#34;Avg SHM Throughput:&#34; in line:
                 data[&#34;avg_throughput&#34;] = float(
                     line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
                 )
-            if &#34;Peak Throughput:&#34; in line:
+            if &#34;Peak SHM Throughput:&#34; in line:
                 data[&#34;peak_throughput&#34;] = float(
+                    line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
+                )
+            if &#34;ZMQ Throughput:&#34; in line:
+                data[&#34;zmq_throughput&#34;] = float(
                     line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
                 )
             if &#34;Messages/Second:&#34; in line:
@@ -547,6 +564,7 @@ el.replaceWith(d);
             duration=duration,
             avg_throughput_mbs=data.get(&#34;avg_throughput&#34;, 0),
             peak_throughput_mbs=data.get(&#34;peak_throughput&#34;, 0),
+            zmq_throughput_mbs=data.get(&#34;zmq_throughput&#34;, 0),
             messages_per_second=data.get(&#34;messages_per_second&#34;, 0),
             avg_queue_size=data.get(&#34;avg_queue&#34;, 0),
             cpu_usage_percent=data.get(&#34;cpu_usage&#34;, 0),
@@ -567,7 +585,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult"><code class="flex name class">
 <span>class <span class="ident">BenchmarkResult</span></span>
-<span>(</span><span>num_clients: int,<br>payload_size: int,<br>duration: int,<br>avg_throughput_mbs: float,<br>peak_throughput_mbs: float,<br>messages_per_second: float,<br>avg_queue_size: float,<br>cpu_usage_percent: float,<br>latency_p95_ms: float,<br>latency_p99_ms: float)</span>
+<span>(</span><span>num_clients: int,<br>payload_size: int,<br>duration: int,<br>avg_throughput_mbs: float,<br>peak_throughput_mbs: float,<br>zmq_throughput_mbs: float,<br>messages_per_second: float,<br>avg_queue_size: float,<br>cpu_usage_percent: float,<br>latency_p95_ms: float,<br>latency_p99_ms: float)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -581,13 +599,14 @@ class BenchmarkResult:
     duration: int
     avg_throughput_mbs: float
     peak_throughput_mbs: float
+    zmq_throughput_mbs: float
     messages_per_second: float
     avg_queue_size: float
     cpu_usage_percent: float
     latency_p95_ms: float
     latency_p99_ms: float</code></pre>
 </details>
-<div class="desc"><p>BenchmarkResult(num_clients: int, payload_size: int, duration: int, avg_throughput_mbs: float, peak_throughput_mbs: float, messages_per_second: float, avg_queue_size: float, cpu_usage_percent: float, latency_p95_ms: float, latency_p99_ms: float)</p></div>
+<div class="desc"><p>BenchmarkResult(num_clients: int, payload_size: int, duration: int, avg_throughput_mbs: float, peak_throughput_mbs: float, zmq_throughput_mbs: float, messages_per_second: float, avg_queue_size: float, cpu_usage_percent: float, latency_p95_ms: float, latency_p99_ms: float)</p></div>
 <h3>Instance variables</h3>
 <dl>
 <dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.avg_queue_size"><code class="name">var <span class="ident">avg_queue_size</span> : float</code></dt>
@@ -627,6 +646,10 @@ class BenchmarkResult:
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs"><code class="name">var <span class="ident">peak_throughput_mbs</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.plot_benchmarks.BenchmarkResult.zmq_throughput_mbs"><code class="name">var <span class="ident">zmq_throughput_mbs</span> : float</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -673,6 +696,7 @@ class BenchmarkResult:
 <li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.num_clients" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.num_clients">num_clients</a></code></li>
 <li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.payload_size" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.payload_size">payload_size</a></code></li>
 <li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.peak_throughput_mbs">peak_throughput_mbs</a></code></li>
+<li><code><a title="enrgdaq.tools.plot_benchmarks.BenchmarkResult.zmq_throughput_mbs" href="#enrgdaq.tools.plot_benchmarks.BenchmarkResult.zmq_throughput_mbs">zmq_throughput_mbs</a></code></li>
 </ul>
 </li>
 </ul>

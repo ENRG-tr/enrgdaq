@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+<meta name="generator" content="pdoc3 0.11.6">
+<title>enrgdaq.utils.arrow_ipc API documentation</title>
+<meta name="description" content="Arrow IPC utilities for zero-copy serialization/deserialization …">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => {
+hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
+hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
+})</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>enrgdaq.utils.arrow_ipc</code></h1>
+</header>
+<section id="section-intro">
+<p>Arrow IPC utilities for zero-copy serialization/deserialization.</p>
+<p>This module provides functions to write and read PyArrow tables directly
+to/from shared memory buffers without intermediate copies.</p>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.utils.arrow_ipc.get_table_ipc_size"><code class="name flex">
+<span>def <span class="ident">get_table_ipc_size</span></span>(<span>table: pyarrow.lib.Table) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_table_ipc_size(table: pa.Table) -&gt; int:
+    &#34;&#34;&#34;
+    Calculate the size needed to serialize a PyArrow table in IPC format.
+
+    This includes schema overhead, so the actual size may vary slightly.
+    We add a buffer for safety.
+
+    Args:
+        table: The PyArrow table to measure.
+
+    Returns:
+        Estimated size in bytes.
+    &#34;&#34;&#34;
+    # Use a mock stream to calculate size
+    sink = pa.BufferOutputStream()
+    with pa.ipc.new_stream(sink, table.schema) as writer:
+        writer.write_table(table)
+    return sink.getvalue().size</code></pre>
+</details>
+<div class="desc"><p>Calculate the size needed to serialize a PyArrow table in IPC format.</p>
+<p>This includes schema overhead, so the actual size may vary slightly.
+We add a buffer for safety.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table</code></strong></dt>
+<dd>The PyArrow table to measure.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Estimated size in bytes.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.ipc_bytes_to_table"><code class="name flex">
+<span>def <span class="ident">ipc_bytes_to_table</span></span>(<span>data: bytes) ‑> pyarrow.lib.Table</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ipc_bytes_to_table(data: bytes) -&gt; pa.Table:
+    &#34;&#34;&#34;
+    Deserialize a PyArrow table from IPC bytes.
+
+    This is a fallback for when zero-copy is not available.
+
+    Args:
+        data: Bytes containing the IPC-serialized table.
+
+    Returns:
+        The deserialized PyArrow Table.
+    &#34;&#34;&#34;
+    reader = pa.ipc.open_stream(data)
+    return reader.read_all()</code></pre>
+</details>
+<div class="desc"><p>Deserialize a PyArrow table from IPC bytes.</p>
+<p>This is a fallback for when zero-copy is not available.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>Bytes containing the IPC-serialized table.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The deserialized PyArrow Table.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.read_table_from_address"><code class="name flex">
+<span>def <span class="ident">read_table_from_address</span></span>(<span>address: int, size: int, base: object) ‑> pyarrow.lib.Table</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_table_from_address(address: int, size: int, base: object) -&gt; pa.Table:
+    &#34;&#34;&#34;
+    Read a PyArrow table from a memory address using zero-copy.
+
+    This is useful when you have the raw memory address (e.g., from
+    get_slot_address) rather than a memoryview.
+
+    Args:
+        address: Memory address of the IPC data.
+        size: Number of bytes of valid data.
+        base: Python object to keep alive (prevents garbage collection
+              of the underlying memory).
+
+    Returns:
+        A PyArrow Table that references the memory directly.
+    &#34;&#34;&#34;
+    arrow_buf = pa.foreign_buffer(address, size, base=base)
+    reader = pa.ipc.open_stream(arrow_buf)
+    return reader.read_all()</code></pre>
+</details>
+<div class="desc"><p>Read a PyArrow table from a memory address using zero-copy.</p>
+<p>This is useful when you have the raw memory address (e.g., from
+get_slot_address) rather than a memoryview.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>address</code></strong></dt>
+<dd>Memory address of the IPC data.</dd>
+<dt><strong><code>size</code></strong></dt>
+<dd>Number of bytes of valid data.</dd>
+<dt><strong><code>base</code></strong></dt>
+<dd>Python object to keep alive (prevents garbage collection
+of the underlying memory).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A PyArrow Table that references the memory directly.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.read_table_from_buffer"><code class="name flex">
+<span>def <span class="ident">read_table_from_buffer</span></span>(<span>buffer: memoryview, size: int) ‑> pyarrow.lib.Table</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_table_from_buffer(buffer: memoryview, size: int) -&gt; pa.Table:
+    &#34;&#34;&#34;
+    Read a PyArrow table from a buffer using zero-copy.
+
+    This uses pa.foreign_buffer to wrap the shared memory, allowing
+    PyArrow to read directly from the memory without copying.
+
+    Args:
+        buffer: A memoryview containing the IPC data.
+        size: Number of bytes of valid data in the buffer.
+
+    Returns:
+        A PyArrow Table that references the shared memory directly.
+
+    Important:
+        The returned table references the shared memory buffer. The buffer
+        must remain valid for as long as the table is in use.
+    &#34;&#34;&#34;
+    # Get the memory address of the buffer
+    # For a memoryview backed by shared memory, this gives us the shared address
+    c_array = (ctypes.c_char * len(buffer)).from_buffer(buffer)
+    address = ctypes.addressof(c_array)
+
+    # Create an Arrow buffer that references the shared memory
+    # The `buffer` parameter keeps the Python memoryview alive
+    arrow_buf = pa.foreign_buffer(address, size, base=buffer)
+
+    # Create a buffer reader and read the IPC stream
+    reader = pa.ipc.open_stream(arrow_buf)
+    table = reader.read_all()
+
+    return table</code></pre>
+</details>
+<div class="desc"><p>Read a PyArrow table from a buffer using zero-copy.</p>
+<p>This uses pa.foreign_buffer to wrap the shared memory, allowing
+PyArrow to read directly from the memory without copying.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>buffer</code></strong></dt>
+<dd>A memoryview containing the IPC data.</dd>
+<dt><strong><code>size</code></strong></dt>
+<dd>Number of bytes of valid data in the buffer.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A PyArrow Table that references the shared memory directly.</p>
+<h2 id="important">Important</h2>
+<p>The returned table references the shared memory buffer. The buffer
+must remain valid for as long as the table is in use.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.table_to_ipc_bytes"><code class="name flex">
+<span>def <span class="ident">table_to_ipc_bytes</span></span>(<span>table: pyarrow.lib.Table) ‑> bytes</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def table_to_ipc_bytes(table: pa.Table) -&gt; bytes:
+    &#34;&#34;&#34;
+    Serialize a PyArrow table to bytes using IPC format.
+
+    This is a fallback for when zero-copy is not available.
+    Creates a copy of the data.
+
+    Args:
+        table: The PyArrow table to serialize.
+
+    Returns:
+        Bytes containing the IPC-serialized table.
+    &#34;&#34;&#34;
+    sink = pa.BufferOutputStream()
+    with pa.ipc.new_stream(sink, table.schema) as writer:
+        writer.write_table(table)
+    return sink.getvalue().to_pybytes()</code></pre>
+</details>
+<div class="desc"><p>Serialize a PyArrow table to bytes using IPC format.</p>
+<p>This is a fallback for when zero-copy is not available.
+Creates a copy of the data.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table</code></strong></dt>
+<dd>The PyArrow table to serialize.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Bytes containing the IPC-serialized table.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.try_zero_copy_pyarrow"><code class="name flex">
+<span>def <span class="ident">try_zero_copy_pyarrow</span></span>(<span>table: pyarrow.lib.Table, store_config: Any, tag: Any) ‑> tuple['RingBufferHandle | None', bool]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def try_zero_copy_pyarrow(
+    table: pa.Table,
+    store_config: Any,
+    tag: Any,
+) -&gt; tuple[&#34;RingBufferHandle | None&#34;, bool]:
+    &#34;&#34;&#34;
+    Try to write a PyArrow table to the ring buffer for zero-copy transfer.
+
+    Args:
+        table: The PyArrow table to transfer.
+        store_config: The store config to copy to the new message.
+        tag: The tag to copy to the new message.
+
+    Returns:
+        A tuple of (RingBufferHandle or None, success: bool).
+        If successful, returns the handle; otherwise returns None.
+    &#34;&#34;&#34;
+    try:
+        from enrgdaq.daq.models import RingBufferHandle
+        from enrgdaq.utils.shared_ring_buffer import get_global_ring_buffer
+
+        ring_buffer = get_global_ring_buffer()
+
+        # Calculate required size
+        table_size = get_table_ipc_size(table)
+
+        # Try to allocate a slot
+        slot = ring_buffer.allocate(table_size)
+        if slot is None:
+            logger.debug(
+                f&#34;Ring buffer allocation failed (size={table_size}), &#34;
+                &#34;falling back to pickle-based SHM&#34;
+            )
+            return None, False
+
+        try:
+            # Write table directly to slot
+            bytes_written = write_table_to_buffer(table, slot.view)
+
+            # Mark slot as ready for reading and track bytes
+            ring_buffer.mark_ready(slot.index, bytes_written)
+
+            # Create the handle
+            handle = RingBufferHandle(
+                buffer_name=ring_buffer.name,
+                slot_index=slot.index,
+                data_size=bytes_written,
+                is_pyarrow=True,
+                total_size=ring_buffer.total_size,
+                slot_size=ring_buffer.slot_size,
+            )
+
+            return handle, True
+        except Exception as e:
+            # If writing fails, release the slot and fall back
+            logger.warning(f&#34;Zero-copy write failed: {e}, falling back&#34;)
+            slot.release()
+            return None, False
+
+    except Exception as e:
+        logger.debug(f&#34;Zero-copy setup failed: {e}, falling back to pickle&#34;)
+        return None, False</code></pre>
+</details>
+<div class="desc"><p>Try to write a PyArrow table to the ring buffer for zero-copy transfer.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table</code></strong></dt>
+<dd>The PyArrow table to transfer.</dd>
+<dt><strong><code>store_config</code></strong></dt>
+<dd>The store config to copy to the new message.</dd>
+<dt><strong><code>tag</code></strong></dt>
+<dd>The tag to copy to the new message.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A tuple of (RingBufferHandle or None, success: bool).
+If successful, returns the handle; otherwise returns None.</p></div>
+</dd>
+<dt id="enrgdaq.utils.arrow_ipc.write_table_to_buffer"><code class="name flex">
+<span>def <span class="ident">write_table_to_buffer</span></span>(<span>table: pyarrow.lib.Table, buffer: memoryview) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def write_table_to_buffer(table: pa.Table, buffer: memoryview) -&gt; int:
+    &#34;&#34;&#34;
+    Write a PyArrow table to a buffer using Arrow IPC streaming format.
+
+    The table is serialized directly into the provided buffer memory.
+
+    Args:
+        table: The PyArrow table to write.
+        buffer: A memoryview providing the destination memory.
+
+    Returns:
+        Number of bytes written.
+
+    Raises:
+        ValueError: If the buffer is too small.
+    &#34;&#34;&#34;
+    # Create a fixed-size buffer writer that writes directly to the memoryview
+    # We need to wrap the memoryview in an Arrow buffer first
+    arrow_buf = pa.py_buffer(buffer)
+    output_stream = pa.FixedSizeBufferWriter(arrow_buf)
+
+    with pa.ipc.new_stream(output_stream, table.schema) as writer:
+        writer.write_table(table)
+
+    bytes_written = output_stream.tell()
+    output_stream.close()
+
+    return bytes_written</code></pre>
+</details>
+<div class="desc"><p>Write a PyArrow table to a buffer using Arrow IPC streaming format.</p>
+<p>The table is serialized directly into the provided buffer memory.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>table</code></strong></dt>
+<dd>The PyArrow table to write.</dd>
+<dt><strong><code>buffer</code></strong></dt>
+<dd>A memoryview providing the destination memory.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Number of bytes written.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If the buffer is too small.</dd>
+</dl></div>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="enrgdaq.utils" href="index.html">enrgdaq.utils</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.utils.arrow_ipc.get_table_ipc_size" href="#enrgdaq.utils.arrow_ipc.get_table_ipc_size">get_table_ipc_size</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.ipc_bytes_to_table" href="#enrgdaq.utils.arrow_ipc.ipc_bytes_to_table">ipc_bytes_to_table</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.read_table_from_address" href="#enrgdaq.utils.arrow_ipc.read_table_from_address">read_table_from_address</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.read_table_from_buffer" href="#enrgdaq.utils.arrow_ipc.read_table_from_buffer">read_table_from_buffer</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.table_to_ipc_bytes" href="#enrgdaq.utils.arrow_ipc.table_to_ipc_bytes">table_to_ipc_bytes</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.try_zero_copy_pyarrow" href="#enrgdaq.utils.arrow_ipc.try_zero_copy_pyarrow">try_zero_copy_pyarrow</a></code></li>
+<li><code><a title="enrgdaq.utils.arrow_ipc.write_table_to_buffer" href="#enrgdaq.utils.arrow_ipc.write_table_to_buffer">write_table_to_buffer</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
+</footer>
+</body>
+</html>

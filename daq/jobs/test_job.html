@@ -92,13 +92,19 @@ el.replaceWith(d);
             return randint(self.config.rand_min, self.config.rand_max)
 
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=[&#34;timestamp&#34;, &#34;A&#34;, &#34;B&#34;, &#34;C&#34;],
-                data=[
-                    [datetime.now().timestamp() * 1000, get_int(), get_int(), get_int()]
-                ],
-            )
+                table=pa.Table.from_arrays(
+                    [
+                        pa.array([int(datetime.now().timestamp() * 1000)]),
+                        pa.array([get_int()]),
+                        pa.array([get_int()]),
+                        pa.array([get_int()]),
+                    ],
+                    names=[&#34;timestamp&#34;, &#34;A&#34;, &#34;B&#34;, &#34;C&#34;],
+                ),
+            ),
+            use_shm=True,
         )</code></pre>
 </details>
 <div class="desc"><p>A test job for the DAQ system that generates random data.</p>
