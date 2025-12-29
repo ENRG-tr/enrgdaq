@@ -10,6 +10,7 @@ from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobMessage,
     DAQRemoteConfig,
+    RingBufferHandle,
     SHMHandle,
 )
 
@@ -125,25 +126,60 @@ class DAQJobMessageStorePyArrow(DAQJobMessageStore, kw_only=True):
     columnar format. Optimized for numerical data with zero-copy reads.
 
     Attributes:
-        table (pa.Table): A PyArrow Table containing the columnar data.
+        table (pa.Table | None): A PyArrow Table containing the columnar data.
+            None when using zero-copy mode (handle is set instead).
+        handle (RingBufferHandle | None): Handle to PyArrow data in shared memory.
+            When set, the table is loaded from shared memory using zero-copy.
     """
 
-    table: pa.Table
+    table: pa.Table | None = None
+    handle: RingBufferHandle | None = None
+
+    def get_table(self) -> pa.Table:
+        """
+        Get the PyArrow table, loading from shared memory if using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table.
+        """
+        if self.handle is not None:
+            return self.handle.load_pyarrow()
+        if self.table is not None:
+            return self.table
+        raise ValueError("Neither table nor handle is set")
+
+    def release(self):
+        """
+        Release the ring buffer slot back to the pool (if using zero-copy).
+
+        Call this after you're done with the table to allow the slot to be reused.
+        No-op if not using zero-copy mode.
+        """
+        if self.handle is not None:
+            self.handle.release()
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Convert table to bytes using Arrow IPC
-        sink = pa.BufferOutputStream()
-        with pa.ipc.new_stream(sink, self.table.schema) as writer:
-            writer.write_table(self.table)
-        state["table"] = sink.getvalue().to_pybytes()
+        # Don't serialize handle - it's only used for zero-copy within same host
+        if self.handle is not None:
+            # Load table from handle for serialization
+            state["table"] = self.handle.load_pyarrow()
+            state["handle"] = None
+        if state.get("table") is not None:
+            # Convert table to bytes using Arrow IPC
+            sink = pa.BufferOutputStream()
+            with pa.ipc.new_stream(sink, state["table"].schema) as writer:
+                writer.write_table(state["table"])
+            state["table"] = sink.getvalue().to_pybytes()
         return state
 
     def __setstate__(self, state):
         # Restore table from bytes
-        table_bytes = state["table"]
-        with pa.ipc.open_stream(table_bytes) as reader:
-            state["table"] = reader.read_all()
+        table_bytes = state.get("table")
+        if table_bytes is not None and isinstance(table_bytes, bytes):
+            with pa.ipc.open_stream(table_bytes) as reader:
+                state["table"] = reader.read_all()
+        state["handle"] = None  # Handle is never deserialized
         self.__dict__.update(state)
 
 

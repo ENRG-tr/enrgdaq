@@ -28,6 +28,7 @@ from enrgdaq.daq.models import (
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreSHM,
 )
 from enrgdaq.models import SupervisorInfo
@@ -279,40 +280,65 @@ class DAQJob:
 
         if use_shm and sys.platform != "win32":
             original_message = message
-            # Pickle message
-            message_bytes = pickle.dumps(message)
-            # Create shared memory object
-            shm = SharedMemory(create=True, size=len(message_bytes))
-            assert shm.buf is not None, "Shared memory buffer is None"
-            # Write message to shared memory
-            shm.buf[: len(message_bytes)] = message_bytes
-            shm.close()
-            shm_handle = SHMHandle(shm_name=shm.name, shm_size=shm.size)
-            if isinstance(message, DAQJobMessageStore):
-                message = DAQJobMessageStoreSHM(
-                    store_config=getattr(original_message, "store_config"),
-                    tag=getattr(original_message, "tag", None),
-                    shm=shm_handle,
-                )
-            else:
-                message = DAQJobMessageSHM(
-                    shm=shm_handle,
-                )
-            message.daq_job_info = self.info
-            message.remote_config = self.config.remote_config
-            message.route_keys = original_message.route_keys
 
-        if False and self.supervisor_id != "benchmark_client_0":
-            print(
-                "***",
-                self.supervisor_id,
-                type(self).__name__,
-                "putting message",
-                type(message),
-                self._routes,
-            )
+            # Use zero-copy ring buffer for PyArrow messages
+            if (
+                isinstance(message, DAQJobMessageStorePyArrow)
+                and message.table is not None
+            ):
+                from enrgdaq.utils.arrow_ipc import try_zero_copy_pyarrow
+
+                handle, success = try_zero_copy_pyarrow(
+                    message.table,
+                    message.store_config,
+                    message.tag,
+                )
+                if success and handle is not None:
+                    message = DAQJobMessageStorePyArrow(
+                        store_config=message.store_config,
+                        tag=message.tag,
+                        table=None,
+                        handle=handle,
+                    )
+                    message.daq_job_info = self.info
+                    message.remote_config = self.config.remote_config
+                    message.route_keys = original_message.route_keys
+                else:
+                    # Fall back to regular pickle-based SHM
+                    pass  # Continue to standard SHM handling below
+            else:
+                # For non-PyArrow messages, use the existing pickle-based approach
+                pass
+
+            # Standard SHM path for non-PyArrow or fallback
+            if not (
+                isinstance(message, DAQJobMessageStorePyArrow)
+                and message.handle is not None
+            ):
+                # Pickle message
+                message_bytes = pickle.dumps(message)
+                # Create shared memory object
+                shm = SharedMemory(create=True, size=len(message_bytes))
+                assert shm.buf is not None, "Shared memory buffer is None"
+                # Write message to shared memory
+                shm.buf[: len(message_bytes)] = message_bytes
+                shm.close()
+                shm_handle = SHMHandle(shm_name=shm.name, shm_size=shm.size)
+                if isinstance(original_message, DAQJobMessageStore):
+                    message = DAQJobMessageStoreSHM(
+                        store_config=getattr(original_message, "store_config"),
+                        tag=getattr(original_message, "tag", None),
+                        shm=shm_handle,
+                    )
+                else:
+                    message = DAQJobMessageSHM(
+                        shm=shm_handle,
+                    )
+                message.daq_job_info = self.info
+                message.remote_config = self.config.remote_config
+                message.route_keys = original_message.route_keys
+
         message_routed = False
-        # print(type(self).__name__, self._routes, message.route_keys)
         if self._routes is not None:
             for route_key in message.route_keys:
                 if route_key in self._routes:

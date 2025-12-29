@@ -159,6 +159,60 @@ class SHMHandle(Struct):
         shm.unlink()
 
 
+class RingBufferHandle(Struct):
+    """
+    Handle to data stored in a shared memory ring buffer slot.
+
+    This is used for zero-copy transfer of PyArrow data between processes.
+    The handle contains only metadata; the actual data remains in shared memory.
+    """
+
+    buffer_name: str  # Name of the SharedMemoryRingBuffer
+    slot_index: int  # Slot index within the buffer
+    data_size: int  # Actual size of data in the slot
+    is_pyarrow: bool = True  # Whether this is PyArrow data (for zero-copy path)
+
+    # Ring buffer configuration (needed to attach in other process)
+    total_size: int = 256 * 1024 * 1024  # 256 MB default
+    slot_size: int = 10 * 1024 * 1024  # 10 MB default
+
+    def load_pyarrow(self):
+        """
+        Load PyArrow table from the ring buffer slot using zero-copy.
+
+        Returns:
+            pa.Table: The PyArrow table (references shared memory directly).
+        """
+        from enrgdaq.utils.arrow_ipc import read_table_from_address
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+
+        # Acquire for reading (increment ref count) and track bytes
+        ring_buffer.acquire_for_read(self.slot_index, self.data_size)
+
+        # Get the address and read zero-copy
+        address = ring_buffer.get_slot_address(self.slot_index)
+        table = read_table_from_address(address, self.data_size, base=ring_buffer)
+
+        return table
+
+    def release(self):
+        """Release the slot back to the ring buffer pool."""
+        from enrgdaq.utils.shared_ring_buffer import attach_to_ring_buffer
+
+        ring_buffer = attach_to_ring_buffer(
+            name=self.buffer_name,
+            total_size=self.total_size,
+            slot_size=self.slot_size,
+        )
+        ring_buffer.release(self.slot_index)
+
+
 class DAQJobMessageSHM(DAQJobMessage):
     shm: SHMHandle
 

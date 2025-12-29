@@ -52,9 +52,7 @@ class DAQJobBenchmark(DAQJob):
 
             self._send_store_message()
             i += 1
-            # Small sleep to avoid hammering the queue into a giant backlog
-            # which would skew system latency measurements.
-            time.sleep(0.0001)  # ~10kHz max rate
+            time.sleep(0.00005)
 
     def _send_store_message(self):
         """

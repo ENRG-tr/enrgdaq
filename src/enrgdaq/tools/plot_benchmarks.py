@@ -50,6 +50,7 @@ class BenchmarkResult:
     duration: int
     avg_throughput_mbs: float
     peak_throughput_mbs: float
+    zmq_throughput_mbs: float
     messages_per_second: float
     avg_queue_size: float
     cpu_usage_percent: float
@@ -62,8 +63,9 @@ def run_single_benchmark(
 ) -> Optional[BenchmarkResult]:
     """Run a single benchmark configuration and return results."""
     cmd = [
-        "python3",
-        "src/benchmark.py",
+        "uv",
+        "run",
+        "src/enrgdaq/tools/benchmark_runner.py",
         "--clients",
         str(clients),
         "--payload-size",
@@ -91,12 +93,16 @@ def run_single_benchmark(
         lines = stdout.split("\n")
         data = {}
         for line in lines:
-            if "Average Throughput:" in line:
+            if "Avg SHM Throughput:" in line:
                 data["avg_throughput"] = float(
                     line.split(":")[1].split("MB/s")[0].strip()
                 )
-            if "Peak Throughput:" in line:
+            if "Peak SHM Throughput:" in line:
                 data["peak_throughput"] = float(
+                    line.split(":")[1].split("MB/s")[0].strip()
+                )
+            if "ZMQ Throughput:" in line:
+                data["zmq_throughput"] = float(
                     line.split(":")[1].split("MB/s")[0].strip()
                 )
             if "Messages/Second:" in line:
@@ -122,6 +128,7 @@ def run_single_benchmark(
             duration=duration,
             avg_throughput_mbs=data.get("avg_throughput", 0),
             peak_throughput_mbs=data.get("peak_throughput", 0),
+            zmq_throughput_mbs=data.get("zmq_throughput", 0),
             messages_per_second=data.get("messages_per_second", 0),
             avg_queue_size=data.get("avg_queue", 0),
             cpu_usage_percent=data.get("cpu_usage", 0),
@@ -259,7 +266,7 @@ def plot_performance_curve(results: list[dict]):
         color=COLORS["secondary"],
         lw=4,
         markersize=10,
-        label="Sustained Throughput",
+        label="Sustained SHM Throughput",
     )
     ax.plot(
         payloads,
@@ -268,7 +275,19 @@ def plot_performance_curve(results: list[dict]):
         color=COLORS["primary"],
         lw=2,
         alpha=0.5,
-        label="Peak Capability",
+        label="Peak SHM Capability",
+    )
+
+    # Added: ZMQ Throughput (Management Overhead)
+    zmq = [r["zmq_throughput_mbs"] for r in data]
+    ax.plot(
+        payloads,
+        zmq,
+        "x:",
+        color=COLORS["dark"],
+        lw=1,
+        alpha=0.8,
+        label="ZMQ Management Overhead",
     )
 
     # 11.4 Gbps Ceiling (based on latest tests)
@@ -297,7 +316,7 @@ def plot_performance_curve(results: list[dict]):
     ax.set_xlabel("Payload Size (Values per Message)", fontsize=12, fontweight="bold")
     ax.set_ylabel("Data Throughput (MB/s)", fontsize=12, fontweight="bold")
     ax.set_title(
-        "ENRGDAQ Throughput Scaling\n(Arrow IPC + Zero-Copy ZMQ)",
+        "ENRGDAQ Throughput Scaling\n(Arrow IPC + Zero-Copy SHM)",
         fontsize=16,
         pad=20,
         fontweight="bold",

@@ -1,5 +1,6 @@
 import csv
 import gzip
+import io
 import os
 from collections import deque
 from dataclasses import dataclass, field
@@ -71,11 +72,10 @@ class DAQJobStoreCSV(DAQJobStore):
 
         # Handle PyArrow messages
         if isinstance(message, DAQJobMessageStorePyArrow):
-            table = message.table
-            if table is None or table.num_rows == 0:
+            table = message.get_table()
+            message.release()
+            if table.num_rows == 0:
                 return True
-
-            # Queue the table for efficient batch writing
             file.arrow_tables.append(table)
             return True
 
@@ -107,6 +107,8 @@ class DAQJobStoreCSV(DAQJobStore):
         """
         if file_path not in self._open_csv_files:
             file_exists = os.path.exists(file_path)
+            # Check if existing file has content (meaning header was already written)
+            file_has_content = file_exists and os.path.getsize(file_path) > 0
             # Create the file if it doesn't exist
             if not file_exists:
                 # Create the directory if it doesn't exist
@@ -121,11 +123,13 @@ class DAQJobStoreCSV(DAQJobStore):
                 file_handle = open(file_path, "a" if not overwrite else "w", newline="")
 
             # Open file
+            # If file already has content and we're appending, assume header was written
             file = CSVFile(
                 file_handle,
                 datetime.now(),
                 deque(),
                 overwrite=overwrite,
+                header_written=file_has_content and not overwrite,
             )
             self._open_csv_files[file_path] = file
         else:
@@ -160,8 +164,11 @@ class DAQJobStoreCSV(DAQJobStore):
                     include_header=not file.header_written
                 )
 
-                # Write to the underlying file
-                pa_csv.write_csv(combined, file.file, write_options=write_options)
+                # Write to a BytesIO buffer first, then decode and write to text file
+                # PyArrow's write_csv requires a binary file, but we have a text file
+                buffer = io.BytesIO()
+                pa_csv.write_csv(combined, buffer, write_options=write_options)
+                file.file.write(buffer.getvalue().decode("utf-8"))
                 file.header_written = True
 
             # Write traditional queue rows

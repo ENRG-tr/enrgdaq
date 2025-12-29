@@ -52,11 +52,17 @@ class SupervisorConfig(Struct, kw_only=True):
         verbosity (LogVerbosity): The verbosity level for logging.
         info (SupervisorInfo): The information of the supervisor.
         cnc (SupervisorCNCConfig | None): The configuration for the Command and Control (C&C) system.
+        ring_buffer_size_mb (int): Size of the shared memory ring buffer in MB for zero-copy message transfer.
+        ring_buffer_slot_size_kb (int): Size of each slot in the ring buffer in KB.
     """
 
     verbosity: LogVerbosity = LogVerbosity.INFO
     info: "SupervisorInfo"
     cnc: Optional[SupervisorCNCConfig] = None
+
+    # Ring buffer configuration for zero-copy PyArrow message transfer
+    ring_buffer_size_mb: int = 256  # 256 MB total buffer
+    ring_buffer_slot_size_kb: int = 10 * 1024  # 1 MB per slot
 
     def clone(self):
         return deepcopy(self)

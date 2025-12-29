@@ -41,8 +41,9 @@ class DAQJobStoreMemory(DAQJobStore):
         timestamp = datetime.now()
 
         if isinstance(message, DAQJobMessageStorePyArrow):
-            table = message.table
-            if table is None or table.num_rows == 0:
+            table = message.get_table()
+            message.release()
+            if table.num_rows == 0:
                 return True
             self._memory[message.tag] = {
                 "timestamp": timestamp,

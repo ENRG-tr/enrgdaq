@@ -2,9 +2,11 @@ import time
 from datetime import datetime
 from random import randint
 
+from pyarrow.ipc import pa
+
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 
@@ -59,11 +61,17 @@ class DAQJobTest(DAQJob):
             return randint(self.config.rand_min, self.config.rand_max)
 
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=["timestamp", "A", "B", "C"],
-                data=[
-                    [datetime.now().timestamp() * 1000, get_int(), get_int(), get_int()]
-                ],
-            )
+                table=pa.Table.from_arrays(
+                    [
+                        pa.array([int(datetime.now().timestamp() * 1000)]),
+                        pa.array([get_int()]),
+                        pa.array([get_int()]),
+                        pa.array([get_int()]),
+                    ],
+                    names=["timestamp", "A", "B", "C"],
+                ),
+            ),
+            use_shm=True,
         )

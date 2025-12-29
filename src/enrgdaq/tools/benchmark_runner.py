@@ -20,7 +20,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from multiprocessing import Event, Process, Value
+from multiprocessing import Array, Event, Process, Value
 from statistics import fmean
 from threading import Thread
 from typing import Any, Optional
@@ -76,6 +76,8 @@ class BenchmarkStats:
     rss_mb: float
     latency_p95_ms: float
     latency_p99_ms: float
+    shm_bytes_written: int = 0
+    shm_mb_per_s: float = 0.0
 
 
 @dataclass
@@ -156,6 +158,7 @@ def run_main_supervisor(
     config: BenchmarkConfig,
     stats_queue: Any,
     stop_flag: Value,
+    client_shm_bytes: Array,
 ):
     """Run the main supervisor that collects stats and runs the proxy."""
 
@@ -165,6 +168,8 @@ def run_main_supervisor(
     supervisor_id = "benchmark_supervisor"
     supervisor_info = create_supervisor_info(supervisor_id)
     supervisor_config = create_supervisor_config(supervisor_id)
+    supervisor_config.ring_buffer_size_mb = 1024
+    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024
 
     # Create DAQ job processes using the proper factory function
     daq_job_processes = []
@@ -248,7 +253,9 @@ def run_main_supervisor(
     # Register cleanup on exit
     atexit.register(cleanup_supervisor, supervisor)
 
-    run_supervisor_with_stats(supervisor, config, stats_queue, stop_flag)
+    run_supervisor_with_stats(
+        supervisor, config, stats_queue, stop_flag, client_shm_bytes=client_shm_bytes
+    )
 
 
 def run_client_supervisor(
@@ -256,6 +263,7 @@ def run_client_supervisor(
     config: BenchmarkConfig,
     stop_flag: Value,
     ready_event: Event,
+    shm_bytes_counter: Array,
 ):
     """Run a client supervisor that generates benchmark data."""
 
@@ -265,6 +273,8 @@ def run_client_supervisor(
     supervisor_id = f"benchmark_client_{client_id}"
     supervisor_info = create_supervisor_info(supervisor_id)
     supervisor_config = create_supervisor_config(supervisor_id)
+    supervisor_config.ring_buffer_size_mb = 1024  # 1GB for clients
+    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024  # 10MB slots
 
     daq_job_processes = [
         # Benchmark job that generates data
@@ -312,7 +322,14 @@ def run_client_supervisor(
     ready_event.set()  # Signal that this client is ready
 
     run_supervisor_with_stats(
-        supervisor, config, None, stop_flag, collect_stats=False, skip_init=True
+        supervisor,
+        config,
+        None,
+        stop_flag,
+        collect_stats=False,
+        skip_init=True,
+        shm_bytes_counter=shm_bytes_counter,
+        client_id=client_id,
     )
 
 
@@ -323,6 +340,9 @@ def run_supervisor_with_stats(
     stop_flag: Value,
     collect_stats: bool = True,
     skip_init: bool = False,
+    shm_bytes_counter: Optional[Array] = None,
+    client_id: Optional[int] = None,
+    client_shm_bytes: Optional[Array] = None,
 ):
     """Run a supervisor and optionally collect stats."""
     assert supervisor.config is not None
@@ -424,6 +444,16 @@ def run_supervisor_with_stats(
                 latency_p95 = max(p95_latencies) if p95_latencies else 0.0
                 latency_p99 = max(p99_latencies) if p99_latencies else 0.0
 
+                # Calculate data throughput from message count (more reliable than ring buffer stats)
+                # Each message contains payload_size * 2 float64 columns (timestamp + value) = 16 bytes/row
+                msg_size_bytes = config.payload_size * 16
+                if last_stats and elapsed > 0:
+                    msg_diff = msg_in_count - last_stats.get("msg_in_count", 0)
+                    data_mb_per_s = (msg_diff * msg_size_bytes) / elapsed / 10**6
+                else:
+                    data_mb_per_s = 0.0
+                total_data_mb = msg_in_count * msg_size_bytes / 10**6
+
                 current_stats = {
                     "timestamp": now.isoformat(),
                     "supervisor_id": supervisor.config.info.supervisor_id,
@@ -437,6 +467,8 @@ def run_supervisor_with_stats(
                     "rss_mb": rss_mb_total,
                     "latency_p95_ms": latency_p95,
                     "latency_p99_ms": latency_p99,
+                    "shm_bytes_written": int(total_data_mb * 10**6),
+                    "shm_mb_per_s": data_mb_per_s,
                 }
 
                 try:
@@ -479,13 +511,15 @@ class BenchmarkRunner:
             rss_mb=d.get("rss_mb", 0.0),
             latency_p95_ms=d.get("latency_p95_ms", 0.0),
             latency_p99_ms=d.get("latency_p99_ms", 0.0),
+            shm_bytes_written=d.get("shm_bytes_written", 0),
+            shm_mb_per_s=d.get("shm_mb_per_s", 0.0),
         )
 
     def _print_stats(self, stats: BenchmarkStats):
         """Print statistics to console."""
         print(
             f"[{stats.timestamp.strftime('%H:%M:%S')}] "
-            f"Throughput: {stats.msg_in_out_mb_per_s:7.2f} MB/s | "
+            f"SHM: {stats.shm_mb_per_s:7.2f} MB/s | "
             f"CPU: {stats.cpu_usage_percent:5.1f}% | "
             f"p95 Latency: {stats.latency_p95_ms:5.2f}ms | "
             f"Active Jobs: {stats.active_job_count:3d}"
@@ -562,11 +596,19 @@ class BenchmarkRunner:
                 os.remove(output_file)
                 print(f"Removed existing output file: {output_file}")
 
+        # Create shared array to track client ring buffer bytes (one c_longlong per client)
+        self._client_shm_bytes = Array("q", self.config.num_clients)  # 'q' = c_longlong
+
         # Start main supervisor process
         print("Starting main supervisor...")
         main_process = Process(
             target=run_main_supervisor,
-            args=(self.config, self._stats_queue, self._stop_flag),
+            args=(
+                self.config,
+                self._stats_queue,
+                self._stop_flag,
+                self._client_shm_bytes,
+            ),
         )
         main_process.start()
         self._processes.append(main_process)
@@ -582,7 +624,13 @@ class BenchmarkRunner:
         for i in range(self.config.num_clients):
             client_process = Process(
                 target=run_client_supervisor,
-                args=(i, self.config, self._stop_flag, ready_events[i]),
+                args=(
+                    i,
+                    self.config,
+                    self._stop_flag,
+                    ready_events[i],
+                    self._client_shm_bytes,
+                ),
             )
             client_process.start()
             self._processes.append(client_process)
@@ -665,15 +713,19 @@ class BenchmarkRunner:
             total_duration = 1.0
 
         avg_throughput = fmean([s.msg_in_out_mb_per_s for s in data_stats])
-        max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
-        total_mb = data_stats[-1].msg_in_out_mb
+        # max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
+        avg_shm_throughput = fmean([s.shm_mb_per_s for s in data_stats])
+        max_shm_throughput = max([s.shm_mb_per_s for s in data_stats])
+        total_shm_mb = data_stats[-1].shm_bytes_written / 10**6
+        # total_mb = data_stats[-1].msg_in_out_mb
         total_msgs = data_stats[-1].msg_in_count
         avg_queue = fmean([s.avg_queue_size for s in data_stats])
 
         print(f"Duration:              {total_duration:.1f} seconds")
-        print(f"Average Throughput:    {avg_throughput:.2f} MB/s")
-        print(f"Peak Throughput:       {max_throughput:.2f} MB/s")
-        print(f"Total Data:            {total_mb:.2f} MB")
+        print(f"Avg SHM Throughput:    {avg_shm_throughput:.2f} MB/s")
+        print(f"Peak SHM Throughput:   {max_shm_throughput:.2f} MB/s")
+        print(f"Total SHM Data:        {total_shm_mb:.2f} MB")
+        print(f"ZMQ Throughput:        {avg_throughput:.2f} MB/s (handles only)")
         print(f"Total Messages:        {total_msgs:,}")
         print(f"Average Queue Size:    {avg_queue:.1f}")
         print(f"Messages/Second:       {total_msgs / total_duration:,.0f}")

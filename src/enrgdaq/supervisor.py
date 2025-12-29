@@ -1,3 +1,4 @@
+import base64
 import logging
 import os
 import platform
@@ -170,6 +171,29 @@ class Supervisor:
                 config=self.config.cnc,
             )
 
+        # Initialize ring buffer for zero-copy PyArrow message transfer
+        if sys.platform != "win32":
+            from enrgdaq.utils.shared_ring_buffer import get_global_ring_buffer
+
+            try:
+                # get hash of supervisor_id to fit name
+                import hashlib
+
+                supervisor_id_hash = base64.b64encode(
+                    hashlib.md5(self.config.info.supervisor_id.encode()).digest()
+                ).decode()
+                get_global_ring_buffer(
+                    name=f"ring_{supervisor_id_hash}",
+                    total_size=self.config.ring_buffer_size_mb * 1024 * 1024,
+                    slot_size=self.config.ring_buffer_slot_size_kb * 1024,
+                )
+                self._logger.info(
+                    f"Initialized ring buffer: {self.config.ring_buffer_size_mb}MB total, "
+                    f"{self.config.ring_buffer_slot_size_kb}KB per slot"
+                )
+            except Exception as e:
+                self._logger.warning(f"Failed to initialize ring buffer: {e}")
+
         # Set up log listener to capture logs from child processes
         handlers: list[logging.Handler] = []
         if self._cnc_instance:
@@ -254,6 +278,17 @@ class Supervisor:
             self._cnc_instance.stop()
         if self._log_listener:
             self._log_listener.stop()
+
+        # Clean up ring buffer
+        if sys.platform != "win32":
+            from enrgdaq.utils.shared_ring_buffer import cleanup_global_ring_buffer
+
+            try:
+                cleanup_global_ring_buffer()
+                self._logger.debug("Ring buffer cleaned up")
+            except Exception as e:
+                self._logger.warning(f"Failed to cleanup ring buffer: {e}")
+
         self._is_stopped = True
 
     def loop(self):

@@ -87,8 +87,9 @@ class DAQJobStoreROOT(DAQJobStore):
 
         # Convert message to PyArrow table
         if isinstance(message, DAQJobMessageStorePyArrow):
-            table = message.table
-            if table is None or table.num_rows == 0:
+            table = message.get_table()
+            message.release()
+            if table.num_rows == 0:
                 return True
         else:
             # Convert tabular data to PyArrow table
