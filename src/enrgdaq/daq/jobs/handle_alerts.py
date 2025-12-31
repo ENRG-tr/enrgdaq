@@ -1,5 +1,6 @@
 from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.base import DAQJob
+from enrgdaq.daq.models import DAQJobMessage
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     StorableDAQJobConfig,
@@ -32,9 +33,11 @@ class DAQJobHandleAlerts(DAQJob):
         while True:
             self.consume(nowait=False)
 
-    def handle_message(self, message: DAQJobMessageAlert) -> bool:
+    def handle_message(self, message: DAQJobMessage) -> bool:
         if not super().handle_message(message):
             return False
+        if not isinstance(message, DAQJobMessageAlert):
+            return True
 
         keys = [
             "timestamp",
