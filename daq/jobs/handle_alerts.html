@@ -71,9 +71,11 @@ el.replaceWith(d);
         while True:
             self.consume(nowait=False)
 
-    def handle_message(self, message: DAQJobMessageAlert) -&gt; bool:
+    def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if not super().handle_message(message):
             return False
+        if not isinstance(message, DAQJobMessageAlert):
+            return True
 
         keys = [
             &#34;timestamp&#34;,
