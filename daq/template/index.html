@@ -203,8 +203,12 @@ sent to DAQ jobs via CNC.</p></div>
     templates: dict[str, dict] = {}
 
     for store_type, config_class in store_type_to_class.items():
-        # Generate JSON schema using msgspec
-        schema = msgspec.json.schema(config_class)
+        try:
+            # Generate JSON schema using msgspec with custom hook for unsupported types
+            schema = msgspec.json.schema(config_class, schema_hook=_schema_hook)
+        except TypeError:
+            # Skip types that can&#39;t be converted to schemas
+            continue
 
         # Add our custom metadata
         schema[&#34;type_key&#34;] = store_type

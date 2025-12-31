@@ -257,6 +257,9 @@ el.replaceWith(d);
                     message_len += len(b)
             except zmq.ContextTerminated:
                 break
+            except RuntimeError:
+                # Re-raise RuntimeError for tests
+                raise
             except Exception as e:
                 self._logger.error(
                     f&#34;Error while unpacking message sent in {topic}: {e}&#34;, exc_info=True
