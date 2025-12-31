@@ -1,6 +1,9 @@
 import logging
 import os
 import pickle
+import random
+import socket
+import sys
 import tempfile
 import uuid
 from queue import Empty, Full
@@ -11,18 +14,54 @@ import zmq
 logger = logging.getLogger(__name__)
 
 
-class ZMQQueue:
-    """A high-performance multiprocess queue using ZeroMQ IPC.
+def _is_port_available(port: int) -> bool:
+    """Check if a TCP port is available on localhost."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+            return True
+    except OSError:
+        return False
 
-    This class mimics the queue.Queue interface but works across process boundaries
-    without requiring inheritance. It uses ZMQ PUSH/PULL sockets over IPC.
+
+def _generate_zmq_uri() -> str:
+    """Generate a ZMQ URI appropriate for the current platform.
+
+    On Windows, IPC is not supported, so we use TCP.
+    """
+    if sys.platform == "win32":
+        # Use TCP on Windows with a random high port
+        # Port range 49152-65535 is for dynamic/private ports
+        max_attempts = 100
+        for _ in range(max_attempts):
+            port = random.randint(49152, 65535)
+            if _is_port_available(port):
+                return f"tcp://127.0.0.1:{port}"
+        # If we couldn't find a free port after max attempts, use the last one anyway
+        # and let ZMQ handle the error
+        logger.warning(
+            f"Could not find an available port after {max_attempts} attempts"
+        )
+        return f"tcp://127.0.0.1:{port}"
+    else:
+        # Use IPC on Unix-like systems
+        return f"ipc://{tempfile.gettempdir()}/enrgdaq_q_{uuid.uuid4()}.ipc"
+
+
+class ZMQQueue:
+    """A high-performance multiprocess queue using ZeroMQ.
+
+    This class mimics the queue. Queue interface but works across process boundaries
+    without requiring inheritance. It uses ZMQ PUSH/PULL sockets.
+
+    On Unix-like systems, it uses IPC; on Windows, it uses TCP.
 
     The first call to 'get' will bind a PULL socket to the URI.
     The first call to 'put' will connect a PUSH socket to the URI.
     """
 
     def __init__(self, uri: Optional[str] = None, maxsize: int = 0):
-        self.uri = uri or f"ipc://{tempfile.gettempdir()}/enrgdaq_q_{uuid.uuid4()}.ipc"
+        self.uri = uri or _generate_zmq_uri()
         self.maxsize = maxsize
         self._context: Optional[zmq.Context] = None
         self._push_socket: Optional[zmq.Socket] = None
