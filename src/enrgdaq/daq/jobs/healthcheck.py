@@ -10,7 +10,7 @@ from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.alert.models import DAQAlertInfo, DAQAlertSeverity
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
-from enrgdaq.daq.models import DAQJobConfig, DAQJobStats
+from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage, DAQJobStats
 
 HEALTHCHECK_LOOP_INTERVAL_SECONDS = 0.1
 
@@ -175,10 +175,12 @@ class DAQJobHealthcheck(DAQJob):
             self.handle_checks()
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
-    def handle_message(self, message: DAQJobMessageStats) -> bool:
+    def handle_message(self, message: DAQJobMessage) -> bool:
         """Handles incoming messages and updates current stats."""
         if not super().handle_message(message):
             return False
+        if not isinstance(message, DAQJobMessageStats):
+            return True
 
         self._current_stats[message.supervisor_id] = message.stats
         return True
