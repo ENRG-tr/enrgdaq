@@ -109,7 +109,8 @@ class DAQJobMessage(Struct, kw_only=True):
 
 
 class SupervisorDAQJobMessage(DAQJobMessage):
-    pass
+    def __post_init__(self):
+        self.remote_config = DAQRemoteConfig(remote_disable=True)
 
 
 class DAQJobMessageJobStarted(SupervisorDAQJobMessage):
@@ -132,10 +133,6 @@ class DAQJobMessageRoutes(SupervisorDAQJobMessage):
     """
 
     routes: RouteMapping
-
-    @property
-    def remote_config(self) -> DAQRemoteConfig:
-        return DAQRemoteConfig(remote_disable=True)
 
 
 class SHMHandle(Struct):
