@@ -56,17 +56,19 @@ el.replaceWith(d);
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ZMQQueue:
-    &#34;&#34;&#34;A high-performance multiprocess queue using ZeroMQ IPC.
+    &#34;&#34;&#34;A high-performance multiprocess queue using ZeroMQ.
 
-    This class mimics the queue.Queue interface but works across process boundaries
-    without requiring inheritance. It uses ZMQ PUSH/PULL sockets over IPC.
+    This class mimics the queue. Queue interface but works across process boundaries
+    without requiring inheritance. It uses ZMQ PUSH/PULL sockets.
+
+    On Unix-like systems, it uses IPC; on Windows, it uses TCP.
 
     The first call to &#39;get&#39; will bind a PULL socket to the URI.
     The first call to &#39;put&#39; will connect a PUSH socket to the URI.
     &#34;&#34;&#34;
 
     def __init__(self, uri: Optional[str] = None, maxsize: int = 0):
-        self.uri = uri or f&#34;ipc://{tempfile.gettempdir()}/enrgdaq_q_{uuid.uuid4()}.ipc&#34;
+        self.uri = uri or _generate_zmq_uri()
         self.maxsize = maxsize
         self._context: Optional[zmq.Context] = None
         self._push_socket: Optional[zmq.Socket] = None
@@ -205,9 +207,10 @@ el.replaceWith(d);
     def __repr__(self):
         return f&#34;ZMQQueue(uri=&#39;{self.uri}&#39;, maxsize={self.maxsize})&#34;</code></pre>
 </details>
-<div class="desc"><p>A high-performance multiprocess queue using ZeroMQ IPC.</p>
-<p>This class mimics the queue.Queue interface but works across process boundaries
-without requiring inheritance. It uses ZMQ PUSH/PULL sockets over IPC.</p>
+<div class="desc"><p>A high-performance multiprocess queue using ZeroMQ.</p>
+<p>This class mimics the queue. Queue interface but works across process boundaries
+without requiring inheritance. It uses ZMQ PUSH/PULL sockets.</p>
+<p>On Unix-like systems, it uses IPC; on Windows, it uses TCP.</p>
 <p>The first call to 'get' will bind a PULL socket to the URI.
 The first call to 'put' will connect a PUSH socket to the URI.</p></div>
 <h3>Methods</h3>
