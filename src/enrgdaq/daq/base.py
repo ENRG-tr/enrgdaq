@@ -5,7 +5,6 @@ import uuid
 from datetime import datetime, timedelta
 from logging.handlers import QueueHandler
 from multiprocessing import Process
-from multiprocessing.context import ForkProcess
 from multiprocessing.shared_memory import SharedMemory
 from queue import Empty
 from queue import Queue as ThreadQueue
@@ -409,7 +408,7 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
