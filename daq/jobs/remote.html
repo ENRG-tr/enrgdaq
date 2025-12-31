@@ -163,13 +163,10 @@ el.replaceWith(d);
             or message.is_remote
             # Ignore if we are not connected to the proxy
             or self._zmq_pub is None
+            # Ignore if the message is disabled for remote
+            or message.remote_config.remote_disable
         ):
             return True  # Silently ignore
-
-        if message.remote_config.remote_disable and not isinstance(
-            message, SupervisorDAQJobMessage
-        ):
-            return True
 
         self._send_remote_pub_message(message)
         return True

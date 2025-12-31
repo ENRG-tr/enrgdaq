@@ -235,7 +235,7 @@ Examples:
 <div class="desc"><p>Parse command line arguments.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_client_supervisor"><code class="name flex">
-<span>def <span class="ident">run_client_supervisor</span></span>(<span>client_id: int,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>,<br>ready_event: <bound method BaseContext.Event of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>)</span>
+<span>def <span class="ident">run_client_supervisor</span></span>(<span>client_id: int,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>,<br>ready_event: <bound method BaseContext.Event of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -319,7 +319,7 @@ Examples:
 <div class="desc"><p>Run a client supervisor that generates benchmark data.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_main_supervisor"><code class="name flex">
-<span>def <span class="ident">run_main_supervisor</span></span>(<span>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>)</span>
+<span>def <span class="ident">run_main_supervisor</span></span>(<span>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -432,7 +432,7 @@ Examples:
 <div class="desc"><p>Run the main supervisor that collects stats and runs the proxy.</p></div>
 </dd>
 <dt id="enrgdaq.tools.benchmark_runner.run_supervisor_with_stats"><code class="name flex">
-<span>def <span class="ident">run_supervisor_with_stats</span></span>(<span>supervisor: <a title="enrgdaq.supervisor.Supervisor" href="../supervisor.html#enrgdaq.supervisor.Supervisor">Supervisor</a>,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>>,<br>collect_stats: bool = True,<br>skip_init: bool = False,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>> | None = None,<br>client_id: int | None = None,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7fb66924a690>> | None = None)</span>
+<span>def <span class="ident">run_supervisor_with_stats</span></span>(<span>supervisor: <a title="enrgdaq.supervisor.Supervisor" href="../supervisor.html#enrgdaq.supervisor.Supervisor">Supervisor</a>,<br>config: <a title="enrgdaq.tools.benchmark_runner.BenchmarkConfig" href="#enrgdaq.tools.benchmark_runner.BenchmarkConfig">BenchmarkConfig</a>,<br>stats_queue: Any,<br>stop_flag: <bound method BaseContext.Value of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>>,<br>collect_stats: bool = True,<br>skip_init: bool = False,<br>shm_bytes_counter: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>> | None = None,<br>client_id: int | None = None,<br>client_shm_bytes: <bound method BaseContext.Array of <multiprocessing.context.DefaultContext object at 0x7f5d128e3020>> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
