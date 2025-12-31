@@ -73,8 +73,11 @@ class TestDAQJobStoreCSV(unittest.TestCase):
 
     @patch("enrgdaq.daq.jobs.store.csv.modify_file_path", return_value="test.csv")
     @patch("builtins.open", new_callable=mock_open)
+    @patch("os.path.getsize", return_value=100)  # File has content
     @patch("os.path.exists", return_value=True)
-    def test_handle_message_existing_file(self, mock_exists, mock_open, mock_add_date):
+    def test_handle_message_existing_file(
+        self, mock_exists, mock_getsize, mock_open, mock_add_date
+    ):
         message = MagicMock(spec=DAQJobMessageStoreTabular)
         message.store_config = DAQJobStoreConfig(
             csv=DAQJobStoreConfigCSV(file_path="test.csv", add_date=True)

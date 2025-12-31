@@ -111,15 +111,25 @@ class TestSupervisor(unittest.TestCase):
             [mock_process_alive, mock_start_daq_job.return_value],
         )
 
-    def test_handle_thread_alive_stats(self):
+    @patch("enrgdaq.supervisor.psutil.Process")
+    def test_handle_thread_alive_stats(self, mock_psutil_process):
+        # Mock psutil.Process to avoid TypeError with MagicMock pid
+        mock_psutil_process.return_value.cpu_percent.return_value = 0.0
+        mock_psutil_process.return_value.memory_info.return_value.rss = 0
+
         mock_alive_thread = MagicMock(name="alive_thread")
         mock_alive_thread.start_time = datetime.now() - timedelta(seconds=10)
         mock_alive_thread.daq_job_cls = MagicMock()
         mock_alive_thread.daq_job_cls.__name__ = "alive_job"
+        mock_alive_thread.process.pid = 12345  # Use a real int
+        mock_alive_thread.process.is_alive.return_value = True
+
         mock_dead_thread = MagicMock(name="dead_thread")
         mock_dead_thread.start_time = datetime.now() - timedelta(seconds=10)
         mock_dead_thread.daq_job_cls = MagicMock()
         mock_dead_thread.daq_job_cls.__name__ = "dead_job"
+        mock_dead_thread.process.pid = 12346  # Use a real int
+        mock_dead_thread.process.is_alive.return_value = False
 
         self.supervisor.daq_job_processes = [mock_alive_thread]
         self.supervisor.daq_job_stats = {
@@ -219,7 +229,8 @@ class TestSupervisor(unittest.TestCase):
 
         result = self.supervisor.get_supervisor_messages()
 
-        self.assertEqual(len(result), 1)
+        # Expect 2 messages: stats message and routes message
+        self.assertEqual(len(result), 2)
         self.assertIsInstance(result[0], DAQJobMessageStats)
         assert isinstance(result[0], DAQJobMessageStats)
         self.assertEqual(result[0].stats, self.supervisor.daq_job_stats)

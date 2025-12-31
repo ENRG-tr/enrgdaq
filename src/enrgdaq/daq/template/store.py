@@ -10,7 +10,6 @@ import msgspec
 
 from enrgdaq.daq.store.models import DAQJobStoreConfig
 
-
 # Store type labels
 STORE_TYPE_LABELS = {
     "csv": "CSV Store",
@@ -32,6 +31,17 @@ STORE_TYPE_DESCRIPTIONS = {
     "redis": "Store data in Redis",
     "memory": "In-memory storage (no persistence)",
 }
+
+
+def _schema_hook(tp: type) -> dict:
+    """
+    Custom schema hook to handle types that msgspec can't process natively.
+    """
+    # Handle type[...] annotations by returning a simple schema
+    origin = get_origin(tp)
+    if origin is type:
+        return {"type": "string", "description": "Type reference (internal use)"}
+    raise NotImplementedError(f"No schema for type: {tp}")
 
 
 def get_store_config_templates() -> dict[str, dict]:
@@ -60,8 +70,12 @@ def get_store_config_templates() -> dict[str, dict]:
     templates: dict[str, dict] = {}
 
     for store_type, config_class in store_type_to_class.items():
-        # Generate JSON schema using msgspec
-        schema = msgspec.json.schema(config_class)
+        try:
+            # Generate JSON schema using msgspec with custom hook for unsupported types
+            schema = msgspec.json.schema(config_class, schema_hook=_schema_hook)
+        except TypeError:
+            # Skip types that can't be converted to schemas
+            continue
 
         # Add our custom metadata
         schema["type_key"] = store_type

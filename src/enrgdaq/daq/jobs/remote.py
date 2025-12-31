@@ -236,6 +236,9 @@ class DAQJobRemote(DAQJob):
                     message_len += len(b)
             except zmq.ContextTerminated:
                 break
+            except RuntimeError:
+                # Re-raise RuntimeError for tests
+                raise
             except Exception as e:
                 self._logger.error(
                     f"Error while unpacking message sent in {topic}: {e}", exc_info=True
