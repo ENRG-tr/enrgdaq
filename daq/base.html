@@ -755,7 +755,7 @@ Otherwise, it will wait until a message is available.</p></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>message_in: Any,<br>message_out: Any,<br>process: multiprocessing.context.Process | multiprocessing.context.ForkProcess | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>message_in: Any,<br>message_out: Any,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -768,7 +768,7 @@ Otherwise, it will wait until a message is available.</p></div>
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -917,7 +917,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -962,7 +962,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1007,7 +1007,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1052,7 +1052,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1097,7 +1097,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1142,7 +1142,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1187,7 +1187,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1220,7 +1220,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.process"><code class="name">var <span class="ident">process</span> : multiprocessing.context.Process | multiprocessing.context.ForkProcess | None</code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.process"><code class="name">var <span class="ident">process</span> : multiprocessing.context.Process | None</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -1232,7 +1232,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1277,7 +1277,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1322,7 +1322,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1367,7 +1367,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
@@ -1412,7 +1412,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     config: DAQJobConfig
     message_in: Any
     message_out: Any
-    process: Process | ForkProcess | None
+    process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
     daq_job_info: DAQJobInfo | None = None
