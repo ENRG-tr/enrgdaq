@@ -813,11 +813,7 @@ without a problem.</p></div>
         routes (RouteMapping): route_key to queue mapping.
     &#34;&#34;&#34;
 
-    routes: RouteMapping
-
-    @property
-    def remote_config(self) -&gt; DAQRemoteConfig:
-        return DAQRemoteConfig(remote_disable=True)</code></pre>
+    routes: RouteMapping</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
 set the routes for the DAQJobProcess.</p>
@@ -835,18 +831,6 @@ set the routes for the DAQJobProcess.</p>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.models.DAQJobMessageRoutes.remote_config"><code class="name">prop <span class="ident">remote_config</span> : <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@property
-def remote_config(self) -&gt; DAQRemoteConfig:
-    return DAQRemoteConfig(remote_disable=True)</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageRoutes.routes"><code class="name">var <span class="ident">routes</span> : dict[str, list[typing.Any]]</code></dt>
 <dd>
 <details class="source">
@@ -862,11 +846,7 @@ def remote_config(self) -&gt; DAQRemoteConfig:
         routes (RouteMapping): route_key to queue mapping.
     &#34;&#34;&#34;
 
-    routes: RouteMapping
-
-    @property
-    def remote_config(self) -&gt; DAQRemoteConfig:
-        return DAQRemoteConfig(remote_disable=True)</code></pre>
+    routes: RouteMapping</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2409,7 +2389,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class SupervisorDAQJobMessage(DAQJobMessage):
-    pass</code></pre>
+    def __post_init__(self):
+        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -2504,7 +2485,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li>
 <h4><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes" href="#enrgdaq.daq.models.DAQJobMessageRoutes">DAQJobMessageRoutes</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes.remote_config" href="#enrgdaq.daq.models.DAQJobMessageRoutes.remote_config">remote_config</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes.routes" href="#enrgdaq.daq.models.DAQJobMessageRoutes.routes">routes</a></code></li>
 </ul>
 </li>
