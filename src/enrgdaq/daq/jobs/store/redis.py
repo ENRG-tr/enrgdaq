@@ -11,6 +11,7 @@ from redis.commands.timeseries import TimeSeries
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreRaw,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
@@ -34,7 +35,11 @@ class RedisWriteQueueItem:
 class DAQJobStoreRedis(DAQJobStore):
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
-    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStoreRaw]
+    allowed_message_in_types = [
+        DAQJobMessageStoreTabular,
+        DAQJobMessageStoreRaw,
+        DAQJobMessageStorePyArrow,
+    ]
 
     _write_queue: deque[RedisWriteQueueItem]
     _last_flush_date: datetime
@@ -64,15 +69,30 @@ class DAQJobStoreRedis(DAQJobStore):
         super().start()
 
     def handle_message(
-        self, message: DAQJobMessageStoreTabular | DAQJobMessageStoreRaw
+        self,
+        message: DAQJobMessageStoreTabular
+        | DAQJobMessageStoreRaw
+        | DAQJobMessageStorePyArrow,
     ) -> bool:
         if not super().handle_message(message):
             return False
 
         store_config = cast(DAQJobStoreConfigRedis, message.store_config.redis)
 
-        data = {}
-        if isinstance(message, DAQJobMessageStoreTabular):
+        data: dict[str, list[Any]] | bytes = {}
+
+        # Handle PyArrow messages
+        if isinstance(message, DAQJobMessageStorePyArrow):
+            table = message.get_table()
+            message.release()
+            if table.num_rows == 0:
+                return True
+            # Convert PyArrow table to column-based dictionary
+            data = {col: table.column(col).to_pylist() for col in table.column_names}
+            self._write_queue.append(
+                RedisWriteQueueItem(store_config, data, message.tag)
+            )
+        elif isinstance(message, DAQJobMessageStoreTabular):
             # Add data to data dict that we can add to Redis
             for i, row in enumerate(message.keys):
                 data[row] = [x[i] for x in message.data]

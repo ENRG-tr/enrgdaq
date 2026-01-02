@@ -3,12 +3,15 @@ from collections import deque
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pyarrow as pa
+
 from enrgdaq.daq.jobs.store.redis import (
     DAQJobStoreRedis,
     DAQJobStoreRedisConfig,
     RedisWriteQueueItem,
 )
 from enrgdaq.daq.store.models import (
+    DAQJobMessageStorePyArrow,
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
 )
@@ -180,6 +183,64 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         result = self.store.handle_message(message)
 
         self.assertTrue(result)
+        self.assertEqual(len(self.store._write_queue), 0)
+
+    def test_handle_message_pyarrow(self):
+        """Test handling DAQJobMessageStorePyArrow messages."""
+        # Create a PyArrow table
+        table = pa.table(
+            {
+                "timestamp": [1000, 2000, 3000],
+                "temperature": [25.5, 26.0, 26.5],
+                "humidity": [60.0, 61.0, 62.0],
+            }
+        )
+
+        # Create the message with the table
+        message = DAQJobMessageStorePyArrow(
+            store_config=MagicMock(
+                redis=DAQJobStoreConfigRedis(key="sensor_data", key_expiration_days=7)
+            ),
+            table=table,
+            tag="sensor1",
+        )
+
+        result = self.store.handle_message(message)
+
+        self.assertTrue(result)
+        self.assertEqual(len(self.store._write_queue), 1)
+
+        queued_item = self.store._write_queue[0]
+        self.assertEqual(queued_item.store_config.key, "sensor_data")
+        self.assertEqual(queued_item.tag, "sensor1")
+
+        # Verify the PyArrow table was converted to column-based dict
+        self.assertIsInstance(queued_item.data, dict)
+        self.assertEqual(queued_item.data["timestamp"], [1000, 2000, 3000])
+        self.assertEqual(queued_item.data["temperature"], [25.5, 26.0, 26.5])
+        self.assertEqual(queued_item.data["humidity"], [60.0, 61.0, 62.0])
+
+    def test_handle_message_pyarrow_empty_table(self):
+        """Test handling empty PyArrow table returns early."""
+        # Create an empty PyArrow table
+        table = pa.table(
+            {
+                "timestamp": pa.array([], type=pa.int64()),
+                "value": pa.array([], type=pa.float64()),
+            }
+        )
+
+        message = DAQJobMessageStorePyArrow(
+            store_config=MagicMock(
+                redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
+            ),
+            table=table,
+        )
+
+        result = self.store.handle_message(message)
+
+        self.assertTrue(result)
+        # Empty table should not add to queue
         self.assertEqual(len(self.store._write_queue), 0)
 
     def test_del(self):
