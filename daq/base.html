@@ -281,7 +281,7 @@ el.replaceWith(d);
                     message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
-            self._logger.debug(f&#34;Message out: {message}&#34;)
+            self._logger.debug(f&#34;Message out: {_format_message_for_log(message)}&#34;)
 
         if use_shm and sys.platform != &#34;win32&#34;:
             original_message = message
@@ -343,16 +343,21 @@ el.replaceWith(d);
                 message.remote_config = self.config.remote_config
                 message.route_keys = original_message.route_keys
 
-        message_routed = False
+        all_routes_satisfied = True
         if self._routes is not None:
             for route_key in message.route_keys:
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        message_routed = True
                         break
+                else:
+                    # This route_key is not available locally
+                    all_routes_satisfied = False
+        else:
+            all_routes_satisfied = False
 
-        if not message_routed:
+        # Send to supervisor if any route was not satisfied locally
+        if not all_routes_satisfied:
             self.message_out.put(message)
         self._sent_count += 1
 

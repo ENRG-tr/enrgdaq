@@ -615,6 +615,12 @@ class RestartDAQJobSchedule:
                 ):
                     continue
 
+                # Debug: Log when sending to DAQJobRemote
+                if daq_job_cls.__name__ == &#34;DAQJobRemote&#34;:
+                    self._logger.debug(
+                        f&#34;Sending {type(message).__name__} to DAQJobRemote&#34;
+                    )
+
                 # Send message
                 try:
                     process.message_in.put_nowait(message)
@@ -1278,6 +1284,12 @@ and facilitating communication between them.</p>
                 and not isinstance(daq_job_cls, SupervisorDAQJobMessage)
             ):
                 continue
+
+            # Debug: Log when sending to DAQJobRemote
+            if daq_job_cls.__name__ == &#34;DAQJobRemote&#34;:
+                self._logger.debug(
+                    f&#34;Sending {type(message).__name__} to DAQJobRemote&#34;
+                )
 
             # Send message
             try:
