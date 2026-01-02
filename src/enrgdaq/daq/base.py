@@ -1,5 +1,6 @@
 import logging
 import pickle
+import re
 import sys
 import uuid
 from datetime import datetime, timedelta
@@ -36,6 +37,27 @@ from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
 
 DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS = 1.0
+
+
+def _format_message_for_log(
+    message: "DAQJobMessage", max_bytes_preview: int = 32
+) -> str:
+    """Format a message for debug logging, truncating bytes data."""
+    # Get a string representation and truncate any bytes data
+    msg_str = str(message)
+
+    def truncate_bytes(match: re.Match) -> str:
+        prefix = match.group(1)  # 'data=' or empty
+        bytes_content = match.group(2)  # The actual bytes content
+        if len(bytes_content) > max_bytes_preview:
+            return f"{prefix}b'<{len(bytes_content)} bytes>'"
+        return match.group(0)
+
+    # Match bytes literals: optional prefix like 'data=' followed by b'...'
+    msg_str = re.sub(r"(data=)?b'([^']*)'", truncate_bytes, msg_str)
+    msg_str = re.sub(r'(data=)?b"([^"]*)"', truncate_bytes, msg_str)
+
+    return msg_str
 
 
 def _create_queue(maxsize: int = 0) -> Any:
@@ -275,7 +297,7 @@ class DAQJob:
                     message.remote_config = store_remote_config
 
         if self.config.verbosity == LogVerbosity.DEBUG:
-            self._logger.debug(f"Message out: {message}")
+            self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
         if use_shm and sys.platform != "win32":
             original_message = message
@@ -337,16 +359,21 @@ class DAQJob:
                 message.remote_config = self.config.remote_config
                 message.route_keys = original_message.route_keys
 
-        message_routed = False
+        all_routes_satisfied = True
         if self._routes is not None:
             for route_key in message.route_keys:
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        message_routed = True
                         break
+                else:
+                    # This route_key is not available locally
+                    all_routes_satisfied = False
+        else:
+            all_routes_satisfied = False
 
-        if not message_routed:
+        # Send to supervisor if any route was not satisfied locally
+        if not all_routes_satisfied:
             self.message_out.put(message)
         self._sent_count += 1
 

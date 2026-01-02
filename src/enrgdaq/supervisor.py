@@ -585,6 +585,12 @@ class Supervisor:
                 ):
                     continue
 
+                # Debug: Log when sending to DAQJobRemote
+                if daq_job_cls.__name__ == "DAQJobRemote":
+                    self._logger.debug(
+                        f"Sending {type(message).__name__} to DAQJobRemote"
+                    )
+
                 # Send message
                 try:
                     process.message_in.put_nowait(message)

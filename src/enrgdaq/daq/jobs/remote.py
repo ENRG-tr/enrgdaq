@@ -133,6 +133,14 @@ class DAQJobRemote(DAQJob):
         self._last_is_alive_check_time = datetime.now()
 
     def handle_message(self, message: DAQJobMessage) -> bool:
+        # Debug: Log all incoming messages
+        self._logger.debug(
+            f"handle_message received: {type(message).__name__}, "
+            f"is_remote={message.is_remote}, "
+            f"remote_disable={message.remote_config.remote_disable}, "
+            f"zmq_pub_is_none={self._zmq_pub is None}"
+        )
+
         if (
             # Ignore if the message is not allowed by the DAQ Job
             not super().handle_message(message)
@@ -145,8 +153,14 @@ class DAQJobRemote(DAQJob):
             # Ignore if the message is disabled for remote
             or message.remote_config.remote_disable
         ):
+            self._logger.debug(
+                f"handle_message: Ignoring message {type(message).__name__}"
+            )
             return True  # Silently ignore
 
+        self._logger.debug(
+            f"handle_message: Forwarding message {type(message).__name__} to remote"
+        )
         self._send_remote_pub_message(message)
         return True
 
