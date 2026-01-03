@@ -349,12 +349,17 @@ el.replaceWith(d);
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
+                        self._logger.debug(
+                            f&#34;Direct routed {type(message).__name__} to {route_key}&#34;
+                        )
                         break
                 else:
                     # This route_key is not available locally
                     all_routes_satisfied = False
+                    self._logger.debug(f&#34;Route key {route_key} not found locally&#34;)
         else:
             all_routes_satisfied = False
+            self._logger.debug(&#34;No routes available, sending to supervisor&#34;)
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:
