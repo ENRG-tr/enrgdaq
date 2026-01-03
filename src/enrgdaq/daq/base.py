@@ -365,12 +365,17 @@ class DAQJob:
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
+                        self._logger.debug(
+                            f"Direct routed {type(message).__name__} to {route_key}"
+                        )
                         break
                 else:
                     # This route_key is not available locally
                     all_routes_satisfied = False
+                    self._logger.debug(f"Route key {route_key} not found locally")
         else:
             all_routes_satisfied = False
+            self._logger.debug("No routes available, sending to supervisor")
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:
