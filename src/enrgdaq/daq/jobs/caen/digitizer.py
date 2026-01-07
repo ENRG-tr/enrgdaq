@@ -22,18 +22,22 @@ except Exception:
     from types import SimpleNamespace
 
     # Create proper Enum fallbacks for schema generation
-    class TriggerMode(str, Enum):
-        ACQ_ONLY = "ACQ_ONLY"
-        DISABLED = "DISABLED"
+    class TriggerMode(int, Enum):
+        DISABLED = 0
+        ACQ_ONLY = 1
+        EXTOUT_ONLY = 2
+        ACQ_AND_EXTOUT = 3
 
-    class AcqMode(str, Enum):
-        SW_CONTROLLED = "SW_CONTROLLED"
+    class AcqMode(int, Enum):
+        SW_CONTROLLED = 0
 
-    class TriggerPolarity(str, Enum):
-        ON_RISING_EDGE = "ON_RISING_EDGE"
+    class TriggerPolarity(int, Enum):
+        ON_RISING_EDGE = 0
+        ON_FALLING_EDGE = 1
 
     class IOLevel(str, Enum):
         NIM = "NIM"
+        TTL = "TTL"
 
     dgtz = SimpleNamespace()
     dgtz.TriggerMode = TriggerMode
