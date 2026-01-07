@@ -18,6 +18,7 @@ typedef struct
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     int shutdown;
+    int count;  // Number of items in the queue
 } ThreadSafeQueue_t;
 
 void queue_init(ThreadSafeQueue_t *q);

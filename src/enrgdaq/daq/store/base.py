@@ -1,4 +1,5 @@
 import time
+from typing import override
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage, DAQJobMessageStop
@@ -16,8 +17,7 @@ class DAQJobStore(DAQJob):
     unnecessary latency in message processing.
     """
 
-    allowed_store_config_types: list
-
+    @override
     def start(self):
         """
         Starts the continuous loop for consuming and storing data.
@@ -32,6 +32,7 @@ class DAQJobStore(DAQJob):
     def store_loop(self):
         pass
 
+    @override
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not self.can_handle_message(message):
             raise Exception(

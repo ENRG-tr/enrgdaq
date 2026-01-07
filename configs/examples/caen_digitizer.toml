@@ -14,17 +14,27 @@ channel_enable_mask = 0b00000000  # Bitmask for enabled channels, e.g., 0b11 for
 
 # --------------------- Acquisition Settings ---------------------
 record_length = 1024      # Number of samples per waveform
-acquisition_mode = "SW_CONTROLLED" # "SW_CONTROLLED" or "S_IN_CONTROLLED"
+# acquisition_mode: 0=SW_CONTROLLED (default)
 max_num_events_blt = 1    # Max number of events per block transfer
 
 # --------------------- Trigger Settings ---------------------
-sw_trigger_mode = "ACQ_ONLY" # "ACQ_ONLY", "ACQ_AND_EXTOUT", "EXTOUT_ONLY"
-channel_self_trigger_threshold = 600  # Trigger threshold in LSB (see peak_threshold for details)
+# sw_trigger_mode: 0=DISABLED, 1=ACQ_ONLY, 2=EXTOUT_ONLY, 3=ACQ_AND_EXTOUT
+sw_trigger_mode = 1
+channel_self_trigger_threshold_mv = 100  # Trigger threshold in mV from baseline
 channel_self_trigger_channel_mask = 0b00000000 # Bitmask for channels to use for self-trigger
+# trigger_polarity: 0=ON_RISING_EDGE, 1=ON_FALLING_EDGE
+trigger_polarity = 0
 
 # --------------------- Analysis Settings ---------------------
-peak_threshold = 600 # Threshold for peak finding in waveforms in LSB (not mV)
-                     # For VX1751, 0-1023 is (-500)-500 mV, so map as such
+# Keep samples that deviate more than this from baseline (symmetric filtering)
+filter_threshold_mv = 50  # Threshold in mV
+
+# --------------------- Baseline Settings ---------------------
+# Baseline position for value_mv calculation. Options:
+#   "TOP"    - Baseline at 1023 (max ADC value), signals go negative
+#   "MIDDLE" - Baseline at 512 (center), signals go both ways
+#   "BOTTOM" - Baseline at 0 (min ADC value), signals go positive
+baseline_position = "TOP"
 
 # --------------------- Storage Settings ---------------------
 [waveform_store_config.raw]

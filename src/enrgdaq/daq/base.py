@@ -2,6 +2,8 @@ import logging
 import pickle
 import re
 import sys
+import threading
+import time
 import uuid
 from datetime import datetime, timedelta
 from logging.handlers import QueueHandler
@@ -25,6 +27,7 @@ from enrgdaq.daq.models import (
     LogVerbosity,
     RouteMapping,
     SHMHandle,
+    DAQJobMessageStatsReport,
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
@@ -109,6 +112,7 @@ class DAQJob:
     _watchdog: Watchdog
     _supervisor_info: SupervisorInfo | None
     _routes: RouteMapping | None = None
+    _consume_thread: threading.Thread | None = None 
 
     def __init__(
         self,
@@ -153,6 +157,18 @@ class DAQJob:
 
         self._put_message_out(DAQJobMessageJobStarted())
 
+        # Start consume thread if not a store job
+        from enrgdaq.daq.store.base import DAQJobStore
+        # TODO: FIX THISSSSS!! NOO!
+        if not isinstance(self, DAQJobStore):
+            self._consume_thread = threading.Thread(target=self._consume_thread_func, daemon=True)
+            self._consume_thread.start()
+
+    def _consume_thread_func(self):
+        while True:
+            if not self.consume(nowait=True):
+                time.sleep(0.001)
+
     def consume(self, nowait: bool = True, timeout: float | None = None):
         """
         Consumes messages from the message_in queue.
@@ -164,18 +180,19 @@ class DAQJob:
         if not nowait:
             msg = self.message_in.get(timeout=timeout)
             msg = self._unwrap_message(msg)
-            self.handle_message(msg)
-            return
+            return self.handle_message(msg)
 
         while True:
             try:
                 msg = self.message_in.get_nowait()
                 msg = self._unwrap_message(msg)
-                self.handle_message(msg)
+                return self.handle_message(msg)
             except (Empty, FileNotFoundError):
                 break
-
         self.report_stats()
+
+        return False
+
 
     def consume_all(self):
         processed_any = False
@@ -296,7 +313,8 @@ class DAQJob:
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        if self.config.verbosity == LogVerbosity.DEBUG:
+        omit_debug_message = isinstance(message, DAQJobMessageStatsReport)
+        if self.config.verbosity == LogVerbosity.DEBUG and not omit_debug_message:
             self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
         if use_shm and sys.platform != "win32":
@@ -365,17 +383,20 @@ class DAQJob:
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        self._logger.debug(
-                            f"Direct routed {type(message).__name__} to {route_key}"
-                        )
+                        if not omit_debug_message:
+                            self._logger.debug(
+                                f"Direct routed {type(message).__name__} to {route_key}"
+                            )
                         break
                 else:
+                    pass
                     # This route_key is not available locally
-                    all_routes_satisfied = False
-                    self._logger.debug(f"Route key {route_key} not found locally")
+                    # all_routes_satisfied = False
+                    # self._logger.debug(f"Route key {route_key} not found locally")
         else:
             all_routes_satisfied = False
-            self._logger.debug("No routes available, sending to supervisor")
+            if not omit_debug_message:
+                self._logger.debug(f"No routes available, sending to supervisor ({self._routes} routes)")
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:

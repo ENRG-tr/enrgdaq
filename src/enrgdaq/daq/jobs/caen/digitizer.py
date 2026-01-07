@@ -8,6 +8,7 @@ import sys
 import threading
 import time
 from datetime import timedelta
+from enum import Enum
 from pathlib import Path
 from typing import Literal, Optional
 
@@ -62,6 +63,22 @@ DAQ_JOB_CAEN_DIGITIZER_SEND_EVERY_MB = 1
 UINT16_SIZE = ct.sizeof(ct.c_uint16)
 
 
+class BaselinePosition(str, Enum):
+    """Position of the baseline in the ADC range."""
+    TOP = "TOP"        # Baseline at 1023 (max) - signals go negative
+    MIDDLE = "MIDDLE"  # Baseline at 512 (center) - signals go both ways
+    BOTTOM = "BOTTOM"  # Baseline at 0 (min) - signals go positive
+
+    def get_target_value(self) -> int:
+        """Get the target ADC value for this baseline position."""
+        if self == BaselinePosition.TOP:
+            return 1023
+        elif self == BaselinePosition.MIDDLE:
+            return 512
+        else:  # BOTTOM
+            return 0
+
+
 class DAQJobCAENDigitizerConfig(DAQJobConfig):
     """
     Configuration class for the CAEN Digitizer DAQ Job.
@@ -75,18 +92,21 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None
@@ -104,6 +124,7 @@ class RunAcquisitionArgs(ct.Structure):
         ("handle", ct.c_int),
         ("is_debug_verbosity", ct.c_int),
         ("filter_threshold", ct.c_int),
+        ("calibration_target_baseline", ct.c_int),
         ("waveform_callback", WAVEFORM_CALLBACK_FUNC),
         ("stats_callback", STATS_CALLBACK_FUNC),
         ("channel_dc_offsets", ct.c_void_p),
@@ -126,20 +147,62 @@ class WaveformSamplesRaw(ct.Structure):
 
 class AcquisitionStatsRaw(ct.Structure):
     _fields_ = [
+        # Basic counts
         ("acq_events", ct.c_long),
         ("acq_samples", ct.c_long),
+        # Value statistics (in mV)
+        ("sum_value_mv", ct.c_long),
+        ("sum_value_mv_squared", ct.c_long),
+        ("min_value_mv", ct.c_int16),
+        ("max_value_mv", ct.c_int16),
+        # Filter statistics
+        ("samples_filtered_out", ct.c_long),
+        ("total_samples_raw", ct.c_long),
+        # Performance statistics
+        ("events_dropped", ct.c_long),
+        ("queue_depth", ct.c_long),
+        ("processing_time_us", ct.c_long),
+        ("buffer_flush_count", ct.c_long),
     ]
 
 
 class AcquisitionStats(Struct):
+    # Basic counts
     acq_events: int
     acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples > 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
         )
 
 
@@ -220,10 +283,12 @@ class DAQJobCAENDigitizer(DAQJob):
             self._logger.error(f"Error during acquisition: {e}", exc_info=True)
 
     def handle_message(self, message: DAQJobMessage) -> bool:
+        if not super().handle_message(message):
+            return False
         if not isinstance(message, DAQJobMessageStop):
-            return super().handle_message(message)
+            return True
         if not self.config.save_npy_lz4 or self._converting_npy_lz4:
-            return super().handle_message(message)
+            return True
 
         self._converting_npy_lz4 = True
         # Convert npy.lz4 to root
@@ -234,7 +299,7 @@ class DAQJobCAENDigitizer(DAQJob):
             self._logger.warning(
                 f"Npy file does not exist: {npy_path}, skipping conversion"
             )
-            return super().handle_message(message)
+            return True
 
         root_path = npy_path.parent / (npy_path.stem + ".root")
         self._logger.info(f"Running npy2root: {npy_path} -> {root_path}")
@@ -249,7 +314,7 @@ class DAQJobCAENDigitizer(DAQJob):
             check=True,
         )
 
-        return super().handle_message(message)
+        return True
 
     def _run_acquisition(self, device: dgtz.Device):
         try:
@@ -259,7 +324,8 @@ class DAQJobCAENDigitizer(DAQJob):
             args = RunAcquisitionArgs()
             args.handle = device.handle
             args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
-            args.filter_threshold = self.config.peak_threshold
+            args.filter_threshold = self.config.filter_threshold_mv
+            args.calibration_target_baseline = self.config.baseline_position.get_target_value()
             args.waveform_callback = self._waveform_callback_delegate
             args.stats_callback = self._stats_callback_delegate
 
@@ -276,14 +342,25 @@ class DAQJobCAENDigitizer(DAQJob):
         device.reset()
         device.set_record_length(self.config.record_length)
         device.set_channel_enable_mask(self.config.channel_enable_mask)
+
+        # Convert mV threshold to LSB using target baseline
+        target_baseline = self.config.baseline_position.get_target_value()
+        # For rising edge: baseline + mV, for falling edge: baseline - mV
+        if self.config.trigger_polarity == dgtz.TriggerPolarity.ON_RISING_EDGE:
+            trigger_threshold_lsb = target_baseline + (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+        else:
+            trigger_threshold_lsb = target_baseline - (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+        # Clamp to valid range (10-bit ADC: 0-1023)
+        trigger_threshold_lsb = max(0, min(1023, trigger_threshold_lsb))
+
         for channel in range(info.channels):
             device.set_channel_trigger_threshold(
                 channel,
-                self.config.channel_self_trigger_threshold,
+                trigger_threshold_lsb,
             )
             device.set_trigger_polarity(
                 channel,
-                dgtz.TriggerPolarity.ON_RISING_EDGE,
+                self.config.trigger_polarity,
             )
             device.set_channel_self_trigger(
                 dgtz.TriggerMode.ACQ_ONLY
@@ -340,7 +417,7 @@ class DAQJobCAENDigitizer(DAQJob):
                 tag="waveform",
                 table=table,
             ),
-            use_shm=True,
+            use_shm=False,
         )
 
     def _writer_thread_func(self):
@@ -378,8 +455,22 @@ class DAQJobCAENDigitizer(DAQJob):
         table = pa.table(
             {
                 "timestamp": [get_now_unix_timestamp_ms()],
+                # Basic counts
                 "acq_events": [stats.acq_events],
                 "acq_samples": [stats.acq_samples],
+                # Value statistics (in mV)
+                "mean_value_mv": [stats.mean_value_mv],
+                "sum_value_mv_squared": [stats.sum_value_mv_squared],
+                "min_value_mv": [stats.min_value_mv],
+                "max_value_mv": [stats.max_value_mv],
+                # Filter statistics
+                "samples_filtered_out": [stats.samples_filtered_out],
+                "total_samples_raw": [stats.total_samples_raw],
+                # Performance statistics
+                "events_dropped": [stats.events_dropped],
+                "queue_depth": [stats.queue_depth],
+                "processing_time_us": [stats.processing_time_us],
+                "buffer_flush_count": [stats.buffer_flush_count],
             }
         )
 

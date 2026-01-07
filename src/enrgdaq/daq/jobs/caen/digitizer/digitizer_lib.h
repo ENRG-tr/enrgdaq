@@ -7,12 +7,29 @@
 #define CHANNEL_COUNT 8
 #define MAX_SAMPLES_PER_CHANNEL 1024 * 2
 #define EVENT_POOL_SIZE 1024 * 4
-#define ACQ_BUFFER_SIZE 1024 * 1024 * 8
+#define ACQ_BUFFER_SIZE 1024 * 512//1024 * 8
 
 typedef struct
 {
+    // Basic counts
     long acq_events;
     long acq_samples;
+
+    // Value statistics (in mV)
+    long sum_value_mv;          // Sum of all value_mv (for mean calculation)
+    long sum_value_mv_squared;  // Sum of squares (for variance/RMS)
+    int16_t min_value_mv;       // Minimum value_mv
+    int16_t max_value_mv;       // Maximum value_mv
+
+    // Filter statistics
+    long samples_filtered_out;  // Samples that didn't pass the threshold filter
+    long total_samples_raw;     // Total raw samples before filtering
+
+    // Performance statistics
+    long events_dropped;        // Events dropped due to queue full
+    long queue_depth;           // Current work queue depth
+    long processing_time_us;    // Time spent processing in this period
+    long buffer_flush_count;    // Number of times buffer was flushed
 } AcquisitionStats_t;
 
 typedef struct
@@ -46,6 +63,7 @@ typedef struct
     int handle;
     int is_debug_verbosity;
     int filter_threshold;
+    int calibration_target_baseline;
     waveform_callback_t waveform_callback;
     acquisition_stats_callback_t stats_callback;
 
@@ -61,6 +79,7 @@ typedef struct
     size_t out_buffer_max_samples;
     int64_t pc_unix_ms_timestamp;
     int64_t real_ns_timestamp_without_sample;
+    AcquisitionStats_t *stats; 
 } FilterWaveformsArgs_t;
 
 void run_acquisition(RunAcquisitionArgs_t *args);

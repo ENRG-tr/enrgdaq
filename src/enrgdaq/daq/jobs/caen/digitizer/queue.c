@@ -9,6 +9,7 @@ void queue_init(ThreadSafeQueue_t *q)
     pthread_mutex_init(&q->mutex, NULL);
     pthread_cond_init(&q->cond, NULL);
     q->shutdown = 0;
+    q->count = 0;
 }
 
 void queue_push_ptr(ThreadSafeQueue_t *q, EventDataCopy_t *data_ptr)
@@ -27,6 +28,7 @@ void queue_push_ptr(ThreadSafeQueue_t *q, EventDataCopy_t *data_ptr)
         q->head = item;
     }
     q->tail = item;
+    q->count++;
 
     pthread_cond_signal(&q->cond);
     pthread_mutex_unlock(&q->mutex);
@@ -55,6 +57,7 @@ EventDataCopy_t *queue_pop_ptr(ThreadSafeQueue_t *q)
         {
             q->tail = NULL;
         }
+        q->count--;
     }
     pthread_mutex_unlock(&q->mutex);
 

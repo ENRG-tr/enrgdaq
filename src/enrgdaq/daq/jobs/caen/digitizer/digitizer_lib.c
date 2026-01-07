@@ -8,12 +8,16 @@
 #include <time.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <limits.h>
 #include "CAENDigitizer.h"
 #include "digitizer_lib.h"
 #include "queue.h"
 
 static int g_running = 0;
 static int g_is_debug_verbosity = 0;
+
+// Baseline value for each channel (set from config target baseline)
+static int16_t g_baseline = 1023;
 
 const int TTT_PERIOD_NS = 8; // 1 / 125 MHz
 
@@ -48,10 +52,42 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
+        // First, calculate pre-trigger baseline (10% of waveforms)
+        uint64_t value_lsb_sum = 0;
+        uint64_t value_lsb_count = 0;
+        for (int i = 0; i < args.event_copy->ChSize[ch] / 10; i++)
+        {
+            uint16_t sample_value = args.event_copy->Waveforms[ch][i];
+            value_lsb_sum += sample_value;
+            value_lsb_count++;
+        }
+        uint16_t pre_trigger_baseline = value_lsb_sum / value_lsb_count;
+
+        // Track total raw samples
+        args.stats->total_samples_raw += args.event_copy->ChSize[ch];
+
         for (int i = 0; i < args.event_copy->ChSize[ch]; i++)
         {
-            if (args.event_copy->Waveforms[ch][i] < args.filter_threshold)
+            uint16_t sample_value = args.event_copy->Waveforms[ch][i];
+
+            // Calculate value_mv: (sample_value - baseline) * 1000 / 1024
+            int16_t value_mv = (((int16_t)(sample_value - pre_trigger_baseline)) * 1000) / 1024;
+
+            // Symmetric filtering: keep samples that deviate more than filter_threshold_mv from baseline
+            // filter_threshold is now in mV
+            if (abs(value_mv) < args.filter_threshold)
+            {
+                args.stats->samples_filtered_out++;
                 continue;
+            }
+
+            // Update value statistics
+            args.stats->sum_value_mv += value_mv;
+            args.stats->sum_value_mv_squared += (long)value_mv * value_mv;
+            if (value_mv < args.stats->min_value_mv)
+                args.stats->min_value_mv = value_mv;
+            if (value_mv > args.stats->max_value_mv)
+                args.stats->max_value_mv = value_mv;
 
             if (args.out_buffer->len + sample_count >= args.out_buffer_max_samples)
             {
@@ -62,18 +98,12 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
             uint32_t buf_index = args.out_buffer->len + sample_count;
 
             // Header
-            // args.out_buffer->pc_unix_ms_timestamp[buf_index] = args.pc_unix_ms_timestamp;
             args.out_buffer->real_ns_timestamp[buf_index] = args.real_ns_timestamp_without_sample + i; // i = 1 ns
             args.out_buffer->event_counter[buf_index] = args.event_copy->event_info.EventCounter;
-            // args.out_buffer->trigger_time_tag[buf_index] = args.event_copy->event_info.TriggerTimeTag;
 
             args.out_buffer->channel[buf_index] = (uint8_t)ch;
             args.out_buffer->sample_index[buf_index] = (uint16_t)i;
-            // args.out_buffer->value_lsb[buf_index] = args.event_copy->Waveforms[ch][i];
-            //  we're using vx1751 which is 1 v_pp, which is represented using uint16, so we need to map it
-            float normalized_value_lsb = (float)args.event_copy->Waveforms[ch][i] / 1023.0;
-            float dc_offset_diff = 0; // todo: change this // (float)(65535 - args.channel_dc_offsets[ch]) / 65535.0;
-            args.out_buffer->value_mv[buf_index] = (int16_t)((normalized_value_lsb - dc_offset_diff) * 1000.0);
+            args.out_buffer->value_mv[buf_index] = value_mv;
 
             sample_count++;
         }
@@ -98,7 +128,10 @@ void *processing_thread_func(void *arg)
         .value_mv = malloc(ACQ_BUFFER_SIZE * sizeof(int16_t)),
         .len = 0};
 
+    // Initialize stats with proper extreme values for min/max
     AcquisitionStats_t stats = {0};
+    stats.min_value_mv = INT16_MAX;
+    stats.max_value_mv = INT16_MIN;
 
     time_t last_log_time = time(NULL);
 
@@ -109,13 +142,21 @@ void *processing_thread_func(void *arg)
     uint32_t last_ttt_value = -1;
     uint64_t rollover_offset_ns = 0;
 
+    struct timespec process_start, process_end;
+
     while (1)
     {
         EventDataCopy_t *item = queue_pop_ptr(&g_work_queue);
         if (item == NULL) // Shutdown
             break;
 
+        // Start timing for processing
+        clock_gettime(CLOCK_MONOTONIC, &process_start);
+
         stats.acq_events++;
+
+        // Track queue depth (current work queue size)
+        stats.queue_depth = g_work_queue.count;
 
         uint32_t total_ch_size = 0;
         for (int ch = 0; ch < CHANNEL_COUNT; ch++)
@@ -130,6 +171,7 @@ void *processing_thread_func(void *arg)
             }
             args->waveform_callback(&acq_buffer);
             acq_buffer.len = 0;
+            stats.buffer_flush_count++;
         }
 
         uint32_t correct_ttt_value = item->event_info.TriggerTimeTag & TTT_31_BIT_MASK;
@@ -147,17 +189,26 @@ void *processing_thread_func(void *arg)
         int64_t real_ns_timestamp_without_sample = (int64_t)correct_ttt_value * TTT_PERIOD_NS + rollover_offset_ns;
 
         size_t sample_count = filter_channel_waveforms(
-            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample});
+            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample, &stats});
 
         stats.acq_samples += sample_count;
         acq_buffer.len += sample_count;
 
         queue_push_ptr(&g_free_pool_queue, item);
 
+        // End timing and accumulate processing time
+        clock_gettime(CLOCK_MONOTONIC, &process_end);
+        long elapsed_us = (process_end.tv_sec - process_start.tv_sec) * 1000000 +
+                          (process_end.tv_nsec - process_start.tv_nsec) / 1000;
+        stats.processing_time_us += elapsed_us;
+
         if (time(NULL) - last_log_time >= 1)
         {
             args->stats_callback(&stats);
+            // Reset stats 
             stats = (const AcquisitionStats_t){0};
+            stats.min_value_mv = INT16_MAX;
+            stats.max_value_mv = INT16_MIN;
             last_log_time = time(NULL);
         }
     }
@@ -213,6 +264,9 @@ void run_acquisition(RunAcquisitionArgs_t *args)
         fflush(stdout);
     }
     args->channel_dc_offsets = channel_dc_offsets;
+
+    // Set baseline from config for value_mv calculation
+    g_baseline = (int16_t)args->calibration_target_baseline;
 
     g_running = 1;
     ret = CAEN_DGTZ_SWStartAcquisition(args->handle);
