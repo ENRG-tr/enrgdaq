@@ -82,7 +82,7 @@ errors defaults to 'strict'.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats"><code class="flex name class">
 <span>class <span class="ident">AcquisitionStats</span></span>
-<span>(</span><span>acq_events: int, acq_samples: int)</span>
+<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -90,14 +90,42 @@ errors defaults to 'strict'.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
     acq_events: int
     acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
         )</code></pre>
 </details>
 <div class="desc"><p>A base class for defining efficient serializable objects.</p>
@@ -222,14 +250,42 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
     acq_events: int
     acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -241,14 +297,512 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
     acq_events: int
     acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count"><code class="name">var <span class="ident">buffer_flush_count</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped"><code class="name">var <span class="ident">events_dropped</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv"><code class="name">var <span class="ident">max_value_mv</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_value_mv"><code class="name">var <span class="ident">mean_value_mv</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv"><code class="name">var <span class="ident">min_value_mv</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us"><code class="name">var <span class="ident">processing_time_us</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth"><code class="name">var <span class="ident">queue_depth</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.samples_filtered_out"><code class="name">var <span class="ident">samples_filtered_out</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.sum_value_mv_squared"><code class="name">var <span class="ident">sum_value_mv_squared</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.total_samples_raw"><code class="name">var <span class="ident">total_samples_raw</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -266,8 +820,22 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </summary>
 <pre><code class="python">class AcquisitionStatsRaw(ct.Structure):
     _fields_ = [
+        # Basic counts
         (&#34;acq_events&#34;, ct.c_long),
         (&#34;acq_samples&#34;, ct.c_long),
+        # Value statistics (in mV)
+        (&#34;sum_value_mv&#34;, ct.c_long),
+        (&#34;sum_value_mv_squared&#34;, ct.c_long),
+        (&#34;min_value_mv&#34;, ct.c_int16),
+        (&#34;max_value_mv&#34;, ct.c_int16),
+        # Filter statistics
+        (&#34;samples_filtered_out&#34;, ct.c_long),
+        (&#34;total_samples_raw&#34;, ct.c_long),
+        # Performance statistics
+        (&#34;events_dropped&#34;, ct.c_long),
+        (&#34;queue_depth&#34;, ct.c_long),
+        (&#34;processing_time_us&#34;, ct.c_long),
+        (&#34;buffer_flush_count&#34;, ct.c_long),
     ]</code></pre>
 </details>
 <div class="desc"><p>Structure base class</p></div>
@@ -285,6 +853,114 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples"><code class="name">var <span class="ident">acq_samples</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count"><code class="name">var <span class="ident">buffer_flush_count</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped"><code class="name">var <span class="ident">events_dropped</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv"><code class="name">var <span class="ident">max_value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv"><code class="name">var <span class="ident">min_value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us"><code class="name">var <span class="ident">processing_time_us</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth"><code class="name">var <span class="ident">queue_depth</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out"><code class="name">var <span class="ident">samples_filtered_out</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv"><code class="name">var <span class="ident">sum_value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv_squared"><code class="name">var <span class="ident">sum_value_mv_squared</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.total_samples_raw"><code class="name">var <span class="ident">total_samples_raw</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition"><code class="flex name class">
+<span>class <span class="ident">BaselinePosition</span></span>
+<span>(</span><span>*args, **kwds)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BaselinePosition(str, Enum):
+    &#34;&#34;&#34;Position of the baseline in the ADC range.&#34;&#34;&#34;
+    TOP = &#34;TOP&#34;        # Baseline at 1023 (max) - signals go negative
+    MIDDLE = &#34;MIDDLE&#34;  # Baseline at 512 (center) - signals go both ways
+    BOTTOM = &#34;BOTTOM&#34;  # Baseline at 0 (min) - signals go positive
+
+    def get_target_value(self) -&gt; int:
+        &#34;&#34;&#34;Get the target ADC value for this baseline position.&#34;&#34;&#34;
+        if self == BaselinePosition.TOP:
+            return 1023
+        elif self == BaselinePosition.MIDDLE:
+            return 512
+        else:  # BOTTOM
+            return 0</code></pre>
+</details>
+<div class="desc"><p>Position of the baseline in the ADC range.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.str</li>
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.BOTTOM"><code class="name">var <span class="ident">BOTTOM</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.MIDDLE"><code class="name">var <span class="ident">MIDDLE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.TOP"><code class="name">var <span class="ident">TOP</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.get_target_value"><code class="name flex">
+<span>def <span class="ident">get_target_value</span></span>(<span>self) ‑> int</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_target_value(self) -&gt; int:
+    &#34;&#34;&#34;Get the target ADC value for this baseline position.&#34;&#34;&#34;
+    if self == BaselinePosition.TOP:
+        return 1023
+    elif self == BaselinePosition.MIDDLE:
+        return 512
+    else:  # BOTTOM
+        return 0</code></pre>
+</details>
+<div class="desc"><p>Get the target ADC value for this baseline position.</p></div>
 </dd>
 </dl>
 </dd>
@@ -374,10 +1050,12 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self._logger.error(f&#34;Error during acquisition: {e}&#34;, exc_info=True)
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
+        if not super().handle_message(message):
+            return False
         if not isinstance(message, DAQJobMessageStop):
-            return super().handle_message(message)
+            return True
         if not self.config.save_npy_lz4 or self._converting_npy_lz4:
-            return super().handle_message(message)
+            return True
 
         self._converting_npy_lz4 = True
         # Convert npy.lz4 to root
@@ -388,7 +1066,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self._logger.warning(
                 f&#34;Npy file does not exist: {npy_path}, skipping conversion&#34;
             )
-            return super().handle_message(message)
+            return True
 
         root_path = npy_path.parent / (npy_path.stem + &#34;.root&#34;)
         self._logger.info(f&#34;Running npy2root: {npy_path} -&gt; {root_path}&#34;)
@@ -403,7 +1081,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             check=True,
         )
 
-        return super().handle_message(message)
+        return True
 
     def _run_acquisition(self, device: dgtz.Device):
         try:
@@ -413,7 +1091,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             args = RunAcquisitionArgs()
             args.handle = device.handle
             args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
-            args.filter_threshold = self.config.peak_threshold
+            args.filter_threshold = self.config.filter_threshold_mv
+            args.calibration_target_baseline = self.config.baseline_position.get_target_value()
             args.waveform_callback = self._waveform_callback_delegate
             args.stats_callback = self._stats_callback_delegate
 
@@ -430,14 +1109,25 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         device.reset()
         device.set_record_length(self.config.record_length)
         device.set_channel_enable_mask(self.config.channel_enable_mask)
+
+        # Convert mV threshold to LSB using target baseline
+        target_baseline = self.config.baseline_position.get_target_value()
+        # For rising edge: baseline + mV, for falling edge: baseline - mV
+        if self.config.trigger_polarity == dgtz.TriggerPolarity.ON_RISING_EDGE:
+            trigger_threshold_lsb = target_baseline + (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+        else:
+            trigger_threshold_lsb = target_baseline - (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+        # Clamp to valid range (10-bit ADC: 0-1023)
+        trigger_threshold_lsb = max(0, min(1023, trigger_threshold_lsb))
+
         for channel in range(info.channels):
             device.set_channel_trigger_threshold(
                 channel,
-                self.config.channel_self_trigger_threshold,
+                trigger_threshold_lsb,
             )
             device.set_trigger_polarity(
                 channel,
-                dgtz.TriggerPolarity.ON_RISING_EDGE,
+                self.config.trigger_polarity,
             )
             device.set_channel_self_trigger(
                 dgtz.TriggerMode.ACQ_ONLY
@@ -494,7 +1184,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
                 tag=&#34;waveform&#34;,
                 table=table,
             ),
-            use_shm=True,
+            use_shm=False,
         )
 
     def _writer_thread_func(self):
@@ -532,8 +1222,22 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         table = pa.table(
             {
                 &#34;timestamp&#34;: [get_now_unix_timestamp_ms()],
+                # Basic counts
                 &#34;acq_events&#34;: [stats.acq_events],
                 &#34;acq_samples&#34;: [stats.acq_samples],
+                # Value statistics (in mV)
+                &#34;mean_value_mv&#34;: [stats.mean_value_mv],
+                &#34;sum_value_mv_squared&#34;: [stats.sum_value_mv_squared],
+                &#34;min_value_mv&#34;: [stats.min_value_mv],
+                &#34;max_value_mv&#34;: [stats.max_value_mv],
+                # Filter statistics
+                &#34;samples_filtered_out&#34;: [stats.samples_filtered_out],
+                &#34;total_samples_raw&#34;: [stats.total_samples_raw],
+                # Performance statistics
+                &#34;events_dropped&#34;: [stats.events_dropped],
+                &#34;queue_depth&#34;: [stats.queue_depth],
+                &#34;processing_time_us&#34;: [stats.processing_time_us],
+                &#34;buffer_flush_count&#34;: [stats.buffer_flush_count],
             }
         )
 
@@ -647,7 +1351,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobCAENDigitizerConfig</span></span>
-<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold: int = 32768,<br>channel_self_trigger_channel_mask: int = 0,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.ACQ_ONLY,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>peak_threshold: int = 750,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
+<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold_mv: int = 100,<br>channel_self_trigger_channel_mask: int = 0,<br>trigger_polarity: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a> = TriggerPolarity.ON_RISING_EDGE,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.ACQ_ONLY,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>filter_threshold_mv: int = 50,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>baseline_position: <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a> = BaselinePosition.TOP,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -667,18 +1371,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -711,18 +1418,61 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.baseline_position"><code class="name">var <span class="ident">baseline_position</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
+    channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -748,18 +1498,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -785,18 +1538,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -822,25 +1578,28 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
 
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold"><code class="name">var <span class="ident">channel_self_trigger_threshold</span> : int</code></dt>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold_mv"><code class="name">var <span class="ident">channel_self_trigger_threshold_mv</span> : int</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -859,18 +1618,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -896,18 +1658,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -933,18 +1698,61 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.filter_threshold_mv"><code class="name">var <span class="ident">filter_threshold_mv</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
+    channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -970,18 +1778,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1007,18 +1818,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1044,18 +1858,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1081,55 +1898,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
 
-    save_npy_lz4: bool = False
-    output_filename: Optional[str] = None</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold"><code class="name">var <span class="ident">peak_threshold</span> : int</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
-    &#34;&#34;&#34;
-    Configuration class for the CAEN Digitizer DAQ Job.
-    &#34;&#34;&#34;
-
-    connection_type: Literal[
-        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
-    ]
-    link_number: str
-    conet_node: int = 0
-    vme_base_address: int = 0
-    record_length: int = 1024
-    channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
-    channel_self_trigger_channel_mask: int = 0
-    channel_dc_offsets: dict[int, int] = {}
-    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
-    max_num_events_blt: int = 1
-    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
-    post_trigger_size: int = 80
-
-    waveform_store_config: Optional[DAQJobStoreConfig] = None
-    stats_store_config: Optional[DAQJobStoreConfig] = None
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1155,18 +1938,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1192,18 +1978,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1229,18 +2018,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1266,18 +2058,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1303,18 +2098,61 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
+    save_npy_lz4: bool = False
+    output_filename: Optional[str] = None</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.trigger_polarity"><code class="name">var <span class="ident">trigger_polarity</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
+    channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1340,18 +2178,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1377,18 +2218,21 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     vme_base_address: int = 0
     record_length: int = 1024
     channel_enable_mask: int = 1
-    channel_self_trigger_threshold: int = 32768
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
     channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
     sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    peak_threshold: int = 750
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
     io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
     stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
     output_filename: Optional[str] = None</code></pre>
@@ -1445,6 +2289,7 @@ errors defaults to 'strict'.</p></div>
         (&#34;handle&#34;, ct.c_int),
         (&#34;is_debug_verbosity&#34;, ct.c_int),
         (&#34;filter_threshold&#34;, ct.c_int),
+        (&#34;calibration_target_baseline&#34;, ct.c_int),
         (&#34;waveform_callback&#34;, WAVEFORM_CALLBACK_FUNC),
         (&#34;stats_callback&#34;, STATS_CALLBACK_FUNC),
         (&#34;channel_dc_offsets&#34;, ct.c_void_p),
@@ -1458,6 +2303,10 @@ errors defaults to 'strict'.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.calibration_target_baseline"><code class="name">var <span class="ident">calibration_target_baseline</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets"><code class="name">var <span class="ident">channel_dc_offsets</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
@@ -1639,7 +2488,17 @@ errors defaults to 'strict'.</p></div>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_events">acq_events</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples">acq_samples</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count">buffer_flush_count</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped">events_dropped</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw">from_raw</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv">max_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_value_mv">mean_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv">min_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us">processing_time_us</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth">queue_depth</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.samples_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.samples_filtered_out">samples_filtered_out</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.sum_value_mv_squared" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.sum_value_mv_squared">sum_value_mv_squared</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.total_samples_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.total_samples_raw">total_samples_raw</a></code></li>
 </ul>
 </li>
 <li>
@@ -1647,6 +2506,25 @@ errors defaults to 'strict'.</p></div>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_events">acq_events</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples">acq_samples</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count">buffer_flush_count</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped">events_dropped</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv">max_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv">min_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us">processing_time_us</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth">queue_depth</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out">samples_filtered_out</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv">sum_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv_squared" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv_squared">sum_value_mv_squared</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.total_samples_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.total_samples_raw">total_samples_raw</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.BOTTOM" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.BOTTOM">BOTTOM</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.MIDDLE" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.MIDDLE">MIDDLE</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.TOP" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.TOP">TOP</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.get_target_value" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition.get_target_value">get_target_value</a></code></li>
 </ul>
 </li>
 <li>
@@ -1663,22 +2541,24 @@ errors defaults to 'strict'.</p></div>
 <h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig">DAQJobCAENDigitizerConfig</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.acquisition_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.acquisition_mode">acquisition_mode</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.baseline_position" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.baseline_position">baseline_position</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_dc_offsets" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_dc_offsets">channel_dc_offsets</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_enable_mask" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_enable_mask">channel_enable_mask</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_channel_mask" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_channel_mask">channel_self_trigger_channel_mask</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold">channel_self_trigger_threshold</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold_mv" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold_mv">channel_self_trigger_threshold_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node">conet_node</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type">connection_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.filter_threshold_mv" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.filter_threshold_mv">filter_threshold_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level">io_level</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number">link_number</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt">max_num_events_blt</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename">output_filename</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.peak_threshold">peak_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.post_trigger_size" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.post_trigger_size">post_trigger_size</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.record_length" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.record_length">record_length</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4">save_npy_lz4</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config">stats_store_config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode">sw_trigger_mode</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.trigger_polarity" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.trigger_polarity">trigger_polarity</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address">vme_base_address</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.waveform_store_config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.waveform_store_config">waveform_store_config</a></code></li>
 </ul>
@@ -1691,7 +2571,8 @@ errors defaults to 'strict'.</p></div>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs">RunAcquisitionArgs</a></code></h4>
-<ul class="two-column">
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.calibration_target_baseline" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.calibration_target_baseline">calibration_target_baseline</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets">channel_dc_offsets</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold">filter_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle">handle</a></code></li>

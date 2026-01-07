@@ -63,8 +63,7 @@ el.replaceWith(d);
     unnecessary latency in message processing.
     &#34;&#34;&#34;
 
-    allowed_store_config_types: list
-
+    @override
     def start(self):
         &#34;&#34;&#34;
         Starts the continuous loop for consuming and storing data.
@@ -79,6 +78,7 @@ el.replaceWith(d);
     def store_loop(self):
         pass
 
+    @override
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if not self.can_handle_message(message):
             raise Exception(
@@ -122,13 +122,6 @@ unnecessary latency in message processing.</p></div>
 <li><a title="enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis" href="../jobs/store/redis.html#enrgdaq.daq.jobs.store.redis.DAQJobStoreRedis">DAQJobStoreRedis</a></li>
 <li><a title="enrgdaq.daq.jobs.store.root.DAQJobStoreROOT" href="../jobs/store/root.html#enrgdaq.daq.jobs.store.root.DAQJobStoreROOT">DAQJobStoreROOT</a></li>
 </ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types"><code class="name">var <span class="ident">allowed_store_config_types</span> : list</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
 <h3>Static methods</h3>
 <dl>
 <dt id="enrgdaq.daq.store.base.DAQJobStore.can_handle_message"><code class="name flex">
@@ -158,7 +151,8 @@ unnecessary latency in message processing.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def start(self):
+<pre><code class="python">@override
+def start(self):
     &#34;&#34;&#34;
     Starts the continuous loop for consuming and storing data.
     &#34;&#34;&#34;
@@ -213,7 +207,6 @@ unnecessary latency in message processing.</p></div>
 <li>
 <h4><code><a title="enrgdaq.daq.store.base.DAQJobStore" href="#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types" href="#enrgdaq.daq.store.base.DAQJobStore.allowed_store_config_types">allowed_store_config_types</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.store_loop" href="#enrgdaq.daq.store.base.DAQJobStore.store_loop">store_loop</a></code></li>

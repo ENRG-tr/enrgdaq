@@ -93,6 +93,7 @@ el.replaceWith(d);
     _watchdog: Watchdog
     _supervisor_info: SupervisorInfo | None
     _routes: RouteMapping | None = None
+    _consume_thread: threading.Thread | None = None 
 
     def __init__(
         self,
@@ -137,6 +138,18 @@ el.replaceWith(d);
 
         self._put_message_out(DAQJobMessageJobStarted())
 
+        # Start consume thread if not a store job
+        from enrgdaq.daq.store.base import DAQJobStore
+        # TODO: FIX THISSSSS!! NOO!
+        if not isinstance(self, DAQJobStore):
+            self._consume_thread = threading.Thread(target=self._consume_thread_func, daemon=True)
+            self._consume_thread.start()
+
+    def _consume_thread_func(self):
+        while True:
+            if not self.consume(nowait=True):
+                time.sleep(0.001)
+
     def consume(self, nowait: bool = True, timeout: float | None = None):
         &#34;&#34;&#34;
         Consumes messages from the message_in queue.
@@ -148,18 +161,19 @@ el.replaceWith(d);
         if not nowait:
             msg = self.message_in.get(timeout=timeout)
             msg = self._unwrap_message(msg)
-            self.handle_message(msg)
-            return
+            return self.handle_message(msg)
 
         while True:
             try:
                 msg = self.message_in.get_nowait()
                 msg = self._unwrap_message(msg)
-                self.handle_message(msg)
+                return self.handle_message(msg)
             except (Empty, FileNotFoundError):
                 break
-
         self.report_stats()
+
+        return False
+
 
     def consume_all(self):
         processed_any = False
@@ -280,7 +294,8 @@ el.replaceWith(d);
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        if self.config.verbosity == LogVerbosity.DEBUG:
+        omit_debug_message = isinstance(message, DAQJobMessageStatsReport)
+        if self.config.verbosity == LogVerbosity.DEBUG and not omit_debug_message:
             self._logger.debug(f&#34;Message out: {_format_message_for_log(message)}&#34;)
 
         if use_shm and sys.platform != &#34;win32&#34;:
@@ -349,17 +364,20 @@ el.replaceWith(d);
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        self._logger.debug(
-                            f&#34;Direct routed {type(message).__name__} to {route_key}&#34;
-                        )
+                        if not omit_debug_message:
+                            self._logger.debug(
+                                f&#34;Direct routed {type(message).__name__} to {route_key}&#34;
+                            )
                         break
                 else:
+                    pass
                     # This route_key is not available locally
-                    all_routes_satisfied = False
-                    self._logger.debug(f&#34;Route key {route_key} not found locally&#34;)
+                    # all_routes_satisfied = False
+                    # self._logger.debug(f&#34;Route key {route_key} not found locally&#34;)
         else:
             all_routes_satisfied = False
-            self._logger.debug(&#34;No routes available, sending to supervisor&#34;)
+            if not omit_debug_message:
+                self._logger.debug(f&#34;No routes available, sending to supervisor ({self._routes} routes)&#34;)
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:
@@ -553,18 +571,18 @@ def supervisor_id(self):
     if not nowait:
         msg = self.message_in.get(timeout=timeout)
         msg = self._unwrap_message(msg)
-        self.handle_message(msg)
-        return
+        return self.handle_message(msg)
 
     while True:
         try:
             msg = self.message_in.get_nowait()
             msg = self._unwrap_message(msg)
-            self.handle_message(msg)
+            return self.handle_message(msg)
         except (Empty, FileNotFoundError):
             break
+    self.report_stats()
 
-    self.report_stats()</code></pre>
+    return False</code></pre>
 </details>
 <div class="desc"><p>Consumes messages from the message_in queue.
 If nowait is True, it will consume the message immediately.
