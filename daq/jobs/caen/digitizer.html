@@ -55,21 +55,30 @@ el.replaceWith(d);
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class AcqMode(str, Enum):
-    SW_CONTROLLED = &#34;SW_CONTROLLED&#34;</code></pre>
+<pre><code class="python">class AcqMode(int, Enum):
+    SW_CONTROLLED = 0</code></pre>
 </details>
-<div class="desc"><p>str(object='') -&gt; str
-str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
-<p>Create a new string object from the given object. If encoding or
-errors is specified, then the object must expose a data buffer
-that will be decoded using the given encoding and error handler.
-Otherwise, returns the result of object.<strong>str</strong>() (if defined)
-or repr(object).
-encoding defaults to sys.getdefaultencoding().
-errors defaults to 'strict'.</p></div>
+<div class="desc"><p>int([x]) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.
+If x is a number, return x.<strong>int</strong>().
+For floating-point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.
+The literal can be preceded by '+' or '-' and be surrounded
+by whitespace.
+The base defaults to 10.
+Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; int('0b100', base=0)
+4
+</code></pre></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.str</li>
+<li>builtins.int</li>
 <li>enum.Enum</li>
 </ul>
 <h3>Class variables</h3>
@@ -2251,7 +2260,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class IOLevel(str, Enum):
-    NIM = &#34;NIM&#34;</code></pre>
+    NIM = &#34;NIM&#34;
+    TTL = &#34;TTL&#34;</code></pre>
 </details>
 <div class="desc"><p>str(object='') -&gt; str
 str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
@@ -2270,6 +2280,10 @@ errors defaults to 'strict'.</p></div>
 <h3>Class variables</h3>
 <dl>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM"><code class="name">var <span class="ident">NIM</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.IOLevel.TTL"><code class="name">var <span class="ident">TTL</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2342,31 +2356,50 @@ errors defaults to 'strict'.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TriggerMode(str, Enum):
-    ACQ_ONLY = &#34;ACQ_ONLY&#34;
-    DISABLED = &#34;DISABLED&#34;</code></pre>
+<pre><code class="python">class TriggerMode(int, Enum):
+    DISABLED = 0
+    ACQ_ONLY = 1
+    EXTOUT_ONLY = 2
+    ACQ_AND_EXTOUT = 3</code></pre>
 </details>
-<div class="desc"><p>str(object='') -&gt; str
-str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
-<p>Create a new string object from the given object. If encoding or
-errors is specified, then the object must expose a data buffer
-that will be decoded using the given encoding and error handler.
-Otherwise, returns the result of object.<strong>str</strong>() (if defined)
-or repr(object).
-encoding defaults to sys.getdefaultencoding().
-errors defaults to 'strict'.</p></div>
+<div class="desc"><p>int([x]) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.
+If x is a number, return x.<strong>int</strong>().
+For floating-point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.
+The literal can be preceded by '+' or '-' and be surrounded
+by whitespace.
+The base defaults to 10.
+Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; int('0b100', base=0)
+4
+</code></pre></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.str</li>
+<li>builtins.int</li>
 <li>enum.Enum</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_AND_EXTOUT"><code class="name">var <span class="ident">ACQ_AND_EXTOUT</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY"><code class="name">var <span class="ident">ACQ_ONLY</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED"><code class="name">var <span class="ident">DISABLED</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.EXTOUT_ONLY"><code class="name">var <span class="ident">EXTOUT_ONLY</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -2381,25 +2414,39 @@ errors defaults to 'strict'.</p></div>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class TriggerPolarity(str, Enum):
-    ON_RISING_EDGE = &#34;ON_RISING_EDGE&#34;</code></pre>
+<pre><code class="python">class TriggerPolarity(int, Enum):
+    ON_RISING_EDGE = 0
+    ON_FALLING_EDGE = 1</code></pre>
 </details>
-<div class="desc"><p>str(object='') -&gt; str
-str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
-<p>Create a new string object from the given object. If encoding or
-errors is specified, then the object must expose a data buffer
-that will be decoded using the given encoding and error handler.
-Otherwise, returns the result of object.<strong>str</strong>() (if defined)
-or repr(object).
-encoding defaults to sys.getdefaultencoding().
-errors defaults to 'strict'.</p></div>
+<div class="desc"><p>int([x]) -&gt; integer
+int(x, base=10) -&gt; integer</p>
+<p>Convert a number or string to an integer, or return 0 if no arguments
+are given.
+If x is a number, return x.<strong>int</strong>().
+For floating-point
+numbers, this truncates towards zero.</p>
+<p>If x is not a number or if base is given, then x must be a string,
+bytes, or bytearray instance representing an integer literal in the
+given base.
+The literal can be preceded by '+' or '-' and be surrounded
+by whitespace.
+The base defaults to 10.
+Valid bases are 0 and 2-36.
+Base 0 means to interpret the base from the string as an integer literal.</p>
+<pre><code class="language-python-repl">&gt;&gt;&gt; int('0b100', base=0)
+4
+</code></pre></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>builtins.str</li>
+<li>builtins.int</li>
 <li>enum.Enum</li>
 </ul>
 <h3>Class variables</h3>
 <dl>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_FALLING_EDGE"><code class="name">var <span class="ident">ON_FALLING_EDGE</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE"><code class="name">var <span class="ident">ON_RISING_EDGE</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -2567,6 +2614,7 @@ errors defaults to 'strict'.</p></div>
 <h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel.NIM">NIM</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel.TTL" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel.TTL">TTL</a></code></li>
 </ul>
 </li>
 <li>
@@ -2584,13 +2632,16 @@ errors defaults to 'strict'.</p></div>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_AND_EXTOUT" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_AND_EXTOUT">ACQ_AND_EXTOUT</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.ACQ_ONLY">ACQ_ONLY</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.DISABLED">DISABLED</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode.EXTOUT_ONLY" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode.EXTOUT_ONLY">EXTOUT_ONLY</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_FALLING_EDGE" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_FALLING_EDGE">ON_FALLING_EDGE</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity.ON_RISING_EDGE">ON_RISING_EDGE</a></code></li>
 </ul>
 </li>
