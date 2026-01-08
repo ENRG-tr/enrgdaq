@@ -166,7 +166,7 @@ class DAQJob:
 
     def _consume_thread_func(self):
         while True:
-            if not self.consume(nowait=True):
+            if not self.consume_all():
                 time.sleep(0.001)
 
     def consume(self, nowait: bool = True, timeout: float | None = None):

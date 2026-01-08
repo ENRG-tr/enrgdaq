@@ -31,6 +31,33 @@ BUFFER_SIZE_THRESHOLD_BYTES = 5_000_000
 BUFFER_FLUSH_INTERVAL_SECONDS = 1.0
 
 
+def _get_available_file_path(file_path: str, resolved_paths: set[str]) -> str:
+    """
+    Get an available file path, incrementing suffix if file exists.
+
+    If file_path exists or has been resolved in this session, returns a new path
+    with an incremented suffix (e.g., test.root -> test_1.root -> test_2.root).
+
+    Args:
+        file_path: The desired file path
+        resolved_paths: Set of paths already allocated in this session
+
+    Returns:
+        An available file path that doesn't exist and hasn't been allocated
+    """
+    if not os.path.exists(file_path) and file_path not in resolved_paths:
+        return file_path
+
+    base, ext = os.path.splitext(file_path)
+    counter = 1
+
+    while True:
+        new_path = f"{base}_{counter}{ext}"
+        if not os.path.exists(new_path) and new_path not in resolved_paths:
+            return new_path
+        counter += 1
+
+
 @dataclass
 class TreeBuffer:
     """Buffer for accumulating data before writing to ROOT tree."""
@@ -64,6 +91,7 @@ class DAQJobStoreROOT(DAQJobStore):
     _open_files: dict[str, uproot.WritableDirectory]
     _open_trees: dict[str, dict[str, uproot.WritableTree]]
     _buffers: dict[tuple[str, str], TreeBuffer]  # (file_path, tree_name) -> buffer
+    _resolved_paths: dict[str, str]  # original_path -> resolved_path
 
     def __init__(self, config: Any, **kwargs):
         super().__init__(config, **kwargs)
@@ -71,6 +99,7 @@ class DAQJobStoreROOT(DAQJobStore):
         self._open_files = {}
         self._open_trees = {}
         self._buffers = {}
+        self._resolved_paths = {}
 
     def start(self):
         while True:
@@ -102,10 +131,24 @@ class DAQJobStoreROOT(DAQJobStore):
             table = pa.table(data_columns)
 
         store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
-        file_path = modify_file_path(
+        original_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
-        file_path = os.path.join(self.config.out_dir, file_path)
+        original_path = os.path.join(self.config.out_dir, original_path)
+
+        # Resolve file path (use cached resolution or find available path)
+        if original_path in self._resolved_paths:
+            file_path = self._resolved_paths[original_path]
+        else:
+            file_path = _get_available_file_path(
+                original_path, set(self._resolved_paths.values())
+            )
+            self._resolved_paths[original_path] = file_path
+            if file_path != original_path:
+                self._logger.info(
+                    f"File '{original_path}' exists, using '{file_path}' instead"
+                )
+
         tree_name = store_config.tree_name
 
         # Get or create buffer for this file/tree
