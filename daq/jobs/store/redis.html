@@ -145,7 +145,7 @@ el.replaceWith(d);
             if msg.store_config.key_expiration_days is not None:
                 key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
-            base_item_key = f&#34;{msg.store_config.key}{f&#34;.{msg.tag}&#34; if msg.tag else &#39;&#39;}&#34;
+            base_item_key = f&#34;{msg.store_config.key}{f&#39;.{msg.tag}&#39; if msg.tag else &#39;&#39;}&#34;
             if isinstance(msg.data, bytes):
                 item_key = msg.store_config.key
                 data = base64.b64encode(msg.data).decode(&#34;utf-8&#34;)
@@ -279,7 +279,7 @@ unnecessary latency in message processing.</p></div>
         if msg.store_config.key_expiration_days is not None:
             key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
-        base_item_key = f&#34;{msg.store_config.key}{f&#34;.{msg.tag}&#34; if msg.tag else &#39;&#39;}&#34;
+        base_item_key = f&#34;{msg.store_config.key}{f&#39;.{msg.tag}&#39; if msg.tag else &#39;&#39;}&#34;
         if isinstance(msg.data, bytes):
             item_key = msg.store_config.key
             data = base64.b64encode(msg.data).decode(&#34;utf-8&#34;)

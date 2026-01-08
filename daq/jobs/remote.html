@@ -245,7 +245,7 @@ el.replaceWith(d);
             for topic in topics_to_subscribe:
                 zmq_sub.subscribe(topic)
 
-            self._logger.info(f&#34;Subscribed to topics: {&#34;, &#34;.join(topics_to_subscribe)}&#34;)
+            self._logger.info(f&#34;Subscribed to topics: {&#39;, &#39;.join(topics_to_subscribe)}&#34;)
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
@@ -257,7 +257,7 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         self._zmq_sub = self._create_zmq_sub(remote_urls)
 
-        while True:
+        while not self._has_been_freed:
             try:
                 parts = self._zmq_sub.recv_multipart()
                 topic = parts[0]
@@ -309,7 +309,7 @@ el.replaceWith(d);
             self._put_message_out(recv_message, modify_message_metadata=False)
 
     def _start_send_remote_stats_thread(self):
-        while True:
+        while not self._has_been_freed:
             self._send_remote_stats_message()
             sleep_for(DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS)
 
@@ -320,7 +320,9 @@ el.replaceWith(d);
         self._receive_thread.start()
         self._send_remote_stats_thread.start()
 
-        while True:
+        while not self._has_been_freed:
+            &#34;&#34;&#34;
+            TODO: Remove completely, now DAQJob thread does this
             # Consume all messages in the queue
             while True:
                 try:
@@ -329,6 +331,7 @@ el.replaceWith(d);
                     )
                 except Empty:
                     break
+            &#34;&#34;&#34;
 
             # Check thread healths
             if datetime.now() - self._last_is_alive_check_time &gt; timedelta(
@@ -486,7 +489,9 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
     self._receive_thread.start()
     self._send_remote_stats_thread.start()
 
-    while True:
+    while not self._has_been_freed:
+        &#34;&#34;&#34;
+        TODO: Remove completely, now DAQJob thread does this
         # Consume all messages in the queue
         while True:
             try:
@@ -495,6 +500,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
                 )
             except Empty:
                 break
+        &#34;&#34;&#34;
 
         # Check thread healths
         if datetime.now() - self._last_is_alive_check_time &gt; timedelta(

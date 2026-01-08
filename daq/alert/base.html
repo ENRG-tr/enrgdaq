@@ -62,7 +62,7 @@ el.replaceWith(d);
         super().__init__(config, **kwargs)
 
     def start(self):
-        while True:
+        while not self._has_been_freed:
             self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessageAlert) -&gt; bool:
@@ -139,7 +139,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start(self):
-    while True:
+    while not self._has_been_freed:
         self.consume(nowait=False)</code></pre>
 </details>
 <div class="desc"></div>

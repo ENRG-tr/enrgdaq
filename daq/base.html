@@ -212,6 +212,7 @@ el.replaceWith(d);
         &#34;&#34;&#34;
 
         if isinstance(message, DAQJobMessageStop):
+            self.free()
             raise DAQJobStopError(message.reason)
 
         if isinstance(message, DAQJobMessageRoutes):
@@ -679,6 +680,7 @@ Otherwise, it will wait until a message is available.</p></div>
     &#34;&#34;&#34;
 
     if isinstance(message, DAQJobMessageStop):
+        self.free()
         raise DAQJobStopError(message.reason)
 
     if isinstance(message, DAQJobMessageRoutes):

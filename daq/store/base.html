@@ -68,7 +68,7 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         Starts the continuous loop for consuming and storing data.
         &#34;&#34;&#34;
-        while True:
+        while not self._has_been_freed:
             messages_processed = self.consume_all()
             self.store_loop()
 
@@ -156,7 +156,7 @@ def start(self):
     &#34;&#34;&#34;
     Starts the continuous loop for consuming and storing data.
     &#34;&#34;&#34;
-    while True:
+    while not self._has_been_freed:
         messages_processed = self.consume_all()
         self.store_loop()
 

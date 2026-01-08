@@ -166,8 +166,8 @@ el.replaceWith(d);
         self._sent_alert_items = set()
 
     def start(self):
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
             self.handle_checks()
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
@@ -370,8 +370,8 @@ The default value is True.</p></div>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start(self):
-    while True:
-        self.consume()
+    while not self._has_been_freed:
+        # self.consume()
         self.handle_checks()
         time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)</code></pre>
 </details>

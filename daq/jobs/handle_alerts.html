@@ -68,7 +68,7 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         Starts the job, continuously consuming messages from the queue.
         &#34;&#34;&#34;
-        while True:
+        while not self._has_been_freed:
             self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
@@ -139,7 +139,7 @@ Inherits from StorableDAQJobConfig.</p></div>
     &#34;&#34;&#34;
     Starts the job, continuously consuming messages from the queue.
     &#34;&#34;&#34;
-    while True:
+    while not self._has_been_freed:
         self.consume(nowait=False)</code></pre>
 </details>
 <div class="desc"><p>Starts the job, continuously consuming messages from the queue.</p></div>

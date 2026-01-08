@@ -70,8 +70,8 @@ el.replaceWith(d);
         logging.getLogger(&#34;asyncio&#34;).setLevel(self.config.verbosity.to_logging_level())
 
     def start(self):
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
             try:
                 # _get_data now returns (data, units)
                 data = self._get_data()
@@ -197,8 +197,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def start(self):
-    while True:
-        self.consume()
+    while not self._has_been_freed:
+        # self.consume()
         try:
             # _get_data now returns (data, units)
             data = self._get_data()

@@ -71,8 +71,8 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         Start the DAQ job, continuously consuming data and sending store messages.
         &#34;&#34;&#34;
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
             self._send_store_message()
 
             time.sleep(1)
@@ -151,8 +151,8 @@ el.replaceWith(d);
     &#34;&#34;&#34;
     Start the DAQ job, continuously consuming data and sending store messages.
     &#34;&#34;&#34;
-    while True:
-        self.consume()
+    while not self._has_been_freed:
+        # self.consume()
         self._send_store_message()
 
         time.sleep(1)</code></pre>
