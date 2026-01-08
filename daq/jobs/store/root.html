@@ -72,6 +72,7 @@ el.replaceWith(d);
     _open_files: dict[str, uproot.WritableDirectory]
     _open_trees: dict[str, dict[str, uproot.WritableTree]]
     _buffers: dict[tuple[str, str], TreeBuffer]  # (file_path, tree_name) -&gt; buffer
+    _resolved_paths: dict[str, str]  # original_path -&gt; resolved_path
 
     def __init__(self, config: Any, **kwargs):
         super().__init__(config, **kwargs)
@@ -79,6 +80,7 @@ el.replaceWith(d);
         self._open_files = {}
         self._open_trees = {}
         self._buffers = {}
+        self._resolved_paths = {}
 
     def start(self):
         while True:
@@ -110,10 +112,24 @@ el.replaceWith(d);
             table = pa.table(data_columns)
 
         store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
-        file_path = modify_file_path(
+        original_path = modify_file_path(
             store_config.file_path, store_config.add_date, message.tag
         )
-        file_path = os.path.join(self.config.out_dir, file_path)
+        original_path = os.path.join(self.config.out_dir, original_path)
+
+        # Resolve file path (use cached resolution or find available path)
+        if original_path in self._resolved_paths:
+            file_path = self._resolved_paths[original_path]
+        else:
+            file_path = _get_available_file_path(
+                original_path, set(self._resolved_paths.values())
+            )
+            self._resolved_paths[original_path] = file_path
+            if file_path != original_path:
+                self._logger.info(
+                    f&#34;File &#39;{original_path}&#39; exists, using &#39;{file_path}&#39; instead&#34;
+                )
+
         tree_name = store_config.tree_name
 
         # Get or create buffer for this file/tree
