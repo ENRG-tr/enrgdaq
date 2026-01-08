@@ -122,7 +122,7 @@ class DAQJobStoreRedis(DAQJobStore):
             if msg.store_config.key_expiration_days is not None:
                 key_expiration = timedelta(days=msg.store_config.key_expiration_days)
 
-            base_item_key = f"{msg.store_config.key}{f".{msg.tag}" if msg.tag else ''}"
+            base_item_key = f"{msg.store_config.key}{f'.{msg.tag}' if msg.tag else ''}"
             if isinstance(msg.data, bytes):
                 item_key = msg.store_config.key
                 data = base64.b64encode(msg.data).decode("utf-8")

@@ -61,8 +61,8 @@ class DAQJobN1081B(DAQJob):
             return False
 
     def start(self):
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
 
             # Log in if not connected
             if not self._is_connected():

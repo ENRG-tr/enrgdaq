@@ -170,8 +170,8 @@ class DAQJobHealthcheck(DAQJob):
         self._sent_alert_items = set()
 
     def start(self):
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
             self.handle_checks()
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 

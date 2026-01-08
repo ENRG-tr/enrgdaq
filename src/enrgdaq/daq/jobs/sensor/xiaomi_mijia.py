@@ -51,8 +51,8 @@ class DAQJobXiaomiMijia(DAQJob):
         logging.getLogger("asyncio").setLevel(self.config.verbosity.to_logging_level())
 
     def start(self):
-        while True:
-            self.consume()
+        while not self._has_been_freed:
+            # self.consume()
             try:
                 # _get_data now returns (data, units)
                 data = self._get_data()

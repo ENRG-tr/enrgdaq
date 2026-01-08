@@ -102,7 +102,7 @@ class DAQJobStoreROOT(DAQJobStore):
         self._resolved_paths = {}
 
     def start(self):
-        while True:
+        while not self._has_been_freed:
             messages_processed = self.consume_all()
             self._flush_ready_buffers()
 

@@ -30,7 +30,7 @@ class DAQJobHandleAlerts(DAQJob):
         """
         Starts the job, continuously consuming messages from the queue.
         """
-        while True:
+        while not self._has_been_freed:
             self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessage) -> bool:

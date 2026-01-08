@@ -57,9 +57,9 @@ class DAQJobHandleStats(DAQJob):
         self._remote_stats = defaultdict()
 
     def start(self):
-        while True:
+        while not self._has_been_freed:
             start_time = datetime.now()
-            self.consume()
+            # self.consume()
             self._save_stats()
             self._save_remote_stats()
             sleep_for(DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS, start_time)

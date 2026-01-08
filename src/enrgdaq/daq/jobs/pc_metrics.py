@@ -46,7 +46,7 @@ class DAQJobPCMetrics(DAQJob):
         super().handle_message(message)
 
     def start(self):
-        while True:
+        while not self._has_been_freed:
             start_time = datetime.now()
             self._poll_metrics()
             sleep_for(self.config.poll_interval_seconds, start_time)

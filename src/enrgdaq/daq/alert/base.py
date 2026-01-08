@@ -11,7 +11,7 @@ class DAQJobAlert(DAQJob):
         super().__init__(config, **kwargs)
 
     def start(self):
-        while True:
+        while not self._has_been_freed:
             self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessageAlert) -> bool:

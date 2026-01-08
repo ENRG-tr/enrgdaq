@@ -224,7 +224,7 @@ class DAQJobRemote(DAQJob):
             for topic in topics_to_subscribe:
                 zmq_sub.subscribe(topic)
 
-            self._logger.info(f"Subscribed to topics: {", ".join(topics_to_subscribe)}")
+            self._logger.info(f"Subscribed to topics: {', '.join(topics_to_subscribe)}")
         return zmq_sub
 
     def _start_receive_thread(self, remote_urls: list[str]):
@@ -236,7 +236,7 @@ class DAQJobRemote(DAQJob):
         """
         self._zmq_sub = self._create_zmq_sub(remote_urls)
 
-        while True:
+        while not self._has_been_freed:
             try:
                 parts = self._zmq_sub.recv_multipart()
                 topic = parts[0]
@@ -288,7 +288,7 @@ class DAQJobRemote(DAQJob):
             self._put_message_out(recv_message, modify_message_metadata=False)
 
     def _start_send_remote_stats_thread(self):
-        while True:
+        while not self._has_been_freed:
             self._send_remote_stats_message()
             sleep_for(DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS)
 
@@ -299,7 +299,9 @@ class DAQJobRemote(DAQJob):
         self._receive_thread.start()
         self._send_remote_stats_thread.start()
 
-        while True:
+        while not self._has_been_freed:
+            """
+            TODO: Remove completely, now DAQJob thread does this
             # Consume all messages in the queue
             while True:
                 try:
@@ -308,6 +310,7 @@ class DAQJobRemote(DAQJob):
                     )
                 except Empty:
                     break
+            """
 
             # Check thread healths
             if datetime.now() - self._last_is_alive_check_time > timedelta(

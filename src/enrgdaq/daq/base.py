@@ -231,6 +231,7 @@ class DAQJob:
         """
 
         if isinstance(message, DAQJobMessageStop):
+            self.free()
             raise DAQJobStopError(message.reason)
 
         if isinstance(message, DAQJobMessageRoutes):

@@ -138,26 +138,16 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         mock_data = DummyData()
         mock_get_data.return_value = mock_data
 
-        self.job.consume = MagicMock()
-
         # 2. Setup loop break
-        called = False
+        def side_effect(*args, **kwargs):
+            self.job._has_been_freed = True
 
-        def side_effect():
-            nonlocal called
-            if not called:
-                called = True
-            else:
-                raise KeyboardInterrupt()  # Stop after 2nd iteration
-
-        self.job.consume.side_effect = side_effect
+        mock_send_store.side_effect = side_effect
 
         # 3. Run test
-        with self.assertRaises(KeyboardInterrupt):
-            self.job.start()
+        self.job.start()
 
         # 4. Assert
-        self.assertEqual(self.job.consume.call_count, 2)
         self.assertEqual(mock_get_data.call_count, 1)
         self.assertEqual(mock_send_store.call_count, 1)
         # Check that send_store was called with the correct args
@@ -171,20 +161,15 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         self.job._send_store_message = MagicMock()
 
         # 2. Setup loop break
-        def fail_on_second_call(method):
-            if method.call_count == 2:
-                raise Exception("Stop loop")
+        def side_effect(*args, **kwargs):
+            self.job._has_been_freed = True
 
-        self.job.consume = MagicMock(
-            side_effect=lambda: fail_on_second_call(self.job.consume)
-        )
+        mock_sleep.side_effect = side_effect
 
         # 3. Run test
-        with self.assertRaises(Exception, msg="Stop loop"):
-            self.job.start()
+        self.job.start()
 
         # 4. Assert
-        self.assertEqual(self.job.consume.call_count, 2)
         self.assertEqual(mock_get_data.call_count, 1)
         self.job._logger.warning.assert_any_call(
             "Failed to get data: fail. Retrying after poll interval..."

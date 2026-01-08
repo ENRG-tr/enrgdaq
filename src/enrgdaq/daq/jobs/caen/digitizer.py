@@ -429,7 +429,7 @@ class DAQJobCAENDigitizer(DAQJob):
             self.config.output_filename is not None and self._writer_queue is not None
         )
 
-        while True:
+        while not self._has_been_freed:
             try:
                 data = self._writer_queue.get()
                 if data is None:

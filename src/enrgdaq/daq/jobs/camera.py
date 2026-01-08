@@ -97,7 +97,7 @@ class DAQJobCamera(DAQJob):
         self._cam = cv2.VideoCapture(camera_index)
 
         last_no_movement_capture_time = datetime.now()
-        while True:
+        while not self._has_been_freed:
             start_time = datetime.now()
             should_capture = False
             movement_detected = self._detect_movement_from_camera()

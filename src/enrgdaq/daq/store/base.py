@@ -1,5 +1,9 @@
 import time
-from typing import override
+try:
+    from typing import override
+except ImportError:
+    def override(func):
+        return func
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage, DAQJobMessageStop
@@ -22,7 +26,7 @@ class DAQJobStore(DAQJob):
         """
         Starts the continuous loop for consuming and storing data.
         """
-        while True:
+        while not self._has_been_freed:
             messages_processed = self.consume_all()
             self.store_loop()
 
