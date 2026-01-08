@@ -43,7 +43,8 @@ class TestDAQJobRemoteProxy(unittest.TestCase):
         )
 
     def test_destructor(self):
-        del self.daq_job_remote_proxy
+        self.daq_job_remote_proxy.__del__()
+        self.mock_context.socket.return_value.close.assert_called()
         self.mock_context.destroy.assert_called_once()
 
 

@@ -105,9 +105,9 @@ class TestDAQJobN1081B(unittest.TestCase):
         message = self.daq_job.message_out.put.call_args[0][0]
         self.assertIsInstance(message, DAQJobMessageStore)
         self.assertEqual(message.tag, "SEC_A")
-        self.assertIn("timestamp", message.keys)
-        self.assertIn("lemo_1", message.keys)
-        self.assertIn(100, message.data[0])
+        self.assertIn("timestamp", message.table.column_names)
+        self.assertIn("lemo_1", message.table.column_names)
+        self.assertEqual(100, message.table["lemo_1"][0].as_py())
 
     def test_invalid_section_in_config(self):
         invalid_config = DAQJobN1081BConfig(
