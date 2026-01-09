@@ -96,11 +96,7 @@ class DAQJobMessageStore(DAQJobMessage):
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.route_keys.add(store_job.__name__)
-
-        remote_config = self.get_remote_config()
-        if not remote_config or not remote_config.remote_disable:
-            self.route_keys.add("DAQJobRemote")
+                self.topics.add("store." + store_job.__name__)
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):

@@ -242,9 +242,6 @@ class DAQJobCAENHV(DAQJob):
                 # Start/reset watchdog timer at the beginning of each iteration
                 self._watchdog.reset()
 
-                # Consume incoming messages
-                self.consume()
-
                 # Poll channel parameters
                 try:
                     self._poll_channel_params(device, slots)

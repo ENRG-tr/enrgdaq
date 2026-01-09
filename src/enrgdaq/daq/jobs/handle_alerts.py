@@ -26,13 +26,6 @@ class DAQJobHandleAlerts(DAQJob):
     config_type = DAQJobHandleAlertsConfig
     config: DAQJobHandleAlertsConfig
 
-    def start(self):
-        """
-        Starts the job, continuously consuming messages from the queue.
-        """
-        while not self._has_been_freed:
-            self.consume(nowait=False)
-
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not super().handle_message(message):
             return False

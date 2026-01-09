@@ -38,16 +38,16 @@ from enrgdaq.daq.jobs.remote import (
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessage,
-    DAQJobMessageRoutes,
     DAQJobMessageSHM,
     DAQJobMessageStatsReport,
     DAQJobMessageStop,
     DAQJobStats,
-    RouteMapping,
     InternalDAQJobMessage,
+    RouteMapping,
 )
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import DAQJobMessageStoreSHM
+from enrgdaq.message_broker import MessageBroker
 from enrgdaq.models import (
     RestartScheduleInfo,
     SupervisorConfig,
@@ -143,6 +143,20 @@ class Supervisor:
         self._log_listener = None
         self._logger = logging.getLogger()
 
+        self.message_broker = MessageBroker()
+        self.supervisor_xpub_url = (
+            f"ipc:///tmp/supervisor_{self.supervisor_id}_xpub.ipc"
+        )
+        self.supervisor_xsub_url = (
+            f"ipc:///tmp/supervisor_{self.supervisor_id}_xsub.ipc"
+        )
+
+        self.message_broker.add_xpub_socket("supervisor_xpub", self.supervisor_xpub_url)
+        self.message_broker.add_xsub_socket("supervisor_xsub", self.supervisor_xsub_url)
+        self.message_broker.start_proxy(
+            "supervisor_proxy", "supervisor_xpub", "supervisor_xsub"
+        )
+
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
         self._last_routes_message_time = datetime.min
@@ -236,6 +250,7 @@ class Supervisor:
 
     def start_daq_job_processes(self, daq_jobs_to_load: list[DAQJobProcess]):
         assert self.config is not None
+
         # Start threads from user-provided daq jobs, or by
         # reading the config files like usual
         jobs_to_start = daq_jobs_to_load or load_daq_jobs(
@@ -244,6 +259,8 @@ class Supervisor:
 
         for job in jobs_to_start:
             job.log_queue = self._log_queue
+            job.zmq_xpub_url = self.supervisor_xpub_url
+            job.zmq_xsub_url = self.supervisor_xsub_url
 
         started_jobs = start_daq_jobs(jobs_to_start)
         self.daq_job_processes.extend(started_jobs)
@@ -480,31 +497,7 @@ class Supervisor:
                     daq_job_info=self._get_supervisor_daq_job_info(),
                 )
             )
-        # Send heartbeat message, targeted at the remote
-        """
-        if datetime.now() > self._last_heartbeat_message_time + timedelta(
-            seconds=DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS
-        ):
-            self._last_heartbeat_message_time = datetime.now()
-            messages.append(
-                DAQJobMessageHeartbeat(
-                    daq_job_info=self._get_supervisor_daq_job_info(),
-                )
-            )
-        """
 
-        # Send routes message
-        if datetime.now() > self._last_routes_message_time + timedelta(
-            seconds=DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS
-        ):
-            self._last_routes_message_time = datetime.now()
-            routes = self._generate_route_mapping()
-            messages.append(
-                DAQJobMessageRoutes(
-                    routes=routes,
-                    daq_job_info=self._get_supervisor_daq_job_info(),
-                )
-            )
         return messages
 
     def get_daq_job_stats(
@@ -521,6 +514,7 @@ class Supervisor:
         for process in self.daq_job_processes:
             try:
                 while True:
+                    break
                     msg = process.message_out.get_nowait()
                     if msg.daq_job_info is None:
                         self._logger.warning(f"Message {msg} has no daq_job_info")
@@ -561,6 +555,7 @@ class Supervisor:
 
         for message in daq_messages:
             for process in self.daq_job_processes:
+                break
                 # Do not send to the same DAQ job
                 if (
                     message.daq_job_info
@@ -658,6 +653,13 @@ class Supervisor:
             if issubclass(process.daq_job_cls, DAQJobStore) or issubclass(
                 process.daq_job_cls, DAQJobRemote
             ):
+                break
                 routes[process.daq_job_cls.__name__].append(process.message_in)
 
         return dict(routes)
+
+    @property
+    def supervisor_id(self):
+        if self.config is None or self.config.info is None:
+            return "unknown"
+        return self.config.info.supervisor_id

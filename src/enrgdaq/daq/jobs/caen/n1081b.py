@@ -62,8 +62,6 @@ class DAQJobN1081B(DAQJob):
 
     def start(self):
         while not self._has_been_freed:
-            # self.consume()
-
             # Log in if not connected
             if not self._is_connected():
                 self._logger.info("Connecting to the device...")

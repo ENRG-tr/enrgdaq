@@ -3,7 +3,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime
 from multiprocessing.shared_memory import SharedMemory
-from typing import Any, Optional
+from typing import Any, Optional, override
 
 from msgspec import Struct, field
 
@@ -74,6 +74,7 @@ class DAQJobConfig(Struct, kw_only=True):
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     """
 
     daq_job_type: str
@@ -98,7 +99,7 @@ class DAQJobMessage(Struct, kw_only=True):
     is_remote: bool = False
     daq_job_info: "DAQJobInfo | None" = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -> str:
@@ -107,12 +108,17 @@ class DAQJobMessage(Struct, kw_only=True):
 
         return self.daq_job_info.supervisor_info.supervisor_id
 
+    def pre_send(self):
+        pass
+
 
 class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
     target_supervisor: bool = True
 
-    def __post_init__(self):
-        self.remote_config = DAQRemoteConfig(remote_disable=True)
+    @override
+    def pre_send(self):
+        if self.target_supervisor:
+            self.topics.add(f"supervisor.{self.supervisor_id}.internal")
 
 
 class DAQJobMessageJobStarted(InternalDAQJobMessage):

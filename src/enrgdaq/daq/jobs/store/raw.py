@@ -29,6 +29,7 @@ class RawFile:
 
 
 class DAQJobStoreRaw(DAQJobStore):
+    config: DAQJobStoreRawConfig
     config_type = DAQJobStoreRawConfig
     allowed_store_config_types = [DAQJobStoreConfigRaw]
     allowed_message_in_types = [DAQJobMessageStoreRaw]

@@ -1,5 +1,6 @@
 import logging
 import pickle
+import queue
 import re
 import sys
 import threading
@@ -8,11 +9,11 @@ from datetime import datetime, timedelta
 from logging.handlers import QueueHandler
 from multiprocessing import Process
 from multiprocessing.shared_memory import SharedMemory
-from queue import Empty
 from queue import Queue as ThreadQueue
 from typing import Any, Optional
 
 import msgspec
+import zmq
 
 from enrgdaq.daq.models import (
     DAQJobConfig,
@@ -21,13 +22,12 @@ from enrgdaq.daq.models import (
     DAQJobMessageJobStarted,
     DAQJobMessageRoutes,
     DAQJobMessageSHM,
+    DAQJobMessageStatsReport,
     DAQJobMessageStop,
     DAQJobStopError,
-    LogVerbosity,
-    RouteMapping,
-    SHMHandle,
-    DAQJobMessageStatsReport,
     InternalDAQJobMessage,
+    LogVerbosity,
+    SHMHandle,
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
@@ -93,7 +93,9 @@ class DAQJob:
         multiprocessing_method (str): The multiprocessing method to use ('fork' or 'spawn').
     """
 
-    allowed_message_in_types: list[type[DAQJobMessage]] = []
+    allowed_message_in_types = []
+
+    topics_to_subscribe: list[str] = []
     config_type: type[DAQJobConfig]  # pyright: ignore[reportUninitializedInstanceVariable]
     config: DAQJobConfig
     message_in: Any
@@ -111,8 +113,7 @@ class DAQJob:
     )
     _watchdog: Watchdog
     _supervisor_info: SupervisorInfo | None
-    _routes: RouteMapping | None = None
-    _consume_thread: threading.Thread | None = None 
+    _consume_thread: threading.Thread | None = None
 
     def __init__(
         self,
@@ -122,6 +123,8 @@ class DAQJob:
         message_in: Any = None,
         message_out: Any = None,
         raw_config: str | None = None,
+        zmq_xpub_url: str | None = None,
+        zmq_xsub_url: str | None = None,
     ):
         self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f"{type(self).__name__}({self.instance_id})")
@@ -155,64 +158,109 @@ class DAQJob:
         self._sent_count = 0
         self._last_stats_report_time = datetime.now()
 
+        self.topics_to_subscribe.extend(
+            [
+                #  f"supervisor.{self.supervisor_id}",
+                f"daq_job.{type(self).__name__}.{self.unique_id}",
+            ]
+        )
+
+        self._zmq_xpub_url = zmq_xpub_url
+        self._zmq_xsub_url = zmq_xsub_url
+
+        self._consume_thread = threading.Thread(
+            target=self._consume_thread_func, daemon=True
+        )
+        self._publish_thread = threading.Thread(
+            target=self._publish_thread_func, daemon=True
+        )
+        self._publish_buffer = queue.Queue()
+        self._consume_thread.start()
+        self._publish_thread.start()
+
         self._put_message_out(DAQJobMessageJobStarted())
 
-        # Start consume thread if not a store job
-        from enrgdaq.daq.store.base import DAQJobStore
-        # TODO: FIX THISSSSS!! NOO!
-        if not isinstance(self, DAQJobStore):
-            self._consume_thread = threading.Thread(target=self._consume_thread_func, daemon=True)
-            self._consume_thread.start()
-
     def _consume_thread_func(self):
+        assert self._zmq_xpub_url is not None
+
+        # Connect to zmq xpub
+        self.zmq_context = zmq.Context()
+        zmq_xpub = self.zmq_context.socket(zmq.SUB)
+        zmq_xpub.setsockopt_string(zmq.IDENTITY, self.unique_id)
+        zmq_xpub.connect(self._zmq_xpub_url)
+        # Subscribe to topics
+        for topic in self.topics_to_subscribe:
+            zmq_xpub.subscribe(topic)
+
+        self._logger.debug(
+            f"Subscribed to topics: {', '.join(self.topics_to_subscribe)}"
+        )
+
+        # Start receiving messages
         while not self._has_been_freed:
-            if self.consume(nowait=False):
-                self.consume_all()
-
-    def consume(self, nowait: bool = True, timeout: float | None = None):
-        """
-        Consumes messages from the message_in queue.
-        If nowait is True, it will consume the message immediately.
-        Otherwise, it will wait until a message is available.
-        """
-
-        # Return immediately after consuming the message
-        if not nowait:
-            msg = self.message_in.get(timeout=timeout)
-            msg = self._unwrap_message(msg)
-            return self.handle_message(msg)
-
-        while True:
             try:
-                msg = self.message_in.get_nowait()
-                msg = self._unwrap_message(msg)
-                return self.handle_message(msg)
-            except (Empty, FileNotFoundError):
+                parts = zmq_xpub.recv_multipart()
+                topic = parts[0]
+                header = parts[1]
+                buffers = parts[2:]
+
+                message_len = len(header) + sum(len(b) for b in buffers)
+                recv_message = pickle.loads(header, buffers=buffers)
+                if isinstance(recv_message, DAQJobMessageSHM) or isinstance(
+                    recv_message, DAQJobMessageStoreSHM
+                ):
+                    message_len += recv_message.shm.shm_size
+                elif isinstance(recv_message, DAQJobMessageStorePyArrow):
+                    if recv_message.handle is not None:
+                        message_len += recv_message.handle.data_size
+
+                recv_message = self._unwrap_message(recv_message)
+                self._logger.debug(
+                    f"Received message of size {message_len} bytes '{type(recv_message).__name__}' on topic '{topic.decode()}'"
+                )
+                recv_message.is_remote = True
+                self.handle_message(recv_message)
+            except zmq.ContextTerminated:
                 break
-        self.report_stats()
+            except Exception as e:
+                self._logger.error(
+                    f"Error while unpacking message sent in {topic}: {e}",
+                    exc_info=True,
+                )
 
-        return False
+    def _publish_thread_func(self):
+        assert self._zmq_xsub_url is not None
+        # Connect to zmq xsub
+        self.zmq_context = zmq.Context()
+        zmq_xsub = self.zmq_context.socket(zmq.PUB)
+        zmq_xsub.setsockopt_string(zmq.IDENTITY, self.unique_id)
+        zmq_xsub.connect(self._zmq_xsub_url)
 
-
-    def consume_all(self):
-        processed_any = False
-        while True:
-            try:
-                msg = self.message_in.get_nowait()
-                msg = self._unwrap_message(msg)
-                if self.handle_message(msg):
-                    processed_any = True
-            except (Empty, FileNotFoundError):
+        buffers = []
+        while not self._has_been_freed:
+            message: DAQJobMessage = self._publish_buffer.get()
+            if message is None:
                 break
+            buffers.clear()
+            message.pre_send()
+            header = pickle.dumps(
+                message,
+                protocol=pickle.HIGHEST_PROTOCOL,
+                buffer_callback=buffers.append,
+            )
+            payload = ["", header] + [zmq.Frame(b) for b in buffers]
 
-        self.report_stats()
-        return processed_any
+            for topic in message.topics:
+                payload[0] = topic.encode()
+                zmq_xsub.send_multipart(payload)
 
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
             message, DAQJobMessageStoreSHM
         ):
-            return message.shm.load()
+            res = message.shm.load()
+            message.shm.cleanup()
+            return res
         return message
 
     def handle_message(self, message: "DAQJobMessage") -> bool:
@@ -314,7 +362,9 @@ class DAQJob:
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        omit_debug_message = not isinstance(message, DAQJobMessageStatsReport) and not isinstance(message, InternalDAQJobMessage)
+        omit_debug_message = not isinstance(
+            message, DAQJobMessageStatsReport
+        ) and not isinstance(message, InternalDAQJobMessage)
         if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
@@ -342,7 +392,7 @@ class DAQJob:
                     )
                     message.daq_job_info = self.info
                     message.remote_config = self.config.remote_config
-                    message.route_keys = original_message.route_keys
+                    message.topics = original_message.topics
                 else:
                     # Fall back to regular pickle-based SHM
                     pass  # Continue to standard SHM handling below
@@ -376,32 +426,9 @@ class DAQJob:
                     )
                 message.daq_job_info = self.info
                 message.remote_config = self.config.remote_config
-                message.route_keys = original_message.route_keys
+                message.topics = original_message.topics
 
-        all_routes_satisfied = True
-        if self._routes is not None:
-            for route_key in message.route_keys:
-                if route_key in self._routes:
-                    for queue in self._routes[route_key]:
-                        queue.put(message)
-                        if omit_debug_message:
-                            self._logger.debug(
-                                f"Direct routed {type(message).__name__} to {route_key}"
-                            )
-                        break
-                else:
-                    pass
-                    # This route_key is not available locally
-                    # all_routes_satisfied = False
-                    # self._logger.debug(f"Route key {route_key} not found locally")
-        else:
-            all_routes_satisfied = False
-            if omit_debug_message:
-                self._logger.debug(f"No routes available, sending to supervisor ({self._routes or 'N/A'} routes)")
-
-        # Send to supervisor if any route was not satisfied locally
-        if not all_routes_satisfied:
-            self.message_out.put(message)
+        self._publish_buffer.put(message)
         self._sent_count += 1
 
     def get_latency_stats(self) -> Any:
@@ -440,12 +467,6 @@ class DAQJob:
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
 
-    @classmethod
-    def can_handle_message(cls, message: DAQJobMessage) -> bool:
-        if isinstance(message, InternalDAQJobMessage):
-            return not message.target_supervisor
-        return True
-
     def __del__(self):
         self._logger.info("DAQ job is being deleted")
         self._has_been_freed = True
@@ -466,8 +487,6 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -475,6 +494,9 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -487,9 +509,9 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()

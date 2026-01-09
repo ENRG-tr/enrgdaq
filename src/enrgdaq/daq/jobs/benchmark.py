@@ -48,7 +48,6 @@ class DAQJobBenchmark(DAQJob):
         while True:
             # Only check for messages every 1000 iterations to maximize production speed
             # if i % 1000 == 0:
-                # self.consume()
 
             self._send_store_message()
             i += 1

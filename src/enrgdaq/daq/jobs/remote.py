@@ -167,14 +167,6 @@ class DAQJobRemote(DAQJob):
         self._send_remote_pub_message(message)
         return True
 
-    @classmethod
-    def can_handle_message(cls, message: DAQJobMessage) -> bool:
-        if not super().can_handle_message(message):
-            return False
-        if message.remote_config.remote_disable:
-            return False
-        return True
-
     def _send_remote_pub_message(self, message: DAQJobMessage):
         if self._zmq_pub is None:
             return

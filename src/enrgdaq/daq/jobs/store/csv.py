@@ -149,7 +149,7 @@ class DAQJobStoreCSV(DAQJobStore):
 
     def store_loop(self):
         files_to_delete = []
-        for file_path, file in self._open_csv_files.items():
+        for file_path, file in self._open_csv_files.copy().items():
             if file.file.closed:
                 files_to_delete.append(file_path)
                 continue

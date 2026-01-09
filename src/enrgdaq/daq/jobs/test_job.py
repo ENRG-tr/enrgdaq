@@ -41,7 +41,6 @@ class DAQJobTest(DAQJob):
         Start the DAQ job, continuously consuming data and sending store messages.
         """
         while not self._has_been_freed:
-            # self.consume()
             self._send_store_message()
 
             time.sleep(1)

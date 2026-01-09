@@ -52,7 +52,6 @@ class DAQJobXiaomiMijia(DAQJob):
 
     def start(self):
         while not self._has_been_freed:
-            # self.consume()
             try:
                 # _get_data now returns (data, units)
                 data = self._get_data()
