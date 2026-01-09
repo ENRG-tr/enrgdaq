@@ -63,7 +63,8 @@ class TestDAQJobRemote(unittest.TestCase):
             keys=[],
             daq_job_info=DAQJobInfo.mock(),
         )
-        self.daq_job_remote.message_out = MagicMock()
+        # Mock _publish_buffer instead of message_out
+        self.daq_job_remote._publish_buffer = MagicMock()
 
         call_count = 0
 
@@ -85,8 +86,8 @@ class TestDAQJobRemote(unittest.TestCase):
 
         assert_msg = message
         assert_msg.is_remote = True
-        self.daq_job_remote.message_out.put.assert_called_once_with(assert_msg)
-        self.assertEqual(self.daq_job_remote.message_out.put.call_count, 1)
+        self.daq_job_remote._publish_buffer.put.assert_called_once_with(assert_msg)
+        self.assertEqual(self.daq_job_remote._publish_buffer.put.call_count, 1)
         self.assertEqual(call_count, 2)
 
     def test_handle_message_with_remote_config(self):

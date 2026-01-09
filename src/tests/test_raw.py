@@ -100,7 +100,8 @@ class TestDAQJobStoreRaw(unittest.TestCase):
         )
         self.store._open_raw_files["test.raw"] = file
 
-        del self.store
+        # Explicitly call __del__ to test cleanup behavior
+        self.store.__del__()
 
         file.file.close.assert_called_once()
 

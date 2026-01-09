@@ -248,7 +248,8 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.store._connection = MagicMock()
         self.store._connection.close = mock_close  # type: ignore
 
-        del self.store
+        # Explicitly call __del__ to test cleanup behavior
+        self.store.__del__()
 
         mock_close.assert_called_once()
 

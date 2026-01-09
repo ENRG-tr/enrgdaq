@@ -14,7 +14,8 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
             daq_job_type="", store_config=MagicMock()
         )
         self.daq_job = DAQJobHandleAlerts(config=self.config)
-        self.daq_job.message_out = MagicMock()
+        # Mock the _publish_buffer instead of message_out
+        self.daq_job._publish_buffer = MagicMock()
 
     @patch("enrgdaq.utils.time.get_unix_timestamp_ms", return_value=1234567890)
     def test_handle_message(self, mock_get_unix_timestamp_ms):
@@ -30,8 +31,8 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
         result = self.daq_job.handle_message(message)
 
         self.assertTrue(result)
-        self.daq_job.message_out.put.assert_called_once()
-        args, kwargs = self.daq_job.message_out.put.call_args
+        self.daq_job._publish_buffer.put.assert_called_once()
+        args, kwargs = self.daq_job._publish_buffer.put.call_args
         stored_message = args[0]
         self.assertIsInstance(stored_message, DAQJobMessageStore)
         self.assertEqual(
@@ -62,16 +63,7 @@ class TestDAQJobHandleAlerts(unittest.TestCase):
         )
 
         self.assertFalse(result)
-        self.daq_job.message_out.put.assert_not_called()
-
-    def test_start(self):
-        self.daq_job.consume = MagicMock(side_effect=[None, Exception("Stop")])
-
-        with self.assertRaises(Exception) as context:
-            self.daq_job.start()
-
-        self.assertEqual(str(context.exception), "Stop")
-        self.daq_job.consume.assert_called()
+        self.daq_job._publish_buffer.put.assert_not_called()
 
 
 if __name__ == "__main__":

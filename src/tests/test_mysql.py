@@ -105,7 +105,8 @@ class TestDAQJobStoreMySQL(unittest.TestCase):
         mock_close = MagicMock()
         self.store._connection.close = mock_close  # type: ignore
 
-        del self.store
+        # Explicitly call __del__ to test cleanup behavior
+        self.store.__del__()
 
         mock_commit.assert_called_once()
         mock_close.assert_called_once()
