@@ -71,7 +71,6 @@ el.replaceWith(d);
 
     def start(self):
         while not self._has_been_freed:
-            # self.consume()
             try:
                 # _get_data now returns (data, units)
                 data = self._get_data()
@@ -198,7 +197,6 @@ message queues, and provides methods for consuming and handling messages.</p>
 </summary>
 <pre><code class="python">def start(self):
     while not self._has_been_freed:
-        # self.consume()
         try:
             # _get_data now returns (data, units)
             data = self._get_data()
@@ -216,7 +214,6 @@ message queues, and provides methods for consuming and handling messages.</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 </ul>
 </li>

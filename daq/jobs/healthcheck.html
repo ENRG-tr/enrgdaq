@@ -167,7 +167,6 @@ el.replaceWith(d);
 
     def start(self):
         while not self._has_been_freed:
-            # self.consume()
             self.handle_checks()
             time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)
 
@@ -263,7 +262,7 @@ updated within a specified interval or if a job has restarted.</p>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -371,21 +370,12 @@ The default value is True.</p></div>
 </summary>
 <pre><code class="python">def start(self):
     while not self._has_been_freed:
-        # self.consume()
         self.handle_checks()
         time.sleep(HEALTHCHECK_LOOP_INTERVAL_SECONDS)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
-<ul class="hlist">
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheckConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobHealthcheckConfig</span></span>

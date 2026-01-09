@@ -153,13 +153,13 @@ el.replaceWith(d);
         process = Process(target=daq_job_process.start, daemon=True)
 
     process.start()
-    daq_job_process.process = process
+    daq_job_process.process = process  # type: ignore
     try:
-        daq_job_info_message = daq_job_process.message_out.get(timeout=5000)
+        &#34;&#34;&#34;daq_job_info_message = daq_job_process.message_out.get(timeout=5000)
         if isinstance(daq_job_info_message, DAQJobMessageJobStarted):
             daq_job_process.daq_job_info = daq_job_info_message.daq_job_info
         else:
-            raise Exception(&#34;Initial message of DAQJob was not DAQJobMessageJobStarted&#34;)
+            raise Exception(&#34;Initial message of DAQJob was not DAQJobMessageJobStarted&#34;)&#34;&#34;&#34;
     except Exception as e:
         logging.error(
             f&#34;Could not get DAQ job info for {daq_job_process.daq_job_cls.__name__}: {e}&#34;,

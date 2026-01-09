@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleAlerts</span></span>
-<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="../models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -63,13 +63,6 @@ el.replaceWith(d);
     allowed_message_in_types = [DAQJobMessageAlert]
     config_type = DAQJobHandleAlertsConfig
     config: DAQJobHandleAlertsConfig
-
-    def start(self):
-        &#34;&#34;&#34;
-        Starts the job, continuously consuming messages from the queue.
-        &#34;&#34;&#34;
-        while not self._has_been_freed:
-            self.consume(nowait=False)
 
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if not super().handle_message(message):
@@ -111,7 +104,7 @@ el.replaceWith(d);
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -125,31 +118,10 @@ el.replaceWith(d);
 Inherits from StorableDAQJobConfig.</p></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start"><code class="name flex">
-<span>def <span class="ident">start</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def start(self):
-    &#34;&#34;&#34;
-    Starts the job, continuously consuming messages from the queue.
-    &#34;&#34;&#34;
-    while not self._has_been_freed:
-        self.consume(nowait=False)</code></pre>
-</details>
-<div class="desc"><p>Starts the job, continuously consuming messages from the queue.</p></div>
-</dd>
-</dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 </ul>
 </li>
@@ -203,7 +175,6 @@ Inherits from StorableDAQJobConfig.</p></div>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types">allowed_message_in_types</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config_type" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config_type">config_type</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start">start</a></code></li>
 </ul>
 </li>
 <li>

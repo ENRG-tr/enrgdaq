@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsRemote</span></span>
-<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -187,14 +187,6 @@ el.replaceWith(d);
                 f&#34;handle_message: Forwarding message {type(message).__name__} to remote&#34;
             )
         self._send_remote_pub_message(message)
-        return True
-
-    @classmethod
-    def can_handle_message(cls, message: DAQJobMessage) -&gt; bool:
-        if not super().can_handle_message(message):
-            return False
-        if message.remote_config.remote_disable:
-            return False
         return True
 
     def _send_remote_pub_message(self, message: DAQJobMessage):
@@ -431,7 +423,7 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -453,15 +445,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset"><code class="name">var <span class="ident">restart_offset</span> : datetime.timedelta</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message"><code class="name flex">
-<span>def <span class="ident">can_handle_message</span></span>(<span>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
-</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -501,7 +484,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.base.DAQJob" href="../base.html#enrgdaq.daq.base.DAQJob">DAQJob</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 </ul>
 </li>
@@ -859,7 +841,6 @@ It sends to and receives from a remote ENRGDAQ, such that:</p>
 <h4><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote" href="#enrgdaq.daq.jobs.remote.DAQJobRemote">DAQJobRemote</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.allowed_message_in_types">allowed_message_in_types</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.config" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.config_type" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset" href="#enrgdaq.daq.jobs.remote.DAQJobRemote.restart_offset">restart_offset</a></code></li>

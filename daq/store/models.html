@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStore"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStore</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -89,11 +89,7 @@ el.replaceWith(d);
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.route_keys.add(store_job.__name__)
-
-        remote_config = self.get_remote_config()
-        if not remote_config or not remote_config.remote_disable:
-            self.route_keys.add(&#34;DAQJobRemote&#34;)</code></pre>
+                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
@@ -159,11 +155,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.route_keys.add(store_job.__name__)
-
-        remote_config = self.get_remote_config()
-        if not remote_config or not remote_config.remote_disable:
-            self.route_keys.add(&#34;DAQJobRemote&#34;)</code></pre>
+                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -207,11 +199,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.route_keys.add(store_job.__name__)
-
-        remote_config = self.get_remote_config()
-        if not remote_config or not remote_config.remote_disable:
-            self.route_keys.add(&#34;DAQJobRemote&#34;)</code></pre>
+                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -257,7 +245,7 @@ of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgda
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStorePyArrow</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table | None = None,<br>handle: <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None = None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table | None = None,<br>handle: <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -551,7 +539,7 @@ No-op if not using zero-copy mode.</p></div>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreRaw"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreRaw</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>data: bytes)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>data: bytes)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -614,7 +602,7 @@ a raw data message store for DAQ jobs.</p>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreSHM"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreSHM</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>shm: <a title="enrgdaq.daq.models.SHMHandle" href="../models.html#enrgdaq.daq.models.SHMHandle">SHMHandle</a>)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>shm: <a title="enrgdaq.daq.models.SHMHandle" href="../models.html#enrgdaq.daq.models.SHMHandle">SHMHandle</a>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -665,7 +653,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreTabular"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreTabular</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>keys: list[str],<br>data: list[list[str | float | int] | numpy.ndarray] | None = None,<br>data_columns: dict[str, list[str | float | int] | numpy.ndarray] | None = None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>keys: list[str],<br>data: list[list[str | float | int] | numpy.ndarray] | None = None,<br>data_columns: dict[str, list[str | float | int] | numpy.ndarray] | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1841,6 +1829,8 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
+<dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The unique identifier for the DAQ job.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">

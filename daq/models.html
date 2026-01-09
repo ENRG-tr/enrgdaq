@@ -62,6 +62,7 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     &#34;&#34;&#34;
 
     daq_job_type: str
@@ -78,6 +79,8 @@ el.replaceWith(d);
 <dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
+<dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The unique identifier for the DAQ job.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -117,6 +120,7 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     &#34;&#34;&#34;
 
     daq_job_type: str
@@ -139,6 +143,7 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     &#34;&#34;&#34;
 
     daq_job_type: str
@@ -161,6 +166,7 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     &#34;&#34;&#34;
 
     daq_job_type: str
@@ -183,6 +189,7 @@ el.replaceWith(d);
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
     &#34;&#34;&#34;
 
     daq_job_type: str
@@ -452,7 +459,7 @@ Measurements are in milliseconds.</p></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessage"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessage</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -475,14 +482,17 @@ Measurements are in milliseconds.</p></div>
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -539,14 +549,17 @@ Measurements are in milliseconds.</p></div>
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -572,14 +585,17 @@ Measurements are in milliseconds.</p></div>
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -605,14 +621,17 @@ Measurements are in milliseconds.</p></div>
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -638,47 +657,17 @@ Measurements are in milliseconds.</p></div>
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.models.DAQJobMessage.route_keys"><code class="name">var <span class="ident">route_keys</span> : set[str]</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
-    &#34;&#34;&#34;
-    DAQJobMessage is the base class for messages sent between DAQJobs.
-    Attributes:
-        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
-        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
-        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
-        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
-        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
-    &#34;&#34;&#34;
+        return self.daq_job_info.supervisor_info.supervisor_id
 
-    id: str | None = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime | None = field(default_factory=datetime.now)
-    is_remote: bool = False
-    daq_job_info: &#34;DAQJobInfo | None&#34; = None
-    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
-
-    @property
-    def supervisor_id(self) -&gt; str:
-        if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
-            return &#34;unknown&#34;
-
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+    def pre_send(self):
+        pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -719,14 +708,69 @@ def supervisor_id(self) -&gt; str:
     is_remote: bool = False
     daq_job_info: &#34;DAQJobInfo | None&#34; = None
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    route_keys: set[RouteKey] = field(default_factory=set)
+    topics: set[RouteKey] = field(default_factory=set)
 
     @property
     def supervisor_id(self) -&gt; str:
         if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
             return &#34;unknown&#34;
 
-        return self.daq_job_info.supervisor_info.supervisor_id</code></pre>
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessage.topics"><code class="name">var <span class="ident">topics</span> : set[str]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessage(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobMessage is the base class for messages sent between DAQJobs.
+    Attributes:
+        id (Optional[str]): The unique identifier for the message. Defaults to a UUID.
+        timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
+        is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
+        daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
+        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+    &#34;&#34;&#34;
+
+    id: str | None = field(default_factory=lambda: str(uuid.uuid4()))
+    timestamp: datetime | None = field(default_factory=datetime.now)
+    is_remote: bool = False
+    daq_job_info: &#34;DAQJobInfo | None&#34; = None
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+    topics: set[RouteKey] = field(default_factory=set)
+
+    @property
+    def supervisor_id(self) -&gt; str:
+        if self.daq_job_info is None or self.daq_job_info.supervisor_info is None:
+            return &#34;unknown&#34;
+
+        return self.daq_job_info.supervisor_info.supervisor_id
+
+    def pre_send(self):
+        pass</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessage.pre_send"><code class="name flex">
+<span>def <span class="ident">pre_send</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def pre_send(self):
+    pass</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -734,7 +778,7 @@ def supervisor_id(self) -&gt; str:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageHeartbeat"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageHeartbeat</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -767,7 +811,7 @@ def supervisor_id(self) -&gt; str:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageJobStarted"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageJobStarted</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -796,7 +840,7 @@ without a problem.</p></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageRoutes"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageRoutes</span></span>
-<span>(</span><span>routes: dict[str, list[typing.Any]],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
+<span>(</span><span>routes: dict[str, list[typing.Any]],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -862,7 +906,7 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageSHM"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageSHM</span></span>
-<span>(</span><span>shm: <a title="enrgdaq.daq.models.SHMHandle" href="#enrgdaq.daq.models.SHMHandle">SHMHandle</a>,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>shm: <a title="enrgdaq.daq.models.SHMHandle" href="#enrgdaq.daq.models.SHMHandle">SHMHandle</a>,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -909,7 +953,7 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageStatsReport"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsReport</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>processed_count: int,<br>sent_count: int,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>processed_count: int,<br>processed_bytes: int = 0,<br>sent_count: int,<br>sent_bytes: int = 0,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -923,8 +967,15 @@ set the routes for the DAQJobProcess.</p>
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
-    latency: DAQJobLatencyStats</code></pre>
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
 </details>
 <div class="desc"><p>Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.</p></div>
 <h3>Ancestors</h3>
@@ -949,8 +1000,40 @@ set the routes for the DAQJobProcess.</p>
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
-    latency: DAQJobLatencyStats</code></pre>
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_bytes"><code class="name">var <span class="ident">processed_bytes</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;
+    Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
+    &#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    processed_count: int
+    processed_bytes: int = 0
+    sent_count: int
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -967,8 +1050,40 @@ set the routes for the DAQJobProcess.</p>
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
-    latency: DAQJobLatencyStats</code></pre>
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_bytes"><code class="name">var <span class="ident">sent_bytes</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;
+    Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
+    &#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    processed_count: int
+    processed_bytes: int = 0
+    sent_count: int
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -985,8 +1100,15 @@ set the routes for the DAQJobProcess.</p>
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
-    latency: DAQJobLatencyStats</code></pre>
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1003,8 +1125,33 @@ set the routes for the DAQJobProcess.</p>
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
-    latency: DAQJobLatencyStats</code></pre>
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessageStatsReport.pre_send"><code class="name flex">
+<span>def <span class="ident">pre_send</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@override
+def pre_send(self):
+    super().pre_send()
+    self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1012,7 +1159,7 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageStop"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStop</span></span>
-<span>(</span><span>reason: str,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>reason: str,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1676,7 +1823,7 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.InternalDAQJobMessage"><code class="flex name class">
 <span>class <span class="ident">InternalDAQJobMessage</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1686,8 +1833,10 @@ set the routes for the DAQJobProcess.</p>
 <pre><code class="python">class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
     target_supervisor: bool = True
 
-    def __post_init__(self):
-        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
+    @override
+    def pre_send(self):
+        if self.target_supervisor:
+            self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -1726,8 +1875,28 @@ set the routes for the DAQJobProcess.</p>
 <pre><code class="python">class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
     target_supervisor: bool = True
 
-    def __post_init__(self):
-        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
+    @override
+    def pre_send(self):
+        if self.target_supervisor:
+            self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.models.InternalDAQJobMessage.pre_send"><code class="name flex">
+<span>def <span class="ident">pre_send</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@override
+def pre_send(self):
+    if self.target_supervisor:
+        self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2521,10 +2690,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.daq_job_info" href="#enrgdaq.daq.models.DAQJobMessage.daq_job_info">daq_job_info</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.id" href="#enrgdaq.daq.models.DAQJobMessage.id">id</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.is_remote" href="#enrgdaq.daq.models.DAQJobMessage.is_remote">is_remote</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessage.pre_send" href="#enrgdaq.daq.models.DAQJobMessage.pre_send">pre_send</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.remote_config" href="#enrgdaq.daq.models.DAQJobMessage.remote_config">remote_config</a></code></li>
-<li><code><a title="enrgdaq.daq.models.DAQJobMessage.route_keys" href="#enrgdaq.daq.models.DAQJobMessage.route_keys">route_keys</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.supervisor_id" href="#enrgdaq.daq.models.DAQJobMessage.supervisor_id">supervisor_id</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessage.timestamp" href="#enrgdaq.daq.models.DAQJobMessage.timestamp">timestamp</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessage.topics" href="#enrgdaq.daq.models.DAQJobMessage.topics">topics</a></code></li>
 </ul>
 </li>
 <li>
@@ -2548,9 +2718,12 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport" href="#enrgdaq.daq.models.DAQJobMessageStatsReport">DAQJobMessageStatsReport</a></code></h4>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.latency" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.latency">latency</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.pre_send" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.pre_send">pre_send</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_bytes" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.processed_bytes">processed_bytes</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count">processed_count</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_bytes" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.sent_bytes">sent_bytes</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count">sent_count</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor">target_supervisor</a></code></li>
 </ul>
@@ -2604,6 +2777,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li>
 <h4><code><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></code></h4>
 <ul class="">
+<li><code><a title="enrgdaq.daq.models.InternalDAQJobMessage.pre_send" href="#enrgdaq.daq.models.InternalDAQJobMessage.pre_send">pre_send</a></code></li>
 <li><code><a title="enrgdaq.daq.models.InternalDAQJobMessage.target_supervisor" href="#enrgdaq.daq.models.InternalDAQJobMessage.target_supervisor">target_supervisor</a></code></li>
 </ul>
 </li>

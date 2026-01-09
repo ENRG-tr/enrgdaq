@@ -133,9 +133,7 @@ el.replaceWith(d);
 
         return super().__del__()</code></pre>
 </details>
-<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p>
-<p>Optimized for high throughput - only sleeps when idle to avoid
-unnecessary latency in message processing.</p></div>
+<div class="desc"><p>DAQJobStore is an abstract base class for data acquisition job stores.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></li>
@@ -143,7 +141,7 @@ unnecessary latency in message processing.</p></div>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="../../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.jobs.store.mysql.DAQJobStoreMySQL.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -162,6 +160,8 @@ unnecessary latency in message processing.</p></div>
 <dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
+<dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The unique identifier for the DAQ job.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -198,8 +198,6 @@ unnecessary latency in message processing.</p></div>
 <ul class="hlist">
 <li><code><b><a title="enrgdaq.daq.store.base.DAQJobStore" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore">DAQJobStore</a></b></code>:
 <ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.can_handle_message" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.can_handle_message">can_handle_message</a></code></li>
-<li><code><a title="enrgdaq.daq.store.base.DAQJobStore.consume" href="../../base.html#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.handle_message" href="../../base.html#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.store.base.DAQJobStore.start" href="../../store/base.html#enrgdaq.daq.store.base.DAQJobStore.start">start</a></code></li>
 </ul>
@@ -231,6 +229,8 @@ unnecessary latency in message processing.</p></div>
 <dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
+<dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The unique identifier for the DAQ job.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">

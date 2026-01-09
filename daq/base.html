@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.base.DAQJob"><code class="flex name class">
 <span>class <span class="ident">DAQJob</span></span>
-<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None,<br>instance_id: int | None = None,<br>message_in: Any = None,<br>message_out: Any = None,<br>raw_config: str | None = None,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -74,7 +74,9 @@ el.replaceWith(d);
         multiprocessing_method (str): The multiprocessing method to use (&#39;fork&#39; or &#39;spawn&#39;).
     &#34;&#34;&#34;
 
-    allowed_message_in_types: list[type[DAQJobMessage]] = []
+    allowed_message_in_types = []
+
+    topics_to_subscribe: list[str] = []
     config_type: type[DAQJobConfig]  # pyright: ignore[reportUninitializedInstanceVariable]
     config: DAQJobConfig
     message_in: Any
@@ -92,8 +94,7 @@ el.replaceWith(d);
     )
     _watchdog: Watchdog
     _supervisor_info: SupervisorInfo | None
-    _routes: RouteMapping | None = None
-    _consume_thread: threading.Thread | None = None 
+    _consume_thread: threading.Thread | None = None
 
     def __init__(
         self,
@@ -103,6 +104,8 @@ el.replaceWith(d);
         message_in: Any = None,
         message_out: Any = None,
         raw_config: str | None = None,
+        zmq_xpub_url: str | None = None,
+        zmq_xsub_url: str | None = None,
     ):
         self.instance_id = instance_id or 0
         self._logger = logging.getLogger(f&#34;{type(self).__name__}({self.instance_id})&#34;)
@@ -133,67 +136,116 @@ el.replaceWith(d);
 
         self._latency_samples: list[float] = []
         self._processed_count = 0
+        self._processed_bytes = 0
         self._sent_count = 0
+        self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
+
+        self.topics_to_subscribe.extend(
+            [
+                #  f&#34;supervisor.{self.supervisor_id}&#34;,
+                f&#34;daq_job.{type(self).__name__}.{self.unique_id}&#34;,
+            ]
+        )
+
+        self._zmq_xpub_url = zmq_xpub_url
+        self._zmq_xsub_url = zmq_xsub_url
+
+        self._consume_thread = threading.Thread(
+            target=self._consume_thread_func, daemon=True
+        )
+        self._publish_thread = threading.Thread(
+            target=self._publish_thread_func, daemon=True
+        )
+        self._publish_buffer = queue.Queue()
+        self._consume_thread.start()
+        self._publish_thread.start()
 
         self._put_message_out(DAQJobMessageJobStarted())
 
-        # Start consume thread if not a store job
-        from enrgdaq.daq.store.base import DAQJobStore
-        # TODO: FIX THISSSSS!! NOO!
-        if not isinstance(self, DAQJobStore):
-            self._consume_thread = threading.Thread(target=self._consume_thread_func, daemon=True)
-            self._consume_thread.start()
-
     def _consume_thread_func(self):
+        assert self._zmq_xpub_url is not None
+
+        # Connect to zmq xpub
+        self.zmq_context = zmq.Context()
+        zmq_xpub = self.zmq_context.socket(zmq.SUB)
+        zmq_xpub.setsockopt_string(zmq.IDENTITY, self.unique_id)
+        zmq_xpub.connect(self._zmq_xpub_url)
+        # Subscribe to topics
+        for topic in self.topics_to_subscribe:
+            zmq_xpub.subscribe(topic)
+
+        self._logger.debug(
+            f&#34;Subscribed to topics: {&#39;, &#39;.join(self.topics_to_subscribe)}&#34;
+        )
+
+        # Start receiving messages
         while not self._has_been_freed:
-            if self.consume(nowait=False):
-                self.consume_all()
-
-    def consume(self, nowait: bool = True, timeout: float | None = None):
-        &#34;&#34;&#34;
-        Consumes messages from the message_in queue.
-        If nowait is True, it will consume the message immediately.
-        Otherwise, it will wait until a message is available.
-        &#34;&#34;&#34;
-
-        # Return immediately after consuming the message
-        if not nowait:
-            msg = self.message_in.get(timeout=timeout)
-            msg = self._unwrap_message(msg)
-            return self.handle_message(msg)
-
-        while True:
             try:
-                msg = self.message_in.get_nowait()
-                msg = self._unwrap_message(msg)
-                return self.handle_message(msg)
-            except (Empty, FileNotFoundError):
+                parts = zmq_xpub.recv_multipart()
+                topic = parts[0]
+                header = parts[1]
+                buffers = parts[2:]
+
+                message_len = len(header) + sum(len(b) for b in buffers)
+                recv_message = pickle.loads(header, buffers=buffers)
+                if isinstance(recv_message, DAQJobMessageSHM) or isinstance(
+                    recv_message, DAQJobMessageStoreSHM
+                ):
+                    message_len += recv_message.shm.shm_size
+                elif isinstance(recv_message, DAQJobMessageStorePyArrow):
+                    if recv_message.handle is not None:
+                        message_len += recv_message.handle.data_size
+
+                recv_message = self._unwrap_message(recv_message)
+                self._logger.debug(
+                    f&#34;Received message of size {message_len} bytes &#39;{type(recv_message).__name__}&#39; on topic &#39;{topic.decode()}&#39;&#34;
+                )
+                recv_message.is_remote = True
+                self.handle_message(recv_message)
+                self._processed_bytes += message_len
+                self.report_stats()
+            except zmq.ContextTerminated:
                 break
-        self.report_stats()
+            except Exception as e:
+                self._logger.error(
+                    f&#34;Error while unpacking message sent in {topic}: {e}&#34;,
+                    exc_info=True,
+                )
 
-        return False
+    def _publish_thread_func(self):
+        assert self._zmq_xsub_url is not None
+        # Connect to zmq xsub
+        self.zmq_context = zmq.Context()
+        zmq_xsub = self.zmq_context.socket(zmq.PUB)
+        zmq_xsub.setsockopt_string(zmq.IDENTITY, self.unique_id)
+        zmq_xsub.connect(self._zmq_xsub_url)
 
-
-    def consume_all(self):
-        processed_any = False
-        while True:
-            try:
-                msg = self.message_in.get_nowait()
-                msg = self._unwrap_message(msg)
-                if self.handle_message(msg):
-                    processed_any = True
-            except (Empty, FileNotFoundError):
+        buffers = []
+        while not self._has_been_freed:
+            message: DAQJobMessage = self._publish_buffer.get()
+            if message is None:
                 break
+            buffers.clear()
+            message.pre_send()
+            header = pickle.dumps(
+                message,
+                protocol=pickle.HIGHEST_PROTOCOL,
+                buffer_callback=buffers.append,
+            )
+            payload = [&#34;&#34;, header] + [zmq.Frame(b) for b in buffers]
 
-        self.report_stats()
-        return processed_any
+            for topic in message.topics:
+                payload[0] = topic.encode()
+                zmq_xsub.send_multipart(payload)
 
     def _unwrap_message(self, message: DAQJobMessage) -&gt; DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
             message, DAQJobMessageStoreSHM
         ):
-            return message.shm.load()
+            res = message.shm.load()
+            message.shm.cleanup()
+            return res
         return message
 
     def handle_message(self, message: &#34;DAQJobMessage&#34;) -&gt; bool:
@@ -214,10 +266,6 @@ el.replaceWith(d);
         if isinstance(message, DAQJobMessageStop):
             self.free()
             raise DAQJobStopError(message.reason)
-
-        if isinstance(message, DAQJobMessageRoutes):
-            self._routes = message.routes
-            return True
         # check if the message is accepted
         is_message_type_accepted = False
         for accepted_message_type in self.allowed_message_in_types:
@@ -295,7 +343,9 @@ el.replaceWith(d);
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        omit_debug_message = not isinstance(message, DAQJobMessageStatsReport) and not isinstance(message, InternalDAQJobMessage)
+        omit_debug_message = not isinstance(
+            message, DAQJobMessageStatsReport
+        ) and not isinstance(message, InternalDAQJobMessage)
         if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f&#34;Message out: {_format_message_for_log(message)}&#34;)
 
@@ -323,7 +373,7 @@ el.replaceWith(d);
                     )
                     message.daq_job_info = self.info
                     message.remote_config = self.config.remote_config
-                    message.route_keys = original_message.route_keys
+                    message.topics = original_message.topics
                 else:
                     # Fall back to regular pickle-based SHM
                     pass  # Continue to standard SHM handling below
@@ -357,32 +407,9 @@ el.replaceWith(d);
                     )
                 message.daq_job_info = self.info
                 message.remote_config = self.config.remote_config
-                message.route_keys = original_message.route_keys
+                message.topics = original_message.topics
 
-        all_routes_satisfied = True
-        if self._routes is not None:
-            for route_key in message.route_keys:
-                if route_key in self._routes:
-                    for queue in self._routes[route_key]:
-                        queue.put(message)
-                        if omit_debug_message:
-                            self._logger.debug(
-                                f&#34;Direct routed {type(message).__name__} to {route_key}&#34;
-                            )
-                        break
-                else:
-                    pass
-                    # This route_key is not available locally
-                    # all_routes_satisfied = False
-                    # self._logger.debug(f&#34;Route key {route_key} not found locally&#34;)
-        else:
-            all_routes_satisfied = False
-            if omit_debug_message:
-                self._logger.debug(f&#34;No routes available, sending to supervisor ({self._routes or &#39;N/A&#39;} routes)&#34;)
-
-        # Send to supervisor if any route was not satisfied locally
-        if not all_routes_satisfied:
-            self.message_out.put(message)
+        self._publish_buffer.put(message)
         self._sent_count += 1
 
     def get_latency_stats(self) -&gt; Any:
@@ -415,17 +442,13 @@ el.replaceWith(d);
         self._last_stats_report_time = datetime.now()
         report = DAQJobMessageStatsReport(
             processed_count=self._processed_count,
+            processed_bytes=self._processed_bytes,
             sent_count=self._sent_count,
+            sent_bytes=self._sent_bytes,
             latency=self.get_latency_stats(),
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
-
-    @classmethod
-    def can_handle_message(cls, message: DAQJobMessage) -&gt; bool:
-        if isinstance(message, InternalDAQJobMessage):
-            return not message.target_supervisor
-        return True
 
     def __del__(self):
         self._logger.info(&#34;DAQ job is being deleted&#34;)
@@ -492,7 +515,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="enrgdaq.daq.base.DAQJob.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span> : list[type[<a title="enrgdaq.daq.models.DAQJobMessage" href="models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>]]</code></dt>
+<dt id="enrgdaq.daq.base.DAQJob.allowed_message_in_types"><code class="name">var <span class="ident">allowed_message_in_types</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -528,6 +551,10 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="enrgdaq.daq.base.DAQJob.topics_to_subscribe"><code class="name">var <span class="ident">topics_to_subscribe</span> : list[str]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.base.DAQJob.unique_id"><code class="name">var <span class="ident">unique_id</span> : str</code></dt>
 <dd>
 <div class="desc"></div>
@@ -537,15 +564,6 @@ message queues, and provides methods for consuming and handling messages.</p>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds"><code class="name">var <span class="ident">watchdog_timeout_seconds</span> : float</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="enrgdaq.daq.base.DAQJob.can_handle_message"><code class="name flex">
-<span>def <span class="ident">can_handle_message</span></span>(<span>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
-</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -568,66 +586,6 @@ def supervisor_id(self):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="enrgdaq.daq.base.DAQJob.consume"><code class="name flex">
-<span>def <span class="ident">consume</span></span>(<span>self, nowait: bool = True, timeout: float | None = None)</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def consume(self, nowait: bool = True, timeout: float | None = None):
-    &#34;&#34;&#34;
-    Consumes messages from the message_in queue.
-    If nowait is True, it will consume the message immediately.
-    Otherwise, it will wait until a message is available.
-    &#34;&#34;&#34;
-
-    # Return immediately after consuming the message
-    if not nowait:
-        msg = self.message_in.get(timeout=timeout)
-        msg = self._unwrap_message(msg)
-        return self.handle_message(msg)
-
-    while True:
-        try:
-            msg = self.message_in.get_nowait()
-            msg = self._unwrap_message(msg)
-            return self.handle_message(msg)
-        except (Empty, FileNotFoundError):
-            break
-    self.report_stats()
-
-    return False</code></pre>
-</details>
-<div class="desc"><p>Consumes messages from the message_in queue.
-If nowait is True, it will consume the message immediately.
-Otherwise, it will wait until a message is available.</p></div>
-</dd>
-<dt id="enrgdaq.daq.base.DAQJob.consume_all"><code class="name flex">
-<span>def <span class="ident">consume_all</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def consume_all(self):
-    processed_any = False
-    while True:
-        try:
-            msg = self.message_in.get_nowait()
-            msg = self._unwrap_message(msg)
-            if self.handle_message(msg):
-                processed_any = True
-        except (Empty, FileNotFoundError):
-            break
-
-    self.report_stats()
-    return processed_any</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
 <dt id="enrgdaq.daq.base.DAQJob.free"><code class="name flex">
 <span>def <span class="ident">free</span></span>(<span>self)</span>
 </code></dt>
@@ -697,10 +655,6 @@ Otherwise, it will wait until a message is available.</p></div>
     if isinstance(message, DAQJobMessageStop):
         self.free()
         raise DAQJobStopError(message.reason)
-
-    if isinstance(message, DAQJobMessageRoutes):
-        self._routes = message.routes
-        return True
     # check if the message is accepted
     is_message_type_accepted = False
     for accepted_message_type in self.allowed_message_in_types:
@@ -775,7 +729,9 @@ Otherwise, it will wait until a message is available.</p></div>
     self._last_stats_report_time = datetime.now()
     report = DAQJobMessageStatsReport(
         processed_count=self._processed_count,
+        processed_bytes=self._processed_bytes,
         sent_count=self._sent_count,
+        sent_bytes=self._sent_bytes,
         latency=self.get_latency_stats(),
     )
     self._put_message_out(report)
@@ -800,7 +756,7 @@ Otherwise, it will wait until a message is available.</p></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>message_in: Any,<br>message_out: Any,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -811,8 +767,6 @@ Otherwise, it will wait until a message is available.</p></div>
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -820,6 +774,9 @@ Otherwise, it will wait until a message is available.</p></div>
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -832,9 +789,9 @@ Otherwise, it will wait until a message is available.</p></div>
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -960,8 +917,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -969,6 +924,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -981,9 +939,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1005,8 +963,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1014,6 +970,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1026,9 +985,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1050,8 +1009,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1059,6 +1016,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1071,9 +1031,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1095,8 +1055,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1104,6 +1062,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1116,9 +1077,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1140,8 +1101,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1149,6 +1108,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1161,99 +1123,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
-        )
-        try:
-            instance.start()
-        except Exception as e:
-            logging.error(
-                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
-            )
-            raise e</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.message_in"><code class="name">var <span class="ident">message_in</span> : Any</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
-    daq_job_cls: type[DAQJob]
-    supervisor_info: SupervisorInfo
-    config: DAQJobConfig
-    message_in: Any
-    message_out: Any
-    process: Process | None
-    start_time: datetime = msgspec.field(default_factory=datetime.now)
-    instance_id: int
-    daq_job_info: DAQJobInfo | None = None
-    raw_config: str | None = None
-    log_queue: Any | None = None
-    restart_on_crash: bool = True
-
-    def start(self):
-        if self.log_queue:
-            root_logger = logging.getLogger()
-            root_logger.handlers.clear()
-            root_logger.addHandler(QueueHandler(self.log_queue))
-            root_logger.setLevel(logging.DEBUG)
-
-        instance = self.daq_job_cls(
-            self.config,
-            supervisor_info=self.supervisor_info,
-            instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
-            raw_config=self.raw_config,
-        )
-        try:
-            instance.start()
-        except Exception as e:
-            logging.error(
-                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
-            )
-            raise e</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.message_out"><code class="name">var <span class="ident">message_out</span> : Any</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
-    daq_job_cls: type[DAQJob]
-    supervisor_info: SupervisorInfo
-    config: DAQJobConfig
-    message_in: Any
-    message_out: Any
-    process: Process | None
-    start_time: datetime = msgspec.field(default_factory=datetime.now)
-    instance_id: int
-    daq_job_info: DAQJobInfo | None = None
-    raw_config: str | None = None
-    log_queue: Any | None = None
-    restart_on_crash: bool = True
-
-    def start(self):
-        if self.log_queue:
-            root_logger = logging.getLogger()
-            root_logger.handlers.clear()
-            root_logger.addHandler(QueueHandler(self.log_queue))
-            root_logger.setLevel(logging.DEBUG)
-
-        instance = self.daq_job_cls(
-            self.config,
-            supervisor_info=self.supervisor_info,
-            instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
-            raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1275,8 +1147,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1284,6 +1154,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1296,9 +1169,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1320,8 +1193,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1329,6 +1200,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1341,9 +1215,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1365,8 +1239,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1374,6 +1246,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1386,9 +1261,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1410,8 +1285,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1419,6 +1292,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1431,9 +1307,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1455,8 +1331,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     daq_job_cls: type[DAQJob]
     supervisor_info: SupervisorInfo
     config: DAQJobConfig
-    message_in: Any
-    message_out: Any
     process: Process | None
     start_time: datetime = msgspec.field(default_factory=datetime.now)
     instance_id: int
@@ -1464,6 +1338,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     raw_config: str | None = None
     log_queue: Any | None = None
     restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
 
     def start(self):
         if self.log_queue:
@@ -1476,9 +1353,101 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             self.config,
             supervisor_info=self.supervisor_info,
             instance_id=self.instance_id,
-            message_in=self.message_in,
-            message_out=self.message_out,
             raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.zmq_xpub_url"><code class="name">var <span class="ident">zmq_xpub_url</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    process: Process | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
+        )
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.zmq_xsub_url"><code class="name">var <span class="ident">zmq_xsub_url</span> : str | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    process: Process | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
         )
         try:
             instance.start()
@@ -1512,9 +1481,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         self.config,
         supervisor_info=self.supervisor_info,
         instance_id=self.instance_id,
-        message_in=self.message_in,
-        message_out=self.message_out,
         raw_config=self.raw_config,
+        zmq_xpub_url=self.zmq_xpub_url,
+        zmq_xsub_url=self.zmq_xsub_url,
     )
     try:
         instance.start()
@@ -1547,11 +1516,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <h4><code><a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.base.DAQJob.allowed_message_in_types" href="#enrgdaq.daq.base.DAQJob.allowed_message_in_types">allowed_message_in_types</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJob.can_handle_message" href="#enrgdaq.daq.base.DAQJob.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config" href="#enrgdaq.daq.base.DAQJob.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config_type" href="#enrgdaq.daq.base.DAQJob.config_type">config_type</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJob.consume_all" href="#enrgdaq.daq.base.DAQJob.consume_all">consume_all</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.free" href="#enrgdaq.daq.base.DAQJob.free">free</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.get_latency_stats" href="#enrgdaq.daq.base.DAQJob.get_latency_stats">get_latency_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
@@ -1564,6 +1530,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJob.restart_offset" href="#enrgdaq.daq.base.DAQJob.restart_offset">restart_offset</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.start" href="#enrgdaq.daq.base.DAQJob.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.supervisor_id" href="#enrgdaq.daq.base.DAQJob.supervisor_id">supervisor_id</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.topics_to_subscribe" href="#enrgdaq.daq.base.DAQJob.topics_to_subscribe">topics_to_subscribe</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.unique_id" href="#enrgdaq.daq.base.DAQJob.unique_id">unique_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.watchdog_force_exit" href="#enrgdaq.daq.base.DAQJob.watchdog_force_exit">watchdog_force_exit</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds" href="#enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds">watchdog_timeout_seconds</a></code></li>
@@ -1577,14 +1544,14 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.daq_job_info" href="#enrgdaq.daq.base.DAQJobProcess.daq_job_info">daq_job_info</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.instance_id" href="#enrgdaq.daq.base.DAQJobProcess.instance_id">instance_id</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.log_queue" href="#enrgdaq.daq.base.DAQJobProcess.log_queue">log_queue</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJobProcess.message_in" href="#enrgdaq.daq.base.DAQJobProcess.message_in">message_in</a></code></li>
-<li><code><a title="enrgdaq.daq.base.DAQJobProcess.message_out" href="#enrgdaq.daq.base.DAQJobProcess.message_out">message_out</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.process" href="#enrgdaq.daq.base.DAQJobProcess.process">process</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.raw_config" href="#enrgdaq.daq.base.DAQJobProcess.raw_config">raw_config</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.restart_on_crash" href="#enrgdaq.daq.base.DAQJobProcess.restart_on_crash">restart_on_crash</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.start" href="#enrgdaq.daq.base.DAQJobProcess.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.start_time" href="#enrgdaq.daq.base.DAQJobProcess.start_time">start_time</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.supervisor_info" href="#enrgdaq.daq.base.DAQJobProcess.supervisor_info">supervisor_info</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.zmq_xpub_url" href="#enrgdaq.daq.base.DAQJobProcess.zmq_xpub_url">zmq_xpub_url</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.zmq_xsub_url" href="#enrgdaq.daq.base.DAQJobProcess.zmq_xsub_url">zmq_xsub_url</a></code></li>
 </ul>
 </li>
 </ul>
