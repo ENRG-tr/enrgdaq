@@ -304,8 +304,15 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
 
     target_supervisor: bool = True
     processed_count: int
+    processed_bytes: int = 0
     sent_count: int
+    sent_bytes: int = 0
     latency: DAQJobLatencyStats
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(f"stats.{self.supervisor_id}")
 
 
 class DAQJobStopError(Exception):

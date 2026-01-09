@@ -11,7 +11,6 @@ from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobMessageStoreTabul
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
 from enrgdaq.supervisor import (
     DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS,
-    DAQ_JOB_QUEUE_ACTION_TIMEOUT,
     Supervisor,
 )
 
@@ -229,8 +228,8 @@ class TestSupervisor(unittest.TestCase):
 
         result = self.supervisor.get_supervisor_messages()
 
-        # Expect 2 messages: stats message and routes message
-        self.assertEqual(len(result), 2)
+        # Expect 1 message: stats message (routes message disabled in new architecture)
+        self.assertEqual(len(result), 1)
         self.assertIsInstance(result[0], DAQJobMessageStats)
         assert isinstance(result[0], DAQJobMessageStats)
         self.assertEqual(result[0].stats, self.supervisor.daq_job_stats)
@@ -238,6 +237,7 @@ class TestSupervisor(unittest.TestCase):
         self.assertEqual(result[0].daq_job_info.daq_job_type, "Supervisor")
 
     def test_get_messages_from_daq_jobs(self):
+        """Test that get_messages_from_daq_jobs returns empty list (disabled)."""
         mock_process = MagicMock()
         mock_process.daq_job_cls = MagicMock()
         mock_process.daq_job_cls.__name__ = "mock_job"
@@ -249,9 +249,12 @@ class TestSupervisor(unittest.TestCase):
 
         result = self.supervisor.get_messages_from_daq_jobs()
 
-        self.assertEqual(result, [mock_message])
+        # This function is now disabled with break - returns empty list
+        # Stats are now received via SupervisorMessageHandler ZMQ subscription
+        self.assertEqual(result, [])
 
     def test_send_messages_to_daq_jobs(self):
+        """Test that send_messages_to_daq_jobs is disabled (break in loop)."""
         mock_process = MagicMock()
         mock_daq_job_cls = MagicMock(spec=DAQJobStore)
         mock_daq_job_cls.__name__ = "mock_store_job"
@@ -265,11 +268,9 @@ class TestSupervisor(unittest.TestCase):
 
         self.supervisor.send_messages_to_daq_jobs([mock_message])
 
-        self.assertFalse(mock_process.message_in.empty())
-        self.assertEqual(
-            mock_process.message_in.get(timeout=DAQ_JOB_QUEUE_ACTION_TIMEOUT),
-            mock_message,
-        )
+        # This function is now disabled with break - queue should remain empty
+        # Messages are now published directly via ZMQ pub/sub
+        self.assertTrue(mock_process.message_in.empty())
 
 
 if __name__ == "__main__":

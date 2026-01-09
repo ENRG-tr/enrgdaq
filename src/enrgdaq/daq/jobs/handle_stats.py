@@ -10,7 +10,12 @@ from enrgdaq.daq.jobs.remote import (
     DAQJobRemoteStatsDict,
     SupervisorRemoteStats,
 )
-from enrgdaq.daq.models import DAQJobMessage, DAQJobStats, DAQJobStatsRecord
+from enrgdaq.daq.models import (
+    DAQJobMessage,
+    DAQJobMessageStatsReport,
+    DAQJobStats,
+    DAQJobStatsRecord,
+)
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     StorableDAQJobConfig,
@@ -44,17 +49,24 @@ class DAQJobHandleStats(DAQJob):
     It extracts relevant statistics from the messages and stores them.
     """
 
-    allowed_message_in_types = [DAQJobMessageStats, DAQJobMessageStatsRemote]
+    allowed_message_in_types = [
+        DAQJobMessageStatsRemote,
+        DAQJobMessageStatsReport,
+    ]
+    # Subscribe to "stats" prefix to receive stats from all supervisors
     config_type = DAQJobHandleStatsConfig
     config: DAQJobHandleStatsConfig
 
     _stats: dict[str, DAQJobStatsDict]
     _remote_stats: DAQJobRemoteStatsDict  # type:ignore
+    _supervisor_activity: dict[str, SupervisorRemoteStats]
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
+        self.topics_to_subscribe.append("stats")
         super().__init__(config, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()
+        self._supervisor_activity = {}  # Track supervisor activity from stats reports
 
     def start(self):
         while not self._has_been_freed:
@@ -64,7 +76,8 @@ class DAQJobHandleStats(DAQJob):
             sleep_for(DAQ_JOB_HANDLE_STATS_SLEEP_INTERVAL_SECONDS, start_time)
 
     def handle_message(
-        self, message: DAQJobMessageStats | DAQJobMessageStatsRemote
+        self,
+        message: DAQJobMessageStatsRemote | DAQJobMessageStatsReport,
     ) -> bool:
         if not super().handle_message(message):
             return False
@@ -73,10 +86,28 @@ class DAQJobHandleStats(DAQJob):
         if not message.daq_job_info or not message.daq_job_info.supervisor_info:
             return True
 
-        if isinstance(message, DAQJobMessageStats):
-            self._stats[message.supervisor_id] = message.stats
-        elif isinstance(message, DAQJobMessageStatsRemote):
-            self._remote_stats[message.supervisor_id] = message.stats
+        supervisor_id = message.supervisor_id
+
+        if isinstance(message, DAQJobMessageStatsReport):
+            # Per-job stats report from individual DAQJob
+            daq_job_type = message.daq_job_info.daq_job_type
+            if supervisor_id not in self._stats:
+                self._stats[supervisor_id] = {}
+            if daq_job_type not in self._stats[supervisor_id]:
+                self._stats[supervisor_id][daq_job_type] = DAQJobStats()
+            stats = self._stats[supervisor_id][daq_job_type]
+            stats.latency_stats = message.latency
+            stats.message_in_stats.set(message.processed_count)
+            stats.message_out_stats.set(message.sent_count)
+
+            # Track supervisor activity and accumulate bytes
+            if supervisor_id not in self._supervisor_activity:
+                self._supervisor_activity[supervisor_id] = SupervisorRemoteStats()
+            activity = self._supervisor_activity[supervisor_id]
+            activity.last_active = datetime.now()
+            # Accumulate bytes (aggregate across all DAQJobs)
+            activity.message_in_bytes += message.processed_bytes
+            activity.message_out_bytes += message.sent_bytes
         return True
 
     def _save_stats(self):
@@ -141,8 +172,35 @@ class DAQJobHandleStats(DAQJob):
         ]
         data_to_send = []
 
-        # Combine remote stats from all supervisors
+        # Build remote stats by aggregating per-supervisor stats from all DAQJobs
         remote_stats_combined = defaultdict(lambda: SupervisorRemoteStats())
+
+        # Sum stats from all DAQJobs for each supervisor
+        for supervisor_id, daq_job_stats in self._stats.items():
+            if supervisor_id not in remote_stats_combined:
+                remote_stats_combined[supervisor_id] = SupervisorRemoteStats()
+
+            total_message_in = 0
+            total_message_out = 0
+            for _, stats in daq_job_stats.items():
+                total_message_in += stats.message_in_stats.count
+                total_message_out += stats.message_out_stats.count
+
+            remote_stats_combined[supervisor_id].message_in_count = total_message_in
+            remote_stats_combined[supervisor_id].message_out_count = total_message_out
+
+            # Copy activity data including bytes from _supervisor_activity
+            if supervisor_id in self._supervisor_activity:
+                activity = self._supervisor_activity[supervisor_id]
+                remote_stats_combined[supervisor_id].last_active = activity.last_active
+                remote_stats_combined[
+                    supervisor_id
+                ].message_in_bytes = activity.message_in_bytes
+                remote_stats_combined[
+                    supervisor_id
+                ].message_out_bytes = activity.message_out_bytes
+
+        # Also include stats from DAQJobMessageStatsRemote if received
         if (
             self._supervisor_info
             and self._supervisor_info.supervisor_id in self._remote_stats
@@ -150,7 +208,16 @@ class DAQJobHandleStats(DAQJob):
             for supervisor_id, remote_stats in self._remote_stats[
                 self._supervisor_info.supervisor_id
             ].items():
-                remote_stats_combined[supervisor_id] = remote_stats
+                # Merge with existing activity stats
+                if supervisor_id in remote_stats_combined:
+                    # Keep the more recent last_active
+                    if (
+                        remote_stats.last_active
+                        > remote_stats_combined[supervisor_id].last_active
+                    ):
+                        remote_stats_combined[supervisor_id] = remote_stats
+                else:
+                    remote_stats_combined[supervisor_id] = remote_stats
 
         for remote_supervisor_id, remote_stats_dict in self._remote_stats.items():
             # For each remote stats dict, combine the values

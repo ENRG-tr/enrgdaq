@@ -53,6 +53,7 @@ from enrgdaq.models import (
     SupervisorConfig,
     SupervisorInfo,
 )
+from enrgdaq.supervisor_message_handler import SupervisorMessageHandler
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -118,6 +119,7 @@ class Supervisor:
     _daq_jobs_to_load: list[DAQJobProcess] | None
     _daq_job_config_path: str
     _psutil_process_cache: dict[int, psutil.Process]
+    _message_handler: SupervisorMessageHandler | None = None
 
     def __init__(
         self,
@@ -248,6 +250,15 @@ class Supervisor:
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
 
+        # Start message handler for receiving stats reports from DAQJobs
+        self._message_handler = SupervisorMessageHandler(
+            xpub_url=self.supervisor_xpub_url,
+            supervisor_id=self.supervisor_id,
+            on_stats_report=self._handle_stats_report,
+            on_remote_stats=self._handle_remote_stats,
+        )
+        self._message_handler.start()
+
     def start_daq_job_processes(self, daq_jobs_to_load: list[DAQJobProcess]):
         assert self.config is not None
 
@@ -305,6 +316,10 @@ class Supervisor:
                 self._logger.debug("Ring buffer cleaned up")
             except Exception as e:
                 self._logger.warning(f"Failed to cleanup ring buffer: {e}")
+
+        # Stop message handler
+        if self._message_handler:
+            self._message_handler.stop()
 
         self._is_stopped = True
 
@@ -501,12 +516,34 @@ class Supervisor:
         return messages
 
     def get_daq_job_stats(
-        self, daq_job_stats: DAQJobStatsDict, daq_job_type: type[DAQJob]
+        self, daq_job_stats: DAQJobStatsDict, daq_job_type: type[DAQJob] | str
     ) -> DAQJobStats:
-        daq_job_type_name = daq_job_type.__name__
+        # Get the type name - handle both type classes and string names
+        if isinstance(daq_job_type, str):
+            daq_job_type_name = daq_job_type
+        elif hasattr(daq_job_type, "__name__"):
+            daq_job_type_name = daq_job_type.__name__
+        else:
+            daq_job_type_name = str(daq_job_type)
         if daq_job_type_name not in daq_job_stats:
             daq_job_stats[daq_job_type_name] = DAQJobStats()
         return daq_job_stats[daq_job_type_name]
+
+    def _handle_stats_report(self, msg: DAQJobMessageStatsReport):
+        """Handle stats report from a DAQJob (callback for message handler)."""
+        if msg.daq_job_info is None:
+            return
+        daq_job_type = msg.daq_job_info.daq_job_type
+        stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_type)
+        stats.latency_stats = msg.latency
+        stats.message_in_stats.set(msg.processed_count)
+        stats.message_out_stats.set(msg.sent_count)
+
+    def _handle_remote_stats(self, msg: DAQJobMessageStatsRemote):
+        """Handle remote stats from a DAQJobRemote (callback for message handler)."""
+        assert self.config is not None
+        if msg.supervisor_id == self.config.info.supervisor_id:
+            self.daq_job_remote_stats = msg.stats
 
     def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
         assert self.config is not None

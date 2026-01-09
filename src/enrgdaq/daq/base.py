@@ -20,7 +20,6 @@ from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessage,
     DAQJobMessageJobStarted,
-    DAQJobMessageRoutes,
     DAQJobMessageSHM,
     DAQJobMessageStatsReport,
     DAQJobMessageStop,
@@ -155,7 +154,9 @@ class DAQJob:
 
         self._latency_samples: list[float] = []
         self._processed_count = 0
+        self._processed_bytes = 0
         self._sent_count = 0
+        self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
 
         self.topics_to_subscribe.extend(
@@ -220,6 +221,8 @@ class DAQJob:
                 )
                 recv_message.is_remote = True
                 self.handle_message(recv_message)
+                self._processed_bytes += message_len
+                self.report_stats()
             except zmq.ContextTerminated:
                 break
             except Exception as e:
@@ -281,10 +284,6 @@ class DAQJob:
         if isinstance(message, DAQJobMessageStop):
             self.free()
             raise DAQJobStopError(message.reason)
-
-        if isinstance(message, DAQJobMessageRoutes):
-            self._routes = message.routes
-            return True
         # check if the message is accepted
         is_message_type_accepted = False
         for accepted_message_type in self.allowed_message_in_types:
@@ -461,7 +460,9 @@ class DAQJob:
         self._last_stats_report_time = datetime.now()
         report = DAQJobMessageStatsReport(
             processed_count=self._processed_count,
+            processed_bytes=self._processed_bytes,
             sent_count=self._sent_count,
+            sent_bytes=self._sent_bytes,
             latency=self.get_latency_stats(),
         )
         self._put_message_out(report)
