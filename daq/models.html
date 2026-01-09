@@ -511,9 +511,8 @@ Measurements are in milliseconds.</p></div>
 <li><a title="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote" href="jobs/remote.html#enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote">DAQJobMessageStatsRemote</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageHeartbeat" href="#enrgdaq.daq.models.DAQJobMessageHeartbeat">DAQJobMessageHeartbeat</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageSHM" href="#enrgdaq.daq.models.DAQJobMessageSHM">DAQJobMessageSHM</a></li>
-<li><a title="enrgdaq.daq.models.DAQJobMessageStatsReport" href="#enrgdaq.daq.models.DAQJobMessageStatsReport">DAQJobMessageStatsReport</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageStop" href="#enrgdaq.daq.models.DAQJobMessageStop">DAQJobMessageStop</a></li>
-<li><a title="enrgdaq.daq.models.SupervisorDAQJobMessage" href="#enrgdaq.daq.models.SupervisorDAQJobMessage">SupervisorDAQJobMessage</a></li>
+<li><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></li>
 <li><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="store/models.html#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></li>
 </ul>
 <h3>Instance variables</h3>
@@ -768,14 +767,14 @@ def supervisor_id(self) -&gt; str:
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageJobStarted"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageJobStarted</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageJobStarted(SupervisorDAQJobMessage):
+<pre><code class="python">class DAQJobMessageJobStarted(InternalDAQJobMessage):
     &#34;&#34;&#34;
     DAQJobMessageJobStarted is sent when a DAQJob starts, primarily used for
     setting DAQJobInfo of the DAQJobProcess. Also signals the process started
@@ -789,7 +788,7 @@ setting DAQJobInfo of the DAQJobProcess. Also signals the process started
 without a problem.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="enrgdaq.daq.models.SupervisorDAQJobMessage" href="#enrgdaq.daq.models.SupervisorDAQJobMessage">SupervisorDAQJobMessage</a></li>
+<li><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
 <li>msgspec.Struct</li>
 <li>msgspec._core._StructMixin</li>
@@ -797,14 +796,14 @@ without a problem.</p></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageRoutes"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageRoutes</span></span>
-<span>(</span><span>routes: dict[str, list[typing.Any]],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>routes: dict[str, list[typing.Any]],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageRoutes(SupervisorDAQJobMessage):
+<pre><code class="python">class DAQJobMessageRoutes(InternalDAQJobMessage):
     &#34;&#34;&#34;
     DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
     set the routes for the DAQJobProcess.
@@ -813,7 +812,8 @@ without a problem.</p></div>
         routes (RouteMapping): route_key to queue mapping.
     &#34;&#34;&#34;
 
-    routes: RouteMapping</code></pre>
+    routes: RouteMapping
+    target_supervisor = False</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
 set the routes for the DAQJobProcess.</p>
@@ -824,11 +824,18 @@ set the routes for the DAQJobProcess.</p>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="enrgdaq.daq.models.SupervisorDAQJobMessage" href="#enrgdaq.daq.models.SupervisorDAQJobMessage">SupervisorDAQJobMessage</a></li>
+<li><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
 <li>msgspec.Struct</li>
 <li>msgspec._core._StructMixin</li>
 </ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessageRoutes.target_supervisor"><code class="name">var <span class="ident">target_supervisor</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
 <h3>Instance variables</h3>
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobMessageRoutes.routes"><code class="name">var <span class="ident">routes</span> : dict[str, list[typing.Any]]</code></dt>
@@ -837,7 +844,7 @@ set the routes for the DAQJobProcess.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageRoutes(SupervisorDAQJobMessage):
+<pre><code class="python">class DAQJobMessageRoutes(InternalDAQJobMessage):
     &#34;&#34;&#34;
     DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
     set the routes for the DAQJobProcess.
@@ -846,7 +853,8 @@ set the routes for the DAQJobProcess.</p>
         routes (RouteMapping): route_key to queue mapping.
     &#34;&#34;&#34;
 
-    routes: RouteMapping</code></pre>
+    routes: RouteMapping
+    target_supervisor = False</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -901,18 +909,19 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageStatsReport"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsReport</span></span>
-<span>(</span><span>processed_count: int,<br>sent_count: int,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>processed_count: int,<br>sent_count: int,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStatsReport(DAQJobMessage):
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     &#34;&#34;&#34;
     Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
     &#34;&#34;&#34;
 
+    target_supervisor: bool = True
     processed_count: int
     sent_count: int
     latency: DAQJobLatencyStats</code></pre>
@@ -920,6 +929,7 @@ set the routes for the DAQJobProcess.</p>
 <div class="desc"><p>Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
+<li><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
 <li>msgspec.Struct</li>
 <li>msgspec._core._StructMixin</li>
@@ -932,11 +942,12 @@ set the routes for the DAQJobProcess.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStatsReport(DAQJobMessage):
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     &#34;&#34;&#34;
     Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
     &#34;&#34;&#34;
 
+    target_supervisor: bool = True
     processed_count: int
     sent_count: int
     latency: DAQJobLatencyStats</code></pre>
@@ -949,11 +960,12 @@ set the routes for the DAQJobProcess.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStatsReport(DAQJobMessage):
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     &#34;&#34;&#34;
     Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
     &#34;&#34;&#34;
 
+    target_supervisor: bool = True
     processed_count: int
     sent_count: int
     latency: DAQJobLatencyStats</code></pre>
@@ -966,11 +978,30 @@ set the routes for the DAQJobProcess.</p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStatsReport(DAQJobMessage):
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     &#34;&#34;&#34;
     Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
     &#34;&#34;&#34;
 
+    target_supervisor: bool = True
+    processed_count: int
+    sent_count: int
+    latency: DAQJobLatencyStats</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor"><code class="name">var <span class="ident">target_supervisor</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;
+    Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
+    &#34;&#34;&#34;
+
+    target_supervisor: bool = True
     processed_count: int
     sent_count: int
     latency: DAQJobLatencyStats</code></pre>
@@ -1638,6 +1669,65 @@ set the routes for the DAQJobProcess.</p>
     remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
     remote_disable: Optional[bool] = False
     drop_remote_messages: Optional[bool] = False</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.models.InternalDAQJobMessage"><code class="flex name class">
+<span>class <span class="ident">InternalDAQJobMessage</span></span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
+    target_supervisor: bool = True
+
+    def __post_init__(self):
+        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
+</details>
+<div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
+<dd>The unique identifier for the message. Defaults to a UUID.</dd>
+<dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
+<dd>The timestamp for the message. Defaults to the current datetime.</dd>
+<dt><strong><code>is_remote</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether the message is sent by a remote DAQJob. Defaults to False.</dd>
+<dt><strong><code>daq_job_info</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
+<dd>The information about the DAQJob that sent the message. Defaults to None.</dd>
+<dt><strong><code>remote_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
+<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
+</dl></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobMessageJobStarted" href="#enrgdaq.daq.models.DAQJobMessageJobStarted">DAQJobMessageJobStarted</a></li>
+<li><a title="enrgdaq.daq.models.DAQJobMessageRoutes" href="#enrgdaq.daq.models.DAQJobMessageRoutes">DAQJobMessageRoutes</a></li>
+<li><a title="enrgdaq.daq.models.DAQJobMessageStatsReport" href="#enrgdaq.daq.models.DAQJobMessageStatsReport">DAQJobMessageStatsReport</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.models.InternalDAQJobMessage.target_supervisor"><code class="name">var <span class="ident">target_supervisor</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
+    target_supervisor: bool = True
+
+    def __post_init__(self):
+        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2379,45 +2469,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </dd>
 </dl>
 </dd>
-<dt id="enrgdaq.daq.models.SupervisorDAQJobMessage"><code class="flex name class">
-<span>class <span class="ident">SupervisorDAQJobMessage</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>route_keys: set[str] = &lt;factory&gt;)</span>
-</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class SupervisorDAQJobMessage(DAQJobMessage):
-    def __post_init__(self):
-        self.remote_config = DAQRemoteConfig(remote_disable=True)</code></pre>
-</details>
-<div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
-<dd>The unique identifier for the message. Defaults to a UUID.</dd>
-<dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
-<dd>The timestamp for the message. Defaults to the current datetime.</dd>
-<dt><strong><code>is_remote</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether the message is sent by a remote DAQJob. Defaults to False.</dd>
-<dt><strong><code>daq_job_info</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>]</code></dt>
-<dd>The information about the DAQJob that sent the message. Defaults to None.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a></code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
-</dl></div>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
-<li>msgspec.Struct</li>
-<li>msgspec._core._StructMixin</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="enrgdaq.daq.models.DAQJobMessageJobStarted" href="#enrgdaq.daq.models.DAQJobMessageJobStarted">DAQJobMessageJobStarted</a></li>
-<li><a title="enrgdaq.daq.models.DAQJobMessageRoutes" href="#enrgdaq.daq.models.DAQJobMessageRoutes">DAQJobMessageRoutes</a></li>
-</ul>
-</dd>
 </dl>
 </section>
 </article>
@@ -2486,6 +2537,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <h4><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes" href="#enrgdaq.daq.models.DAQJobMessageRoutes">DAQJobMessageRoutes</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes.routes" href="#enrgdaq.daq.models.DAQJobMessageRoutes.routes">routes</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageRoutes.target_supervisor" href="#enrgdaq.daq.models.DAQJobMessageRoutes.target_supervisor">target_supervisor</a></code></li>
 </ul>
 </li>
 <li>
@@ -2500,6 +2552,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.latency" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.latency">latency</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count">processed_count</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count">sent_count</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor">target_supervisor</a></code></li>
 </ul>
 </li>
 <li>
@@ -2549,6 +2602,12 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </ul>
 </li>
 <li>
+<h4><code><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.models.InternalDAQJobMessage.target_supervisor" href="#enrgdaq.daq.models.InternalDAQJobMessage.target_supervisor">target_supervisor</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="enrgdaq.daq.models.RingBufferHandle" href="#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a></code></h4>
 <ul class="two-column">
 <li><code><a title="enrgdaq.daq.models.RingBufferHandle.buffer_name" href="#enrgdaq.daq.models.RingBufferHandle.buffer_name">buffer_name</a></code></li>
@@ -2569,9 +2628,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.SHMHandle.shm_name" href="#enrgdaq.daq.models.SHMHandle.shm_name">shm_name</a></code></li>
 <li><code><a title="enrgdaq.daq.models.SHMHandle.shm_size" href="#enrgdaq.daq.models.SHMHandle.shm_size">shm_size</a></code></li>
 </ul>
-</li>
-<li>
-<h4><code><a title="enrgdaq.daq.models.SupervisorDAQJobMessage" href="#enrgdaq.daq.models.SupervisorDAQJobMessage">SupervisorDAQJobMessage</a></code></h4>
 </li>
 </ul>
 </li>

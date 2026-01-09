@@ -146,9 +146,9 @@ el.replaceWith(d);
             self._consume_thread.start()
 
     def _consume_thread_func(self):
-        while True:
-            if not self.consume_all():
-                time.sleep(0.001)
+        while not self._has_been_freed:
+            if self.consume(nowait=False):
+                self.consume_all()
 
     def consume(self, nowait: bool = True, timeout: float | None = None):
         &#34;&#34;&#34;
@@ -295,8 +295,8 @@ el.replaceWith(d);
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        omit_debug_message = isinstance(message, DAQJobMessageStatsReport)
-        if self.config.verbosity == LogVerbosity.DEBUG and not omit_debug_message:
+        omit_debug_message = not isinstance(message, DAQJobMessageStatsReport) and not isinstance(message, InternalDAQJobMessage)
+        if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f&#34;Message out: {_format_message_for_log(message)}&#34;)
 
         if use_shm and sys.platform != &#34;win32&#34;:
@@ -365,7 +365,7 @@ el.replaceWith(d);
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        if not omit_debug_message:
+                        if omit_debug_message:
                             self._logger.debug(
                                 f&#34;Direct routed {type(message).__name__} to {route_key}&#34;
                             )
@@ -377,8 +377,8 @@ el.replaceWith(d);
                     # self._logger.debug(f&#34;Route key {route_key} not found locally&#34;)
         else:
             all_routes_satisfied = False
-            if not omit_debug_message:
-                self._logger.debug(f&#34;No routes available, sending to supervisor ({self._routes} routes)&#34;)
+            if omit_debug_message:
+                self._logger.debug(f&#34;No routes available, sending to supervisor ({self._routes or &#39;N/A&#39;} routes)&#34;)
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:
@@ -420,6 +420,12 @@ el.replaceWith(d);
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
+
+    @classmethod
+    def can_handle_message(cls, message: DAQJobMessage) -&gt; bool:
+        if isinstance(message, InternalDAQJobMessage):
+            return not message.target_supervisor
+        return True
 
     def __del__(self):
         self._logger.info(&#34;DAQ job is being deleted&#34;)
@@ -531,6 +537,15 @@ message queues, and provides methods for consuming and handling messages.</p>
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.base.DAQJob.watchdog_timeout_seconds"><code class="name">var <span class="ident">watchdog_timeout_seconds</span> : float</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Static methods</h3>
+<dl>
+<dt id="enrgdaq.daq.base.DAQJob.can_handle_message"><code class="name flex">
+<span>def <span class="ident">can_handle_message</span></span>(<span>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>) ‑> bool</span>
+</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -1532,6 +1547,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <h4><code><a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.base.DAQJob.allowed_message_in_types" href="#enrgdaq.daq.base.DAQJob.allowed_message_in_types">allowed_message_in_types</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.can_handle_message" href="#enrgdaq.daq.base.DAQJob.can_handle_message">can_handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config" href="#enrgdaq.daq.base.DAQJob.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config_type" href="#enrgdaq.daq.base.DAQJob.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.consume" href="#enrgdaq.daq.base.DAQJob.consume">consume</a></code></li>
