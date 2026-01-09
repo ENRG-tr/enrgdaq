@@ -8,11 +8,9 @@ Usage: python analyze_stats.py <path_to_stats.csv>
 
 import argparse
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
 
@@ -163,7 +161,7 @@ def print_summary(df: pd.DataFrame):
     print("📊 WCD Physics Stats:")
     print(f"  Trigger Rate: {df['acq_events'].mean():,.0f} ± {df['acq_events'].std():,.0f} Hz")
     print(f"  Input Flux:   {(df['raw_rate_hz'].mean()/1e6):.2f} MHz")
-    print(f"  Dead Fraction: N/A (Needs Max Rate)")
+    print("  Dead Fraction: N/A (Needs Max Rate)")
     print()
     
     print("🔬 Signal & Stability:")
@@ -192,15 +190,12 @@ def main():
         print(f"Error: File not found: {csv_path}")
         sys.exit(1)
     
-    output_path = args.output or str(csv_path.with_suffix('.png'))
-    
     print(f"Loading {csv_path}...")
     df = load_stats(str(csv_path))
     
     print_summary(df)
     
-    print(f"\nGenerating plots...")
-    fig = create_analysis_figure(df, output_path)
+    print("\nGenerating plots...")
     
     if not args.no_show:
         plt.show()

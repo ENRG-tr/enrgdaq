@@ -108,12 +108,14 @@ class DAQJobMessage(Struct, kw_only=True):
         return self.daq_job_info.supervisor_info.supervisor_id
 
 
-class SupervisorDAQJobMessage(DAQJobMessage):
+class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
+    target_supervisor: bool = True
+
     def __post_init__(self):
         self.remote_config = DAQRemoteConfig(remote_disable=True)
 
 
-class DAQJobMessageJobStarted(SupervisorDAQJobMessage):
+class DAQJobMessageJobStarted(InternalDAQJobMessage):
     """
     DAQJobMessageJobStarted is sent when a DAQJob starts, primarily used for
     setting DAQJobInfo of the DAQJobProcess. Also signals the process started
@@ -123,7 +125,7 @@ class DAQJobMessageJobStarted(SupervisorDAQJobMessage):
     pass
 
 
-class DAQJobMessageRoutes(SupervisorDAQJobMessage):
+class DAQJobMessageRoutes(InternalDAQJobMessage):
     """
     DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
     set the routes for the DAQJobProcess.
@@ -133,6 +135,7 @@ class DAQJobMessageRoutes(SupervisorDAQJobMessage):
     """
 
     routes: RouteMapping
+    target_supervisor = False
 
 
 class SHMHandle(Struct):
@@ -288,11 +291,12 @@ class DAQJobStats(Struct):
     is_alive: bool = True
 
 
-class DAQJobMessageStatsReport(DAQJobMessage):
+class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     """
     Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
     """
 
+    target_supervisor: bool = True
     processed_count: int
     sent_count: int
     latency: DAQJobLatencyStats

@@ -3,7 +3,6 @@ import pickle
 import re
 import sys
 import threading
-import time
 import uuid
 from datetime import datetime, timedelta
 from logging.handlers import QueueHandler
@@ -28,6 +27,7 @@ from enrgdaq.daq.models import (
     RouteMapping,
     SHMHandle,
     DAQJobMessageStatsReport,
+    InternalDAQJobMessage,
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
@@ -165,9 +165,9 @@ class DAQJob:
             self._consume_thread.start()
 
     def _consume_thread_func(self):
-        while True:
-            if not self.consume_all():
-                time.sleep(0.001)
+        while not self._has_been_freed:
+            if self.consume(nowait=False):
+                self.consume_all()
 
     def consume(self, nowait: bool = True, timeout: float | None = None):
         """
@@ -314,8 +314,8 @@ class DAQJob:
                 if store_remote_config is not None:
                     message.remote_config = store_remote_config
 
-        omit_debug_message = isinstance(message, DAQJobMessageStatsReport)
-        if self.config.verbosity == LogVerbosity.DEBUG and not omit_debug_message:
+        omit_debug_message = not isinstance(message, DAQJobMessageStatsReport) and not isinstance(message, InternalDAQJobMessage)
+        if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
         if use_shm and sys.platform != "win32":
@@ -384,7 +384,7 @@ class DAQJob:
                 if route_key in self._routes:
                     for queue in self._routes[route_key]:
                         queue.put(message)
-                        if not omit_debug_message:
+                        if omit_debug_message:
                             self._logger.debug(
                                 f"Direct routed {type(message).__name__} to {route_key}"
                             )
@@ -396,8 +396,8 @@ class DAQJob:
                     # self._logger.debug(f"Route key {route_key} not found locally")
         else:
             all_routes_satisfied = False
-            if not omit_debug_message:
-                self._logger.debug(f"No routes available, sending to supervisor ({self._routes} routes)")
+            if omit_debug_message:
+                self._logger.debug(f"No routes available, sending to supervisor ({self._routes or 'N/A'} routes)")
 
         # Send to supervisor if any route was not satisfied locally
         if not all_routes_satisfied:
@@ -439,6 +439,12 @@ class DAQJob:
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
+
+    @classmethod
+    def can_handle_message(cls, message: DAQJobMessage) -> bool:
+        if isinstance(message, InternalDAQJobMessage):
+            return not message.target_supervisor
+        return True
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")

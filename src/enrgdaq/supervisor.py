@@ -44,7 +44,7 @@ from enrgdaq.daq.models import (
     DAQJobMessageStop,
     DAQJobStats,
     RouteMapping,
-    SupervisorDAQJobMessage,
+    InternalDAQJobMessage,
 )
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import DAQJobMessageStoreSHM
@@ -574,14 +574,14 @@ class Supervisor:
                 if not any(
                     isinstance(message, msg_type)
                     for msg_type in daq_job_cls.allowed_message_in_types
-                ) and not isinstance(message, SupervisorDAQJobMessage):
+                ) and not isinstance(message, InternalDAQJobMessage):
                     continue
 
                 # Check if base class can handle such message
                 if (
                     getattr(daq_job_cls, "can_handle_message", None)
                     and not daq_job_cls.can_handle_message(message)  # type: ignore
-                    and not isinstance(daq_job_cls, SupervisorDAQJobMessage)
+                    and not isinstance(daq_job_cls, InternalDAQJobMessage)
                 ):
                     continue
 

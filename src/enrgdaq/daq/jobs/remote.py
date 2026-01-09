@@ -2,7 +2,6 @@ import pickle
 import threading
 from collections import defaultdict
 from datetime import datetime, timedelta
-from queue import Empty
 from typing import Optional
 
 import msgspec
@@ -14,7 +13,7 @@ from enrgdaq.daq.models import (
     DEFAULT_REMOTE_TOPIC,
     DAQJobConfig,
     DAQJobMessage,
-    SupervisorDAQJobMessage,
+    InternalDAQJobMessage,
 )
 from enrgdaq.utils.subclasses import all_subclasses
 from enrgdaq.utils.time import sleep_for
@@ -133,13 +132,15 @@ class DAQJobRemote(DAQJob):
         self._last_is_alive_check_time = datetime.now()
 
     def handle_message(self, message: DAQJobMessage) -> bool:
+        omit_debug = not isinstance(message, InternalDAQJobMessage)
         # Debug: Log all incoming messages
-        self._logger.debug(
-            f"handle_message received: {type(message).__name__}, "
-            f"is_remote={message.is_remote}, "
-            f"remote_disable={message.remote_config.remote_disable}, "
-            f"zmq_pub_is_none={self._zmq_pub is None}"
-        )
+        if omit_debug:
+            self._logger.debug(
+                f"handle_message received: {type(message).__name__}, "
+                f"is_remote={message.is_remote}, "
+                f"remote_disable={message.remote_config.remote_disable}, "
+                f"zmq_pub_is_none={self._zmq_pub is None}"
+            )
 
         if (
             # Ignore if the message is not allowed by the DAQ Job
@@ -153,27 +154,31 @@ class DAQJobRemote(DAQJob):
             # Ignore if the message is disabled for remote
             or message.remote_config.remote_disable
         ):
-            self._logger.debug(
-                f"handle_message: Ignoring message {type(message).__name__}"
-            )
+            if omit_debug:
+                self._logger.debug(
+                    f"handle_message: Ignoring message {type(message).__name__}"
+                )
             return True  # Silently ignore
 
-        self._logger.debug(
-            f"handle_message: Forwarding message {type(message).__name__} to remote"
-        )
+        if omit_debug:
+            self._logger.debug(
+                f"handle_message: Forwarding message {type(message).__name__} to remote"
+            )
         self._send_remote_pub_message(message)
         return True
 
     @classmethod
     def can_handle_message(cls, message: DAQJobMessage) -> bool:
-        if isinstance(message, SupervisorDAQJobMessage):
-            return True
+        if not super().can_handle_message(message):
+            return False
         if message.remote_config.remote_disable:
             return False
         return True
 
     def _send_remote_pub_message(self, message: DAQJobMessage):
         if self._zmq_pub is None:
+            return
+        if isinstance(message, InternalDAQJobMessage):
             return
 
         remote_topic = message.remote_config.remote_topic or DEFAULT_REMOTE_TOPIC
@@ -300,18 +305,6 @@ class DAQJobRemote(DAQJob):
         self._send_remote_stats_thread.start()
 
         while not self._has_been_freed:
-            """
-            TODO: Remove completely, now DAQJob thread does this
-            # Consume all messages in the queue
-            while True:
-                try:
-                    self.consume(
-                        nowait=False, timeout=DAQ_JOB_REMOTE_QUEUE_ACTION_TIMEOUT
-                    )
-                except Empty:
-                    break
-            """
-
             # Check thread healths
             if datetime.now() - self._last_is_alive_check_time > timedelta(
                 seconds=DAQ_JOB_REMOTE_IS_ALIVE_CHECK_INTERVAL_SECONDS
