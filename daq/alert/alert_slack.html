@@ -170,6 +170,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The unique identifier for the DAQ job.</dd>
+<dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -244,7 +246,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.alert.alert_slack.DAQJobAlertSlackConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobAlertSlackConfig</span></span>
-<span>(</span><span>slack_webhook_url: str,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
+<span>(</span><span>slack_webhook_url: str,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -265,6 +267,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The unique identifier for the DAQ job.</dd>
+<dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">

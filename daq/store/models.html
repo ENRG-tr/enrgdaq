@@ -86,10 +86,12 @@ el.replaceWith(d);
         return None
 
     def __post_init__(self):
+        from enrgdaq.daq.topics import Topic
+
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
+                self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
@@ -152,10 +154,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         return None
 
     def __post_init__(self):
+        from enrgdaq.daq.topics import Topic
+
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
+                self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -196,10 +200,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         return None
 
     def __post_init__(self):
+        from enrgdaq.daq.topics import Topic
+
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(&#34;store.&#34; + store_job.__name__)</code></pre>
+                self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -292,12 +298,12 @@ of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgda
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        # If we have a handle, we serialize it (efficient local transfer)
+        # The supervisor will convert this to full data if sending remotely
         if self.handle is not None:
-            # Load table from handle for serialization
-            state[&#34;table&#34;] = self.handle.load_pyarrow()
-            state[&#34;handle&#34;] = None
-        if state.get(&#34;table&#34;) is not None:
+            # Table shouldn&#39;t be serialized if we&#39;re sending the handle
+            state[&#34;table&#34;] = None
+        elif state.get(&#34;table&#34;) is not None:
             # Convert table to bytes using Arrow IPC
             sink = pa.BufferOutputStream()
             with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
@@ -380,12 +386,12 @@ When set, the table is loaded from shared memory using zero-copy.</dd>
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        # If we have a handle, we serialize it (efficient local transfer)
+        # The supervisor will convert this to full data if sending remotely
         if self.handle is not None:
-            # Load table from handle for serialization
-            state[&#34;table&#34;] = self.handle.load_pyarrow()
-            state[&#34;handle&#34;] = None
-        if state.get(&#34;table&#34;) is not None:
+            # Table shouldn&#39;t be serialized if we&#39;re sending the handle
+            state[&#34;table&#34;] = None
+        elif state.get(&#34;table&#34;) is not None:
             # Convert table to bytes using Arrow IPC
             sink = pa.BufferOutputStream()
             with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
@@ -450,12 +456,12 @@ When set, the table is loaded from shared memory using zero-copy.</dd>
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Don&#39;t serialize handle - it&#39;s only used for zero-copy within same host
+        # If we have a handle, we serialize it (efficient local transfer)
+        # The supervisor will convert this to full data if sending remotely
         if self.handle is not None:
-            # Load table from handle for serialization
-            state[&#34;table&#34;] = self.handle.load_pyarrow()
-            state[&#34;handle&#34;] = None
-        if state.get(&#34;table&#34;) is not None:
+            # Table shouldn&#39;t be serialized if we&#39;re sending the handle
+            state[&#34;table&#34;] = None
+        elif state.get(&#34;table&#34;) is not None:
             # Convert table to bytes using Arrow IPC
             sink = pa.BufferOutputStream()
             with pa.ipc.new_stream(sink, state[&#34;table&#34;].schema) as writer:
@@ -1677,14 +1683,14 @@ that is expected to be extended by specific store configurations, such as CSV, M
     If the expiration is set, the key will be prefixed with the date, e.g. for the data key &#34;test&#34;, the redis key will be &#34;redis_key.test:2023-01-01&#34;.
     &#34;&#34;&#34;
 
-    key_expiration_days: Optional[int] = None
+    key_expiration_days: int | None = None
     &#34;&#34;&#34;
     Delete keys older than this number of days.
     
     If None, keys will not be deleted.
     &#34;&#34;&#34;
 
-    use_timeseries: Optional[bool] = None
+    use_timeseries: bool | None = None
     &#34;&#34;&#34;
     Utilize Redis Timeseries to store data.
 
@@ -1722,14 +1728,14 @@ that is expected to be extended by specific store configurations, such as CSV, M
     If the expiration is set, the key will be prefixed with the date, e.g. for the data key &#34;test&#34;, the redis key will be &#34;redis_key.test:2023-01-01&#34;.
     &#34;&#34;&#34;
 
-    key_expiration_days: Optional[int] = None
+    key_expiration_days: int | None = None
     &#34;&#34;&#34;
     Delete keys older than this number of days.
     
     If None, keys will not be deleted.
     &#34;&#34;&#34;
 
-    use_timeseries: Optional[bool] = None
+    use_timeseries: bool | None = None
     &#34;&#34;&#34;
     Utilize Redis Timeseries to store data.
 
@@ -1756,14 +1762,14 @@ that is expected to be extended by specific store configurations, such as CSV, M
     If the expiration is set, the key will be prefixed with the date, e.g. for the data key &#34;test&#34;, the redis key will be &#34;redis_key.test:2023-01-01&#34;.
     &#34;&#34;&#34;
 
-    key_expiration_days: Optional[int] = None
+    key_expiration_days: int | None = None
     &#34;&#34;&#34;
     Delete keys older than this number of days.
     
     If None, keys will not be deleted.
     &#34;&#34;&#34;
 
-    use_timeseries: Optional[bool] = None
+    use_timeseries: bool | None = None
     &#34;&#34;&#34;
     Utilize Redis Timeseries to store data.
 
@@ -1789,14 +1795,14 @@ that is expected to be extended by specific store configurations, such as CSV, M
     If the expiration is set, the key will be prefixed with the date, e.g. for the data key &#34;test&#34;, the redis key will be &#34;redis_key.test:2023-01-01&#34;.
     &#34;&#34;&#34;
 
-    key_expiration_days: Optional[int] = None
+    key_expiration_days: int | None = None
     &#34;&#34;&#34;
     Delete keys older than this number of days.
     
     If None, keys will not be deleted.
     &#34;&#34;&#34;
 
-    use_timeseries: Optional[bool] = None
+    use_timeseries: bool | None = None
     &#34;&#34;&#34;
     Utilize Redis Timeseries to store data.
 
@@ -1810,7 +1816,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.StorableDAQJobConfig"><code class="flex name class">
 <span>class <span class="ident">StorableDAQJobConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1831,6 +1837,8 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The unique identifier for the DAQ job.</dd>
+<dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">

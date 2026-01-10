@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobConfig</span></span>
-<span>(</span><span>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None)</span>
+<span>(</span><span>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -63,12 +63,14 @@ el.replaceWith(d);
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: str | None = None</code></pre>
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
 </details>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -81,6 +83,8 @@ el.replaceWith(d);
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The unique identifier for the DAQ job.</dd>
+<dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -121,12 +125,14 @@ el.replaceWith(d);
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: str | None = None</code></pre>
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -144,12 +150,14 @@ el.replaceWith(d);
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: str | None = None</code></pre>
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -167,12 +175,39 @@ el.replaceWith(d);
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: str | None = None</code></pre>
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobConfig.use_shm_when_possible"><code class="name">var <span class="ident">use_shm_when_possible</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobConfig is the base configuration class for DAQJobs.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
+        remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
+        daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -190,12 +225,14 @@ el.replaceWith(d);
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
-    daq_job_unique_id: str | None = None</code></pre>
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -203,7 +240,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobInfo"><code class="flex name class">
 <span>class <span class="ident">DAQJobInfo</span></span>
-<span>(</span><span>daq_job_type: str,<br>unique_id: str,<br>instance_id: int,<br>config: str,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None)</span>
+<span>(</span><span>daq_job_type: str,<br>unique_id: str,<br>instance_id: int,<br>config: str,<br>subscribed_topics: list[str] = &lt;msgspec._core.Field object&gt;,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -229,6 +266,7 @@ class DAQJobInfo:
     unique_id: str
     instance_id: int
     config: str
+    subscribed_topics: list[str] = field(default_factory=list)
     supervisor_info: Optional[SupervisorInfo] = None
 
     @staticmethod
@@ -285,6 +323,10 @@ def mock() -&gt; &#34;DAQJobInfo&#34;:
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobInfo.instance_id"><code class="name">var <span class="ident">instance_id</span> : int</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobInfo.subscribed_topics"><code class="name">var <span class="ident">subscribed_topics</span> : list[str]</code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -975,7 +1017,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"><p>Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.</p></div>
 <h3>Ancestors</h3>
@@ -1008,7 +1052,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1033,7 +1079,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1058,7 +1106,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1083,7 +1133,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1108,7 +1160,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1133,7 +1187,9 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1151,7 +1207,9 @@ set the routes for the DAQJobProcess.</p>
 <pre><code class="python">@override
 def pre_send(self):
     super().pre_send()
-    self.topics.add(f&#34;stats.{self.supervisor_id}&#34;)</code></pre>
+    from enrgdaq.daq.topics import Topic
+
+    self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1836,7 +1894,9 @@ def pre_send(self):
     @override
     def pre_send(self):
         if self.target_supervisor:
-            self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
+            from enrgdaq.daq.topics import Topic
+
+            self.topics.add(Topic.supervisor_internal(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -1878,7 +1938,9 @@ def pre_send(self):
     @override
     def pre_send(self):
         if self.target_supervisor:
-            self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
+            from enrgdaq.daq.topics import Topic
+
+            self.topics.add(Topic.supervisor_internal(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1896,7 +1958,9 @@ def pre_send(self):
 <pre><code class="python">@override
 def pre_send(self):
     if self.target_supervisor:
-        self.topics.add(f&#34;supervisor.{self.supervisor_id}.internal&#34;)</code></pre>
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.supervisor_internal(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2659,6 +2723,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.daq_job_type" href="#enrgdaq.daq.models.DAQJobConfig.daq_job_type">daq_job_type</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.daq_job_unique_id" href="#enrgdaq.daq.models.DAQJobConfig.daq_job_unique_id">daq_job_unique_id</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.remote_config" href="#enrgdaq.daq.models.DAQJobConfig.remote_config">remote_config</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobConfig.use_shm_when_possible" href="#enrgdaq.daq.models.DAQJobConfig.use_shm_when_possible">use_shm_when_possible</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.verbosity" href="#enrgdaq.daq.models.DAQJobConfig.verbosity">verbosity</a></code></li>
 </ul>
 </li>
@@ -2669,6 +2734,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQJobInfo.daq_job_type" href="#enrgdaq.daq.models.DAQJobInfo.daq_job_type">daq_job_type</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobInfo.instance_id" href="#enrgdaq.daq.models.DAQJobInfo.instance_id">instance_id</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobInfo.mock" href="#enrgdaq.daq.models.DAQJobInfo.mock">mock</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobInfo.subscribed_topics" href="#enrgdaq.daq.models.DAQJobInfo.subscribed_topics">subscribed_topics</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobInfo.supervisor_info" href="#enrgdaq.daq.models.DAQJobInfo.supervisor_info">supervisor_info</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobInfo.unique_id" href="#enrgdaq.daq.models.DAQJobInfo.unique_id">unique_id</a></code></li>
 </ul>

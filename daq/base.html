@@ -121,10 +121,8 @@ el.replaceWith(d);
         self._has_been_freed = False
         self.unique_id = getattr(config, &#34;daq_job_unique_id&#34;, None) or str(uuid.uuid4())
 
-        if supervisor_info is not None:
-            self._supervisor_info = supervisor_info
-        else:
-            self._supervisor_info = None
+        self._supervisor_info = supervisor_info
+
         self.info = self._create_info(raw_config)
         self._logger.debug(f&#34;DAQ job {self.info.unique_id} created&#34;)
 
@@ -143,10 +141,11 @@ el.replaceWith(d);
 
         self.topics_to_subscribe.extend(
             [
-                #  f&#34;supervisor.{self.supervisor_id}&#34;,
-                f&#34;daq_job.{type(self).__name__}.{self.unique_id}&#34;,
+                Topic.supervisor_broadcast(self.supervisor_id),
+                Topic.daq_job_direct(type(self).__name__, self.unique_id),
             ]
         )
+        self.info.subscribed_topics = self.topics_to_subscribe
 
         self._zmq_xpub_url = zmq_xpub_url
         self._zmq_xsub_url = zmq_xsub_url
@@ -221,23 +220,12 @@ el.replaceWith(d);
         zmq_xsub.setsockopt_string(zmq.IDENTITY, self.unique_id)
         zmq_xsub.connect(self._zmq_xsub_url)
 
-        buffers = []
+        buffer = []
         while not self._has_been_freed:
             message: DAQJobMessage = self._publish_buffer.get()
             if message is None:
                 break
-            buffers.clear()
-            message.pre_send()
-            header = pickle.dumps(
-                message,
-                protocol=pickle.HIGHEST_PROTOCOL,
-                buffer_callback=buffers.append,
-            )
-            payload = [&#34;&#34;, header] + [zmq.Frame(b) for b in buffers]
-
-            for topic in message.topics:
-                payload[0] = topic.encode()
-                zmq_xsub.send_multipart(payload)
+            send_message(zmq_xsub, message, buffer)
 
     def _unwrap_message(self, message: DAQJobMessage) -&gt; DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
@@ -319,6 +307,7 @@ el.replaceWith(d);
             instance_id=self.instance_id,
             supervisor_info=getattr(self, &#34;_supervisor_info&#34;, None),
             config=raw_config or &#34;# No config&#34;,
+            subscribed_topics=self.topics_to_subscribe,
         )
 
     def _put_message_out(
@@ -349,7 +338,7 @@ el.replaceWith(d);
         if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f&#34;Message out: {_format_message_for_log(message)}&#34;)
 
-        if use_shm and sys.platform != &#34;win32&#34;:
+        if use_shm and self.config.use_shm_when_possible and sys.platform != &#34;win32&#34;:
             original_message = message
 
             # Use zero-copy ring buffer for PyArrow messages
@@ -456,7 +445,8 @@ el.replaceWith(d);
 
     @property
     def supervisor_id(self):
-        assert self.info.supervisor_info is not None
+        if self.info.supervisor_info is None:
+            return &#34;unknown&#34;
         return self.info.supervisor_info.supervisor_id
 
     def free(self):
@@ -578,7 +568,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 </summary>
 <pre><code class="python">@property
 def supervisor_id(self):
-    assert self.info.supervisor_info is not None
+    if self.info.supervisor_info is None:
+        return &#34;unknown&#34;
     return self.info.supervisor_info.supervisor_id</code></pre>
 </details>
 <div class="desc"></div>
