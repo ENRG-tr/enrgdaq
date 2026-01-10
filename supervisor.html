@@ -489,17 +489,6 @@ class RestartDAQJobSchedule:
             config=&#34;&#34;,
         )
 
-    def _generate_route_mapping(self) -&gt; RouteMapping:
-        routes: RouteMapping = defaultdict(list)
-        for process in self.daq_job_processes:
-            if issubclass(process.daq_job_cls, DAQJobStore) or issubclass(
-                process.daq_job_cls, DAQJobRemote
-            ):
-                break
-                routes[process.daq_job_cls.__name__].append(process.message_in)
-
-        return dict(routes)
-
     def _setup_federation(self) -&gt; None:
         &#34;&#34;&#34;
         Set up federation between supervisors in a star topology.

@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStore"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStore</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>target_local_supervisor: bool = False,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -62,28 +62,12 @@ el.replaceWith(d);
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
     tag: str | None = None
-
-    def get_remote_config(self) -&gt; Optional[DAQRemoteConfig]:
-        &#34;&#34;&#34;
-        Retrieves the remote configuration from the store_config.
-        Iterates through the attributes of `self.store_config` to find an instance
-        of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
-        Returns:
-            Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
-        &#34;&#34;&#34;
-
-        for key in dir(self.store_config):
-            value = getattr(self.store_config, key)
-            if not isinstance(value, DAQJobStoreConfigBase):
-                continue
-            if value.remote_config is None:
-                continue
-            return value.remote_config
-        return None
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         from enrgdaq.daq.topics import Topic
@@ -91,7 +75,12 @@ el.replaceWith(d);
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(Topic.store(store_job.__name__))</code></pre>
+                if self.target_local_supervisor:
+                    self.topics.add(
+                        Topic.store_supervisor(self.supervisor_id, store_job.__name__)
+                    )
+                else:
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
@@ -101,6 +90,8 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <dd>Configuration for the DAQ job store.</dd>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
 <dd>Optional tag associated with the message.</dd>
+<dt><strong><code>target_local_supervisor</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to send the message to store job topics of the local supervisor.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -130,28 +121,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
     tag: str | None = None
-
-    def get_remote_config(self) -&gt; Optional[DAQRemoteConfig]:
-        &#34;&#34;&#34;
-        Retrieves the remote configuration from the store_config.
-        Iterates through the attributes of `self.store_config` to find an instance
-        of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
-        Returns:
-            Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
-        &#34;&#34;&#34;
-
-        for key in dir(self.store_config):
-            value = getattr(self.store_config, key)
-            if not isinstance(value, DAQJobStoreConfigBase):
-                continue
-            if value.remote_config is None:
-                continue
-            return value.remote_config
-        return None
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         from enrgdaq.daq.topics import Topic
@@ -159,7 +134,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(Topic.store(store_job.__name__))</code></pre>
+                if self.target_local_supervisor:
+                    self.topics.add(
+                        Topic.store_supervisor(self.supervisor_id, store_job.__name__)
+                    )
+                else:
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -176,28 +156,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
     tag: str | None = None
-
-    def get_remote_config(self) -&gt; Optional[DAQRemoteConfig]:
-        &#34;&#34;&#34;
-        Retrieves the remote configuration from the store_config.
-        Iterates through the attributes of `self.store_config` to find an instance
-        of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
-        Returns:
-            Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
-        &#34;&#34;&#34;
-
-        for key in dir(self.store_config):
-            value = getattr(self.store_config, key)
-            if not isinstance(value, DAQJobStoreConfigBase):
-                continue
-            if value.remote_config is None:
-                continue
-            return value.remote_config
-        return None
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         from enrgdaq.daq.topics import Topic
@@ -205,53 +169,55 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(Topic.store(store_job.__name__))</code></pre>
+                if self.target_local_supervisor:
+                    self.topics.add(
+                        Topic.store_supervisor(self.supervisor_id, store_job.__name__)
+                    )
+                else:
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config"><code class="name flex">
-<span>def <span class="ident">get_remote_config</span></span>(<span>self) ‑> <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None</span>
-</code></dt>
+<dt id="enrgdaq.daq.store.models.DAQJobMessageStore.target_local_supervisor"><code class="name">var <span class="ident">target_local_supervisor</span> : bool</code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_remote_config(self) -&gt; Optional[DAQRemoteConfig]:
+<pre><code class="python">class DAQJobMessageStore(DAQJobMessage):
     &#34;&#34;&#34;
-    Retrieves the remote configuration from the store_config.
-    Iterates through the attributes of `self.store_config` to find an instance
-    of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
-    Returns:
-        Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
+    DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
+    configuration and data related to a DAQ (Data Acquisition) job.
+    Attributes:
+        store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
+        tag (str | None): Optional tag associated with the message.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
     &#34;&#34;&#34;
 
-    for key in dir(self.store_config):
-        value = getattr(self.store_config, key)
-        if not isinstance(value, DAQJobStoreConfigBase):
-            continue
-        if value.remote_config is None:
-            continue
-        return value.remote_config
-    return None</code></pre>
+    store_config: DAQJobStoreConfig
+    tag: str | None = None
+    target_local_supervisor: bool = False
+
+    def __post_init__(self):
+        from enrgdaq.daq.topics import Topic
+
+        mappings = _get_store_config_base_to_store_job_mapping()
+        for store_type in self.store_config.store_types:
+            for store_job in mappings[store_type]:
+                if self.target_local_supervisor:
+                    self.topics.add(
+                        Topic.store_supervisor(self.supervisor_id, store_job.__name__)
+                    )
+                else:
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
-<div class="desc"><p>Retrieves the remote configuration from the store_config.
-Iterates through the attributes of <code>self.store_config</code> to find an instance
-of <code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></code> that has a non-None <code>remote_config</code> attribute.</p>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration if found, otherwise None.</dd>
-</dl></div>
+<div class="desc"></div>
 </dd>
 </dl>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStorePyArrow"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStorePyArrow</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table | None = None,<br>handle: <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None = None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>target_local_supervisor: bool = False,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>table: pyarrow.lib.Table | None = None,<br>handle: <a title="enrgdaq.daq.models.RingBufferHandle" href="../models.html#enrgdaq.daq.models.RingBufferHandle">RingBufferHandle</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -534,18 +500,10 @@ When set, the table is loaded from shared memory using zero-copy.</dd>
 No-op if not using zero-copy mode.</p></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></b></code>:
-<ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config">get_remote_config</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreRaw"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreRaw</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>data: bytes)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>target_local_supervisor: bool = False,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>data: bytes)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -597,18 +555,10 @@ a raw data message store for DAQ jobs.</p>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></b></code>:
-<ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config">get_remote_config</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreSHM"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreSHM</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>shm: <a title="enrgdaq.daq.models.SHMHandle" href="../models.html#enrgdaq.daq.models.SHMHandle">SHMHandle</a>)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>target_local_supervisor: bool = False,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>shm: <a title="enrgdaq.daq.models.SHMHandle" href="../models.html#enrgdaq.daq.models.SHMHandle">SHMHandle</a>)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -626,6 +576,8 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <dd>Configuration for the DAQ job store.</dd>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
 <dd>Optional tag associated with the message.</dd>
+<dt><strong><code>target_local_supervisor</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to send the message to store job topics of the local supervisor.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -648,18 +600,10 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></b></code>:
-<ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config">get_remote_config</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobMessageStoreTabular"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStoreTabular</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;,<br>keys: list[str],<br>data: list[list[str | float | int] | numpy.ndarray] | None = None,<br>data_columns: dict[str, list[str | float | int] | numpy.ndarray] | None = None)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>tag: str | None = None,<br>target_local_supervisor: bool = False,<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>keys: list[str],<br>data: list[list[str | float | int] | numpy.ndarray] | None = None,<br>data_columns: dict[str, list[str | float | int] | numpy.ndarray] | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -756,14 +700,6 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Inherited members</h3>
-<ul class="hlist">
-<li><code><b><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></b></code>:
-<ul class="hlist">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config">get_remote_config</a></code></li>
-</ul>
-</li>
-</ul>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfig</span></span>
@@ -1082,7 +1018,6 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigBase"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigBase</span></span>
-<span>(</span><span>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1093,20 +1028,12 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     &#34;&#34;&#34;
     DAQJobStoreConfigBase is a configuration class for DAQ job store,
     that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.
-
-    Attributes:
-        remote_config (Optional[DAQRemoteConfig]): Configuration for remote DAQ.
     &#34;&#34;&#34;
 
-    remote_config: Optional[DAQRemoteConfig] = None</code></pre>
+    pass</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -1122,32 +1049,10 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigRaw" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRaw">DAQJobStoreConfigRaw</a></li>
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a></li>
 </ul>
-<h3>Instance variables</h3>
-<dl>
-<dt id="enrgdaq.daq.store.models.DAQJobStoreConfigBase.remote_config"><code class="name">var <span class="ident">remote_config</span> : <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None</code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobStoreConfigBase(Struct, kw_only=True):
-    &#34;&#34;&#34;
-    DAQJobStoreConfigBase is a configuration class for DAQ job store,
-    that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.
-
-    Attributes:
-        remote_config (Optional[DAQRemoteConfig]): Configuration for remote DAQ.
-    &#34;&#34;&#34;
-
-    remote_config: Optional[DAQRemoteConfig] = None</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-</dl>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigCSV"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigCSV</span></span>
-<span>(</span><span>file_path: str,<br>add_date: bool = False,<br>overwrite: bool = False,<br>use_gzip: bool = False,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>file_path: str,<br>add_date: bool = False,<br>overwrite: bool = False,<br>use_gzip: bool = False)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1176,12 +1081,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1310,7 +1210,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigHDF5"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigHDF5</span></span>
-<span>(</span><span>file_path: str,<br>add_date: bool,<br>dataset_name: str,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>file_path: str, add_date: bool, dataset_name: str)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1323,12 +1223,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     dataset_name: str</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1380,7 +1275,6 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigMemory"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigMemory</span></span>
-<span>(</span><span>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1404,7 +1298,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigMySQL"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigMySQL</span></span>
-<span>(</span><span>table_name: str,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>table_name: str)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1415,12 +1309,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     table_name: str</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1444,7 +1333,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigROOT"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigROOT</span></span>
-<span>(</span><span>file_path: str,<br>add_date: bool,<br>tree_name: str,<br>compression_type: str = 'ZSTD',<br>compression_level: int = 5,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>file_path: str,<br>add_date: bool,<br>tree_name: str,<br>compression_type: str = 'ZSTD',<br>compression_level: int = 5)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1459,12 +1348,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     compression_level: int = 5</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1552,7 +1436,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigRaw"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigRaw</span></span>
-<span>(</span><span>file_path: str,<br>add_date: bool = False,<br>overwrite: bool = True,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>file_path: str, add_date: bool = False, overwrite: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1576,12 +1460,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1666,7 +1545,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigRedis"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigRedis</span></span>
-<span>(</span><span>key: str,<br>key_expiration_days: int | None = None,<br>use_timeseries: bool | None = None,<br>*,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> | None = None)</span>
+<span>(</span><span>key: str,<br>key_expiration_days: int | None = None,<br>use_timeseries: bool | None = None)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1698,12 +1577,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
-that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p>
-<h2 id="attributes">Attributes</h2>
-<dl>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>Configuration for remote DAQ.</dd>
-</dl></div>
+that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></li>
@@ -1816,7 +1690,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.StorableDAQJobConfig"><code class="flex name class">
 <span>class <span class="ident">StorableDAQJobConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1831,8 +1705,6 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <dl>
 <dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
 <dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
@@ -1890,9 +1762,9 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li>
 <h4><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore" href="#enrgdaq.daq.store.models.DAQJobMessageStore">DAQJobMessageStore</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.get_remote_config">get_remote_config</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.store_config" href="#enrgdaq.daq.store.models.DAQJobMessageStore.store_config">store_config</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.tag" href="#enrgdaq.daq.store.models.DAQJobMessageStore.tag">tag</a></code></li>
+<li><code><a title="enrgdaq.daq.store.models.DAQJobMessageStore.target_local_supervisor" href="#enrgdaq.daq.store.models.DAQJobMessageStore.target_local_supervisor">target_local_supervisor</a></code></li>
 </ul>
 </li>
 <li>
@@ -1940,9 +1812,6 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a></code></h4>
-<ul class="">
-<li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase.remote_config" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase.remote_config">remote_config</a></code></li>
-</ul>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV">DAQJobStoreConfigCSV</a></code></h4>

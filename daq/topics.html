@@ -138,6 +138,20 @@ class Topic:
         return f&#34;{Topic.STORE}.{store_class_name}&#34;
 
     @staticmethod
+    def store_supervisor(supervisor_id: str, store_class_name: str) -&gt; str:
+        &#34;&#34;&#34;
+        Topic for messages routed to a specific store type for a specific supervisor.
+
+        Args:
+            supervisor_id: The supervisor&#39;s unique identifier.
+            store_class_name: The store class name (e.g., DAQJobStoreCSV).
+
+        Returns:
+            Topic string: store.supervisor.{supervisor_id}.{store_class_name}
+        &#34;&#34;&#34;
+        return f&#34;{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}&#34;
+
+    @staticmethod
     def stats(supervisor_id: str) -&gt; str:
         &#34;&#34;&#34;
         Topic for stats messages from DAQJobs to stats handler.
@@ -363,6 +377,42 @@ def store(store_class_name: str) -&gt; str:
 <dd>store.{store_class_name}</dd>
 </dl></div>
 </dd>
+<dt id="enrgdaq.daq.topics.Topic.store_supervisor"><code class="name flex">
+<span>def <span class="ident">store_supervisor</span></span>(<span>supervisor_id: str, store_class_name: str) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def store_supervisor(supervisor_id: str, store_class_name: str) -&gt; str:
+    &#34;&#34;&#34;
+    Topic for messages routed to a specific store type for a specific supervisor.
+
+    Args:
+        supervisor_id: The supervisor&#39;s unique identifier.
+        store_class_name: The store class name (e.g., DAQJobStoreCSV).
+
+    Returns:
+        Topic string: store.supervisor.{supervisor_id}.{store_class_name}
+    &#34;&#34;&#34;
+    return f&#34;{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}&#34;</code></pre>
+</details>
+<div class="desc"><p>Topic for messages routed to a specific store type for a specific supervisor.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>supervisor_id</code></strong></dt>
+<dd>The supervisor's unique identifier.</dd>
+<dt><strong><code>store_class_name</code></strong></dt>
+<dd>The store class name (e.g., DAQJobStoreCSV).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
+<dd>store.supervisor.{supervisor_id}.{store_class_name}</dd>
+</dl></div>
+</dd>
 <dt id="enrgdaq.daq.topics.Topic.supervisor_broadcast"><code class="name flex">
 <span>def <span class="ident">supervisor_broadcast</span></span>(<span>supervisor_id: str) ‑> str</span>
 </code></dt>
@@ -460,6 +510,7 @@ def supervisor_internal(supervisor_id: str) -&gt; str:
 <li><code><a title="enrgdaq.daq.topics.Topic.stats_combined" href="#enrgdaq.daq.topics.Topic.stats_combined">stats_combined</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.stats_prefix" href="#enrgdaq.daq.topics.Topic.stats_prefix">stats_prefix</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.store" href="#enrgdaq.daq.topics.Topic.store">store</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.store_supervisor" href="#enrgdaq.daq.topics.Topic.store_supervisor">store_supervisor</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.supervisor_broadcast" href="#enrgdaq.daq.topics.Topic.supervisor_broadcast">supervisor_broadcast</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.supervisor_internal" href="#enrgdaq.daq.topics.Topic.supervisor_internal">supervisor_internal</a></code></li>
 </ul>

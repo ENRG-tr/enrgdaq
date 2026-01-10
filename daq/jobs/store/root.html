@@ -300,8 +300,6 @@ TBasket overhead. Per uproot docs, each extend() should be at least
 <dl>
 <dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
 <dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
@@ -323,7 +321,7 @@ TBasket overhead. Per uproot docs, each extend() should be at least
 </dd>
 <dt id="enrgdaq.daq.jobs.store.root.DAQJobStoreROOTConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreROOTConfig</span></span>
-<span>(</span><span>out_dir: str = 'out/',<br>buffer_size_bytes: int = 5000000,<br>flush_interval_seconds: float = 1.0,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>out_dir: str = 'out/',<br>buffer_size_bytes: int = 5000000,<br>flush_interval_seconds: float = 1.0,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -340,8 +338,6 @@ TBasket overhead. Per uproot docs, each extend() should be at least
 <dl>
 <dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
 <dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
-<dt><strong><code>remote_config</code></strong> :&ensp;<code>Optional[DAQRemoteConfig]</code></dt>
-<dd>The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
 <dd>The type of the DAQ job.</dd>
 <dt><strong><code>daq_job_unique_id</code></strong> :&ensp;<code>str</code></dt>
