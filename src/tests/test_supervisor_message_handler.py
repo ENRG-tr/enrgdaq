@@ -24,15 +24,15 @@ class TestSupervisorMessageHandler(unittest.TestCase):
         self.assertEqual(handler._xpub_url, "ipc:///tmp/test_xpub.ipc")
         self.assertFalse(handler._is_stopped)
 
-    def test_stats_topic_property(self):
-        """Test that stats_topic returns the correct topic string."""
+    def test_handler_supervisor_id(self):
+        """Test that handler stores supervisor_id correctly."""
         handler = SupervisorMessageHandler(
             xpub_url="ipc:///tmp/test.ipc",
             supervisor_id="my_supervisor",
         )
 
-        # New topic format: stats.{supervisor_id}
-        self.assertEqual(handler.stats_topic, "stats.my_supervisor")
+        # Handler stores supervisor_id correctly
+        self.assertEqual(handler._supervisor_id, "my_supervisor")
 
     def test_handle_stats_report_callback(self):
         """Test that on_stats_report callback is invoked correctly."""
@@ -107,8 +107,8 @@ class TestDAQJobMessageStatsReportTopic(unittest.TestCase):
 
         msg.pre_send()
 
-        # New topic format: stats.{supervisor_id}
-        self.assertIn("stats.my_supervisor", msg.topics)
+        # New topic format: stats.supervisor.{supervisor_id}
+        self.assertIn("stats.supervisor.my_supervisor", msg.topics)
 
     def test_pre_send_always_adds_stats_topic(self):
         """Test that pre_send always adds stats topic regardless of target_supervisor."""
@@ -129,7 +129,7 @@ class TestDAQJobMessageStatsReportTopic(unittest.TestCase):
         msg.pre_send()
 
         # Stats topic is always added
-        self.assertIn("stats.my_supervisor", msg.topics)
+        self.assertIn("stats.supervisor.my_supervisor", msg.topics)
 
 
 if __name__ == "__main__":

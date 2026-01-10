@@ -12,6 +12,7 @@ from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigHDF5,
 )
+from enrgdaq.models import SupervisorInfo
 
 
 class TestHDF5Store(unittest.TestCase):
@@ -20,7 +21,10 @@ class TestHDF5Store(unittest.TestCase):
         self.test_file = os.path.join(self.test_dir, "test.h5")
         self.test_file_real_path = os.path.join("out", self.test_file)
         self.config = DAQJobStoreHDF5Config(daq_job_type="DAQJobStoreHDF5")
-        self.hdf5_store = DAQJobStoreHDF5(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.hdf5_store = DAQJobStoreHDF5(
+            self.config, supervisor_info=self.supervisor_info
+        )
         os.makedirs(self.test_dir, exist_ok=True)
 
     def tearDown(self):

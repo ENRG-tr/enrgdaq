@@ -14,13 +14,15 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     DAQJobStoreConfig,
 )
+from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.file import modify_file_path
 
 
 class TestDAQJobStoreCSV(unittest.TestCase):
     def setUp(self):
         self.config = MagicMock(out_dir="out/")
-        self.store = DAQJobStoreCSV(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.store = DAQJobStoreCSV(self.config, supervisor_info=self.supervisor_info)
 
     def test_modify_file_path(self):
         file_path = "test.csv"

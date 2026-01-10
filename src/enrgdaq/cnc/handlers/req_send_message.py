@@ -144,11 +144,10 @@ class ReqSendMessageHandler(CNCMessageHandler):
         Returns a dict mapping type name to type class.
         """
         from enrgdaq.daq.jobs.caen.hv import DAQJobMessageCAENHVSetChParam
-        from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats
-        from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote
         from enrgdaq.daq.models import (
             DAQJobMessage,
             DAQJobMessageHeartbeat,
+            DAQJobMessageStatsRemote,
             DAQJobMessageStop,
         )
         from enrgdaq.daq.store.models import (
@@ -165,7 +164,6 @@ class ReqSendMessageHandler(CNCMessageHandler):
             "DAQJobMessageStore": DAQJobMessageStore,
             "DAQJobMessageStoreRaw": DAQJobMessageStoreRaw,
             "DAQJobMessageStoreTabular": DAQJobMessageStoreTabular,
-            "DAQJobMessageStats": DAQJobMessageStats,
             "DAQJobMessageStatsRemote": DAQJobMessageStatsRemote,
             "DAQJobMessageCAENHVSetChParam": DAQJobMessageCAENHVSetChParam,
         }

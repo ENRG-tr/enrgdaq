@@ -15,6 +15,7 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
 )
+from enrgdaq.models import SupervisorInfo
 
 
 class TestDAQJobStoreRedis(unittest.TestCase):
@@ -26,7 +27,8 @@ class TestDAQJobStoreRedis(unittest.TestCase):
             db=0,
             password=None,
         )
-        self.store = DAQJobStoreRedis(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.store = DAQJobStoreRedis(self.config, supervisor_info=self.supervisor_info)
 
     @patch("time.sleep", return_value=None, side_effect=StopIteration)
     @patch("redis.Redis")

@@ -10,6 +10,7 @@ from enrgdaq.daq.jobs.store.mysql import (
     MySQLWriteQueueItem,
 )
 from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfigMySQL
+from enrgdaq.models import SupervisorInfo
 
 
 class TestDAQJobStoreMySQL(unittest.TestCase):
@@ -21,7 +22,8 @@ class TestDAQJobStoreMySQL(unittest.TestCase):
             password="password",
             database="test_db",
         )
-        self.store = DAQJobStoreMySQL(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.store = DAQJobStoreMySQL(self.config, supervisor_info=self.supervisor_info)
         self.store._connection = MagicMock(open=True)
 
     @patch("time.sleep", return_value=None, side_effect=StopIteration)

@@ -12,6 +12,7 @@ from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigROOT,
 )
+from enrgdaq.models import SupervisorInfo
 
 
 class TestROOTStore(unittest.TestCase):
@@ -20,7 +21,10 @@ class TestROOTStore(unittest.TestCase):
         self.test_file = os.path.join(self.test_dir, "test.root")
         self.test_file_real_path = os.path.join("out", self.test_file)
         self.config = DAQJobStoreROOTConfig(daq_job_type="DAQJobStoreROOT")
-        self.root_store = DAQJobStoreROOT(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.root_store = DAQJobStoreROOT(
+            self.config, supervisor_info=self.supervisor_info
+        )
         os.makedirs(os.path.join("out", self.test_dir), exist_ok=True)
 
     def tearDown(self):

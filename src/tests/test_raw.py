@@ -13,12 +13,14 @@ from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigRaw,
 )
+from enrgdaq.models import SupervisorInfo
 
 
 class TestDAQJobStoreRaw(unittest.TestCase):
     def setUp(self):
         self.config = MagicMock(out_dir="out/")
-        self.store = DAQJobStoreRaw(self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test")
+        self.store = DAQJobStoreRaw(self.config, supervisor_info=self.supervisor_info)
 
     @patch("enrgdaq.daq.jobs.store.raw.modify_file_path", return_value="test.raw")
     @patch("builtins.open", new_callable=mock_open)

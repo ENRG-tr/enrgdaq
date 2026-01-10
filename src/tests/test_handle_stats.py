@@ -7,12 +7,12 @@ from enrgdaq.daq.jobs.handle_stats import (
     DAQJobHandleStatsConfig,
     DAQJobStatsRecord,
 )
-from enrgdaq.daq.jobs.remote import SupervisorRemoteStats
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobLatencyStats,
     DAQJobMessageStatsReport,
     DAQJobStats,
+    SupervisorRemoteStats,
 )
 from enrgdaq.models import SupervisorInfo
 
@@ -23,7 +23,10 @@ class TestDAQJobHandleStats(unittest.TestCase):
             daq_job_type="",
             store_config=MagicMock(),
         )
-        self.daq_job_handle_stats = DAQJobHandleStats(config=self.config)
+        self.supervisor_info = SupervisorInfo(supervisor_id="test_supervisor")
+        self.daq_job_handle_stats = DAQJobHandleStats(
+            config=self.config, supervisor_info=self.supervisor_info
+        )
         # Mock _publish_buffer instead of message_out
         self.daq_job_handle_stats._publish_buffer = MagicMock()
 
@@ -94,7 +97,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         )
 
         self.daq_job_handle_stats._save_remote_stats()
-        self.daq_job_handle_stats._publish_buffer.put.assert_called_once()
+        # _save_remote_stats sends 2 messages: DAQJobMessageStoreTabular and DAQJobMessageCombinedRemoteStats
+        self.assertEqual(self.daq_job_handle_stats._publish_buffer.put.call_count, 2)
 
     def test_save_remote_stats_empty(self):
         """Test that empty remote stats are handled."""
@@ -102,9 +106,13 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._supervisor_activity = {}
 
         self.daq_job_handle_stats._save_remote_stats()
-        self.daq_job_handle_stats._publish_buffer.put.assert_called_once()
-        args, kwargs = self.daq_job_handle_stats._publish_buffer.put.call_args
-        data = args[0].data
+        # _save_remote_stats sends 2 messages: DAQJobMessageStoreTabular and DAQJobMessageCombinedRemoteStats
+        self.assertEqual(self.daq_job_handle_stats._publish_buffer.put.call_count, 2)
+        # First call is the DAQJobMessageStoreTabular with the data field
+        first_call_args = self.daq_job_handle_stats._publish_buffer.put.call_args_list[
+            0
+        ]
+        data = first_call_args[0][0].data
 
         self.assertEqual(len(data), 0)
 
