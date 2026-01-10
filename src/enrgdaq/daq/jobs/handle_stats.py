@@ -5,16 +5,14 @@ from typing import Dict, Optional
 import msgspec
 
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.jobs.remote import (
-    DAQJobMessageStatsRemote,
-    DAQJobRemoteStatsDict,
-    SupervisorRemoteStats,
-)
 from enrgdaq.daq.models import (
     DAQJobMessage,
+    DAQJobMessageStatsRemote,
     DAQJobMessageStatsReport,
+    DAQJobRemoteStatsDict,
     DAQJobStats,
     DAQJobStatsRecord,
+    SupervisorRemoteStats,
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,

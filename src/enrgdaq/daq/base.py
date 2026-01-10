@@ -286,18 +286,6 @@ class DAQJob:
             raise Exception(
                 f"Message type '{type(message)}' is not accepted by '{type(self).__name__}'"
             )
-        # Drop remote messages silently if configured to do so
-        if self.config.remote_config.drop_remote_messages:
-            if message.daq_job_info and message.daq_job_info.supervisor_info:
-                remote_supervisor_id = (
-                    message.daq_job_info.supervisor_info.supervisor_id
-                )
-            else:
-                remote_supervisor_id = "unknown"
-            self._logger.debug(
-                f"Dropping remote message '{type(message)}' from '{remote_supervisor_id}' because drop_remote_messages is True"
-            )
-            return True
 
         self._processed_count += 1
         from enrgdaq.daq.store.models import DAQJobMessageStore
@@ -345,13 +333,6 @@ class DAQJob:
 
         if modify_message_metadata:
             message.daq_job_info = self.info
-            message.remote_config = self.config.remote_config
-
-            # Get the remote config from the store config if it exists
-            if isinstance(message, DAQJobMessageStore):
-                store_remote_config = message.get_remote_config()
-                if store_remote_config is not None:
-                    message.remote_config = store_remote_config
 
         omit_debug_message = not isinstance(
             message, DAQJobMessageStatsReport
@@ -382,11 +363,10 @@ class DAQJob:
                         handle=handle,
                     )
                     message.daq_job_info = self.info
-                    message.remote_config = self.config.remote_config
                     message.topics = original_message.topics
                 else:
                     # Fall back to regular pickle-based SHM
-                    pass  # Continue to standard SHM handling below
+                    pass
             else:
                 # For non-PyArrow messages, use the existing pickle-based approach
                 pass
@@ -416,7 +396,6 @@ class DAQJob:
                         shm=shm_handle,
                     )
                 message.daq_job_info = self.info
-                message.remote_config = self.config.remote_config
                 message.topics = original_message.topics
 
         return message

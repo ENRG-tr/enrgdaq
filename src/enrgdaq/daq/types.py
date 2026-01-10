@@ -6,7 +6,6 @@ from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.jobs.handle_alerts import DAQJobHandleAlerts
 from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats
 from enrgdaq.daq.jobs.healthcheck import DAQJobHealthcheck
-from enrgdaq.daq.jobs.remote import DAQJobRemote
 from enrgdaq.daq.jobs.serve_http import DAQJobServeHTTP
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreCSV
 from enrgdaq.daq.jobs.store.root import DAQJobStoreROOT
@@ -27,7 +26,6 @@ DAQ_JOB_TYPE_TO_CLASS: dict[str, type[DAQJob]] = {
     "handle_alerts": DAQJobHandleAlerts,
     "alert_slack": DAQJobAlertSlack,
     "healthcheck": DAQJobHealthcheck,
-    "remote": DAQJobRemote,
 }
 
 

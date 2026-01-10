@@ -85,6 +85,20 @@ class Topic:
         return f"{Topic.STORE}.{store_class_name}"
 
     @staticmethod
+    def store_supervisor(supervisor_id: str, store_class_name: str) -> str:
+        """
+        Topic for messages routed to a specific store type for a specific supervisor.
+
+        Args:
+            supervisor_id: The supervisor's unique identifier.
+            store_class_name: The store class name (e.g., DAQJobStoreCSV).
+
+        Returns:
+            Topic string: store.supervisor.{supervisor_id}.{store_class_name}
+        """
+        return f"{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}"
+
+    @staticmethod
     def stats(supervisor_id: str) -> str:
         """
         Topic for stats messages from DAQJobs to stats handler.

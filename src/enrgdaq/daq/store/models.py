@@ -9,7 +9,6 @@ from numpy import ndarray
 from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobMessage,
-    DAQRemoteConfig,
     RingBufferHandle,
     SHMHandle,
 )
@@ -69,28 +68,12 @@ class DAQJobMessageStore(DAQJobMessage):
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
     """
 
     store_config: DAQJobStoreConfig
     tag: str | None = None
-
-    def get_remote_config(self) -> Optional[DAQRemoteConfig]:
-        """
-        Retrieves the remote configuration from the store_config.
-        Iterates through the attributes of `self.store_config` to find an instance
-        of `DAQJobStoreConfigBase` that has a non-None `remote_config` attribute.
-        Returns:
-            Optional[DAQRemoteConfig]: The remote configuration if found, otherwise None.
-        """
-
-        for key in dir(self.store_config):
-            value = getattr(self.store_config, key)
-            if not isinstance(value, DAQJobStoreConfigBase):
-                continue
-            if value.remote_config is None:
-                continue
-            return value.remote_config
-        return None
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         from enrgdaq.daq.topics import Topic
@@ -98,7 +81,12 @@ class DAQJobMessageStore(DAQJobMessage):
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add(Topic.store(store_job.__name__))
+                if self.target_local_supervisor:
+                    self.topics.add(
+                        Topic.store_supervisor(self.supervisor_id, store_job.__name__)
+                    )
+                else:
+                    self.topics.add(Topic.store(store_job.__name__))
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):
@@ -200,12 +188,9 @@ class DAQJobStoreConfigBase(Struct, kw_only=True):
     """
     DAQJobStoreConfigBase is a configuration class for DAQ job store,
     that is expected to be extended by specific store configurations, such as CSV, MySQL, etc.
-
-    Attributes:
-        remote_config (Optional[DAQRemoteConfig]): Configuration for remote DAQ.
     """
 
-    remote_config: Optional[DAQRemoteConfig] = None
+    pass
 
 
 class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):

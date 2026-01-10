@@ -1,5 +1,7 @@
 import time
 
+from enrgdaq.models import SupervisorInfo
+
 try:
     from typing import override  # type: ignore
 except ImportError:
@@ -20,11 +22,14 @@ class DAQJobStore(DAQJob):
     DAQJobStore is an abstract base class for data acquisition job stores.
     """
 
-    def __init__(self, config: DAQJobConfig, **kwargs):
+    def __init__(self, config: DAQJobConfig, supervisor_info: SupervisorInfo, **kwargs):
         from enrgdaq.daq.topics import Topic
 
         self.topics_to_subscribe.append(Topic.store(type(self).__name__))
-        super().__init__(config, **kwargs)
+        self.topics_to_subscribe.append(
+            Topic.store_supervisor(supervisor_info.supervisor_id, type(self).__name__)
+        )
+        super().__init__(config, supervisor_info, **kwargs)
 
     @override
     def start(self):

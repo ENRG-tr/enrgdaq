@@ -6,7 +6,6 @@ import platform
 import sys
 import threading
 import uuid
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
@@ -32,13 +31,9 @@ from enrgdaq.daq.daq_job import (
     start_daq_job,
     start_daq_jobs,
 )
-from enrgdaq.daq.jobs.remote import (
-    DAQJobRemote,
-)
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessageStop,
-    RouteMapping,
 )
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.topics import Topic
@@ -454,17 +449,6 @@ class Supervisor:
             instance_id=0,
             config="",
         )
-
-    def _generate_route_mapping(self) -> RouteMapping:
-        routes: RouteMapping = defaultdict(list)
-        for process in self.daq_job_processes:
-            if issubclass(process.daq_job_cls, DAQJobStore) or issubclass(
-                process.daq_job_cls, DAQJobRemote
-            ):
-                break
-                routes[process.daq_job_cls.__name__].append(process.message_in)
-
-        return dict(routes)
 
     def _setup_federation(self) -> None:
         """

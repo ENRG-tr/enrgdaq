@@ -3,8 +3,7 @@ from typing import Optional, Union
 from msgspec import Struct
 
 from enrgdaq.daq.jobs.handle_stats import DAQJobStatsDict
-from enrgdaq.daq.jobs.remote import DAQJobRemoteStatsDict
-from enrgdaq.daq.models import DAQJobInfo
+from enrgdaq.daq.models import DAQJobInfo, DAQJobRemoteStatsDict
 from enrgdaq.models import RestartScheduleInfo, SupervisorInfo
 
 

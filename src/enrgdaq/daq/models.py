@@ -52,29 +52,11 @@ class DAQJobInfo:
         )
 
 
-class DAQRemoteConfig(Struct, kw_only=True):
-    """
-    Configuration for remote communication of DAQJobMessages.
-
-    Used both in DAQJobConfig and in DAQJobMessageStore.
-
-    Attributes:
-        remote_topic (Optional[str]): The topic to send the message to for remote communication.
-        remote_disable (Optional[bool]): Whether to send messages from this DAQ job to remote. If True, messages will not be sent to any remote.
-        drop_remote_messages (Optional[bool]): Whether to drop remote messages. If True, messages from remote will not be processed, but messages may still be sent to remote.
-    """
-
-    remote_topic: Optional[str] = DEFAULT_REMOTE_TOPIC
-    remote_disable: Optional[bool] = False
-    drop_remote_messages: Optional[bool] = False
-
-
 class DAQJobConfig(Struct, kw_only=True):
     """
     DAQJobConfig is the base configuration class for DAQJobs.
     Attributes:
         verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
-        remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
@@ -82,7 +64,6 @@ class DAQJobConfig(Struct, kw_only=True):
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
-    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
     daq_job_unique_id: str | None = None
     use_shm_when_possible: bool = True
 
@@ -95,14 +76,12 @@ class DAQJobMessage(Struct, kw_only=True):
         timestamp (Optional[datetime]): The timestamp for the message. Defaults to the current datetime.
         is_remote (bool): Whether the message is sent by a remote DAQJob. Defaults to False.
         daq_job_info (Optional[DAQJobInfo]): The information about the DAQJob that sent the message. Defaults to None.
-        remote_config (DAQRemoteConfig): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
     """
 
     id: str | None = field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime | None = field(default_factory=datetime.now)
     is_remote: bool = False
     daq_job_info: "DAQJobInfo | None" = None
-    remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
     topics: set[RouteKey] = field(default_factory=set)
 
     @property
@@ -114,6 +93,37 @@ class DAQJobMessage(Struct, kw_only=True):
 
     def pre_send(self):
         pass
+
+
+class SupervisorRemoteStats(Struct):
+    """Statistics for a remote supervisor."""
+
+    message_in_count: int = 0
+    message_in_bytes: int = 0
+
+    message_out_count: int = 0
+    message_out_bytes: int = 0
+
+    last_active: datetime = field(default_factory=datetime.now)
+
+    def update_message_in_stats(self, message_in_bytes: int):
+        self.message_in_count += 1
+        self.message_in_bytes += message_in_bytes
+        self.last_active = datetime.now()
+
+    def update_message_out_stats(self, message_out_bytes: int):
+        self.message_out_count += 1
+        self.message_out_bytes += message_out_bytes
+        self.last_active = datetime.now()
+
+
+class DAQJobMessageStatsRemote(DAQJobMessage):
+    """Message class containing remote statistics."""
+
+    stats: "DAQJobRemoteStatsDict"
+
+
+DAQJobRemoteStatsDict = dict[str, SupervisorRemoteStats]
 
 
 class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
