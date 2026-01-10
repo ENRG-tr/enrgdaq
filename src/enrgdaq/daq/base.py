@@ -19,6 +19,7 @@ import zmq
 from enrgdaq.daq.models import (
     DAQJobConfig,
     DAQJobInfo,
+    DAQJobLatencyStats,
     DAQJobMessage,
     DAQJobMessageJobStarted,
     DAQJobMessageSHM,
@@ -37,6 +38,7 @@ from enrgdaq.daq.store.models import (
 from enrgdaq.daq.topics import Topic
 from enrgdaq.message_broker import send_message
 from enrgdaq.models import SupervisorInfo
+from enrgdaq.utils.arrow_ipc import try_zero_copy_pyarrow
 from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
@@ -288,12 +290,12 @@ class DAQJob:
             )
 
         self._processed_count += 1
-        from enrgdaq.daq.store.models import DAQJobMessageStore
 
         if message.timestamp and isinstance(message, DAQJobMessageStore):
             latency = (datetime.now() - message.timestamp).total_seconds() * 1000.0
             self._latency_samples.append(latency)
-            # Keep only last 1000 samples to prevent memory leak
+
+            # Keep only last 1000 samples
             if len(self._latency_samples) > 1000:
                 self._latency_samples.pop(0)
 
@@ -340,7 +342,17 @@ class DAQJob:
         if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
-        if use_shm and self.config.use_shm_when_possible and sys.platform != "win32":
+        if (
+            use_shm
+            and self.config.use_shm_when_possible
+            # Should be not store message, or if it is, it should target local supervisor
+            and (
+                not isinstance(message, DAQJobMessageStore)
+                or message.target_local_supervisor
+            )
+            # Should not be Windows
+            and sys.platform != "win32"
+        ):
             original_message = message
 
             # Use zero-copy ring buffer for PyArrow messages
@@ -348,8 +360,6 @@ class DAQJob:
                 isinstance(message, DAQJobMessageStorePyArrow)
                 and message.table is not None
             ):
-                from enrgdaq.utils.arrow_ipc import try_zero_copy_pyarrow
-
                 handle, success = try_zero_copy_pyarrow(
                     message.table,
                     message.store_config,
@@ -414,8 +424,6 @@ class DAQJob:
         self._sent_count += 1
 
     def get_latency_stats(self) -> Any:
-        from enrgdaq.daq.models import DAQJobLatencyStats
-
         if not self._latency_samples:
             return DAQJobLatencyStats()
 

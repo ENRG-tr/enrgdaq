@@ -93,6 +93,9 @@ class DAQJobMessageStore(DAQJobMessage):
             self.target_local_supervisor or self.store_config.target_local_supervisor
         )
 
+    def pre_send(self):
+        super().pre_send()
+
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
@@ -102,6 +105,8 @@ class DAQJobMessageStore(DAQJobMessage):
                     )
                 else:
                     self.topics.add(Topic.store(store_job.__name__))
+
+        print(self.topics)
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):
