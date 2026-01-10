@@ -20,6 +20,8 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStoreTabular,
     StorableDAQJobConfig,
 )
+from enrgdaq.daq.topics import Topic
+from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
 
 DAQJobStatsDict = Dict[str, DAQJobStats]
@@ -35,10 +37,16 @@ class DAQJobHandleStatsConfig(StorableDAQJobConfig):
     pass
 
 
-class DAQJobMessageStats(DAQJobMessage):
-    """Message class containing DAQ job statistics."""
+class DAQJobMessageCombinedStats(DAQJobMessage):
+    """Message class containing combined DAQ job statistics."""
 
-    stats: DAQJobStatsDict
+    stats: dict[str, "DAQJobStatsDict"]
+
+
+class DAQJobMessageCombinedRemoteStats(DAQJobMessage):
+    """Message class containing combined remote statistics."""
+
+    stats: dict[str, SupervisorRemoteStats]
 
 
 class DAQJobHandleStats(DAQJob):
@@ -61,11 +69,11 @@ class DAQJobHandleStats(DAQJob):
     _remote_stats: DAQJobRemoteStatsDict  # type:ignore
     _supervisor_activity: dict[str, SupervisorRemoteStats]
 
-    def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
-        from enrgdaq.daq.topics import Topic
-
-        self.topics_to_subscribe.append(Topic.stats_prefix())
-        super().__init__(config, **kwargs)
+    def __init__(
+        self, config: DAQJobHandleStatsConfig, supervisor_info: SupervisorInfo, **kwargs
+    ):
+        self.topics_to_subscribe.append(Topic.stats(supervisor_info.supervisor_id))
+        super().__init__(config, supervisor_info, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()
         self._supervisor_activity = {}  # Track supervisor activity from stats reports
@@ -159,6 +167,11 @@ class DAQJobHandleStats(DAQJob):
                 store_config=self.config.store_config,
                 keys=keys,
                 data=data_to_send,
+            )
+        )
+        self._put_message_out(
+            DAQJobMessageCombinedStats(
+                stats=self._stats, topics={Topic.stats_combined(self.supervisor_id)}
             )
         )
 
@@ -268,5 +281,11 @@ class DAQJobHandleStats(DAQJob):
                 keys=keys,
                 data=data_to_send,
                 tag="remote",
+            )
+        )
+        self._put_message_out(
+            DAQJobMessageCombinedRemoteStats(
+                stats=dict(remote_stats_combined),
+                topics={Topic.stats_combined(self.supervisor_id)},
             )
         )

@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import logging
 import os
 import platform
@@ -47,6 +48,7 @@ from enrgdaq.models import (
     SupervisorConfig,
     SupervisorInfo,
 )
+from enrgdaq.supervisor_message_handler import SupervisorMessageHandler
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -154,6 +156,13 @@ class Supervisor:
             "supervisor_proxy", "supervisor_xpub", "supervisor_xsub"
         )
 
+        self.message_handler = SupervisorMessageHandler(
+            xpub_url=self.supervisor_xpub_url,
+            supervisor_id=self.supervisor_id,
+            on_stats_receive=lambda x: self._update_stats(x.stats),
+            on_remote_stats_receive=lambda x: self._update_remote_stats(x.stats),
+        )
+
         self._setup_federation()
 
         self._last_stats_message_time = datetime.min
@@ -171,6 +180,8 @@ class Supervisor:
             self.config.verbosity.to_logging_level() if self.config else logging.INFO
         )
 
+        assert self.config is not None
+
         # Change logging name based on supervisor id
         self._logger.name = f"Supervisor({self.config.info.supervisor_id})"
 
@@ -187,7 +198,7 @@ class Supervisor:
 
             try:
                 # get hash of supervisor_id to fit name
-                import hashlib
+                assert self.config is not None
 
                 supervisor_id_hash = base64.b64encode(
                     hashlib.md5(self.config.info.supervisor_id.encode()).digest()
@@ -234,6 +245,8 @@ class Supervisor:
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
         self._logger.debug(f"Started {len(self.daq_job_processes)} DAQ job processes")
         self.warn_for_lack_of_daq_jobs()
+
+        self.message_handler.start()
 
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
@@ -547,6 +560,12 @@ class Supervisor:
             target=forward_to_server, daemon=True
         )
         self._fed_to_server_thread.start()
+
+    def _update_stats(self, stats):
+        self.daq_job_stats = stats
+
+    def _update_remote_stats(self, stats):
+        self.daq_job_remote_stats = stats
 
     @property
     def supervisor_id(self):

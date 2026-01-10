@@ -16,8 +16,8 @@ class TestSupervisorMessageHandler(unittest.TestCase):
         handler = SupervisorMessageHandler(
             xpub_url="ipc:///tmp/test_xpub.ipc",
             supervisor_id="test_supervisor",
-            on_stats_report=None,
-            on_remote_stats=None,
+            on_stats_receive=None,
+            on_remote_stats_receive=None,
         )
 
         self.assertEqual(handler._supervisor_id, "test_supervisor")
@@ -40,7 +40,7 @@ class TestSupervisorMessageHandler(unittest.TestCase):
         handler = SupervisorMessageHandler(
             xpub_url="ipc:///tmp/test.ipc",
             supervisor_id="test",
-            on_stats_report=callback,
+            on_stats_receive=callback,
         )
 
         # Create a mock stats report
@@ -60,8 +60,8 @@ class TestSupervisorMessageHandler(unittest.TestCase):
         )
 
         # Directly call internal method to test callback
-        if handler._on_stats_report:
-            handler._on_stats_report(msg)
+        if handler._on_stats_receive:
+            handler._on_stats_receive(msg)
 
         callback.assert_called_once_with(msg)
 

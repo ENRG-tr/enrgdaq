@@ -5,9 +5,15 @@ Supervisor Message Handler - Handles incoming messages from DAQJobs via ZMQ subs
 import logging
 import pickle
 import threading
-from typing import Any, Callable
+from typing import Callable
 
 import zmq
+
+from enrgdaq.daq.jobs.handle_stats import (
+    DAQJobMessageCombinedRemoteStats,
+    DAQJobMessageCombinedStats,
+)
+from enrgdaq.daq.topics import Topic
 
 
 class SupervisorMessageHandler:
@@ -22,8 +28,9 @@ class SupervisorMessageHandler:
         self,
         xpub_url: str,
         supervisor_id: str,
-        on_stats_report: Callable[[Any], None] | None = None,
-        on_remote_stats: Callable[[Any], None] | None = None,
+        on_stats_receive: Callable[[DAQJobMessageCombinedStats], None] | None = None,
+        on_remote_stats_receive: Callable[[DAQJobMessageCombinedRemoteStats], None]
+        | None = None,
     ):
         """
         Initialize the message handler.
@@ -31,13 +38,11 @@ class SupervisorMessageHandler:
         Args:
             xpub_url: URL of the ZMQ XPUB socket to connect to.
             supervisor_id: ID of the supervisor (used for topic subscription).
-            on_stats_report: Callback for DAQJobMessageStatsReport messages.
-            on_remote_stats: Callback for DAQJobMessageStatsRemote messages.
         """
         self._xpub_url = xpub_url
         self._supervisor_id = supervisor_id
-        self._on_stats_report = on_stats_report
-        self._on_remote_stats = on_remote_stats
+        self._on_stats_receive = on_stats_receive
+        self._on_remote_stats_receive = on_remote_stats_receive
 
         self._logger = logging.getLogger(f"SupervisorMessageHandler({supervisor_id})")
         self._zmq_context: zmq.Context | None = None
@@ -45,21 +50,19 @@ class SupervisorMessageHandler:
         self._subscriber_thread: threading.Thread | None = None
         self._is_stopped = False
 
-    @property
-    def stats_topic(self) -> str:
-        """Topic for stats messages. Uses stats.{supervisor_id} format."""
-        return f"stats.{self._supervisor_id}"
-
     def start(self):
         """Start the subscriber thread to receive messages."""
         self._is_stopped = False
         self._zmq_context = zmq.Context()
         self._zmq_sub = self._zmq_context.socket(zmq.SUB)
+        assert self._zmq_sub is not None
         self._zmq_sub.connect(self._xpub_url)
 
-        # Subscribe to stats topic
-        self._zmq_sub.subscribe(self.stats_topic)
-        self._logger.debug(f"Subscribed to topic: {self.stats_topic}")
+        topics_to_subscribe = [Topic.stats_combined(self._supervisor_id)]
+        for topic in topics_to_subscribe:
+            self._zmq_sub.subscribe(topic)
+
+        self._logger.info(f"Subscribed to topics: {', '.join(topics_to_subscribe)}")
 
         self._subscriber_thread = threading.Thread(
             target=self._subscriber_loop, daemon=True
@@ -88,8 +91,6 @@ class SupervisorMessageHandler:
 
     def _subscriber_loop(self):
         """Receive and dispatch messages from DAQJobs."""
-        from enrgdaq.daq.jobs.remote import DAQJobMessageStatsRemote
-        from enrgdaq.daq.models import DAQJobMessageStatsReport
 
         while not self._is_stopped:
             try:
@@ -104,15 +105,13 @@ class SupervisorMessageHandler:
                 buffers = parts[2:] if len(parts) > 2 else []
                 message = pickle.loads(header, buffers=buffers)
 
-                self._logger.debug(f"Received message: {type(message).__name__}")
-
                 # Dispatch based on message type
-                if isinstance(message, DAQJobMessageStatsReport):
-                    if self._on_stats_report:
-                        self._on_stats_report(message)
-                elif isinstance(message, DAQJobMessageStatsRemote):
-                    if self._on_remote_stats:
-                        self._on_remote_stats(message)
+                if isinstance(message, DAQJobMessageCombinedStats):
+                    if self._on_stats_receive:
+                        self._on_stats_receive(message)
+                elif isinstance(message, DAQJobMessageCombinedRemoteStats):
+                    if self._on_remote_stats_receive:
+                        self._on_remote_stats_receive(message)
 
             except zmq.ContextTerminated:
                 break

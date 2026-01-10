@@ -1,4 +1,5 @@
 import logging
+import multiprocessing
 import pickle
 import queue
 import re
@@ -180,7 +181,8 @@ class DAQJob:
         self._consume_thread.start()
         self._publish_thread.start()
 
-        self._put_message_out(DAQJobMessageJobStarted())
+    def get_job_started_message(self):
+        return self._prepare_message(DAQJobMessageJobStarted())
 
     def _consume_thread_func(self):
         assert self._zmq_xpub_url is not None
@@ -246,6 +248,7 @@ class DAQJob:
             if message is None:
                 break
             send_message(zmq_xsub, message, buffer)
+            self.report_stats()
 
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
@@ -330,13 +333,11 @@ class DAQJob:
             subscribed_topics=self.topics_to_subscribe,
         )
 
-    def _put_message_out(
+    def _prepare_message(
         self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
     ):
         """
-        Puts a message in the message_out queue.
-
-        Should be called by DAQJob itself.
+        Prepares a message for sending.
 
         Args:
             message (DAQJobMessage): The message to put in the queue.
@@ -418,6 +419,18 @@ class DAQJob:
                 message.remote_config = self.config.remote_config
                 message.topics = original_message.topics
 
+        return message
+
+    def _put_message_out(
+        self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
+    ):
+        """
+        Sends the message to its described topics.
+
+        Args:
+            message (DAQJobMessage): The message to put in the queue.
+        """
+        message = self._prepare_message(message, use_shm, modify_message_metadata)
         self._publish_buffer.put(message)
         self._sent_count += 1
 
@@ -445,8 +458,6 @@ class DAQJob:
             < DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS
         ):
             return
-
-        from enrgdaq.daq.models import DAQJobMessageStatsReport
 
         self._last_stats_report_time = datetime.now()
         report = DAQJobMessageStatsReport(
@@ -491,6 +502,10 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -506,6 +521,8 @@ class DAQJobProcess(msgspec.Struct, kw_only=True):
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:

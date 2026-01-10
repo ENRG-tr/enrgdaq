@@ -15,7 +15,7 @@ class SupervisorStatus(Struct):
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]
 

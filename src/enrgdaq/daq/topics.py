@@ -93,9 +93,22 @@ class Topic:
             supervisor_id: The supervisor's unique identifier.
 
         Returns:
-            Topic string: stats.{supervisor_id}
+            Topic string: stats.supervisor.{supervisor_id}
         """
-        return f"{Topic.STATS}.{supervisor_id}"
+        return f"{Topic.STATS}.supervisor.{supervisor_id}"
+
+    @staticmethod
+    def stats_combined(supervisor_id: str) -> str:
+        """
+        Topic for combined stats messages from DAQJobs to stats handler.
+
+        Args:
+            supervisor_id: The supervisor's unique identifier.
+
+        Returns:
+            Topic string: stats.combined.supervisor.{supervisor_id}
+        """
+        return f"{Topic.STATS}.combined.supervisor.{supervisor_id}"
 
     @staticmethod
     def stats_prefix() -> str:

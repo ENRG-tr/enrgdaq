@@ -81,7 +81,6 @@ def start_rest_api(cnc_instance):
     def get_status(client_id: str):
         msg = CNCMessageReqStatus()
         reply = execute_command(client_id, msg)
-        # Handle reply structure (usually ResStatus has a .status field)
         return Response(
             content=msgspec.json.encode(reply.status), media_type="application/json"
         )

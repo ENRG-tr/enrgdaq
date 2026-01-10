@@ -8,7 +8,7 @@ from typing import Any
 import msgspec
 
 from enrgdaq.daq.base import DAQJob, DAQJobProcess
-from enrgdaq.daq.models import DAQJobConfig
+from enrgdaq.daq.models import DAQJobConfig, DAQJobMessageJobStarted
 from enrgdaq.daq.types import get_daq_job_class
 from enrgdaq.models import SupervisorInfo
 
@@ -116,11 +116,11 @@ def start_daq_job(daq_job_process: DAQJobProcess) -> DAQJobProcess:
     process.start()
     daq_job_process.process = process  # type: ignore
     try:
-        """daq_job_info_message = daq_job_process.message_out.get(timeout=5000)
+        daq_job_info_message = daq_job_process.job_started_queue.get(timeout=5000)
         if isinstance(daq_job_info_message, DAQJobMessageJobStarted):
             daq_job_process.daq_job_info = daq_job_info_message.daq_job_info
         else:
-            raise Exception("Initial message of DAQJob was not DAQJobMessageJobStarted")"""
+            raise Exception("Initial message of DAQJob was not DAQJobMessageJobStarted")
     except Exception as e:
         logging.error(
             f"Could not get DAQ job info for {daq_job_process.daq_job_cls.__name__}: {e}",

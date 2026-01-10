@@ -9,8 +9,13 @@ from msgspec import Struct
 from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.alert.models import DAQAlertInfo, DAQAlertSeverity
 from enrgdaq.daq.base import DAQJob
-from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
-from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage, DAQJobStats
+from enrgdaq.daq.jobs.handle_stats import DAQJobMessageCombinedStats, DAQJobStatsDict
+from enrgdaq.daq.models import (
+    DAQJobConfig,
+    DAQJobMessage,
+    DAQJobMessageStatsReport,
+    DAQJobStats,
+)
 
 HEALTHCHECK_LOOP_INTERVAL_SECONDS = 0.1
 
@@ -111,7 +116,7 @@ class DAQJobHealthcheck(DAQJob):
         _get_daq_job_class (Callable): Function to get the DAQ job class by its type name.
     """
 
-    allowed_message_in_types = [DAQJobMessageStats]
+    allowed_message_in_types = [DAQJobMessageCombinedStats]
     config_type = DAQJobHealthcheckConfig
     config: DAQJobHealthcheckConfig
     _sent_alert_items: set[int]
@@ -178,7 +183,7 @@ class DAQJobHealthcheck(DAQJob):
         """Handles incoming messages and updates current stats."""
         if not super().handle_message(message):
             return False
-        if not isinstance(message, DAQJobMessageStats):
+        if not isinstance(message, DAQJobMessageStatsReport):
             return True
 
         self._current_stats[message.supervisor_id] = message.stats

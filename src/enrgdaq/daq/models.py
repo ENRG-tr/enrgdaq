@@ -7,6 +7,7 @@ from typing import Any, Optional, override
 
 from msgspec import Struct, field
 
+from enrgdaq.daq.topics import Topic
 from enrgdaq.models import LogVerbosity, SupervisorInfo
 
 DEFAULT_REMOTE_TOPIC = "DAQ"
@@ -317,7 +318,6 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))
 
