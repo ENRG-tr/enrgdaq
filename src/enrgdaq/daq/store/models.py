@@ -93,10 +93,12 @@ class DAQJobMessageStore(DAQJobMessage):
         return None
 
     def __post_init__(self):
+        from enrgdaq.daq.topics import Topic
+
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
             for store_job in mappings[store_type]:
-                self.topics.add("store." + store_job.__name__)
+                self.topics.add(Topic.store(store_job.__name__))
 
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):
@@ -156,12 +158,12 @@ class DAQJobMessageStorePyArrow(DAQJobMessageStore, kw_only=True):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        # Don't serialize handle - it's only used for zero-copy within same host
+        # If we have a handle, we serialize it (efficient local transfer)
+        # The supervisor will convert this to full data if sending remotely
         if self.handle is not None:
-            # Load table from handle for serialization
-            state["table"] = self.handle.load_pyarrow()
-            state["handle"] = None
-        if state.get("table") is not None:
+            # Table shouldn't be serialized if we're sending the handle
+            state["table"] = None
+        elif state.get("table") is not None:
             # Convert table to bytes using Arrow IPC
             sink = pa.BufferOutputStream()
             with pa.ipc.new_stream(sink, state["table"].schema) as writer:
@@ -259,14 +261,14 @@ class DAQJobStoreConfigRedis(DAQJobStoreConfigBase):
     If the expiration is set, the key will be prefixed with the date, e.g. for the data key "test", the redis key will be "redis_key.test:2023-01-01".
     """
 
-    key_expiration_days: Optional[int] = None
+    key_expiration_days: int | None = None
     """
     Delete keys older than this number of days.
     
     If None, keys will not be deleted.
     """
 
-    use_timeseries: Optional[bool] = None
+    use_timeseries: bool | None = None
     """
     Utilize Redis Timeseries to store data.
 

@@ -21,7 +21,9 @@ class DAQJobStore(DAQJob):
     """
 
     def __init__(self, config: DAQJobConfig, **kwargs):
-        self.topics_to_subscribe.append("store." + type(self).__name__)
+        from enrgdaq.daq.topics import Topic
+
+        self.topics_to_subscribe.append(Topic.store(type(self).__name__))
         super().__init__(config, **kwargs)
 
     @override

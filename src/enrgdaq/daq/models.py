@@ -37,6 +37,7 @@ class DAQJobInfo:
     unique_id: str
     instance_id: int
     config: str
+    subscribed_topics: list[str] = field(default_factory=list)
     supervisor_info: Optional[SupervisorInfo] = None
 
     @staticmethod
@@ -75,12 +76,14 @@ class DAQJobConfig(Struct, kw_only=True):
         remote_config (Optional[DAQRemoteConfig]): The remote configuration for the DAQ job. Defaults to an instance of DAQRemoteConfig.
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
     """
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     remote_config: DAQRemoteConfig = field(default_factory=DAQRemoteConfig)
     daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True
 
 
 class DAQJobMessage(Struct, kw_only=True):
@@ -118,7 +121,9 @@ class InternalDAQJobMessage(DAQJobMessage, kw_only=True):
     @override
     def pre_send(self):
         if self.target_supervisor:
-            self.topics.add(f"supervisor.{self.supervisor_id}.internal")
+            from enrgdaq.daq.topics import Topic
+
+            self.topics.add(Topic.supervisor_internal(self.supervisor_id))
 
 
 class DAQJobMessageJobStarted(InternalDAQJobMessage):
@@ -312,7 +317,9 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     @override
     def pre_send(self):
         super().pre_send()
-        self.topics.add(f"stats.{self.supervisor_id}")
+        from enrgdaq.daq.topics import Topic
+
+        self.topics.add(Topic.stats(self.supervisor_id))
 
 
 class DAQJobStopError(Exception):

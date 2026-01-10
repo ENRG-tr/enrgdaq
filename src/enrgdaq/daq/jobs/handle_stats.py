@@ -62,7 +62,9 @@ class DAQJobHandleStats(DAQJob):
     _supervisor_activity: dict[str, SupervisorRemoteStats]
 
     def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
-        self.topics_to_subscribe.append("stats")
+        from enrgdaq.daq.topics import Topic
+
+        self.topics_to_subscribe.append(Topic.stats_prefix())
         super().__init__(config, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()

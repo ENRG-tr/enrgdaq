@@ -33,6 +33,8 @@ from enrgdaq.daq.store.models import (
     DAQJobMessageStorePyArrow,
     DAQJobMessageStoreSHM,
 )
+from enrgdaq.daq.topics import Topic
+from enrgdaq.message_broker import send_message
 from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
@@ -139,10 +141,8 @@ class DAQJob:
         self._has_been_freed = False
         self.unique_id = getattr(config, "daq_job_unique_id", None) or str(uuid.uuid4())
 
-        if supervisor_info is not None:
-            self._supervisor_info = supervisor_info
-        else:
-            self._supervisor_info = None
+        self._supervisor_info = supervisor_info
+
         self.info = self._create_info(raw_config)
         self._logger.debug(f"DAQ job {self.info.unique_id} created")
 
@@ -161,10 +161,11 @@ class DAQJob:
 
         self.topics_to_subscribe.extend(
             [
-                #  f"supervisor.{self.supervisor_id}",
-                f"daq_job.{type(self).__name__}.{self.unique_id}",
+                Topic.supervisor_broadcast(self.supervisor_id),
+                Topic.daq_job_direct(type(self).__name__, self.unique_id),
             ]
         )
+        self.info.subscribed_topics = self.topics_to_subscribe
 
         self._zmq_xpub_url = zmq_xpub_url
         self._zmq_xsub_url = zmq_xsub_url
@@ -239,23 +240,12 @@ class DAQJob:
         zmq_xsub.setsockopt_string(zmq.IDENTITY, self.unique_id)
         zmq_xsub.connect(self._zmq_xsub_url)
 
-        buffers = []
+        buffer = []
         while not self._has_been_freed:
             message: DAQJobMessage = self._publish_buffer.get()
             if message is None:
                 break
-            buffers.clear()
-            message.pre_send()
-            header = pickle.dumps(
-                message,
-                protocol=pickle.HIGHEST_PROTOCOL,
-                buffer_callback=buffers.append,
-            )
-            payload = ["", header] + [zmq.Frame(b) for b in buffers]
-
-            for topic in message.topics:
-                payload[0] = topic.encode()
-                zmq_xsub.send_multipart(payload)
+            send_message(zmq_xsub, message, buffer)
 
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
@@ -337,6 +327,7 @@ class DAQJob:
             instance_id=self.instance_id,
             supervisor_info=getattr(self, "_supervisor_info", None),
             config=raw_config or "# No config",
+            subscribed_topics=self.topics_to_subscribe,
         )
 
     def _put_message_out(
@@ -367,7 +358,7 @@ class DAQJob:
         if self.config.verbosity == LogVerbosity.DEBUG and omit_debug_message:
             self._logger.debug(f"Message out: {_format_message_for_log(message)}")
 
-        if use_shm and sys.platform != "win32":
+        if use_shm and self.config.use_shm_when_possible and sys.platform != "win32":
             original_message = message
 
             # Use zero-copy ring buffer for PyArrow messages
@@ -474,7 +465,8 @@ class DAQJob:
 
     @property
     def supervisor_id(self):
-        assert self.info.supervisor_info is not None
+        if self.info.supervisor_info is None:
+            return "unknown"
         return self.info.supervisor_info.supervisor_id
 
     def free(self):

@@ -1,18 +1,9 @@
 import unittest
 from datetime import datetime, timedelta
-from queue import Queue
 from unittest.mock import MagicMock, patch
 
-from enrgdaq.daq.base import DAQJobInfo
-from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats
-from enrgdaq.daq.models import DAQJobMessage, DAQJobStats
-from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobMessageStoreTabular
 from enrgdaq.models import SupervisorCNCConfig, SupervisorConfig, SupervisorInfo
-from enrgdaq.supervisor import (
-    DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS,
-    Supervisor,
-)
+from enrgdaq.supervisor import Supervisor
 
 
 class TestSupervisor(unittest.TestCase):
@@ -59,116 +50,13 @@ class TestSupervisor(unittest.TestCase):
 
         mock_warn_for_lack_of_daq_jobs.assert_called_once()
         self.assertEqual(self.supervisor.daq_job_processes, [mock_process])
-        self.assertIn(mock_process.daq_job_cls.__name__, self.supervisor.daq_job_stats)
-        self.assertIsInstance(
-            self.supervisor.daq_job_stats[mock_process.daq_job_cls.__name__],
-            DAQJobStats,
-        )
 
     @patch("enrgdaq.supervisor.start_daq_job")
-    @patch.object(Supervisor, "get_messages_from_daq_jobs")
-    @patch.object(Supervisor, "get_supervisor_messages")
-    @patch.object(Supervisor, "send_messages_to_daq_jobs")
-    def test_loop(
-        self,
-        mock_send_messages_to_daq_jobs,
-        mock_get_supervisor_messages,
-        mock_get_messages_from_daq_jobs,
-        mock_start_daq_job,
-    ):
-        # TODO: Add this back
-        return
-        mock_daq_job_cls = MagicMock()
-        mock_daq_job_cls.__name__ = "mock_job"
+    def test_loop(self, mock_start_daq_job):
+        # TODO: Add this back - loop test needs rework after stats refactoring
+        pass
 
-        mock_process_alive = MagicMock()
-        mock_process_alive.daq_job_cls = mock_daq_job_cls
-        mock_process_alive.process.is_alive.return_value = True
-        mock_process_alive.start_time = datetime.now() - timedelta(seconds=5)
-        mock_process_dead = MagicMock()
-        mock_process_dead.daq_job_cls = mock_daq_job_cls
-        mock_process_dead.process.is_alive.return_value = False
-        mock_process_dead.start_time = datetime.now() - timedelta(seconds=10)
-        mock_start_daq_job.return_value = mock_process_alive
-
-        self.supervisor.daq_job_processes = [mock_process_alive, mock_process_dead]
-        self.supervisor.daq_job_stats = {}
-        self.supervisor.restart_schedules = []
-
-        mock_get_messages_from_daq_jobs.return_value = ["message1"]
-        mock_get_supervisor_messages.return_value = ["message2"]
-
-        self.supervisor.loop()
-
-        # mock_start_daq_job.assert_called_once_with(mock_process_dead)
-        mock_get_messages_from_daq_jobs.assert_called_once()
-        mock_get_supervisor_messages.assert_called_once()
-        mock_send_messages_to_daq_jobs.assert_called_once()
-
-        self.assertEqual(
-            self.supervisor.daq_job_processes,
-            [mock_process_alive, mock_start_daq_job.return_value],
-        )
-
-    @patch("enrgdaq.supervisor.psutil.Process")
-    def test_handle_thread_alive_stats(self, mock_psutil_process):
-        # Mock psutil.Process to avoid TypeError with MagicMock pid
-        mock_psutil_process.return_value.cpu_percent.return_value = 0.0
-        mock_psutil_process.return_value.memory_info.return_value.rss = 0
-
-        mock_alive_thread = MagicMock(name="alive_thread")
-        mock_alive_thread.start_time = datetime.now() - timedelta(seconds=10)
-        mock_alive_thread.daq_job_cls = MagicMock()
-        mock_alive_thread.daq_job_cls.__name__ = "alive_job"
-        mock_alive_thread.process.pid = 12345  # Use a real int
-        mock_alive_thread.process.is_alive.return_value = True
-
-        mock_dead_thread = MagicMock(name="dead_thread")
-        mock_dead_thread.start_time = datetime.now() - timedelta(seconds=10)
-        mock_dead_thread.daq_job_cls = MagicMock()
-        mock_dead_thread.daq_job_cls.__name__ = "dead_job"
-        mock_dead_thread.process.pid = 12346  # Use a real int
-        mock_dead_thread.process.is_alive.return_value = False
-
-        self.supervisor.daq_job_processes = [mock_alive_thread]
-        self.supervisor.daq_job_stats = {
-            "alive_job": DAQJobStats(),
-            "dead_job": DAQJobStats(),
-        }
-
-        self.supervisor.handle_process_alive_stats([mock_dead_thread])
-
-        # Test if dead_thread.is_alive = False and alive_thread.is_alive = True
-        self.assertTrue(
-            self.supervisor.daq_job_stats[
-                mock_alive_thread.daq_job_cls.__name__
-            ].is_alive
-        )
-        self.assertFalse(
-            self.supervisor.daq_job_stats[
-                mock_dead_thread.daq_job_cls.__name__
-            ].is_alive
-        )
-
-        # Now restart the dead thread and run it for const + 1 seconds
-        self.supervisor.daq_job_processes += [mock_dead_thread]
-
-        mock_dead_thread.start_time = datetime.now() - timedelta(
-            seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS + 1
-        )
-        self.supervisor.handle_process_alive_stats([])
-
-        # Test if dead_thread.is_alive = True and alive_thread.is_alive = True
-        self.assertTrue(
-            self.supervisor.daq_job_stats[
-                mock_dead_thread.daq_job_cls.__name__
-            ].is_alive
-        )
-        self.assertTrue(
-            self.supervisor.daq_job_stats[
-                mock_alive_thread.daq_job_cls.__name__
-            ].is_alive
-        )
+    # test_handle_thread_alive_stats removed - method moved to DAQJobs
 
     @patch("enrgdaq.supervisor.datetime")
     def test_get_restart_schedules(self, mock_datetime):
@@ -215,62 +103,9 @@ class TestSupervisor(unittest.TestCase):
         self.assertEqual(result[0].daq_job_process, mock_process_with_restart)
         self.assertEqual(result[0].restart_at, datetime(2023, 1, 1, 12, 0, 10))
 
-    @patch("enrgdaq.supervisor.datetime")
-    def test_get_supervisor_messages(self, mock_datetime):
-        now = datetime(2023, 1, 1, 12, 0, 0)
-        mock_datetime.now.return_value = now
-        self.supervisor._last_stats_message_time = now - timedelta(seconds=10)
-        self.supervisor.daq_job_stats = {
-            str(type(MagicMock())): DAQJobStats(),
-            str(type(MagicMock())): DAQJobStats(),
-        }
-        self.supervisor.config = MagicMock()
-
-        result = self.supervisor.get_supervisor_messages()
-
-        # Expect 1 message: stats message (routes message disabled in new architecture)
-        self.assertEqual(len(result), 1)
-        self.assertIsInstance(result[0], DAQJobMessageStats)
-        assert isinstance(result[0], DAQJobMessageStats)
-        self.assertEqual(result[0].stats, self.supervisor.daq_job_stats)
-        assert result[0].daq_job_info
-        self.assertEqual(result[0].daq_job_info.daq_job_type, "Supervisor")
-
-    def test_get_messages_from_daq_jobs(self):
-        """Test that get_messages_from_daq_jobs returns empty list (disabled)."""
-        mock_process = MagicMock()
-        mock_process.daq_job_cls = MagicMock()
-        mock_process.daq_job_cls.__name__ = "mock_job"
-        mock_process.message_out = Queue()
-        mock_message = DAQJobMessage()
-        mock_process.message_out.put(mock_message)
-
-        self.supervisor.daq_job_processes = [mock_process]
-
-        result = self.supervisor.get_messages_from_daq_jobs()
-
-        # This function is now disabled with break - returns empty list
-        # Stats are now received via SupervisorMessageHandler ZMQ subscription
-        self.assertEqual(result, [])
-
-    def test_send_messages_to_daq_jobs(self):
-        """Test that send_messages_to_daq_jobs is disabled (break in loop)."""
-        mock_process = MagicMock()
-        mock_daq_job_cls = MagicMock(spec=DAQJobStore)
-        mock_daq_job_cls.__name__ = "mock_store_job"
-        mock_daq_job_cls.allowed_message_in_types = [DAQJobMessageStore]
-        mock_process.daq_job_cls = mock_daq_job_cls
-        mock_process.message_in = Queue()
-        mock_message = DAQJobMessageStoreTabular(
-            store_config=MagicMock(), keys=[], data=[], daq_job_info=DAQJobInfo.mock()
-        )
-        self.supervisor.daq_job_processes = [mock_process]
-
-        self.supervisor.send_messages_to_daq_jobs([mock_message])
-
-        # This function is now disabled with break - queue should remain empty
-        # Messages are now published directly via ZMQ pub/sub
-        self.assertTrue(mock_process.message_in.empty())
+    # test_get_supervisor_messages removed - method removed from Supervisor
+    # test_get_messages_from_daq_jobs removed - method removed from Supervisor
+    # test_send_messages_to_daq_jobs removed - method removed from Supervisor
 
 
 if __name__ == "__main__":

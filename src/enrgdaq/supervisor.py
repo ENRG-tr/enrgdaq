@@ -3,16 +3,18 @@ import logging
 import os
 import platform
 import sys
+import threading
+import uuid
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
 from logging.handlers import QueueListener
-from queue import Empty, Full
 from typing import Any
 
 import msgspec
 import psutil
+import zmq
 
 from enrgdaq.cnc.base import (
     SupervisorCNC,
@@ -21,7 +23,7 @@ from enrgdaq.cnc.base import (
 from enrgdaq.cnc.log_util import CNCLogHandler
 from enrgdaq.cnc.models import SupervisorStatus
 from enrgdaq.daq.alert.base import DAQJobAlert
-from enrgdaq.daq.base import DAQJob, DAQJobProcess, _create_queue
+from enrgdaq.daq.base import DAQJobProcess, _create_queue
 from enrgdaq.daq.daq_job import (
     SUPERVISOR_CONFIG_FILE_NAME,
     load_daq_jobs,
@@ -29,31 +31,22 @@ from enrgdaq.daq.daq_job import (
     start_daq_job,
     start_daq_jobs,
 )
-from enrgdaq.daq.jobs.handle_stats import DAQJobMessageStats, DAQJobStatsDict
 from enrgdaq.daq.jobs.remote import (
-    DAQJobMessageStatsRemote,
     DAQJobRemote,
-    DAQJobRemoteStatsDict,
 )
 from enrgdaq.daq.models import (
     DAQJobInfo,
-    DAQJobMessage,
-    DAQJobMessageSHM,
-    DAQJobMessageStatsReport,
     DAQJobMessageStop,
-    DAQJobStats,
-    InternalDAQJobMessage,
     RouteMapping,
 )
 from enrgdaq.daq.store.base import DAQJobStore
-from enrgdaq.daq.store.models import DAQJobMessageStoreSHM
+from enrgdaq.daq.topics import Topic
 from enrgdaq.message_broker import MessageBroker
 from enrgdaq.models import (
     RestartScheduleInfo,
     SupervisorConfig,
     SupervisorInfo,
 )
-from enrgdaq.supervisor_message_handler import SupervisorMessageHandler
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -87,7 +80,6 @@ class Supervisor:
     Attributes:
         config (SupervisorConfig | None): Configuration for the supervisor.
         daq_job_processes (list[DAQJobProcess]): List of DAQ job processes managed by the supervisor.
-        daq_job_stats (DAQJobStatsDict): Dictionary holding statistics for each DAQ job type.
         restart_schedules (list[RestartDAQJobSchedule]): List of schedules for restarting DAQ jobs.
         _logger (logging.Logger): Logger instance for logging supervisor activities.
         _last_stats_message_time (datetime): Last time a stats message was sent.
@@ -100,12 +92,11 @@ class Supervisor:
         _is_stopped (bool): Whether the supervisor is stopped.
         _daq_jobs_to_load (list[DAQJobProcess] | None): List of DAQ jobs to load.
         _daq_job_config_path (str): Path to the DAQ job configuration file.
+        _psutil_process_cache (dict[int, psutil.Process]): Cache for process information.
     """
 
     config: SupervisorConfig | None
     daq_job_processes: list[DAQJobProcess]
-    daq_job_stats: DAQJobStatsDict
-    daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartDAQJobSchedule]
     _logger: logging.Logger
     _cnc_instance: SupervisorCNC | None = None
@@ -119,7 +110,6 @@ class Supervisor:
     _daq_jobs_to_load: list[DAQJobProcess] | None
     _daq_job_config_path: str
     _psutil_process_cache: dict[int, psutil.Process]
-    _message_handler: SupervisorMessageHandler | None = None
 
     def __init__(
         self,
@@ -127,13 +117,21 @@ class Supervisor:
         daq_job_processes: list[DAQJobProcess] | None = None,
         daq_job_config_path: str = "configs/",
     ):
-        self.config = config
+        self._daq_job_config_path = daq_job_config_path
+        self._log_queue = _create_queue()
+        self._log_listener = None
+        self._logger = logging.getLogger()
+
+        if config is None:
+            self.config = self._load_supervisor_config()
+        else:
+            self.config = config
+
         self._daq_jobs_to_load = daq_job_processes
         self.daq_job_processes = []
         self.restart_schedules = []
         self.daq_job_remote_stats = {}
         self.daq_job_stats = {}
-        self._daq_job_config_path = daq_job_config_path
         self._psutil_process_cache = {}
         if not os.path.exists(self._daq_job_config_path):
             raise ValueError(
@@ -141,16 +139,13 @@ class Supervisor:
             )
         self._is_stopped = False
 
-        self._log_queue = _create_queue()
-        self._log_listener = None
-        self._logger = logging.getLogger()
-
         self.message_broker = MessageBroker()
+        random_id = str(uuid.uuid4())[:8]
         self.supervisor_xpub_url = (
-            f"ipc:///tmp/supervisor_{self.supervisor_id}_xpub.ipc"
+            f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xpub.ipc"
         )
         self.supervisor_xsub_url = (
-            f"ipc:///tmp/supervisor_{self.supervisor_id}_xsub.ipc"
+            f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xsub.ipc"
         )
 
         self.message_broker.add_xpub_socket("supervisor_xpub", self.supervisor_xpub_url)
@@ -158,6 +153,8 @@ class Supervisor:
         self.message_broker.start_proxy(
             "supervisor_proxy", "supervisor_xpub", "supervisor_xsub"
         )
+
+        self._setup_federation()
 
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
@@ -169,9 +166,6 @@ class Supervisor:
 
         You should call this method after creating a new instance of the Supervisor class.
         """
-
-        if not self.config:
-            self.config = self._load_supervisor_config()
 
         self._logger.setLevel(
             self.config.verbosity.to_logging_level() if self.config else logging.INFO
@@ -239,25 +233,10 @@ class Supervisor:
         self._logger.debug("Starting DAQ job processes...")
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
         self._logger.debug(f"Started {len(self.daq_job_processes)} DAQ job processes")
-        self.daq_job_stats.update(
-            {
-                thread.daq_job_cls.__name__: DAQJobStats()
-                for thread in self.daq_job_processes
-            }
-        )
         self.warn_for_lack_of_daq_jobs()
 
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
-
-        # Start message handler for receiving stats reports from DAQJobs
-        self._message_handler = SupervisorMessageHandler(
-            xpub_url=self.supervisor_xpub_url,
-            supervisor_id=self.supervisor_id,
-            on_stats_report=self._handle_stats_report,
-            on_remote_stats=self._handle_remote_stats,
-        )
-        self._message_handler.start()
 
     def start_daq_job_processes(self, daq_jobs_to_load: list[DAQJobProcess]):
         assert self.config is not None
@@ -287,14 +266,12 @@ class Supervisor:
                 self._logger.warning("KeyboardInterrupt received, stopping")
                 self.stop()
                 break
-        for daq_job_process in self.daq_job_processes:
-            try:
-                daq_job_process.message_out.put_nowait(
-                    DAQJobMessageStop(reason="Stopped by supervisor")
-                )
-            except Exception:
-                # Queue might be closed, continue
-                pass
+        self.message_broker.send(
+            DAQJobMessageStop(
+                reason="Stopped by supervisor",
+                topics={Topic.supervisor_broadcast(self.supervisor_id)},
+            )
+        )
 
     def stop(self):
         """
@@ -317,10 +294,6 @@ class Supervisor:
             except Exception as e:
                 self._logger.warning(f"Failed to cleanup ring buffer: {e}")
 
-        # Stop message handler
-        if self._message_handler:
-            self._message_handler.stop()
-
         self._is_stopped = True
 
     def loop(self):
@@ -342,18 +315,6 @@ class Supervisor:
 
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
-
-        # Handle process alive stats for dead & alive processes
-        self.handle_process_alive_stats(dead_processes)
-
-        # Get messages from DAQ Jobs
-        daq_messages_out = self.get_messages_from_daq_jobs()
-
-        # Add supervisor messages
-        daq_messages_out.extend(self.get_supervisor_messages())
-
-        # Send messages to appropriate DAQ Jobs
-        self.send_messages_to_daq_jobs(daq_messages_out)
 
     def get_status(self) -> SupervisorStatus:
         """
@@ -380,50 +341,6 @@ class Supervisor:
                 for sched in self.restart_schedules
             ],
         )
-
-    def handle_process_alive_stats(self, dead_processes: list[DAQJobProcess]):
-        """
-        Handles the alive stats for the dead threads.
-
-        Args:
-            dead_threads (list[DAQJobThread]): List of dead threads.
-        """
-
-        for process in self.daq_job_processes:
-            if datetime.now() - process.start_time > timedelta(
-                seconds=DAQ_JOB_MARK_AS_ALIVE_TIME_SECONDS
-            ):
-                self.get_daq_job_stats(
-                    self.daq_job_stats, process.daq_job_cls
-                ).is_alive = True
-
-        for process in dead_processes:
-            self.get_daq_job_stats(
-                self.daq_job_stats, process.daq_job_cls
-            ).is_alive = False
-
-        # Resource Monitoring
-        for process in self.daq_job_processes:
-            if process.process and process.process.is_alive():
-                try:
-                    pid = process.process.pid
-                    if pid is None:
-                        continue
-                    if pid not in self._psutil_process_cache:
-                        self._psutil_process_cache[pid] = psutil.Process(pid)
-
-                    p = self._psutil_process_cache[pid]
-                    stats = self.get_daq_job_stats(
-                        self.daq_job_stats, process.daq_job_cls
-                    )
-                    # Use cpu_percent() - first call usually 0.0,
-                    # but since we cache the process object, subsequent calls will be accurate.
-                    stats.resource_stats.cpu_percent = p.cpu_percent()
-                    stats.resource_stats.rss_mb = p.memory_info().rss / 1024 / 1024
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    if process.process.pid in self._psutil_process_cache:
-                        del self._psutil_process_cache[process.process.pid]
-                    pass
 
     def get_restart_schedules(
         self, dead_processes: list[DAQJobProcess]
@@ -480,171 +397,12 @@ class Supervisor:
             )
             self.daq_job_processes.append(start_daq_job(new_daq_job_process))
 
-            # Update restart stats
-            self.get_daq_job_stats(
-                self.daq_job_stats, new_daq_job_process.daq_job_cls
-            ).restart_stats.increase()
             schedules_to_remove.append(restart_schedule)
 
         # Remove processed schedules
         self.restart_schedules = [
             x for x in self.restart_schedules if x not in schedules_to_remove
         ]
-
-    def get_supervisor_messages(self) -> list[DAQJobMessage]:
-        """
-        Gets the supervisor messages to be sent to the DAQ jobs.
-
-        Returns:
-            list[DAQJobMessage]: List of supervisor messages.
-        """
-
-        messages: list[DAQJobMessage] = []
-
-        # Send stats message
-        if datetime.now() > self._last_stats_message_time + timedelta(
-            seconds=DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS
-        ):
-            self._last_stats_message_time = datetime.now()
-            messages.append(
-                DAQJobMessageStats(
-                    stats=self.daq_job_stats,
-                    daq_job_info=self._get_supervisor_daq_job_info(),
-                )
-            )
-
-        return messages
-
-    def get_daq_job_stats(
-        self, daq_job_stats: DAQJobStatsDict, daq_job_type: type[DAQJob] | str
-    ) -> DAQJobStats:
-        # Get the type name - handle both type classes and string names
-        if isinstance(daq_job_type, str):
-            daq_job_type_name = daq_job_type
-        elif hasattr(daq_job_type, "__name__"):
-            daq_job_type_name = daq_job_type.__name__
-        else:
-            daq_job_type_name = str(daq_job_type)
-        if daq_job_type_name not in daq_job_stats:
-            daq_job_stats[daq_job_type_name] = DAQJobStats()
-        return daq_job_stats[daq_job_type_name]
-
-    def _handle_stats_report(self, msg: DAQJobMessageStatsReport):
-        """Handle stats report from a DAQJob (callback for message handler)."""
-        if msg.daq_job_info is None:
-            return
-        daq_job_type = msg.daq_job_info.daq_job_type
-        stats = self.get_daq_job_stats(self.daq_job_stats, daq_job_type)
-        stats.latency_stats = msg.latency
-        stats.message_in_stats.set(msg.processed_count)
-        stats.message_out_stats.set(msg.sent_count)
-
-    def _handle_remote_stats(self, msg: DAQJobMessageStatsRemote):
-        """Handle remote stats from a DAQJobRemote (callback for message handler)."""
-        assert self.config is not None
-        if msg.supervisor_id == self.config.info.supervisor_id:
-            self.daq_job_remote_stats = msg.stats
-
-    def get_messages_from_daq_jobs(self) -> list[DAQJobMessage]:
-        assert self.config is not None
-        res: list[DAQJobMessage] = []
-        for process in self.daq_job_processes:
-            try:
-                while True:
-                    break
-                    msg = process.message_out.get_nowait()
-                    if msg.daq_job_info is None:
-                        self._logger.warning(f"Message {msg} has no daq_job_info")
-                        # msg.daq_job_info = process.daq_job.info
-                    res.append(msg)
-                    if (
-                        isinstance(msg, DAQJobMessageStatsRemote)
-                        and msg.supervisor_id == self.config.info.supervisor_id
-                    ):
-                        self.daq_job_remote_stats = msg.stats
-
-                    if isinstance(msg, DAQJobMessageStatsReport):
-                        stats = self.get_daq_job_stats(
-                            self.daq_job_stats, process.daq_job_cls
-                        )
-                        stats.latency_stats = msg.latency
-                        stats.message_in_stats.set(msg.processed_count)
-                        stats.message_out_stats.set(msg.sent_count)
-
-                    # Update stats
-                    self.get_daq_job_stats(
-                        self.daq_job_stats, process.daq_job_cls
-                    ).message_out_stats.increase()
-            except Empty:
-                pass
-
-        if len(res) > 0:
-            self._logger.debug(f"Got {len(res)} messages from DAQ jobs: {res}")
-        return res
-
-    def send_messages_to_daq_jobs(self, daq_messages: list[DAQJobMessage]):
-        """
-        Sends messages to the DAQ jobs.
-
-        Args:
-            daq_messages (list[DAQJobMessage]): List of messages to send.
-        """
-
-        for message in daq_messages:
-            for process in self.daq_job_processes:
-                break
-                # Do not send to the same DAQ job
-                if (
-                    message.daq_job_info
-                    and process.daq_job_info
-                    and message.daq_job_info.unique_id == process.daq_job_info.unique_id
-                ):
-                    continue
-
-                daq_job_cls = process.daq_job_cls
-                # Send if message is allowed for this DAQ Job
-                if not any(
-                    isinstance(message, msg_type)
-                    for msg_type in daq_job_cls.allowed_message_in_types
-                ) and not isinstance(message, InternalDAQJobMessage):
-                    continue
-
-                # Check if base class can handle such message
-                if (
-                    getattr(daq_job_cls, "can_handle_message", None)
-                    and not daq_job_cls.can_handle_message(message)  # type: ignore
-                    and not isinstance(daq_job_cls, InternalDAQJobMessage)
-                ):
-                    continue
-
-                # Debug: Log when sending to DAQJobRemote
-                if daq_job_cls.__name__ == "DAQJobRemote":
-                    self._logger.debug(
-                        f"Sending {type(message).__name__} to DAQJobRemote"
-                    )
-
-                # Send message
-                try:
-                    process.message_in.put_nowait(message)
-                except Full:
-                    # Clean SHM
-                    if isinstance(message, DAQJobMessageSHM) or isinstance(
-                        message, DAQJobMessageStoreSHM
-                    ):
-                        message.shm.cleanup()
-                    continue
-
-                # Update stats
-                stats = self.get_daq_job_stats(
-                    self.daq_job_stats,
-                    daq_job_cls,  # type: ignore
-                )
-                stats.message_in_stats.increase()
-
-                # Do not update stats if Mac OS X, as it does not support queue.qsize()
-                if sys.platform != "darwin":
-                    stats.message_in_queue_stats.set(process.message_in.qsize())
-                    stats.message_out_queue_stats.set(process.message_out.qsize())
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
@@ -694,6 +452,101 @@ class Supervisor:
                 routes[process.daq_job_cls.__name__].append(process.message_in)
 
         return dict(routes)
+
+    def _setup_federation(self) -> None:
+        """
+        Set up federation between supervisors in a star topology.
+
+        If this supervisor is the server:
+            - Exposes additional XPUB/XSUB endpoints for clients to connect to
+            - Starts a proxy between these endpoints
+
+        If this supervisor is a client:
+            - Connects to the server's XPUB to receive messages
+            - Connects to the server's XSUB to send messages
+            - Starts forwarder threads for bidirectional communication
+        """
+        if self.config is None or self.config.federation is None:
+            return
+
+        fed = self.config.federation
+
+        if fed.is_server:
+            # Server mode: add federation binds to existing supervisor sockets
+            # This allows remote clients to connect to the same proxy as local jobs
+            if fed.server_xpub_url and fed.server_xsub_url:
+                self._logger.info(
+                    f"Adding federation endpoints: XPUB={fed.server_xpub_url}, XSUB={fed.server_xsub_url}"
+                )
+                # Bind additional addresses to existing sockets
+                xpub_socket = self.message_broker.xpub_sockets["supervisor_xpub"]
+                xsub_socket = self.message_broker.xsub_sockets["supervisor_xsub"]
+                xpub_socket.bind(fed.server_xpub_url)
+                xsub_socket.bind(fed.server_xsub_url)
+                self._logger.info(
+                    "Federation server ready - clients can connect to exposed endpoints"
+                )
+            else:
+                self._logger.warning(
+                    "Federation server mode enabled but XPUB/XSUB URLs not configured"
+                )
+        else:
+            # Client mode: connect to remote server
+            if fed.remote_server_xpub_url and fed.remote_server_xsub_url:
+                self._logger.info(
+                    f"Connecting to federation server XSUB={fed.remote_server_xsub_url}"
+                )
+
+                # Create PUB socket to send messages to server
+                self._fed_pub_socket = self.message_broker.connect_pub_to_xsub(
+                    "federation_pub", fed.remote_server_xsub_url
+                )
+
+                # Start forwarder thread (local -> server only)
+                self._start_federation_forwarders()
+
+                self._logger.info("Connected to federation server")
+            else:
+                self._logger.warning(
+                    "Federation client mode but remote server URLs not configured"
+                )
+
+    def _start_federation_forwarders(self) -> None:
+        """
+        Start forwarder to push messages from local proxy to federation server.
+
+        Uses ZMQ Poller for efficient message forwarding while being stoppable.
+
+        Note: We only forward LOCAL → SERVER, not the reverse.
+        If we forwarded server messages back to local, it would create a loop:
+        (local → server → back to local → server again → ...)
+        """
+
+        # Create SUB socket to receive from local XPUB
+        local_sub = self.message_broker.context.socket(zmq.SUB)
+        local_sub.connect(self.supervisor_xpub_url)
+        local_sub.setsockopt_string(zmq.SUBSCRIBE, "")
+
+        def forward_to_server():
+            self._logger.debug("Federation forwarder (local -> server) started")
+            poller = zmq.Poller()
+            poller.register(local_sub, zmq.POLLIN)
+            try:
+                while not self._is_stopped:
+                    events = dict(poller.poll(100))  # 100ms timeout
+                    if local_sub in events:
+                        msg = local_sub.recv_multipart(zmq.NOBLOCK)
+                        self._fed_pub_socket.send_multipart(msg)
+            except zmq.ContextTerminated:
+                pass
+            finally:
+                local_sub.close()
+                self._logger.debug("Federation forwarder (local -> server) stopped")
+
+        self._fed_to_server_thread = threading.Thread(
+            target=forward_to_server, daemon=True
+        )
+        self._fed_to_server_thread.start()
 
     @property
     def supervisor_id(self):

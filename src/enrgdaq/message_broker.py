@@ -1,10 +1,33 @@
 import logging
+import pickle
 import threading
 from typing import Dict, List
 
 import zmq
 
+from enrgdaq.daq.models import DAQJobMessage
+
 logger = logging.getLogger(__name__)
+
+
+def send_message(
+    socket: zmq.Socket, message: DAQJobMessage, buffer: list | None = None
+):
+    if buffer is None:
+        buffer = []
+
+    buffer.clear()
+    message.pre_send()
+    header = pickle.dumps(
+        message,
+        protocol=pickle.HIGHEST_PROTOCOL,
+        buffer_callback=buffer.append,
+    )
+    payload = ["", header] + [zmq.Frame(b) for b in buffer]
+
+    for topic in message.topics:
+        payload[0] = topic.encode()
+        socket.send_multipart(payload)
 
 
 class MessageBroker:
@@ -106,6 +129,41 @@ class MessageBroker:
             f"Started proxy thread '{name}' between {xpub_name} and {xsub_name}"
         )
 
+    def connect_sub_to_xpub(self, name: str, remote_xpub_address: str) -> zmq.Socket:
+        """
+        Create a SUB socket and connect it to a remote XPUB address.
+        Used by spoke supervisors to receive messages from the hub.
+
+        Args:
+            name: Unique name for the socket
+            remote_xpub_address: The remote XPUB address to connect to
+
+        Returns:
+            The created SUB socket
+        """
+        socket = self.context.socket(zmq.SUB)
+        socket.connect(remote_xpub_address)
+        socket.setsockopt_string(zmq.SUBSCRIBE, "")  # Subscribe to all topics
+        logger.info(f"Created SUB socket '{name}' connected to {remote_xpub_address}")
+        return socket
+
+    def connect_pub_to_xsub(self, name: str, remote_xsub_address: str) -> zmq.Socket:
+        """
+        Create a PUB socket and connect it to a remote XSUB address.
+        Used by spoke supervisors to send messages to the hub.
+
+        Args:
+            name: Unique name for the socket
+            remote_xsub_address: The remote XSUB address to connect to
+
+        Returns:
+            The created PUB socket
+        """
+        socket = self.context.socket(zmq.PUB)
+        socket.connect(remote_xsub_address)
+        logger.info(f"Created PUB socket '{name}' connected to {remote_xsub_address}")
+        return socket
+
     def stop(self) -> None:
         """
         Stop all proxy threads and close all sockets.
@@ -126,6 +184,21 @@ class MessageBroker:
         self.context.term()
 
         logger.info("Message broker stopped")
+
+    def send(self, message: DAQJobMessage):
+        """
+        Send a message to a topic, to all connected XPUB sockets.
+
+        Args:
+            topic: Topic to send the message to
+            message: Message to send
+        """
+        for socket in self.xpub_sockets.values():
+            send_message(socket, message)
+
+        logger.debug(
+            f"Sent {type(message).__name__} to {len(self.xpub_sockets)} XPUB sockets"
+        )
 
     def get_socket_addresses(self) -> Dict[str, List[tuple]]:
         """
