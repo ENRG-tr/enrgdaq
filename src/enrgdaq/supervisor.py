@@ -480,9 +480,7 @@ class Supervisor:
                 xsub_socket = self.message_broker.xsub_sockets["supervisor_xsub"]
                 xpub_socket.bind(fed.server_xpub_url)
                 xsub_socket.bind(fed.server_xsub_url)
-                self._logger.info(
-                    "Federation server ready - clients can connect to exposed endpoints"
-                )
+                self._logger.info("Federation server ready")
             else:
                 self._logger.warning(
                     "Federation server mode enabled but XPUB/XSUB URLs not configured"

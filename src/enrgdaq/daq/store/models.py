@@ -12,6 +12,7 @@ from enrgdaq.daq.models import (
     RingBufferHandle,
     SHMHandle,
 )
+from enrgdaq.daq.topics import Topic
 
 
 @cache
@@ -39,6 +40,17 @@ def _get_store_config_base_to_store_job_mapping():
 class DAQJobStoreConfig(Struct, dict=True):
     """
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     """
 
     csv: "Optional[DAQJobStoreConfigCSV]" = None
@@ -50,6 +62,7 @@ class DAQJobStoreConfig(Struct, dict=True):
     memory: "Optional[DAQJobStoreConfigMemory]" = None
 
     store_types: set[type["DAQJobStoreConfigBase"]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -68,7 +81,7 @@ class DAQJobMessageStore(DAQJobMessage):
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
-        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     """
 
     store_config: DAQJobStoreConfig
@@ -76,7 +89,9 @@ class DAQJobMessageStore(DAQJobMessage):
     target_local_supervisor: bool = False
 
     def __post_init__(self):
-        from enrgdaq.daq.topics import Topic
+        self.target_local_supervisor = (
+            self.target_local_supervisor or self.store_config.target_local_supervisor
+        )
 
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
