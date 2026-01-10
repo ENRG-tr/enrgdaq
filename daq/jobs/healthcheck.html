@@ -107,7 +107,7 @@ el.replaceWith(d);
         _get_daq_job_class (Callable): Function to get the DAQ job class by its type name.
     &#34;&#34;&#34;
 
-    allowed_message_in_types = [DAQJobMessageStats]
+    allowed_message_in_types = [DAQJobMessageCombinedStats]
     config_type = DAQJobHealthcheckConfig
     config: DAQJobHealthcheckConfig
     _sent_alert_items: set[int]
@@ -174,7 +174,7 @@ el.replaceWith(d);
         &#34;&#34;&#34;Handles incoming messages and updates current stats.&#34;&#34;&#34;
         if not super().handle_message(message):
             return False
-        if not isinstance(message, DAQJobMessageStats):
+        if not isinstance(message, DAQJobMessageStatsReport):
             return True
 
         self._current_stats[message.supervisor_id] = message.stats
@@ -352,7 +352,7 @@ The default value is True.</p></div>
     &#34;&#34;&#34;Handles incoming messages and updates current stats.&#34;&#34;&#34;
     if not super().handle_message(message):
         return False
-    if not isinstance(message, DAQJobMessageStats):
+    if not isinstance(message, DAQJobMessageStatsReport):
         return True
 
     self._current_stats[message.supervisor_id] = message.stats

@@ -1051,7 +1051,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.cnc.models.SupervisorStatus"><code class="flex name class">
 <span>class <span class="ident">SupervisorStatus</span></span>
-<span>(</span><span>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>daq_jobs: list[<a title="enrgdaq.daq.models.DAQJobInfo" href="../daq/models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>],<br>daq_job_stats: Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>daq_job_remote_stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="../daq/jobs/remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>restart_schedules: list[<a title="enrgdaq.models.RestartScheduleInfo" href="../models.html#enrgdaq.models.RestartScheduleInfo">RestartScheduleInfo</a>])</span>
+<span>(</span><span>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>daq_jobs: list[<a title="enrgdaq.daq.models.DAQJobInfo" href="../daq/models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a>],<br>daq_job_stats: dict[str, typing.Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]],<br>daq_job_remote_stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="../daq/jobs/remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>restart_schedules: list[<a title="enrgdaq.models.RestartScheduleInfo" href="../models.html#enrgdaq.models.RestartScheduleInfo">RestartScheduleInfo</a>])</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1065,7 +1065,7 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>
@@ -1090,13 +1090,13 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.cnc.models.SupervisorStatus.daq_job_stats"><code class="name">var <span class="ident">daq_job_stats</span> : Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]</code></dt>
+<dt id="enrgdaq.cnc.models.SupervisorStatus.daq_job_stats"><code class="name">var <span class="ident">daq_job_stats</span> : dict[str, typing.Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../daq/models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]]</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -1109,7 +1109,7 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>
@@ -1128,7 +1128,7 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>
@@ -1147,7 +1147,7 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>
@@ -1166,7 +1166,7 @@ el.replaceWith(d);
 
     supervisor_info: SupervisorInfo
     daq_jobs: list[DAQJobInfo]
-    daq_job_stats: DAQJobStatsDict
+    daq_job_stats: dict[str, DAQJobStatsDict]
     daq_job_remote_stats: DAQJobRemoteStatsDict
     restart_schedules: list[RestartScheduleInfo]</code></pre>
 </details>

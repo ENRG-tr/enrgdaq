@@ -160,7 +160,8 @@ el.replaceWith(d);
         self._consume_thread.start()
         self._publish_thread.start()
 
-        self._put_message_out(DAQJobMessageJobStarted())
+    def get_job_started_message(self):
+        return self._prepare_message(DAQJobMessageJobStarted())
 
     def _consume_thread_func(self):
         assert self._zmq_xpub_url is not None
@@ -226,6 +227,7 @@ el.replaceWith(d);
             if message is None:
                 break
             send_message(zmq_xsub, message, buffer)
+            self.report_stats()
 
     def _unwrap_message(self, message: DAQJobMessage) -&gt; DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
@@ -310,13 +312,11 @@ el.replaceWith(d);
             subscribed_topics=self.topics_to_subscribe,
         )
 
-    def _put_message_out(
+    def _prepare_message(
         self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
     ):
         &#34;&#34;&#34;
-        Puts a message in the message_out queue.
-
-        Should be called by DAQJob itself.
+        Prepares a message for sending.
 
         Args:
             message (DAQJobMessage): The message to put in the queue.
@@ -398,6 +398,18 @@ el.replaceWith(d);
                 message.remote_config = self.config.remote_config
                 message.topics = original_message.topics
 
+        return message
+
+    def _put_message_out(
+        self, message: DAQJobMessage, use_shm=False, modify_message_metadata=True
+    ):
+        &#34;&#34;&#34;
+        Sends the message to its described topics.
+
+        Args:
+            message (DAQJobMessage): The message to put in the queue.
+        &#34;&#34;&#34;
+        message = self._prepare_message(message, use_shm, modify_message_metadata)
         self._publish_buffer.put(message)
         self._sent_count += 1
 
@@ -425,8 +437,6 @@ el.replaceWith(d);
             &lt; DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS
         ):
             return
-
-        from enrgdaq.daq.models import DAQJobMessageStatsReport
 
         self._last_stats_report_time = datetime.now()
         report = DAQJobMessageStatsReport(
@@ -593,6 +603,19 @@ def supervisor_id(self):
 </details>
 <div class="desc"></div>
 </dd>
+<dt id="enrgdaq.daq.base.DAQJob.get_job_started_message"><code class="name flex">
+<span>def <span class="ident">get_job_started_message</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_job_started_message(self):
+    return self._prepare_message(DAQJobMessageJobStarted())</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.base.DAQJob.get_latency_stats"><code class="name flex">
 <span>def <span class="ident">get_latency_stats</span></span>(<span>self) ‑> Any</span>
 </code></dt>
@@ -715,8 +738,6 @@ def supervisor_id(self):
     ):
         return
 
-    from enrgdaq.daq.models import DAQJobMessageStatsReport
-
     self._last_stats_report_time = datetime.now()
     report = DAQJobMessageStatsReport(
         processed_count=self._processed_count,
@@ -747,7 +768,7 @@ def supervisor_id(self):
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f8cf1ce3350>> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -769,6 +790,10 @@ def supervisor_id(self):
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -784,6 +809,8 @@ def supervisor_id(self):
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -919,6 +946,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -934,6 +965,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -965,6 +998,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -980,6 +1017,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1011,6 +1050,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1026,6 +1069,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1057,6 +1102,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1072,6 +1121,60 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
+        try:
+            instance.start()
+        except Exception as e:
+            logging.error(
+                f&#34;Error on {self.daq_job_cls.__name__}.start(): {e}&#34;, exc_info=True
+            )
+            raise e</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f8cf1ce3350>></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobProcess(msgspec.Struct, kw_only=True):
+    daq_job_cls: type[DAQJob]
+    supervisor_info: SupervisorInfo
+    config: DAQJobConfig
+    process: Process | None
+    start_time: datetime = msgspec.field(default_factory=datetime.now)
+    instance_id: int
+    daq_job_info: DAQJobInfo | None = None
+    raw_config: str | None = None
+    log_queue: Any | None = None
+    restart_on_crash: bool = True
+
+    zmq_xpub_url: str | None = None
+    zmq_xsub_url: str | None = None
+
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
+    def start(self):
+        if self.log_queue:
+            root_logger = logging.getLogger()
+            root_logger.handlers.clear()
+            root_logger.addHandler(QueueHandler(self.log_queue))
+            root_logger.setLevel(logging.DEBUG)
+
+        instance = self.daq_job_cls(
+            self.config,
+            supervisor_info=self.supervisor_info,
+            instance_id=self.instance_id,
+            raw_config=self.raw_config,
+            zmq_xpub_url=self.zmq_xpub_url,
+            zmq_xsub_url=self.zmq_xsub_url,
+        )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1103,6 +1206,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1118,6 +1225,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1149,6 +1258,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1164,6 +1277,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1195,6 +1310,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1210,6 +1329,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1241,6 +1362,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1256,6 +1381,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1287,6 +1414,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1302,6 +1433,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1333,6 +1466,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1348,6 +1485,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1379,6 +1518,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1394,6 +1537,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1425,6 +1570,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     zmq_xpub_url: str | None = None
     zmq_xsub_url: str | None = None
 
+    job_started_queue: multiprocessing.Queue = msgspec.field(
+        default_factory=multiprocessing.Queue
+    )
+
     def start(self):
         if self.log_queue:
             root_logger = logging.getLogger()
@@ -1440,6 +1589,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             zmq_xpub_url=self.zmq_xpub_url,
             zmq_xsub_url=self.zmq_xsub_url,
         )
+        self.job_started_queue.put(instance.get_job_started_message())
+
         try:
             instance.start()
         except Exception as e:
@@ -1476,6 +1627,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         zmq_xpub_url=self.zmq_xpub_url,
         zmq_xsub_url=self.zmq_xsub_url,
     )
+    self.job_started_queue.put(instance.get_job_started_message())
+
     try:
         instance.start()
     except Exception as e:
@@ -1510,6 +1663,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJob.config" href="#enrgdaq.daq.base.DAQJob.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.config_type" href="#enrgdaq.daq.base.DAQJob.config_type">config_type</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.free" href="#enrgdaq.daq.base.DAQJob.free">free</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.get_job_started_message" href="#enrgdaq.daq.base.DAQJob.get_job_started_message">get_job_started_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.get_latency_stats" href="#enrgdaq.daq.base.DAQJob.get_latency_stats">get_latency_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.handle_message" href="#enrgdaq.daq.base.DAQJob.handle_message">handle_message</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.info" href="#enrgdaq.daq.base.DAQJob.info">info</a></code></li>
@@ -1534,6 +1688,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.daq_job_cls" href="#enrgdaq.daq.base.DAQJobProcess.daq_job_cls">daq_job_cls</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.daq_job_info" href="#enrgdaq.daq.base.DAQJobProcess.daq_job_info">daq_job_info</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.instance_id" href="#enrgdaq.daq.base.DAQJobProcess.instance_id">instance_id</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJobProcess.job_started_queue" href="#enrgdaq.daq.base.DAQJobProcess.job_started_queue">job_started_queue</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.log_queue" href="#enrgdaq.daq.base.DAQJobProcess.log_queue">log_queue</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.process" href="#enrgdaq.daq.base.DAQJobProcess.process">process</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJobProcess.raw_config" href="#enrgdaq.daq.base.DAQJobProcess.raw_config">raw_config</a></code></li>

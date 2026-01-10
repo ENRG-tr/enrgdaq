@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleStats</span></span>
-<span>(</span><span>config: <a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig" href="#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig">DAQJobHandleStatsConfig</a>,<br>**kwargs)</span>
+<span>(</span><span>config: <a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig" href="#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig">DAQJobHandleStatsConfig</a>,<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>**kwargs)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -75,11 +75,11 @@ el.replaceWith(d);
     _remote_stats: DAQJobRemoteStatsDict  # type:ignore
     _supervisor_activity: dict[str, SupervisorRemoteStats]
 
-    def __init__(self, config: DAQJobHandleStatsConfig, **kwargs):
-        from enrgdaq.daq.topics import Topic
-
-        self.topics_to_subscribe.append(Topic.stats_prefix())
-        super().__init__(config, **kwargs)
+    def __init__(
+        self, config: DAQJobHandleStatsConfig, supervisor_info: SupervisorInfo, **kwargs
+    ):
+        self.topics_to_subscribe.append(Topic.stats(supervisor_info.supervisor_id))
+        super().__init__(config, supervisor_info, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()
         self._supervisor_activity = {}  # Track supervisor activity from stats reports
@@ -173,6 +173,11 @@ el.replaceWith(d);
                 store_config=self.config.store_config,
                 keys=keys,
                 data=data_to_send,
+            )
+        )
+        self._put_message_out(
+            DAQJobMessageCombinedStats(
+                stats=self._stats, topics={Topic.stats_combined(self.supervisor_id)}
             )
         )
 
@@ -283,6 +288,12 @@ el.replaceWith(d);
                 data=data_to_send,
                 tag=&#34;remote&#34;,
             )
+        )
+        self._put_message_out(
+            DAQJobMessageCombinedRemoteStats(
+                stats=dict(remote_stats_combined),
+                topics={Topic.stats_combined(self.supervisor_id)},
+            )
         )</code></pre>
 </details>
 <div class="desc"><p>Handles statistics for DAQ jobs.</p>
@@ -359,21 +370,21 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 <li>msgspec._core._StructMixin</li>
 </ul>
 </dd>
-<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats"><code class="flex name class">
-<span>class <span class="ident">DAQJobMessageStats</span></span>
-<span>(</span><span>stats: Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageCombinedRemoteStats</span></span>
+<span>(</span><span>stats: dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStats(DAQJobMessage):
-    &#34;&#34;&#34;Message class containing DAQ job statistics.&#34;&#34;&#34;
+<pre><code class="python">class DAQJobMessageCombinedRemoteStats(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing combined remote statistics.&#34;&#34;&#34;
 
-    stats: DAQJobStatsDict</code></pre>
+    stats: dict[str, SupervisorRemoteStats]</code></pre>
 </details>
-<div class="desc"><p>Message class containing DAQ job statistics.</p></div>
+<div class="desc"><p>Message class containing combined remote statistics.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
@@ -382,16 +393,54 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </ul>
 <h3>Instance variables</h3>
 <dl>
-<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats.stats"><code class="name">var <span class="ident">stats</span> : Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]</code></dt>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats.stats"><code class="name">var <span class="ident">stats</span> : dict[str, <a title="enrgdaq.daq.jobs.remote.SupervisorRemoteStats" href="remote.html#enrgdaq.daq.jobs.remote.SupervisorRemoteStats">SupervisorRemoteStats</a>]</code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class DAQJobMessageStats(DAQJobMessage):
-    &#34;&#34;&#34;Message class containing DAQ job statistics.&#34;&#34;&#34;
+<pre><code class="python">class DAQJobMessageCombinedRemoteStats(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing combined remote statistics.&#34;&#34;&#34;
 
-    stats: DAQJobStatsDict</code></pre>
+    stats: dict[str, SupervisorRemoteStats]</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageCombinedStats</span></span>
+<span>(</span><span>stats: dict[str, typing.Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]],<br>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="../models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>remote_config: <a title="enrgdaq.daq.models.DAQRemoteConfig" href="../models.html#enrgdaq.daq.models.DAQRemoteConfig">DAQRemoteConfig</a> = &lt;factory&gt;,<br>topics: set[str] = &lt;factory&gt;)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCombinedStats(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing combined DAQ job statistics.&#34;&#34;&#34;
+
+    stats: dict[str, &#34;DAQJobStatsDict&#34;]</code></pre>
+</details>
+<div class="desc"><p>Message class containing combined DAQ job statistics.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.DAQJobMessage" href="../models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats.stats"><code class="name">var <span class="ident">stats</span> : dict[str, typing.Dict[str, <a title="enrgdaq.daq.models.DAQJobStats" href="../models.html#enrgdaq.daq.models.DAQJobStats">DAQJobStats</a>]]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageCombinedStats(DAQJobMessage):
+    &#34;&#34;&#34;Message class containing combined DAQ job statistics.&#34;&#34;&#34;
+
+    stats: dict[str, &#34;DAQJobStatsDict&#34;]</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -425,9 +474,15 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 <h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig" href="#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig">DAQJobHandleStatsConfig</a></code></h4>
 </li>
 <li>
-<h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats">DAQJobMessageStats</a></code></h4>
+<h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats">DAQJobMessageCombinedRemoteStats</a></code></h4>
 <ul class="">
-<li><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats.stats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats.stats">stats</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats.stats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats.stats">stats</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats">DAQJobMessageCombinedStats</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats.stats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats.stats">stats</a></code></li>
 </ul>
 </li>
 </ul>

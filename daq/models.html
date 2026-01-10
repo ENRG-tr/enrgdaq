@@ -559,7 +559,8 @@ Measurements are in milliseconds.</p></div>
 <ul class="hlist">
 <li><a title="enrgdaq.daq.alert.models.DAQJobMessageAlert" href="alert/models.html#enrgdaq.daq.alert.models.DAQJobMessageAlert">DAQJobMessageAlert</a></li>
 <li><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam" href="jobs/caen/hv.html#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam">DAQJobMessageCAENHVSetChParam</a></li>
-<li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageStats">DAQJobMessageStats</a></li>
+<li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats">DAQJobMessageCombinedRemoteStats</a></li>
+<li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats">DAQJobMessageCombinedStats</a></li>
 <li><a title="enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote" href="jobs/remote.html#enrgdaq.daq.jobs.remote.DAQJobMessageStatsRemote">DAQJobMessageStatsRemote</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageHeartbeat" href="#enrgdaq.daq.models.DAQJobMessageHeartbeat">DAQJobMessageHeartbeat</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageSHM" href="#enrgdaq.daq.models.DAQJobMessageSHM">DAQJobMessageSHM</a></li>
@@ -1017,7 +1018,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1052,7 +1052,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1079,7 +1078,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1106,7 +1104,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1133,7 +1130,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1160,7 +1156,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1187,7 +1182,6 @@ set the routes for the DAQJobProcess.</p>
     @override
     def pre_send(self):
         super().pre_send()
-        from enrgdaq.daq.topics import Topic
 
         self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>
@@ -1207,7 +1201,6 @@ set the routes for the DAQJobProcess.</p>
 <pre><code class="python">@override
 def pre_send(self):
     super().pre_send()
-    from enrgdaq.daq.topics import Topic
 
     self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
 </details>

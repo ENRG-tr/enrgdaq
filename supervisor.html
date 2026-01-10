@@ -190,6 +190,13 @@ class RestartDAQJobSchedule:
             &#34;supervisor_proxy&#34;, &#34;supervisor_xpub&#34;, &#34;supervisor_xsub&#34;
         )
 
+        self.message_handler = SupervisorMessageHandler(
+            xpub_url=self.supervisor_xpub_url,
+            supervisor_id=self.supervisor_id,
+            on_stats_receive=lambda x: self._update_stats(x.stats),
+            on_remote_stats_receive=lambda x: self._update_remote_stats(x.stats),
+        )
+
         self._setup_federation()
 
         self._last_stats_message_time = datetime.min
@@ -207,6 +214,8 @@ class RestartDAQJobSchedule:
             self.config.verbosity.to_logging_level() if self.config else logging.INFO
         )
 
+        assert self.config is not None
+
         # Change logging name based on supervisor id
         self._logger.name = f&#34;Supervisor({self.config.info.supervisor_id})&#34;
 
@@ -223,7 +232,7 @@ class RestartDAQJobSchedule:
 
             try:
                 # get hash of supervisor_id to fit name
-                import hashlib
+                assert self.config is not None
 
                 supervisor_id_hash = base64.b64encode(
                     hashlib.md5(self.config.info.supervisor_id.encode()).digest()
@@ -270,6 +279,8 @@ class RestartDAQJobSchedule:
         self.start_daq_job_processes(self._daq_jobs_to_load or [])
         self._logger.debug(f&#34;Started {len(self.daq_job_processes)} DAQ job processes&#34;)
         self.warn_for_lack_of_daq_jobs()
+
+        self.message_handler.start()
 
         self._last_stats_message_time = datetime.min
         self._last_heartbeat_message_time = datetime.min
@@ -584,6 +595,12 @@ class RestartDAQJobSchedule:
         )
         self._fed_to_server_thread.start()
 
+    def _update_stats(self, stats):
+        self.daq_job_stats = stats
+
+    def _update_remote_stats(self, stats):
+        self.daq_job_remote_stats = stats
+
     @property
     def supervisor_id(self):
         if self.config is None or self.config.info is None:
@@ -777,6 +794,8 @@ def supervisor_id(self):
         self.config.verbosity.to_logging_level() if self.config else logging.INFO
     )
 
+    assert self.config is not None
+
     # Change logging name based on supervisor id
     self._logger.name = f&#34;Supervisor({self.config.info.supervisor_id})&#34;
 
@@ -793,7 +812,7 @@ def supervisor_id(self):
 
         try:
             # get hash of supervisor_id to fit name
-            import hashlib
+            assert self.config is not None
 
             supervisor_id_hash = base64.b64encode(
                 hashlib.md5(self.config.info.supervisor_id.encode()).digest()
@@ -840,6 +859,8 @@ def supervisor_id(self):
     self.start_daq_job_processes(self._daq_jobs_to_load or [])
     self._logger.debug(f&#34;Started {len(self.daq_job_processes)} DAQ job processes&#34;)
     self.warn_for_lack_of_daq_jobs()
+
+    self.message_handler.start()
 
     self._last_stats_message_time = datetime.min
     self._last_heartbeat_message_time = datetime.min</code></pre>
