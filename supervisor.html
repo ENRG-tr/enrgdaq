@@ -519,9 +519,7 @@ class RestartDAQJobSchedule:
                 xsub_socket = self.message_broker.xsub_sockets[&#34;supervisor_xsub&#34;]
                 xpub_socket.bind(fed.server_xpub_url)
                 xsub_socket.bind(fed.server_xsub_url)
-                self._logger.info(
-                    &#34;Federation server ready - clients can connect to exposed endpoints&#34;
-                )
+                self._logger.info(&#34;Federation server ready&#34;)
             else:
                 self._logger.warning(
                     &#34;Federation server mode enabled but XPUB/XSUB URLs not configured&#34;

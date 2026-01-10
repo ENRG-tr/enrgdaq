@@ -62,7 +62,7 @@ el.replaceWith(d);
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
-        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
@@ -70,7 +70,9 @@ el.replaceWith(d);
     target_local_supervisor: bool = False
 
     def __post_init__(self):
-        from enrgdaq.daq.topics import Topic
+        self.target_local_supervisor = (
+            self.target_local_supervisor or self.store_config.target_local_supervisor
+        )
 
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
@@ -91,7 +93,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
 <dd>Optional tag associated with the message.</dd>
 <dt><strong><code>target_local_supervisor</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether to send the message to store job topics of the local supervisor.</dd>
+<dd>Whether to send the message to store job topics of the local supervisor, or all supervisors.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -121,7 +123,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
-        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
@@ -129,7 +131,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     target_local_supervisor: bool = False
 
     def __post_init__(self):
-        from enrgdaq.daq.topics import Topic
+        self.target_local_supervisor = (
+            self.target_local_supervisor or self.store_config.target_local_supervisor
+        )
 
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
@@ -156,7 +160,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
-        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
@@ -164,7 +168,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     target_local_supervisor: bool = False
 
     def __post_init__(self):
-        from enrgdaq.daq.topics import Topic
+        self.target_local_supervisor = (
+            self.target_local_supervisor or self.store_config.target_local_supervisor
+        )
 
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
@@ -191,7 +197,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     Attributes:
         store_config (DAQJobStoreConfig): Configuration for the DAQ job store.
         tag (str | None): Optional tag associated with the message.
-        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor.
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     store_config: DAQJobStoreConfig
@@ -199,7 +205,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     target_local_supervisor: bool = False
 
     def __post_init__(self):
-        from enrgdaq.daq.topics import Topic
+        self.target_local_supervisor = (
+            self.target_local_supervisor or self.store_config.target_local_supervisor
+        )
 
         mappings = _get_store_config_base_to_store_job_mapping()
         for store_type in self.store_config.store_types:
@@ -577,7 +585,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
 <dd>Optional tag associated with the message.</dd>
 <dt><strong><code>target_local_supervisor</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Whether to send the message to store job topics of the local supervisor.</dd>
+<dd>Whether to send the message to store job topics of the local supervisor, or all supervisors.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -703,7 +711,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfig</span></span>
-<span>(</span><span>csv: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV">DAQJobStoreConfigCSV</a> | None = None,<br>root: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a> | None = None,<br>hdf5: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigHDF5" href="#enrgdaq.daq.store.models.DAQJobStoreConfigHDF5">DAQJobStoreConfigHDF5</a> | None = None,<br>mysql: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigMySQL" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMySQL">DAQJobStoreConfigMySQL</a> | None = None,<br>redis: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a> | None = None,<br>raw: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRaw" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRaw">DAQJobStoreConfigRaw</a> | None = None,<br>memory: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigMemory" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMemory">DAQJobStoreConfigMemory</a> | None = None,<br>store_types: set[type[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a>]] = &lt;factory&gt;)</span>
+<span>(</span><span>csv: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV">DAQJobStoreConfigCSV</a> | None = None,<br>root: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a> | None = None,<br>hdf5: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigHDF5" href="#enrgdaq.daq.store.models.DAQJobStoreConfigHDF5">DAQJobStoreConfigHDF5</a> | None = None,<br>mysql: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigMySQL" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMySQL">DAQJobStoreConfigMySQL</a> | None = None,<br>redis: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a> | None = None,<br>raw: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigRaw" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRaw">DAQJobStoreConfigRaw</a> | None = None,<br>memory: <a title="enrgdaq.daq.store.models.DAQJobStoreConfigMemory" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMemory">DAQJobStoreConfigMemory</a> | None = None,<br>store_types: set[type[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigBase" href="#enrgdaq.daq.store.models.DAQJobStoreConfigBase">DAQJobStoreConfigBase</a>]] = &lt;factory&gt;,<br>target_local_supervisor: bool = False)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -713,6 +721,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -724,6 +743,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -734,7 +754,26 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     def has_store_config(self, store_type: type[&#34;DAQJobStoreConfigBase&#34;]) -&gt; bool:
         return store_type in self.store_types</code></pre>
 </details>
-<div class="desc"><p>Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.</p></div>
+<div class="desc"><p>Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>csv</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV">DAQJobStoreConfigCSV</a>]</code></dt>
+<dd>CSV store configuration.</dd>
+<dt><strong><code>root</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a>]</code></dt>
+<dd>ROOT store configuration.</dd>
+<dt><strong><code>hdf5</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigHDF5" href="#enrgdaq.daq.store.models.DAQJobStoreConfigHDF5">DAQJobStoreConfigHDF5</a>]</code></dt>
+<dd>HDF5 store configuration.</dd>
+<dt><strong><code>mysql</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigMySQL" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMySQL">DAQJobStoreConfigMySQL</a>]</code></dt>
+<dd>MySQL store configuration.</dd>
+<dt><strong><code>redis</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigRedis" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRedis">DAQJobStoreConfigRedis</a>]</code></dt>
+<dd>Redis store configuration.</dd>
+<dt><strong><code>raw</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigRaw" href="#enrgdaq.daq.store.models.DAQJobStoreConfigRaw">DAQJobStoreConfigRaw</a>]</code></dt>
+<dd>Raw store configuration.</dd>
+<dt><strong><code>memory</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigMemory" href="#enrgdaq.daq.store.models.DAQJobStoreConfigMemory">DAQJobStoreConfigMemory</a>]</code></dt>
+<dd>Memory store configuration.</dd>
+<dt><strong><code>target_local_supervisor</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether to send the message to store job topics of the local supervisor, or all supervisors.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>msgspec.Struct</li>
@@ -751,6 +790,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -762,6 +812,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -783,6 +834,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -794,6 +856,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -815,6 +878,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -826,6 +900,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -847,6 +922,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -858,6 +944,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -879,6 +966,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -890,6 +988,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -911,6 +1010,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -922,6 +1032,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -943,6 +1054,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -954,6 +1076,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -975,6 +1098,17 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 <pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
     &#34;&#34;&#34;
     Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
     &#34;&#34;&#34;
 
     csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
@@ -986,6 +1120,51 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
 
     store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
+
+    def __post_init__(self):
+        for key in dir(self):
+            value = getattr(self, key)
+            if isinstance(value, DAQJobStoreConfigBase):
+                self.store_types.add(type(value))
+
+    def has_store_config(self, store_type: type[&#34;DAQJobStoreConfigBase&#34;]) -&gt; bool:
+        return store_type in self.store_types</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.store.models.DAQJobStoreConfig.target_local_supervisor"><code class="name">var <span class="ident">target_local_supervisor</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobStoreConfig(Struct, dict=True):
+    &#34;&#34;&#34;
+    Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.
+
+    Attributes:
+        csv (Optional[DAQJobStoreConfigCSV]): CSV store configuration.
+        root (Optional[DAQJobStoreConfigROOT]): ROOT store configuration.
+        hdf5 (Optional[DAQJobStoreConfigHDF5]): HDF5 store configuration.
+        mysql (Optional[DAQJobStoreConfigMySQL]): MySQL store configuration.
+        redis (Optional[DAQJobStoreConfigRedis]): Redis store configuration.
+        raw (Optional[DAQJobStoreConfigRaw]): Raw store configuration.
+        memory (Optional[DAQJobStoreConfigMemory]): Memory store configuration.
+
+        target_local_supervisor (bool): Whether to send the message to store job topics of the local supervisor, or all supervisors.
+    &#34;&#34;&#34;
+
+    csv: &#34;Optional[DAQJobStoreConfigCSV]&#34; = None
+    root: &#34;Optional[DAQJobStoreConfigROOT]&#34; = None
+    hdf5: &#34;Optional[DAQJobStoreConfigHDF5]&#34; = None
+    mysql: &#34;Optional[DAQJobStoreConfigMySQL]&#34; = None
+    redis: &#34;Optional[DAQJobStoreConfigRedis]&#34; = None
+    raw: &#34;Optional[DAQJobStoreConfigRaw]&#34; = None
+    memory: &#34;Optional[DAQJobStoreConfigMemory]&#34; = None
+
+    store_types: set[type[&#34;DAQJobStoreConfigBase&#34;]] = field(default_factory=set)
+    target_local_supervisor: bool = False
 
     def __post_init__(self):
         for key in dir(self):
@@ -1798,7 +1977,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a></code></h4>
-<ul class="two-column">
+<ul class="">
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.csv" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.csv">csv</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.has_store_config" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.has_store_config">has_store_config</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.hdf5" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.hdf5">hdf5</a></code></li>
@@ -1808,6 +1987,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.redis" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.redis">redis</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.root" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.root">root</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.store_types" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.store_types">store_types</a></code></li>
+<li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig.target_local_supervisor" href="#enrgdaq.daq.store.models.DAQJobStoreConfig.target_local_supervisor">target_local_supervisor</a></code></li>
 </ul>
 </li>
 <li>
