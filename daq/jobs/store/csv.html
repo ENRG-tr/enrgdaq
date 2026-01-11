@@ -127,7 +127,9 @@ class CSVFile:
         file_path = os.path.join(self.config.out_dir, file_path)
 
         file, new_file = self._open_csv_file(
-            file_path, store_config.overwrite, store_config.use_gzip
+            file_path,
+            store_config.overwrite,
+            store_config.use_zstd,
         )
         if file.overwrite:
             file.write_queue.clear()
@@ -162,7 +164,10 @@ class CSVFile:
         return True
 
     def _open_csv_file(
-        self, file_path: str, overwrite: Optional[bool], use_gzip: Optional[bool]
+        self,
+        file_path: str,
+        overwrite: bool | None,
+        use_zstd: bool | None = False,
     ) -&gt; tuple[CSVFile, bool]:
         &#34;&#34;&#34;
         Opens a file and returns (CSVFile, new_file)
@@ -177,9 +182,17 @@ class CSVFile:
                 Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
                 Path(file_path).touch()
 
-            if use_gzip:
-                file_handle = gzip.open(
-                    file_path, &#34;at&#34; if not overwrite else &#34;wt&#34;, newline=&#34;&#34;
+            if use_zstd:
+                # Zstd streaming with frame flush for recoverability
+                mode = &#34;ab&#34; if not overwrite else &#34;wb&#34;
+                raw_file = open(file_path, mode)
+                compressor = zstd.ZstdCompressor(level=3)
+                zstd_writer = compressor.stream_writer(
+                    raw_file, closefd=True, write_return_read=False
+                )
+                # Wrap in a TextIOWrapper for CSV writer compatibility
+                file_handle = io.TextIOWrapper(
+                    zstd_writer, encoding=&#34;utf-8&#34;, newline=&#34;&#34;
                 )
             else:
                 file_handle = open(file_path, &#34;a&#34; if not overwrite else &#34;w&#34;, newline=&#34;&#34;)
@@ -206,6 +219,17 @@ class CSVFile:
             return False
 
         file.file.flush()
+
+        # For zstd wrapped in TextIOWrapper, flush with FLUSH_FRAME for recoverability
+        if hasattr(file.file, &#34;buffer&#34;) and hasattr(file.file.buffer, &#34;flush&#34;):
+            buffer = file.file.buffer
+            # Check if it&#39;s a zstd stream writer (has FLUSH_FRAME capability)
+            try:
+                buffer.flush(zstd.FLUSH_FRAME)
+            except TypeError:
+                # Not a zstd writer, just a regular buffer
+                pass
+
         file.last_flush_date = datetime.now()
         return True
 

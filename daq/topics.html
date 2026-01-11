@@ -79,6 +79,7 @@ class Topic:
     DAQ_JOB = &#34;daq_job&#34;
     STORE = &#34;store&#34;
     STATS = &#34;stats&#34;
+    TRACES = &#34;traces&#34;
 
     # Topic suffixes
     BROADCAST = &#34;broadcast&#34;
@@ -185,7 +186,33 @@ class Topic:
         Returns:
             Topic string: stats
         &#34;&#34;&#34;
-        return Topic.STATS</code></pre>
+        return Topic.STATS
+
+    @staticmethod
+    def traces(supervisor_id: str) -&gt; str:
+        &#34;&#34;&#34;
+        Topic for trace messages from DAQJobs to trace handler.
+
+        Args:
+            supervisor_id: The supervisor&#39;s unique identifier.
+
+        Returns:
+            Topic string: traces.supervisor.{supervisor_id}
+        &#34;&#34;&#34;
+        return f&#34;{Topic.TRACES}.supervisor.{supervisor_id}&#34;
+
+    @staticmethod
+    def traces_combined(supervisor_id: str) -&gt; str:
+        &#34;&#34;&#34;
+        Topic for combined trace messages from trace handler.
+
+        Args:
+            supervisor_id: The supervisor&#39;s unique identifier.
+
+        Returns:
+            Topic string: traces.combined.supervisor.{supervisor_id}
+        &#34;&#34;&#34;
+        return f&#34;{Topic.TRACES}.combined.supervisor.{supervisor_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Centralized topic builder for ZMQ pub/sub message routing.</p></div>
 <h3>Class variables</h3>
@@ -211,6 +238,10 @@ class Topic:
 <div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.topics.Topic.SUPERVISOR"><code class="name">var <span class="ident">SUPERVISOR</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.topics.Topic.TRACES"><code class="name">var <span class="ident">TRACES</span></code></dt>
 <dd>
 <div class="desc"></div>
 </dd>
@@ -479,6 +510,72 @@ def supervisor_internal(supervisor_id: str) -&gt; str:
 <dd>supervisor.{supervisor_id}.internal</dd>
 </dl></div>
 </dd>
+<dt id="enrgdaq.daq.topics.Topic.traces"><code class="name flex">
+<span>def <span class="ident">traces</span></span>(<span>supervisor_id: str) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def traces(supervisor_id: str) -&gt; str:
+    &#34;&#34;&#34;
+    Topic for trace messages from DAQJobs to trace handler.
+
+    Args:
+        supervisor_id: The supervisor&#39;s unique identifier.
+
+    Returns:
+        Topic string: traces.supervisor.{supervisor_id}
+    &#34;&#34;&#34;
+    return f&#34;{Topic.TRACES}.supervisor.{supervisor_id}&#34;</code></pre>
+</details>
+<div class="desc"><p>Topic for trace messages from DAQJobs to trace handler.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>supervisor_id</code></strong></dt>
+<dd>The supervisor's unique identifier.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
+<dd>traces.supervisor.{supervisor_id}</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.daq.topics.Topic.traces_combined"><code class="name flex">
+<span>def <span class="ident">traces_combined</span></span>(<span>supervisor_id: str) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def traces_combined(supervisor_id: str) -&gt; str:
+    &#34;&#34;&#34;
+    Topic for combined trace messages from trace handler.
+
+    Args:
+        supervisor_id: The supervisor&#39;s unique identifier.
+
+    Returns:
+        Topic string: traces.combined.supervisor.{supervisor_id}
+    &#34;&#34;&#34;
+    return f&#34;{Topic.TRACES}.combined.supervisor.{supervisor_id}&#34;</code></pre>
+</details>
+<div class="desc"><p>Topic for combined trace messages from trace handler.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>supervisor_id</code></strong></dt>
+<dd>The supervisor's unique identifier.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
+<dd>traces.combined.supervisor.{supervisor_id}</dd>
+</dl></div>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -505,6 +602,7 @@ def supervisor_internal(supervisor_id: str) -&gt; str:
 <li><code><a title="enrgdaq.daq.topics.Topic.STATS" href="#enrgdaq.daq.topics.Topic.STATS">STATS</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.STORE" href="#enrgdaq.daq.topics.Topic.STORE">STORE</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.SUPERVISOR" href="#enrgdaq.daq.topics.Topic.SUPERVISOR">SUPERVISOR</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.TRACES" href="#enrgdaq.daq.topics.Topic.TRACES">TRACES</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.daq_job_direct" href="#enrgdaq.daq.topics.Topic.daq_job_direct">daq_job_direct</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.stats" href="#enrgdaq.daq.topics.Topic.stats">stats</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.stats_combined" href="#enrgdaq.daq.topics.Topic.stats_combined">stats_combined</a></code></li>
@@ -513,6 +611,8 @@ def supervisor_internal(supervisor_id: str) -&gt; str:
 <li><code><a title="enrgdaq.daq.topics.Topic.store_supervisor" href="#enrgdaq.daq.topics.Topic.store_supervisor">store_supervisor</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.supervisor_broadcast" href="#enrgdaq.daq.topics.Topic.supervisor_broadcast">supervisor_broadcast</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.supervisor_internal" href="#enrgdaq.daq.topics.Topic.supervisor_internal">supervisor_internal</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.traces" href="#enrgdaq.daq.topics.Topic.traces">traces</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.traces_combined" href="#enrgdaq.daq.topics.Topic.traces_combined">traces_combined</a></code></li>
 </ul>
 </li>
 </ul>

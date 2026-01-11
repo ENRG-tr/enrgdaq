@@ -518,6 +518,7 @@ Measurements are in milliseconds.</p></div>
 <li><a title="enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam" href="jobs/caen/hv.html#enrgdaq.daq.jobs.caen.hv.DAQJobMessageCAENHVSetChParam">DAQJobMessageCAENHVSetChParam</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats">DAQJobMessageCombinedRemoteStats</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedStats">DAQJobMessageCombinedStats</a></li>
+<li><a title="enrgdaq.daq.jobs.handle_traces.DAQJobMessageCombinedTraces" href="jobs/handle_traces.html#enrgdaq.daq.jobs.handle_traces.DAQJobMessageCombinedTraces">DAQJobMessageCombinedTraces</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageHeartbeat" href="#enrgdaq.daq.models.DAQJobMessageHeartbeat">DAQJobMessageHeartbeat</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageSHM" href="#enrgdaq.daq.models.DAQJobMessageSHM">DAQJobMessageSHM</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageStatsRemote" href="#enrgdaq.daq.models.DAQJobMessageStatsRemote">DAQJobMessageStatsRemote</a></li>
@@ -1198,6 +1199,285 @@ def pre_send(self):
 </dd>
 </dl>
 </dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageTraceEvent</span></span>
+<span>(</span><span>message_id: str,<br>message_type: str,<br>event_type: str,<br>topics: list[str],<br>timestamp: datetime.datetime,<br>size_bytes: int,<br>source_job: str,<br>source_supervisor: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"><p>Single trace event for a message.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.event_type"><code class="name">var <span class="ident">event_type</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.message_id"><code class="name">var <span class="ident">message_id</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.message_type"><code class="name">var <span class="ident">message_type</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.size_bytes"><code class="name">var <span class="ident">size_bytes</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.source_job"><code class="name">var <span class="ident">source_job</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.source_supervisor"><code class="name">var <span class="ident">source_supervisor</span> : str</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.timestamp"><code class="name">var <span class="ident">timestamp</span> : datetime.datetime</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceEvent.topics"><code class="name">var <span class="ident">topics</span> : list[str]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceEvent(Struct):
+    &#34;&#34;&#34;Single trace event for a message.&#34;&#34;&#34;
+
+    message_id: str
+    message_type: str
+    event_type: str  # &#34;sent&#34; | &#34;received&#34;
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceReport"><code class="flex name class">
+<span>class <span class="ident">DAQJobMessageTraceReport</span></span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>events: list[<a title="enrgdaq.daq.models.DAQJobMessageTraceEvent" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent">DAQJobMessageTraceEvent</a>])</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;Periodic trace report from a DAQJob.&#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    events: list[DAQJobMessageTraceEvent]
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(Topic.traces(self.supervisor_id))</code></pre>
+</details>
+<div class="desc"><p>Periodic trace report from a DAQJob.</p></div>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="enrgdaq.daq.models.InternalDAQJobMessage" href="#enrgdaq.daq.models.InternalDAQJobMessage">InternalDAQJobMessage</a></li>
+<li><a title="enrgdaq.daq.models.DAQJobMessage" href="#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a></li>
+<li>msgspec.Struct</li>
+<li>msgspec._core._StructMixin</li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceReport.events"><code class="name">var <span class="ident">events</span> : list[<a title="enrgdaq.daq.models.DAQJobMessageTraceEvent" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent">DAQJobMessageTraceEvent</a>]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;Periodic trace report from a DAQJob.&#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    events: list[DAQJobMessageTraceEvent]
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(Topic.traces(self.supervisor_id))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceReport.target_supervisor"><code class="name">var <span class="ident">target_supervisor</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageTraceReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;Periodic trace report from a DAQJob.&#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    events: list[DAQJobMessageTraceEvent]
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(Topic.traces(self.supervisor_id))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.models.DAQJobMessageTraceReport.pre_send"><code class="name flex">
+<span>def <span class="ident">pre_send</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@override
+def pre_send(self):
+    super().pre_send()
+    self.topics.add(Topic.traces(self.supervisor_id))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
+</dd>
 <dt id="enrgdaq.daq.models.DAQJobResourceStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobResourceStats</span></span>
 <span>(</span><span>cpu_percent: float = 0.0, rss_mb: float = 0.0)</span>
@@ -1740,6 +2020,7 @@ def pre_send(self):
 <li><a title="enrgdaq.daq.models.DAQJobMessageJobStarted" href="#enrgdaq.daq.models.DAQJobMessageJobStarted">DAQJobMessageJobStarted</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageRoutes" href="#enrgdaq.daq.models.DAQJobMessageRoutes">DAQJobMessageRoutes</a></li>
 <li><a title="enrgdaq.daq.models.DAQJobMessageStatsReport" href="#enrgdaq.daq.models.DAQJobMessageStatsReport">DAQJobMessageStatsReport</a></li>
+<li><a title="enrgdaq.daq.models.DAQJobMessageTraceReport" href="#enrgdaq.daq.models.DAQJobMessageTraceReport">DAQJobMessageTraceReport</a></li>
 </ul>
 <h3>Instance variables</h3>
 <dl>
@@ -2837,6 +3118,27 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <h4><code><a title="enrgdaq.daq.models.DAQJobMessageStop" href="#enrgdaq.daq.models.DAQJobMessageStop">DAQJobMessageStop</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStop.reason" href="#enrgdaq.daq.models.DAQJobMessageStop.reason">reason</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent">DAQJobMessageTraceEvent</a></code></h4>
+<ul class="two-column">
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.event_type" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.event_type">event_type</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.message_id" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.message_id">message_id</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.message_type" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.message_type">message_type</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.size_bytes" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.size_bytes">size_bytes</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.source_job" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.source_job">source_job</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.source_supervisor" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.source_supervisor">source_supervisor</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.timestamp" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.timestamp">timestamp</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceEvent.topics" href="#enrgdaq.daq.models.DAQJobMessageTraceEvent.topics">topics</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="enrgdaq.daq.models.DAQJobMessageTraceReport" href="#enrgdaq.daq.models.DAQJobMessageTraceReport">DAQJobMessageTraceReport</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceReport.events" href="#enrgdaq.daq.models.DAQJobMessageTraceReport.events">events</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceReport.pre_send" href="#enrgdaq.daq.models.DAQJobMessageTraceReport.pre_send">pre_send</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageTraceReport.target_supervisor" href="#enrgdaq.daq.models.DAQJobMessageTraceReport.target_supervisor">target_supervisor</a></code></li>
 </ul>
 </li>
 <li>

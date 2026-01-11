@@ -85,9 +85,7 @@ el.replaceWith(d);
                         Topic.store_supervisor(self.supervisor_id, store_job.__name__)
                     )
                 else:
-                    self.topics.add(Topic.store(store_job.__name__))
-
-        print(self.topics)</code></pre>
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
@@ -151,9 +149,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
                         Topic.store_supervisor(self.supervisor_id, store_job.__name__)
                     )
                 else:
-                    self.topics.add(Topic.store(store_job.__name__))
-
-        print(self.topics)</code></pre>
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -193,9 +189,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
                         Topic.store_supervisor(self.supervisor_id, store_job.__name__)
                     )
                 else:
-                    self.topics.add(Topic.store(store_job.__name__))
-
-        print(self.topics)</code></pre>
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -235,9 +229,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
                         Topic.store_supervisor(self.supervisor_id, store_job.__name__)
                     )
                 else:
-                    self.topics.add(Topic.store(store_job.__name__))
-
-        print(self.topics)</code></pre>
+                    self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -263,9 +255,7 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
                     Topic.store_supervisor(self.supervisor_id, store_job.__name__)
                 )
             else:
-                self.topics.add(Topic.store(store_job.__name__))
-
-    print(self.topics)</code></pre>
+                self.topics.add(Topic.store(store_job.__name__))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1279,7 +1269,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 </dd>
 <dt id="enrgdaq.daq.store.models.DAQJobStoreConfigCSV"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreConfigCSV</span></span>
-<span>(</span><span>file_path: str,<br>add_date: bool = False,<br>overwrite: bool = False,<br>use_gzip: bool = False)</span>
+<span>(</span><span>file_path: str,<br>add_date: bool = False,<br>overwrite: bool = False,<br>use_zstd: bool = False)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1302,9 +1292,10 @@ that is expected to be extended by specific store configurations, such as CSV, M
     Overwrite the file contents.
     &#34;&#34;&#34;
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     &#34;&#34;&#34;
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>DAQJobStoreConfigBase is a configuration class for DAQ job store,
@@ -1339,9 +1330,10 @@ that is expected to be extended by specific store configurations, such as CSV, M
     Overwrite the file contents.
     &#34;&#34;&#34;
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     &#34;&#34;&#34;
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>Include the date in the file path.</p></div>
@@ -1368,9 +1360,10 @@ that is expected to be extended by specific store configurations, such as CSV, M
     Overwrite the file contents.
     &#34;&#34;&#34;
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     &#34;&#34;&#34;
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>File path to store data in.</p></div>
@@ -1397,14 +1390,15 @@ that is expected to be extended by specific store configurations, such as CSV, M
     Overwrite the file contents.
     &#34;&#34;&#34;
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     &#34;&#34;&#34;
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     &#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>Overwrite the file contents.</p></div>
 </dd>
-<dt id="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_gzip"><code class="name">var <span class="ident">use_gzip</span> : bool</code></dt>
+<dt id="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_zstd"><code class="name">var <span class="ident">use_zstd</span> : bool</code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -1426,12 +1420,14 @@ that is expected to be extended by specific store configurations, such as CSV, M
     Overwrite the file contents.
     &#34;&#34;&#34;
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     &#34;&#34;&#34;
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     &#34;&#34;&#34;</code></pre>
 </details>
-<div class="desc"><p>Use gzip compression.</p></div>
+<div class="desc"><p>Use zstd streaming compression. Recommended for live streaming as it creates
+independent frames that can be recovered even if the process is killed.</p></div>
 </dd>
 </dl>
 </dd>
@@ -1952,6 +1948,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li><a title="enrgdaq.daq.jobs.camera.DAQJobCameraConfig" href="../jobs/camera.html#enrgdaq.daq.jobs.camera.DAQJobCameraConfig">DAQJobCameraConfig</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlertsConfig" href="../jobs/handle_alerts.html#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlertsConfig">DAQJobHandleAlertsConfig</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig" href="../jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig">DAQJobHandleStatsConfig</a></li>
+<li><a title="enrgdaq.daq.jobs.handle_traces.DAQJobHandleTracesConfig" href="../jobs/handle_traces.html#enrgdaq.daq.jobs.handle_traces.DAQJobHandleTracesConfig">DAQJobHandleTracesConfig</a></li>
 <li><a title="enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetricsConfig" href="../jobs/pc_metrics.html#enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetricsConfig">DAQJobPCMetricsConfig</a></li>
 <li><a title="enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQXiaomiMijiaConfig" href="../jobs/sensor/xiaomi_mijia.html#enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQXiaomiMijiaConfig">DAQXiaomiMijiaConfig</a></li>
 <li><a title="enrgdaq.daq.jobs.test_job.DAQJobTestConfig" href="../jobs/test_job.html#enrgdaq.daq.jobs.test_job.DAQJobTestConfig">DAQJobTestConfig</a></li>
@@ -2048,7 +2045,7 @@ that is expected to be extended by specific store configurations, such as CSV, M
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.add_date" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV.add_date">add_date</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.file_path" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV.file_path">file_path</a></code></li>
 <li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.overwrite" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV.overwrite">overwrite</a></code></li>
-<li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_gzip" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_gzip">use_gzip</a></code></li>
+<li><code><a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_zstd" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV.use_zstd">use_zstd</a></code></li>
 </ul>
 </li>
 <li>

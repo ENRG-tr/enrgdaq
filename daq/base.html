@@ -139,6 +139,10 @@ el.replaceWith(d);
         self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
 
+        # Trace collection
+        self._trace_events: list[DAQJobMessageTraceEvent] = []
+        self._last_trace_report_time = datetime.now()
+
         self.topics_to_subscribe.extend(
             [
                 Topic.supervisor_broadcast(self.supervisor_id),
@@ -204,7 +208,24 @@ el.replaceWith(d);
                 recv_message.is_remote = True
                 self.handle_message(recv_message)
                 self._processed_bytes += message_len
+
+                # Record received trace event (skip internal messages)
+                if not isinstance(recv_message, InternalDAQJobMessage):
+                    self._trace_events.append(
+                        DAQJobMessageTraceEvent(
+                            message_id=recv_message.id or &#34;unknown&#34;,
+                            message_type=type(recv_message).__name__,
+                            event_type=&#34;received&#34;,
+                            topics=list(recv_message.topics),
+                            timestamp=datetime.now(),
+                            size_bytes=message_len,
+                            source_job=type(self).__name__,
+                            source_supervisor=self.supervisor_id,
+                        )
+                    )
+
                 self.report_stats()
+                self.report_traces()
             except zmq.ContextTerminated:
                 break
             except Exception as e:
@@ -400,6 +421,26 @@ el.replaceWith(d);
         self._publish_buffer.put(message)
         self._sent_count += 1
 
+        # Record sent trace event (skip internal messages to avoid loops)
+        if not isinstance(message, InternalDAQJobMessage):
+            # Estimate size using pickle (approximation)
+            try:
+                sent_size = len(pickle.dumps(message))
+            except Exception:
+                sent_size = 0
+            self._trace_events.append(
+                DAQJobMessageTraceEvent(
+                    message_id=message.id or &#34;unknown&#34;,
+                    message_type=type(message).__name__,
+                    event_type=&#34;sent&#34;,
+                    topics=list(message.topics),
+                    timestamp=datetime.now(),
+                    size_bytes=sent_size,
+                    source_job=type(self).__name__,
+                    source_supervisor=self.supervisor_id,
+                )
+            )
+
     def get_latency_stats(self) -&gt; Any:
         if not self._latency_samples:
             return DAQJobLatencyStats()
@@ -433,6 +474,22 @@ el.replaceWith(d);
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
+
+    def report_traces(self, force: bool = False):
+        if (
+            not force
+            and (datetime.now() - self._last_trace_report_time).total_seconds()
+            &lt; DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS
+        ):
+            return
+
+        if not self._trace_events:
+            return
+
+        self._last_trace_report_time = datetime.now()
+        report = DAQJobMessageTraceReport(events=self._trace_events.copy())
+        self._put_message_out(report)
+        self._trace_events.clear()
 
     def __del__(self):
         self._logger.info(&#34;DAQ job is being deleted&#34;)
@@ -489,6 +546,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 <li><a title="enrgdaq.daq.jobs.camera.DAQJobCamera" href="jobs/camera.html#enrgdaq.daq.jobs.camera.DAQJobCamera">DAQJobCamera</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts" href="jobs/handle_alerts.html#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts">DAQJobHandleAlerts</a></li>
 <li><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats" href="jobs/handle_stats.html#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStats">DAQJobHandleStats</a></li>
+<li><a title="enrgdaq.daq.jobs.handle_traces.DAQJobHandleTraces" href="jobs/handle_traces.html#enrgdaq.daq.jobs.handle_traces.DAQJobHandleTraces">DAQJobHandleTraces</a></li>
 <li><a title="enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck" href="jobs/healthcheck.html#enrgdaq.daq.jobs.healthcheck.DAQJobHealthcheck">DAQJobHealthcheck</a></li>
 <li><a title="enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics" href="jobs/pc_metrics.html#enrgdaq.daq.jobs.pc_metrics.DAQJobPCMetrics">DAQJobPCMetrics</a></li>
 <li><a title="enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia" href="jobs/sensor/xiaomi_mijia.html#enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia">DAQJobXiaomiMijia</a></li>
@@ -720,6 +778,32 @@ def supervisor_id(self):
 </details>
 <div class="desc"></div>
 </dd>
+<dt id="enrgdaq.daq.base.DAQJob.report_traces"><code class="name flex">
+<span>def <span class="ident">report_traces</span></span>(<span>self, force: bool = False)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def report_traces(self, force: bool = False):
+    if (
+        not force
+        and (datetime.now() - self._last_trace_report_time).total_seconds()
+        &lt; DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS
+    ):
+        return
+
+    if not self._trace_events:
+        return
+
+    self._last_trace_report_time = datetime.now()
+    report = DAQJobMessageTraceReport(events=self._trace_events.copy())
+    self._put_message_out(report)
+    self._trace_events.clear()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
 <dt id="enrgdaq.daq.base.DAQJob.start"><code class="name flex">
 <span>def <span class="ident">start</span></span>(<span>self)</span>
 </code></dt>
@@ -737,7 +821,7 @@ def supervisor_id(self):
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7fbea8963380>> = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f90c6d7ef90>> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1102,7 +1186,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7fbea8963380>></code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f90c6d7ef90>></code></dt>
 <dd>
 <details class="source">
 <summary>
@@ -1641,6 +1725,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.base.DAQJob.message_out" href="#enrgdaq.daq.base.DAQJob.message_out">message_out</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.multiprocessing_method" href="#enrgdaq.daq.base.DAQJob.multiprocessing_method">multiprocessing_method</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.report_stats" href="#enrgdaq.daq.base.DAQJob.report_stats">report_stats</a></code></li>
+<li><code><a title="enrgdaq.daq.base.DAQJob.report_traces" href="#enrgdaq.daq.base.DAQJob.report_traces">report_traces</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.restart_offset" href="#enrgdaq.daq.base.DAQJob.restart_offset">restart_offset</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.start" href="#enrgdaq.daq.base.DAQJob.start">start</a></code></li>
 <li><code><a title="enrgdaq.daq.base.DAQJob.supervisor_id" href="#enrgdaq.daq.base.DAQJob.supervisor_id">supervisor_id</a></code></li>
