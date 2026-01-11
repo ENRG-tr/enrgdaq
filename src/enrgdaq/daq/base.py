@@ -25,6 +25,8 @@ from enrgdaq.daq.models import (
     DAQJobMessageSHM,
     DAQJobMessageStatsReport,
     DAQJobMessageStop,
+    DAQJobMessageTraceEvent,
+    DAQJobMessageTraceReport,
     DAQJobStopError,
     InternalDAQJobMessage,
     LogVerbosity,
@@ -44,6 +46,7 @@ from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.watchdog import Watchdog
 
 DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS = 1.0
+DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS = 1.0
 
 
 def _format_message_for_log(
@@ -162,6 +165,10 @@ class DAQJob:
         self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
 
+        # Trace collection
+        self._trace_events: list[DAQJobMessageTraceEvent] = []
+        self._last_trace_report_time = datetime.now()
+
         self.topics_to_subscribe.extend(
             [
                 Topic.supervisor_broadcast(self.supervisor_id),
@@ -227,7 +234,24 @@ class DAQJob:
                 recv_message.is_remote = True
                 self.handle_message(recv_message)
                 self._processed_bytes += message_len
+
+                # Record received trace event (skip internal messages)
+                if not isinstance(recv_message, InternalDAQJobMessage):
+                    self._trace_events.append(
+                        DAQJobMessageTraceEvent(
+                            message_id=recv_message.id or "unknown",
+                            message_type=type(recv_message).__name__,
+                            event_type="received",
+                            topics=list(recv_message.topics),
+                            timestamp=datetime.now(),
+                            size_bytes=message_len,
+                            source_job=type(self).__name__,
+                            source_supervisor=self.supervisor_id,
+                        )
+                    )
+
                 self.report_stats()
+                self.report_traces()
             except zmq.ContextTerminated:
                 break
             except Exception as e:
@@ -423,6 +447,26 @@ class DAQJob:
         self._publish_buffer.put(message)
         self._sent_count += 1
 
+        # Record sent trace event (skip internal messages to avoid loops)
+        if not isinstance(message, InternalDAQJobMessage):
+            # Estimate size using pickle (approximation)
+            try:
+                sent_size = len(pickle.dumps(message))
+            except Exception:
+                sent_size = 0
+            self._trace_events.append(
+                DAQJobMessageTraceEvent(
+                    message_id=message.id or "unknown",
+                    message_type=type(message).__name__,
+                    event_type="sent",
+                    topics=list(message.topics),
+                    timestamp=datetime.now(),
+                    size_bytes=sent_size,
+                    source_job=type(self).__name__,
+                    source_supervisor=self.supervisor_id,
+                )
+            )
+
     def get_latency_stats(self) -> Any:
         if not self._latency_samples:
             return DAQJobLatencyStats()
@@ -456,6 +500,22 @@ class DAQJob:
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
+
+    def report_traces(self, force: bool = False):
+        if (
+            not force
+            and (datetime.now() - self._last_trace_report_time).total_seconds()
+            < DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS
+        ):
+            return
+
+        if not self._trace_events:
+            return
+
+        self._last_trace_report_time = datetime.now()
+        report = DAQJobMessageTraceReport(events=self._trace_events.copy())
+        self._put_message_out(report)
+        self._trace_events.clear()
 
     def __del__(self):
         self._logger.info("DAQ job is being deleted")

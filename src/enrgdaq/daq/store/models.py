@@ -106,8 +106,6 @@ class DAQJobMessageStore(DAQJobMessage):
                 else:
                     self.topics.add(Topic.store(store_job.__name__))
 
-        print(self.topics)
-
 
 class DAQJobMessageStoreSHM(DAQJobMessageStore, kw_only=True):
     shm: SHMHandle
@@ -229,9 +227,10 @@ class DAQJobStoreConfigCSV(DAQJobStoreConfigBase):
     Overwrite the file contents.
     """
 
-    use_gzip: bool = False
+    use_zstd: bool = False
     """
-    Use gzip compression.
+    Use zstd streaming compression. Recommended for live streaming as it creates
+    independent frames that can be recovered even if the process is killed.
     """
 
 

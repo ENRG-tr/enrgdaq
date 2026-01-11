@@ -26,6 +26,7 @@ class Topic:
     DAQ_JOB = "daq_job"
     STORE = "store"
     STATS = "stats"
+    TRACES = "traces"
 
     # Topic suffixes
     BROADCAST = "broadcast"
@@ -133,3 +134,29 @@ class Topic:
             Topic string: stats
         """
         return Topic.STATS
+
+    @staticmethod
+    def traces(supervisor_id: str) -> str:
+        """
+        Topic for trace messages from DAQJobs to trace handler.
+
+        Args:
+            supervisor_id: The supervisor's unique identifier.
+
+        Returns:
+            Topic string: traces.supervisor.{supervisor_id}
+        """
+        return f"{Topic.TRACES}.supervisor.{supervisor_id}"
+
+    @staticmethod
+    def traces_combined(supervisor_id: str) -> str:
+        """
+        Topic for combined trace messages from trace handler.
+
+        Args:
+            supervisor_id: The supervisor's unique identifier.
+
+        Returns:
+            Topic string: traces.combined.supervisor.{supervisor_id}
+        """
+        return f"{Topic.TRACES}.combined.supervisor.{supervisor_id}"

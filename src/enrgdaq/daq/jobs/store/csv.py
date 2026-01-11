@@ -1,5 +1,4 @@
 import csv
-import gzip
 import io
 import os
 from collections import deque
@@ -11,6 +10,7 @@ from typing import Any, Optional, TextIO, cast
 import numpy as np
 import pyarrow as pa
 import pyarrow.csv as pa_csv
+import zstandard as zstd
 from numpy import ndarray
 
 from enrgdaq.daq.models import DAQJobConfig
@@ -65,7 +65,9 @@ class DAQJobStoreCSV(DAQJobStore):
         file_path = os.path.join(self.config.out_dir, file_path)
 
         file, new_file = self._open_csv_file(
-            file_path, store_config.overwrite, store_config.use_gzip
+            file_path,
+            store_config.overwrite,
+            store_config.use_zstd,
         )
         if file.overwrite:
             file.write_queue.clear()
@@ -100,7 +102,10 @@ class DAQJobStoreCSV(DAQJobStore):
         return True
 
     def _open_csv_file(
-        self, file_path: str, overwrite: Optional[bool], use_gzip: Optional[bool]
+        self,
+        file_path: str,
+        overwrite: bool | None,
+        use_zstd: bool | None = False,
     ) -> tuple[CSVFile, bool]:
         """
         Opens a file and returns (CSVFile, new_file)
@@ -115,9 +120,17 @@ class DAQJobStoreCSV(DAQJobStore):
                 Path(os.path.dirname(file_path)).mkdir(parents=True, exist_ok=True)
                 Path(file_path).touch()
 
-            if use_gzip:
-                file_handle = gzip.open(
-                    file_path, "at" if not overwrite else "wt", newline=""
+            if use_zstd:
+                # Zstd streaming with frame flush for recoverability
+                mode = "ab" if not overwrite else "wb"
+                raw_file = open(file_path, mode)
+                compressor = zstd.ZstdCompressor(level=3)
+                zstd_writer = compressor.stream_writer(
+                    raw_file, closefd=True, write_return_read=False
+                )
+                # Wrap in a TextIOWrapper for CSV writer compatibility
+                file_handle = io.TextIOWrapper(
+                    zstd_writer, encoding="utf-8", newline=""
                 )
             else:
                 file_handle = open(file_path, "a" if not overwrite else "w", newline="")
@@ -144,6 +157,17 @@ class DAQJobStoreCSV(DAQJobStore):
             return False
 
         file.file.flush()
+
+        # For zstd wrapped in TextIOWrapper, flush with FLUSH_FRAME for recoverability
+        if hasattr(file.file, "buffer") and hasattr(file.file.buffer, "flush"):
+            buffer = file.file.buffer
+            # Check if it's a zstd stream writer (has FLUSH_FRAME capability)
+            try:
+                buffer.flush(zstd.FLUSH_FRAME)
+            except TypeError:
+                # Not a zstd writer, just a regular buffer
+                pass
+
         file.last_flush_date = datetime.now()
         return True
 

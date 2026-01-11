@@ -1,6 +1,9 @@
 import os
 from datetime import datetime
 
+# Extensions that should be treated as compression suffixes (applied after primary extension)
+COMPRESSION_EXTENSIONS = {".zst", ".gz", ".bz2", ".xz", ".lz4"}
+
 
 def modify_file_path(
     file_path: str, add_date: bool, tag: str | None, date: datetime | None = None
@@ -21,6 +24,8 @@ def modify_file_path(
         '2023-01-01_test_tag1.csv'
         >>> modify_file_path("boo/test.csv", True, "tag2")
         'boo/2023-01-01_test_tag2.csv'
+        >>> modify_file_path("test.csv.zst", False, "latency")
+        'test_latency.csv.zst'
     """
 
     if add_date:
@@ -34,7 +39,13 @@ def modify_file_path(
             os.path.dirname(file_path), f"{file_prefix}_{filename}"
         )
     if tag is not None:
-        head, tail = os.path.splitext(file_path)
-        file_path = f"{head}_{tag}{tail}"
+        # Handle compound extensions like .csv.zst, .csv.gz
+        head, ext = os.path.splitext(file_path)
+        if ext.lower() in COMPRESSION_EXTENSIONS:
+            # Split again to get the primary extension
+            head2, ext2 = os.path.splitext(head)
+            file_path = f"{head2}_{tag}{ext2}{ext}"
+        else:
+            file_path = f"{head}_{tag}{ext}"
 
     return file_path

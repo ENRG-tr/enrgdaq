@@ -332,6 +332,31 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
         self.topics.add(Topic.stats(self.supervisor_id))
 
 
+class DAQJobMessageTraceEvent(Struct):
+    """Single trace event for a message."""
+
+    message_id: str
+    message_type: str
+    event_type: str  # "sent" | "received"
+    topics: list[str]
+    timestamp: datetime
+    size_bytes: int
+    source_job: str  # daq_job_type
+    source_supervisor: str  # supervisor_id
+
+
+class DAQJobMessageTraceReport(InternalDAQJobMessage, kw_only=True):
+    """Periodic trace report from a DAQJob."""
+
+    target_supervisor: bool = True
+    events: list[DAQJobMessageTraceEvent]
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+        self.topics.add(Topic.traces(self.supervisor_id))
+
+
 class DAQJobStopError(Exception):
     def __init__(self, reason: str):
         self.reason = reason

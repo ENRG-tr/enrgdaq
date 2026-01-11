@@ -80,3 +80,4 @@ winrt-windows-foundation==3.2.1 ; platform_system == 'Windows'
 winrt-windows-foundation-collections==3.2.1 ; platform_system == 'Windows'
 winrt-windows-storage-streams==3.2.1 ; platform_system == 'Windows'
 xxhash==3.5.0
+zstandard==0.25.0
