@@ -529,11 +529,12 @@ el.replaceWith(d);
         lines = stdout.split(&#34;\n&#34;)
         data = {}
         for line in lines:
-            if &#34;Avg SHM Throughput:&#34; in line:
+            # Updated field names to match new benchmark_runner output
+            if &#34;Avg Data Throughput:&#34; in line:
                 data[&#34;avg_throughput&#34;] = float(
                     line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
                 )
-            if &#34;Peak SHM Throughput:&#34; in line:
+            if &#34;Peak Data Throughput:&#34; in line:
                 data[&#34;peak_throughput&#34;] = float(
                     line.split(&#34;:&#34;)[1].split(&#34;MB/s&#34;)[0].strip()
                 )
@@ -545,8 +546,6 @@ el.replaceWith(d);
                 data[&#34;messages_per_second&#34;] = float(
                     line.split(&#34;:&#34;)[1].replace(&#34;,&#34;, &#34;&#34;).strip()
                 )
-            if &#34;Average Queue Size:&#34; in line:
-                data[&#34;avg_queue&#34;] = float(line.split(&#34;:&#34;)[1].strip())
             if &#34;Avg CPU Usage:&#34; in line:
                 data[&#34;cpu_usage&#34;] = float(line.split(&#34;:&#34;)[1].replace(&#34;%&#34;, &#34;&#34;).strip())
             if &#34;Avg p95 Latency:&#34; in line:
@@ -566,7 +565,7 @@ el.replaceWith(d);
             peak_throughput_mbs=data.get(&#34;peak_throughput&#34;, 0),
             zmq_throughput_mbs=data.get(&#34;zmq_throughput&#34;, 0),
             messages_per_second=data.get(&#34;messages_per_second&#34;, 0),
-            avg_queue_size=data.get(&#34;avg_queue&#34;, 0),
+            avg_queue_size=0,  # No longer tracked in new architecture
             cpu_usage_percent=data.get(&#34;cpu_usage&#34;, 0),
             latency_p95_ms=data.get(&#34;latency_p95&#34;, 0),
             latency_p99_ms=data.get(&#34;latency_p99&#34;, 0),
