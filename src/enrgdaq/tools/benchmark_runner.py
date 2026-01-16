@@ -2,14 +2,17 @@
 """
 ENRGDAQ Benchmark Script
 
-This script benchmarks the ENRGDAQ system by running multiple supervisor instances
-with benchmark jobs that stress test message throughput, serialization, and networking.
+This script benchmarks the ENRGDAQ system by running a supervisor instance
+with benchmark jobs that stress test message throughput, serialization, and storage.
+
+The new architecture uses ZMQ pub/sub messaging through a single supervisor's
+message broker. For distributed benchmarking, use the federation feature.
 
 Usage:
-    python benchmark.py [--clients N] [--payload-size N] [--duration SECONDS]
+    python benchmark_runner.py [--clients N] [--payload-size N] [--duration SECONDS]
 
 Example:
-    python benchmark.py --clients 5 --payload-size 10000 --duration 30
+    python benchmark_runner.py --clients 5 --payload-size 10000 --duration 30
 """
 
 import argparse
@@ -20,40 +23,28 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from multiprocessing import Array, Event, Process, Value
+from multiprocessing import Value
 from statistics import fmean
 from threading import Thread
-from typing import Any, Optional
 
 import psutil
 
-from enrgdaq.daq.base import _create_queue
 from enrgdaq.daq.daq_job import _create_daq_job_process
-from enrgdaq.daq.jobs import remote as remote_module
 from enrgdaq.daq.jobs.benchmark import DAQJobBenchmark, DAQJobBenchmarkConfig
 from enrgdaq.daq.jobs.handle_stats import DAQJobHandleStats, DAQJobHandleStatsConfig
-from enrgdaq.daq.jobs.remote import DAQJobRemote, DAQJobRemoteConfig
-from enrgdaq.daq.jobs.remote_proxy import DAQJobRemoteProxy, DAQJobRemoteProxyConfig
 from enrgdaq.daq.jobs.store.csv import DAQJobStoreCSV, DAQJobStoreCSVConfig
 from enrgdaq.daq.jobs.store.memory import DAQJobStoreMemory, DAQJobStoreMemoryConfig
 from enrgdaq.daq.jobs.store.root import DAQJobStoreROOT, DAQJobStoreROOTConfig
-from enrgdaq.daq.models import LogVerbosity
 from enrgdaq.daq.store.models import (
     DAQJobStoreConfig,
     DAQJobStoreConfigCSV,
     DAQJobStoreConfigMemory,
     DAQJobStoreConfigROOT,
 )
-from enrgdaq.models import SupervisorConfig, SupervisorInfo
+from enrgdaq.models import LogVerbosity, SupervisorConfig, SupervisorInfo
 from enrgdaq.supervisor import Supervisor
 
-# Override remote stats interval for more accurate benchmarking
-# Default is 1 second, which causes bursty/inconsistent stats
-remote_module.DAQ_JOB_REMOTE_STATS_SEND_INTERVAL_SECONDS = 0.1
-
 # Default configuration
-DEFAULT_ZMQ_XSUB_URL = "tcp://localhost:10001"
-DEFAULT_ZMQ_XPUB_URL = "tcp://localhost:10002"
 DEFAULT_NUM_CLIENTS = 5
 DEFAULT_PAYLOAD_SIZE = 1000
 DEFAULT_DURATION_SECONDS = 60
@@ -70,14 +61,12 @@ class BenchmarkStats:
     msg_in_count: int
     msg_out_count: int
     msg_in_out_mb_per_s: float
-    avg_queue_size: float
     active_job_count: int
     cpu_usage_percent: float
     rss_mb: float
     latency_p95_ms: float
     latency_p99_ms: float
-    shm_bytes_written: int = 0
-    shm_mb_per_s: float = 0.0
+    data_mb_per_s: float = 0.0
 
 
 @dataclass
@@ -88,10 +77,7 @@ class BenchmarkConfig:
     payload_size: int = DEFAULT_PAYLOAD_SIZE
     duration_seconds: int = DEFAULT_DURATION_SECONDS
     stats_interval_seconds: float = DEFAULT_STATS_INTERVAL_SECONDS
-    zmq_xsub_url: str = DEFAULT_ZMQ_XSUB_URL
-    zmq_xpub_url: str = DEFAULT_ZMQ_XPUB_URL
     output_stats_csv: str = "benchmark_stats.csv"
-    output_remote_stats_csv: str = "benchmark_remote_stats.csv"
     void_memory_data: bool = True
     use_memory_store: bool = False
     use_shm: bool = True
@@ -154,372 +140,21 @@ def cleanup_supervisor(supervisor: Supervisor):
         pass
 
 
-def run_main_supervisor(
-    config: BenchmarkConfig,
-    stats_queue: Any,
-    stop_flag: Value,
-    client_shm_bytes: Array,
-):
-    """Run the main supervisor that collects stats and runs the proxy."""
-
-    # Create temporary config directory for the supervisor
-    temp_config_dir = tempfile.mkdtemp(prefix="enrgdaq_benchmark_")
-
-    supervisor_id = "benchmark_supervisor"
-    supervisor_info = create_supervisor_info(supervisor_id)
-    supervisor_config = create_supervisor_config(supervisor_id)
-    supervisor_config.ring_buffer_size_mb = 1024
-    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024
-
-    # Create DAQ job processes using the proper factory function
-    daq_job_processes = []
-
-    # Main store - either Memory (fast, for testing) or ROOT (slow, for production)
-    if config.use_memory_store:
-        daq_job_processes.append(
-            _create_daq_job_process(
-                DAQJobStoreMemory,
-                DAQJobStoreMemoryConfig(
-                    daq_job_type="DAQJobStoreMemory",
-                    void_data=config.void_memory_data,
-                ),
-                supervisor_info,
-            )
-        )
-    else:
-        daq_job_processes.append(
-            _create_daq_job_process(
-                DAQJobStoreROOT,
-                DAQJobStoreROOTConfig(
-                    daq_job_type="DAQJobStoreROOT", verbosity=LogVerbosity.DEBUG
-                ),
-                supervisor_info,
-            )
-        )
-    # CSV store for stats output
-    daq_job_processes.append(
-        _create_daq_job_process(
-            DAQJobStoreCSV,
-            DAQJobStoreCSVConfig(daq_job_type="DAQJobStoreCSV"),
-            supervisor_info,
-        )
-    )
-    # Remote job for receiving from clients
-    daq_job_processes.append(
-        _create_daq_job_process(
-            DAQJobRemote,
-            DAQJobRemoteConfig(
-                daq_job_type="DAQJobRemote",
-                zmq_proxy_sub_urls=[config.zmq_xpub_url],
-            ),
-            supervisor_info,
-        )
-    )
-    # Stats handler
-    daq_job_processes.append(
-        _create_daq_job_process(
-            DAQJobHandleStats,
-            DAQJobHandleStatsConfig(
-                daq_job_type="DAQJobHandleStats",
-                store_config=DAQJobStoreConfig(
-                    csv=DAQJobStoreConfigCSV(
-                        file_path=config.output_stats_csv,
-                        overwrite=True,
-                    ),
-                ),
-            ),
-            supervisor_info,
-        )
-    )
-    # Remote proxy (XSUB/XPUB)
-    daq_job_processes.append(
-        _create_daq_job_process(
-            DAQJobRemoteProxy,
-            DAQJobRemoteProxyConfig(
-                daq_job_type="DAQJobRemoteProxy",
-                zmq_xsub_url=config.zmq_xsub_url,
-                zmq_xpub_url=config.zmq_xpub_url,
-            ),
-            supervisor_info,
-        )
-    )
-
-    supervisor = Supervisor(
-        config=supervisor_config,
-        daq_job_processes=daq_job_processes,
-        daq_job_config_path=temp_config_dir,
-    )
-
-    # Register cleanup on exit
-    atexit.register(cleanup_supervisor, supervisor)
-
-    run_supervisor_with_stats(
-        supervisor, config, stats_queue, stop_flag, client_shm_bytes=client_shm_bytes
-    )
-
-
-def run_client_supervisor(
-    client_id: int,
-    config: BenchmarkConfig,
-    stop_flag: Value,
-    ready_event: Event,
-    shm_bytes_counter: Array,
-):
-    """Run a client supervisor that generates benchmark data."""
-
-    # Create temporary config directory for the supervisor
-    temp_config_dir = tempfile.mkdtemp(prefix="enrgdaq_benchmark_client_")
-
-    supervisor_id = f"benchmark_client_{client_id}"
-    supervisor_info = create_supervisor_info(supervisor_id)
-    supervisor_config = create_supervisor_config(supervisor_id)
-    supervisor_config.ring_buffer_size_mb = 1024  # 1GB for clients
-    supervisor_config.ring_buffer_slot_size_kb = 10 * 1024  # 10MB slots
-
-    daq_job_processes = [
-        # Benchmark job that generates data
-        _create_daq_job_process(
-            DAQJobBenchmark,
-            DAQJobBenchmarkConfig(
-                daq_job_type="DAQJobBenchmark",
-                payload_size=config.payload_size,
-                use_shm=config.use_shm,
-                store_config=DAQJobStoreConfig(memory=DAQJobStoreConfigMemory())
-                if config.use_memory_store
-                else DAQJobStoreConfig(
-                    root=DAQJobStoreConfigROOT(
-                        file_path="test.root",
-                        add_date=False,
-                        tree_name="benchmark_tree",
-                    )
-                ),
-            ),
-            supervisor_info,
-        ),
-        # Remote job for sending to main supervisor
-        _create_daq_job_process(
-            DAQJobRemote,
-            DAQJobRemoteConfig(
-                daq_job_type="DAQJobRemote",
-                zmq_proxy_sub_urls=[],
-                zmq_proxy_pub_url=config.zmq_xsub_url,
-            ),
-            supervisor_info,
-        ),
-    ]
-
-    supervisor = Supervisor(
-        config=supervisor_config,
-        daq_job_processes=daq_job_processes,
-        daq_job_config_path=temp_config_dir,
-    )
-
-    # Register cleanup on exit
-    atexit.register(cleanup_supervisor, supervisor)
-
-    # Initialize supervisor and signal ready
-    supervisor.init()
-    ready_event.set()  # Signal that this client is ready
-
-    run_supervisor_with_stats(
-        supervisor,
-        config,
-        None,
-        stop_flag,
-        collect_stats=False,
-        skip_init=True,
-        shm_bytes_counter=shm_bytes_counter,
-        client_id=client_id,
-    )
-
-
-def run_supervisor_with_stats(
-    supervisor: Supervisor,
-    config: BenchmarkConfig,
-    stats_queue: Any,
-    stop_flag: Value,
-    collect_stats: bool = True,
-    skip_init: bool = False,
-    shm_bytes_counter: Optional[Array] = None,
-    client_id: Optional[int] = None,
-    client_shm_bytes: Optional[Array] = None,
-):
-    """Run a supervisor and optionally collect stats."""
-    assert supervisor.config is not None
-
-    if not skip_init:
-        supervisor.init()
-
-    # Start supervisor in a separate thread
-    supervisor_thread = Thread(target=supervisor.run, daemon=True)
-    supervisor_thread.start()
-
-    try:
-        if not collect_stats or stats_queue is None:
-            # Just keep the process alive
-            while not stop_flag.value:
-                time.sleep(0.5)
-        else:
-            # Collect and report stats
-            last_stats: Optional[dict] = None
-            last_iteration = datetime.now()
-
-            while not stop_flag.value:
-                # Get stats from remote stats dict
-                stats_list = [
-                    v
-                    for k, v in supervisor.daq_job_remote_stats.items()
-                    if k == supervisor.config.info.supervisor_id
-                ]
-
-                # Calculate current stats
-                msg_in_out_mb = (
-                    sum([x.message_in_bytes + x.message_out_bytes for x in stats_list])
-                    / 10**6
-                    if stats_list
-                    else 0.0
-                )
-                msg_in_count = (
-                    sum([x.message_in_count for x in stats_list]) if stats_list else 0
-                )
-                msg_out_count = (
-                    sum([x.message_out_count for x in stats_list]) if stats_list else 0
-                )
-
-                # Calculate queue sizes (macOS doesn't support qsize, so use fallback)
-                try:
-                    avg_queue_size = fmean(
-                        [
-                            x.message_out.qsize() + x.message_in.qsize()
-                            for x in supervisor.daq_job_processes
-                        ]
-                    )
-                except (NotImplementedError, Exception):
-                    avg_queue_size = 0.0
-
-                # Calculate active job count
-                active_job_count = len(
-                    [
-                        x
-                        for x in supervisor.daq_job_processes
-                        if x.process and x.process.is_alive()
-                    ]
-                )
-
-                # Calculate MB/s
-                now = datetime.now()
-                elapsed = (now - last_iteration).total_seconds()
-                if last_stats and elapsed > 0:
-                    mb_diff = msg_in_out_mb - last_stats["msg_in_out_mb"]
-                    msg_in_out_mb_per_s = mb_diff / elapsed
-                else:
-                    msg_in_out_mb_per_s = 0.0
-
-                # Calculate CPU and Memory usage
-                cpu_usage = sum(
-                    [
-                        stats.resource_stats.cpu_percent
-                        for stats in supervisor.daq_job_stats.values()
-                    ]
-                )
-                rss_mb_total = sum(
-                    [
-                        stats.resource_stats.rss_mb
-                        for stats in supervisor.daq_job_stats.values()
-                    ]
-                )
-
-                # Calculate Latency (max of p95/p99 across jobs to be conservative)
-                p95_latencies = [
-                    stats.latency_stats.p95_ms
-                    for stats in supervisor.daq_job_stats.values()
-                    if stats.latency_stats.count > 0
-                ]
-                p99_latencies = [
-                    stats.latency_stats.p99_ms
-                    for stats in supervisor.daq_job_stats.values()
-                    if stats.latency_stats.count > 0
-                ]
-
-                latency_p95 = max(p95_latencies) if p95_latencies else 0.0
-                latency_p99 = max(p99_latencies) if p99_latencies else 0.0
-
-                # Calculate data throughput from message count (more reliable than ring buffer stats)
-                # Each message contains payload_size * 2 float64 columns (timestamp + value) = 16 bytes/row
-                msg_size_bytes = config.payload_size * 16
-                if last_stats and elapsed > 0:
-                    msg_diff = msg_in_count - last_stats.get("msg_in_count", 0)
-                    data_mb_per_s = (msg_diff * msg_size_bytes) / elapsed / 10**6
-                else:
-                    data_mb_per_s = 0.0
-                total_data_mb = msg_in_count * msg_size_bytes / 10**6
-
-                current_stats = {
-                    "timestamp": now.isoformat(),
-                    "supervisor_id": supervisor.config.info.supervisor_id,
-                    "msg_in_out_mb": msg_in_out_mb,
-                    "msg_in_count": msg_in_count,
-                    "msg_out_count": msg_out_count,
-                    "msg_in_out_mb_per_s": msg_in_out_mb_per_s,
-                    "avg_queue_size": avg_queue_size,
-                    "active_job_count": active_job_count,
-                    "cpu_usage_percent": cpu_usage,
-                    "rss_mb": rss_mb_total,
-                    "latency_p95_ms": latency_p95,
-                    "latency_p99_ms": latency_p99,
-                    "shm_bytes_written": int(total_data_mb * 10**6),
-                    "shm_mb_per_s": data_mb_per_s,
-                }
-
-                try:
-                    stats_queue.put_nowait(current_stats)
-                except Exception:
-                    pass
-
-                last_stats = current_stats
-                last_iteration = now
-
-                time.sleep(config.stats_interval_seconds)
-    finally:
-        # Always clean up the supervisor
-        cleanup_supervisor(supervisor)
-
-
 class BenchmarkRunner:
     """Runs the ENRGDAQ benchmark and collects statistics."""
 
     def __init__(self, config: BenchmarkConfig):
         self.config = config
-        self._stats_queue: Any = _create_queue()
         self._stop_flag = Value("b", False)
-        self._processes: list[Process] = []
         self._stats_history: list[BenchmarkStats] = []
         self._main_pid = os.getpid()
-
-    def _dict_to_stats(self, d: dict) -> BenchmarkStats:
-        """Convert dictionary to BenchmarkStats."""
-        return BenchmarkStats(
-            timestamp=datetime.fromisoformat(d["timestamp"]),
-            supervisor_id=d["supervisor_id"],
-            msg_in_out_mb=d["msg_in_out_mb"],
-            msg_in_count=d["msg_in_count"],
-            msg_out_count=d["msg_out_count"],
-            msg_in_out_mb_per_s=d["msg_in_out_mb_per_s"],
-            avg_queue_size=d["avg_queue_size"],
-            active_job_count=d["active_job_count"],
-            cpu_usage_percent=d.get("cpu_usage_percent", 0.0),
-            rss_mb=d.get("rss_mb", 0.0),
-            latency_p95_ms=d.get("latency_p95_ms", 0.0),
-            latency_p99_ms=d.get("latency_p99_ms", 0.0),
-            shm_bytes_written=d.get("shm_bytes_written", 0),
-            shm_mb_per_s=d.get("shm_mb_per_s", 0.0),
-        )
+        self._supervisor: Supervisor | None = None
 
     def _print_stats(self, stats: BenchmarkStats):
         """Print statistics to console."""
         print(
             f"[{stats.timestamp.strftime('%H:%M:%S')}] "
-            f"SHM: {stats.shm_mb_per_s:7.2f} MB/s | "
+            f"Data: {stats.data_mb_per_s:7.2f} MB/s | "
             f"CPU: {stats.cpu_usage_percent:5.1f}% | "
             f"p95 Latency: {stats.latency_p95_ms:5.2f}ms | "
             f"Active Jobs: {stats.active_job_count:3d}"
@@ -530,43 +165,186 @@ class BenchmarkRunner:
         print("\nReceived termination signal, stopping...")
         self._stop_flag.value = True
 
-    def _cleanup_all_processes(self):
-        """Forcefully clean up all child processes using psutil."""
-        print("\nTerminating processes...")
-
-        # First, signal all processes to stop gracefully
+    def _cleanup(self):
+        """Clean up the supervisor."""
+        print("\nTerminating...")
         self._stop_flag.value = True
+        if self._supervisor:
+            cleanup_supervisor(self._supervisor)
 
-        # Give processes time to clean up their children
-        time.sleep(0.5)
+    def _create_supervisor(self) -> Supervisor:
+        """Create and configure the benchmark supervisor."""
+        config = self.config
 
-        # Kill entire process tree for each child process
-        for p in self._processes:
-            if p.pid:
-                kill_process_tree(p.pid)
+        # Create temporary config directory for the supervisor
+        temp_config_dir = tempfile.mkdtemp(prefix="enrgdaq_benchmark_")
 
-        # Also terminate using Process API as backup
-        for p in self._processes:
-            try:
-                if p.is_alive():
-                    p.terminate()
-            except Exception:
-                pass
+        supervisor_id = "benchmark_supervisor"
+        supervisor_info = create_supervisor_info(supervisor_id)
+        supervisor_config = create_supervisor_config(supervisor_id)
+        supervisor_config.ring_buffer_size_mb = 1024
+        supervisor_config.ring_buffer_slot_size_kb = 10 * 1024
 
-        # Wait for processes to terminate
-        for p in self._processes:
-            try:
-                p.join(timeout=1)
-            except Exception:
-                pass
+        # Create DAQ job processes using the proper factory function
+        daq_job_processes = []
 
-        # Force kill any remaining processes
-        for p in self._processes:
-            try:
-                if p.is_alive():
-                    p.kill()
-            except Exception:
-                pass
+        # Benchmark jobs that generate data
+        for i in range(config.num_clients):
+            daq_job_processes.append(
+                _create_daq_job_process(
+                    DAQJobBenchmark,
+                    DAQJobBenchmarkConfig(
+                        daq_job_type="DAQJobBenchmark",
+                        payload_size=config.payload_size,
+                        use_shm=config.use_shm,
+                        store_config=DAQJobStoreConfig(
+                            memory=DAQJobStoreConfigMemory(),
+                            target_local_supervisor=True,  # Enable SHM for local transfer
+                        )
+                        if config.use_memory_store
+                        else DAQJobStoreConfig(
+                            root=DAQJobStoreConfigROOT(
+                                file_path=f"benchmark_{i}.root",
+                                add_date=False,
+                                tree_name="benchmark_tree",
+                            ),
+                            target_local_supervisor=True,  # Enable SHM for local transfer
+                        ),
+                    ),
+                    supervisor_info,
+                )
+            )
+
+        # Main store - either Memory (fast, for testing) or ROOT (slow, for production)
+        if config.use_memory_store:
+            daq_job_processes.append(
+                _create_daq_job_process(
+                    DAQJobStoreMemory,
+                    DAQJobStoreMemoryConfig(
+                        daq_job_type="DAQJobStoreMemory",
+                        void_data=config.void_memory_data,
+                    ),
+                    supervisor_info,
+                )
+            )
+        else:
+            daq_job_processes.append(
+                _create_daq_job_process(
+                    DAQJobStoreROOT,
+                    DAQJobStoreROOTConfig(
+                        daq_job_type="DAQJobStoreROOT", verbosity=LogVerbosity.DEBUG
+                    ),
+                    supervisor_info,
+                )
+            )
+
+        # CSV store for stats output
+        daq_job_processes.append(
+            _create_daq_job_process(
+                DAQJobStoreCSV,
+                DAQJobStoreCSVConfig(daq_job_type="DAQJobStoreCSV"),
+                supervisor_info,
+            )
+        )
+
+        # Stats handler
+        daq_job_processes.append(
+            _create_daq_job_process(
+                DAQJobHandleStats,
+                DAQJobHandleStatsConfig(
+                    daq_job_type="DAQJobHandleStats",
+                    store_config=DAQJobStoreConfig(
+                        csv=DAQJobStoreConfigCSV(
+                            file_path=config.output_stats_csv,
+                            overwrite=True,
+                        ),
+                    ),
+                ),
+                supervisor_info,
+            )
+        )
+
+        return Supervisor(
+            config=supervisor_config,
+            daq_job_processes=daq_job_processes,
+            daq_job_config_path=temp_config_dir,
+        )
+
+    def _collect_stats(self) -> BenchmarkStats | None:
+        """Collect current statistics from the supervisor."""
+        if self._supervisor is None or self._supervisor.config is None:
+            return None
+
+        supervisor = self._supervisor
+        supervisor_id = supervisor.config.info.supervisor_id
+
+        # Calculate active job count
+        active_job_count = len(
+            [
+                x
+                for x in supervisor.daq_job_processes
+                if x.process and x.process.is_alive()
+            ]
+        )
+
+        # Get byte stats from daq_job_remote_stats (like old benchmark did)
+        # Format: dict[supervisor_id, SupervisorRemoteStats]
+        remote_stats = supervisor.daq_job_remote_stats
+
+        # Get our supervisor's stats
+        our_stats = remote_stats.get(supervisor_id)
+        if our_stats:
+            msg_in_out_bytes = our_stats.message_in_bytes + our_stats.message_out_bytes
+            msg_in_out_mb = msg_in_out_bytes / 10**6
+            msg_in_count = our_stats.message_in_count
+            msg_out_count = our_stats.message_out_count
+        else:
+            msg_in_out_mb = 0.0
+            msg_in_count = 0
+            msg_out_count = 0
+
+        # Get latency stats from daq_job_stats
+        # Format: dict[supervisor_id, dict[daq_job_type, DAQJobStats]]
+        stats_nested = supervisor.daq_job_stats
+        all_stats: list = []
+        for sup_id, daq_job_stats_dict in stats_nested.items():
+            if isinstance(daq_job_stats_dict, dict):
+                for daq_job_type, job_stats in daq_job_stats_dict.items():
+                    all_stats.append(job_stats)
+
+        # Calculate CPU and Memory usage from stats
+        cpu_usage = (
+            sum(s.resource_stats.cpu_percent for s in all_stats) if all_stats else 0.0
+        )
+        rss_mb_total = (
+            sum(s.resource_stats.rss_mb for s in all_stats) if all_stats else 0.0
+        )
+
+        # Calculate Latency (max of p95/p99 across jobs to be conservative)
+        p95_latencies = [
+            s.latency_stats.p95_ms for s in all_stats if s.latency_stats.count > 0
+        ]
+        p99_latencies = [
+            s.latency_stats.p99_ms for s in all_stats if s.latency_stats.count > 0
+        ]
+
+        latency_p95 = max(p95_latencies) if p95_latencies else 0.0
+        latency_p99 = max(p99_latencies) if p99_latencies else 0.0
+
+        return BenchmarkStats(
+            timestamp=datetime.now(),
+            supervisor_id=supervisor_id,
+            msg_in_out_mb=msg_in_out_mb,
+            msg_in_count=msg_in_count,
+            msg_out_count=msg_out_count,
+            msg_in_out_mb_per_s=0.0,  # Will be calculated from deltas
+            active_job_count=active_job_count,
+            cpu_usage_percent=cpu_usage,
+            rss_mb=rss_mb_total,
+            latency_p95_ms=latency_p95,
+            latency_p99_ms=latency_p99,
+            data_mb_per_s=0.0,  # Will be calculated from deltas
+        )
 
     def run(self):
         """Run the benchmark."""
@@ -575,71 +353,41 @@ class BenchmarkRunner:
         signal.signal(signal.SIGTERM, self._handle_signal)
 
         # Register cleanup on exit
-        atexit.register(self._cleanup_all_processes)
+        atexit.register(self._cleanup)
 
         print("=" * 80)
         print("ENRGDAQ Benchmark")
         print("=" * 80)
         print("Configuration:")
-        print(f"  - Clients:        {self.config.num_clients}")
+        print(f"  - Benchmark Jobs: {self.config.num_clients}")
         print(f"  - Payload Size:   {self.config.payload_size} values/message")
         print(f"  - Duration:       {self.config.duration_seconds} seconds")
-        print(f"  - ZMQ XSUB URL:   {self.config.zmq_xsub_url}")
-        print(f"  - ZMQ XPUB URL:   {self.config.zmq_xpub_url}")
+        print(f"  - Use SHM:        {self.config.use_shm}")
+        print(
+            f"  - Store Type:     {'Memory' if self.config.use_memory_store else 'ROOT'}"
+        )
         print("=" * 80)
         print()
 
         # Clean up any existing output files from previous runs
-        output_files_to_clean = ["out/test.root"]
-        for output_file in output_files_to_clean:
-            if os.path.exists(output_file):
+        output_files_to_clean = ["out/benchmark_*.root"]
+        for pattern in output_files_to_clean:
+            import glob
+
+            for output_file in glob.glob(pattern):
                 os.remove(output_file)
                 print(f"Removed existing output file: {output_file}")
 
-        # Create shared array to track client ring buffer bytes (one c_longlong per client)
-        self._client_shm_bytes = Array("q", self.config.num_clients)  # 'q' = c_longlong
+        # Create and initialize supervisor
+        print("Creating supervisor...")
+        self._supervisor = self._create_supervisor()
 
-        # Start main supervisor process
-        print("Starting main supervisor...")
-        main_process = Process(
-            target=run_main_supervisor,
-            args=(
-                self.config,
-                self._stats_queue,
-                self._stop_flag,
-                self._client_shm_bytes,
-            ),
-        )
-        main_process.start()
-        self._processes.append(main_process)
+        print("Initializing supervisor...")
+        self._supervisor.init()
 
-        # Give main supervisor time to start (ZMQ needs to bind first)
-        time.sleep(1)
-
-        # Create ready events for each client
-        ready_events = [Event() for _ in range(self.config.num_clients)]
-
-        # Start client processes
-        print(f"Starting {self.config.num_clients} client(s)...")
-        for i in range(self.config.num_clients):
-            client_process = Process(
-                target=run_client_supervisor,
-                args=(
-                    i,
-                    self.config,
-                    self._stop_flag,
-                    ready_events[i],
-                    self._client_shm_bytes,
-                ),
-            )
-            client_process.start()
-            self._processes.append(client_process)
-
-        # Wait for all clients to signal ready (with timeout)
-        print("Waiting for clients to be ready...")
-        all_ready = all(event.wait(timeout=30) for event in ready_events)
-        if not all_ready:
-            print("WARNING: Not all clients signaled ready within timeout")
+        # Start supervisor in a separate thread
+        supervisor_thread = Thread(target=self._supervisor.run, daemon=True)
+        supervisor_thread.start()
 
         print()
         print("Benchmark running... (waiting for first data)")
@@ -648,23 +396,41 @@ class BenchmarkRunner:
         # Timer starts when first data arrives, not now
         start_time: datetime | None = None
         end_time_seconds = self.config.duration_seconds
+        last_stats: BenchmarkStats | None = None
+        last_iteration = datetime.now()
 
         try:
             while not self._stop_flag.value:
-                # Check for stats in queue
-                try:
-                    stats_dict = self._stats_queue.get(timeout=0.5)
-                    stats = self._dict_to_stats(stats_dict)
+                current_stats = self._collect_stats()
 
-                    # Start timer when first data arrives
-                    if start_time is None and stats.msg_in_count > 0:
-                        start_time = datetime.now()
-                        print("First data received, starting timer...")
+                if current_stats is None:
+                    time.sleep(self.config.stats_interval_seconds)
+                    continue
 
-                    self._stats_history.append(stats)
-                    self._print_stats(stats)
-                except Exception:
-                    pass
+                # Start timer when first data arrives
+                if start_time is None and current_stats.msg_in_count > 0:
+                    start_time = datetime.now()
+                    print("First data received, starting timer...")
+
+                # Calculate deltas for MB/s
+                now = datetime.now()
+                elapsed = (now - last_iteration).total_seconds()
+                if last_stats and elapsed > 0:
+                    mb_diff = current_stats.msg_in_out_mb - last_stats.msg_in_out_mb
+                    current_stats.msg_in_out_mb_per_s = mb_diff / elapsed
+
+                    # Calculate data throughput
+                    msg_diff = current_stats.msg_in_count - last_stats.msg_in_count
+                    msg_size_bytes = self.config.payload_size * 16  # 2 float64 columns
+                    current_stats.data_mb_per_s = (
+                        (msg_diff * msg_size_bytes) / elapsed / 10**6
+                    )
+
+                self._stats_history.append(current_stats)
+                self._print_stats(current_stats)
+
+                last_stats = current_stats
+                last_iteration = now
 
                 # Check duration (only if timer has started)
                 if start_time is not None:
@@ -673,18 +439,20 @@ class BenchmarkRunner:
                         print(f"\nDuration of {end_time_seconds}s reached, stopping...")
                         break
 
+                time.sleep(self.config.stats_interval_seconds)
+
         finally:
             self._stop_flag.value = True
 
             # Print summary
             self._print_summary()
 
-            # Clean up all processes
-            self._cleanup_all_processes()
+            # Clean up
+            self._cleanup()
 
             # Unregister atexit since we've already cleaned up
             try:
-                atexit.unregister(self._cleanup_all_processes)
+                atexit.unregister(self._cleanup)
             except Exception:
                 pass
 
@@ -713,21 +481,17 @@ class BenchmarkRunner:
             total_duration = 1.0
 
         avg_throughput = fmean([s.msg_in_out_mb_per_s for s in data_stats])
-        # max_throughput = max([s.msg_in_out_mb_per_s for s in data_stats])
-        avg_shm_throughput = fmean([s.shm_mb_per_s for s in data_stats])
-        max_shm_throughput = max([s.shm_mb_per_s for s in data_stats])
-        total_shm_mb = data_stats[-1].shm_bytes_written / 10**6
-        # total_mb = data_stats[-1].msg_in_out_mb
+        avg_data_throughput = fmean([s.data_mb_per_s for s in data_stats])
+        max_data_throughput = max([s.data_mb_per_s for s in data_stats])
+        total_mb = data_stats[-1].msg_in_out_mb
         total_msgs = data_stats[-1].msg_in_count
-        avg_queue = fmean([s.avg_queue_size for s in data_stats])
 
         print(f"Duration:              {total_duration:.1f} seconds")
-        print(f"Avg SHM Throughput:    {avg_shm_throughput:.2f} MB/s")
-        print(f"Peak SHM Throughput:   {max_shm_throughput:.2f} MB/s")
-        print(f"Total SHM Data:        {total_shm_mb:.2f} MB")
-        print(f"ZMQ Throughput:        {avg_throughput:.2f} MB/s (handles only)")
+        print(f"Avg Data Throughput:   {avg_data_throughput:.2f} MB/s")
+        print(f"Peak Data Throughput:  {max_data_throughput:.2f} MB/s")
+        print(f"Total Data:            {total_mb:.2f} MB")
+        print(f"ZMQ Throughput:        {avg_throughput:.2f} MB/s")
         print(f"Total Messages:        {total_msgs:,}")
-        print(f"Average Queue Size:    {avg_queue:.1f}")
         print(f"Messages/Second:       {total_msgs / total_duration:,.0f}")
         print(
             f"Avg CPU Usage:         {fmean([s.cpu_usage_percent for s in data_stats]):.1f}%"
@@ -748,17 +512,17 @@ def parse_args() -> BenchmarkConfig:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python benchmark.py                           # Run with defaults
-  python benchmark.py --clients 10              # Run with 10 clients
-  python benchmark.py --payload-size 50000      # Larger payloads
-  python benchmark.py --duration 120            # Run for 2 minutes
+  python benchmark_runner.py                           # Run with defaults
+  python benchmark_runner.py --clients 10              # Run with 10 benchmark jobs
+  python benchmark_runner.py --payload-size 50000      # Larger payloads
+  python benchmark_runner.py --duration 120            # Run for 2 minutes
         """,
     )
     parser.add_argument(
         "--clients",
         type=int,
         default=DEFAULT_NUM_CLIENTS,
-        help=f"Number of benchmark clients (default: {DEFAULT_NUM_CLIENTS})",
+        help=f"Number of benchmark jobs (default: {DEFAULT_NUM_CLIENTS})",
     )
     parser.add_argument(
         "--payload-size",
@@ -779,27 +543,21 @@ Examples:
         help=f"Stats collection interval in seconds (default: {DEFAULT_STATS_INTERVAL_SECONDS})",
     )
     parser.add_argument(
-        "--zmq-xsub",
-        type=str,
-        default=DEFAULT_ZMQ_XSUB_URL,
-        help=f"ZMQ XSUB URL (default: {DEFAULT_ZMQ_XSUB_URL})",
-    )
-    parser.add_argument(
-        "--zmq-xpub",
-        type=str,
-        default=DEFAULT_ZMQ_XPUB_URL,
-        help=f"ZMQ XPUB URL (default: {DEFAULT_ZMQ_XPUB_URL})",
-    )
-    parser.add_argument(
         "--no-void-data",
         action="store_true",
         help="Don't void memory store data (uses more memory)",
     )
     parser.add_argument(
-        "--use-shm", action="store_true", default=True, help="Use SHM for zero-copy"
+        "--use-shm",
+        action="store_true",
+        default=True,
+        help="Use SHM for zero-copy (default: True)",
     )
     parser.add_argument(
-        "--no-shm", action="store_false", dest="use_shm", help="Disable SHM"
+        "--no-shm",
+        action="store_false",
+        dest="use_shm",
+        help="Disable SHM",
     )
     parser.add_argument(
         "--use-memory-store",
@@ -814,8 +572,6 @@ Examples:
         payload_size=args.payload_size,
         duration_seconds=args.duration,
         stats_interval_seconds=args.stats_interval,
-        zmq_xsub_url=args.zmq_xsub,
-        zmq_xpub_url=args.zmq_xpub,
         void_memory_data=not args.no_void_data,
         use_memory_store=args.use_memory_store,
         use_shm=args.use_shm,

@@ -38,9 +38,7 @@ class DAQJobHandleTraces(DAQJob):
     It aggregates trace events by message_id and outputs them to storage.
     """
 
-    allowed_message_in_types = [
-        DAQJobMessageTraceReport,
-    ]
+    allowed_message_in_types = [DAQJobMessageTraceReport]
     config_type = DAQJobHandleTracesConfig
     config: DAQJobHandleTracesConfig
 

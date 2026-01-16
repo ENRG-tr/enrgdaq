@@ -93,11 +93,12 @@ def run_single_benchmark(
         lines = stdout.split("\n")
         data = {}
         for line in lines:
-            if "Avg SHM Throughput:" in line:
+            # Updated field names to match new benchmark_runner output
+            if "Avg Data Throughput:" in line:
                 data["avg_throughput"] = float(
                     line.split(":")[1].split("MB/s")[0].strip()
                 )
-            if "Peak SHM Throughput:" in line:
+            if "Peak Data Throughput:" in line:
                 data["peak_throughput"] = float(
                     line.split(":")[1].split("MB/s")[0].strip()
                 )
@@ -109,8 +110,6 @@ def run_single_benchmark(
                 data["messages_per_second"] = float(
                     line.split(":")[1].replace(",", "").strip()
                 )
-            if "Average Queue Size:" in line:
-                data["avg_queue"] = float(line.split(":")[1].strip())
             if "Avg CPU Usage:" in line:
                 data["cpu_usage"] = float(line.split(":")[1].replace("%", "").strip())
             if "Avg p95 Latency:" in line:
@@ -130,7 +129,7 @@ def run_single_benchmark(
             peak_throughput_mbs=data.get("peak_throughput", 0),
             zmq_throughput_mbs=data.get("zmq_throughput", 0),
             messages_per_second=data.get("messages_per_second", 0),
-            avg_queue_size=data.get("avg_queue", 0),
+            avg_queue_size=0,  # No longer tracked in new architecture
             cpu_usage_percent=data.get("cpu_usage", 0),
             latency_p95_ms=data.get("latency_p95", 0),
             latency_p99_ms=data.get("latency_p99", 0),
