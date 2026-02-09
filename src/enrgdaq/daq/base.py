@@ -87,6 +87,7 @@ class DAQJob:
     message queues, and provides methods for consuming and handling messages.
     Attributes:
         allowed_message_in_types (list[type[DAQJobMessage]]): List of allowed message types for input.
+        topics_to_subscribe (list[str]): List of topics to subscribe to.
         config_type (Any): Type of the configuration.
         config (Any): Configuration object.
         message_in (Queue[DAQJobMessage]): Queue for incoming messages.
@@ -170,7 +171,8 @@ class DAQJob:
         self._last_trace_report_time = datetime.now()
 
         self.topics_to_subscribe.extend(
-            [
+            config.topics_to_subscribe
+            + [
                 Topic.supervisor_broadcast(self.supervisor_id),
                 Topic.daq_job_direct(type(self).__name__, self.unique_id),
             ]

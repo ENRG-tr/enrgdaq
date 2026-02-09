@@ -32,7 +32,7 @@ DAQ_JOB_HANDLE_STATS_REMOTE_ALIVE_SECONDS = 30
 class DAQJobHandleStatsConfig(StorableDAQJobConfig):
     """Configuration class for DAQJobHandleStats."""
 
-    pass
+    subscribe_to_all_stats: bool = True
 
 
 class DAQJobMessageCombinedStats(DAQJobMessage):
@@ -70,7 +70,11 @@ class DAQJobHandleStats(DAQJob):
     def __init__(
         self, config: DAQJobHandleStatsConfig, supervisor_info: SupervisorInfo, **kwargs
     ):
-        self.topics_to_subscribe.append(Topic.stats(supervisor_info.supervisor_id))
+        self.topics_to_subscribe.append(
+            Topic.stats_supervisor(supervisor_info.supervisor_id)
+        )
+        if config.subscribe_to_all_stats:
+            self.topics_to_subscribe.append(Topic.stats_all())
         super().__init__(config, supervisor_info, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()

@@ -100,7 +100,11 @@ class Topic:
         return f"{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}"
 
     @staticmethod
-    def stats(supervisor_id: str) -> str:
+    def stats_all() -> str:
+        return f"{Topic.STATS}.supervisor"
+
+    @staticmethod
+    def stats_supervisor(supervisor_id: str) -> str:
         """
         Topic for stats messages from DAQJobs to stats handler.
 

@@ -60,12 +60,14 @@ class DAQJobConfig(Struct, kw_only=True):
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn't know how to handle will result in errors.
     """
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
     use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)
 
 
 class DAQJobMessage(Struct, kw_only=True):
@@ -329,7 +331,7 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))
 
 
 class DAQJobMessageTraceEvent(Struct):
