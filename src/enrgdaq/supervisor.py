@@ -44,6 +44,7 @@ from enrgdaq.models import (
     SupervisorInfo,
 )
 from enrgdaq.supervisor_message_handler import SupervisorMessageHandler
+from enrgdaq.utils.network import get_available_port
 
 DAQ_JOB_QUEUE_ACTION_TIMEOUT = 0.02
 """Time in seconds to wait for a DAQ job to process a message."""
@@ -138,12 +139,20 @@ class Supervisor:
 
         self.message_broker = MessageBroker()
         random_id = str(uuid.uuid4())[:8]
-        self.supervisor_xpub_url = (
-            f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xpub.ipc"
-        )
-        self.supervisor_xsub_url = (
-            f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xsub.ipc"
-        )
+
+        # IPC is not supported on Windows, use TCP with dynamic ports instead
+        if sys.platform == "win32":
+            xpub_port = get_available_port()
+            xsub_port = get_available_port()
+            self.supervisor_xpub_url = f"tcp://127.0.0.1:{xpub_port}"
+            self.supervisor_xsub_url = f"tcp://127.0.0.1:{xsub_port}"
+        else:
+            self.supervisor_xpub_url = (
+                f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xpub.ipc"
+            )
+            self.supervisor_xsub_url = (
+                f"ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xsub.ipc"
+            )
 
         self.message_broker.add_xpub_socket("supervisor_xpub", self.supervisor_xpub_url)
         self.message_broker.add_xsub_socket("supervisor_xsub", self.supervisor_xsub_url)
