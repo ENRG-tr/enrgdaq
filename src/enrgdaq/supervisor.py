@@ -5,12 +5,12 @@ import os
 import platform
 import sys
 import threading
+import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
 from logging.handlers import QueueListener
-from time import time
 from typing import Any
 
 import msgspec
