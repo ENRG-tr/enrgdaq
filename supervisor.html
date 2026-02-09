@@ -58,6 +58,10 @@ el.replaceWith(d);
 <dd>
 <div class="desc"><p>Time in seconds between sending supervisor heartbeat messages.</p></div>
 </dd>
+<dt id="enrgdaq.supervisor.DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS"><code class="name">var <span class="ident">DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS</span></code></dt>
+<dd>
+<div class="desc"><p>Time in seconds between supervisor loop iterations.</p></div>
+</dd>
 <dt id="enrgdaq.supervisor.DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS"><code class="name">var <span class="ident">DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS</span></code></dt>
 <dd>
 <div class="desc"><p>Time in seconds between sending supervisor routes messages.</p></div>
@@ -317,6 +321,7 @@ class RestartDAQJobSchedule:
         while not self._is_stopped:
             try:
                 self.loop()
+                time.sleep(DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS)
             except KeyboardInterrupt:
                 self._logger.warning(&#34;KeyboardInterrupt received, stopping&#34;)
                 self.stop()
@@ -950,6 +955,7 @@ def supervisor_id(self):
     while not self._is_stopped:
         try:
             self.loop()
+            time.sleep(DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS)
         except KeyboardInterrupt:
             self._logger.warning(&#34;KeyboardInterrupt received, stopping&#34;)
             self.stop()
@@ -1068,6 +1074,7 @@ def supervisor_id(self):
 <li><code><a title="enrgdaq.supervisor.DAQ_JOB_QUEUE_ACTION_TIMEOUT" href="#enrgdaq.supervisor.DAQ_JOB_QUEUE_ACTION_TIMEOUT">DAQ_JOB_QUEUE_ACTION_TIMEOUT</a></code></li>
 <li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS">DAQ_SUPERVISOR_DEFAULT_RESTART_TIME_SECONDS</a></code></li>
 <li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS">DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS</a></code></li>
+<li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS">DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS</a></code></li>
 <li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS">DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS</a></code></li>
 <li><code><a title="enrgdaq.supervisor.DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS" href="#enrgdaq.supervisor.DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS">DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS</a></code></li>
 </ul>
