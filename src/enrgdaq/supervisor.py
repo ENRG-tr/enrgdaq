@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import cache
 from logging.handlers import QueueListener
+from time import time
 from typing import Any
 
 import msgspec
@@ -63,6 +64,9 @@ DAQ_SUPERVISOR_HEARTBEAT_MESSAGE_INTERVAL_SECONDS = 1
 
 DAQ_SUPERVISOR_ROUTES_MESSAGE_INTERVAL_SECONDS = 0.1
 """Time in seconds between sending supervisor routes messages."""
+
+DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS = 0.1
+"""Time in seconds between supervisor loop iterations."""
 
 
 @dataclass
@@ -279,6 +283,7 @@ class Supervisor:
         while not self._is_stopped:
             try:
                 self.loop()
+                time.sleep(DAQ_SUPERVISOR_LOOP_INTERVAL_SECONDS)
             except KeyboardInterrupt:
                 self._logger.warning("KeyboardInterrupt received, stopping")
                 self.stop()
