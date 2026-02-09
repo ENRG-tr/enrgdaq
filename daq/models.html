@@ -48,7 +48,7 @@ el.replaceWith(d);
 <dl>
 <dt id="enrgdaq.daq.models.DAQJobConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobConfig</span></span>
-<span>(</span><span>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -63,12 +63,14 @@ el.replaceWith(d);
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
-    use_shm_when_possible: bool = True</code></pre>
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
 <h2 id="attributes">Attributes</h2>
@@ -81,6 +83,8 @@ el.replaceWith(d);
 <dd>The unique identifier for the DAQ job.</dd>
 <dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
+<dt><strong><code>topics_to_subscribe</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn't know how to handle will result in errors.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -119,12 +123,14 @@ el.replaceWith(d);
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
-    use_shm_when_possible: bool = True</code></pre>
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -142,12 +148,39 @@ el.replaceWith(d);
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
-    use_shm_when_possible: bool = True</code></pre>
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobConfig.topics_to_subscribe"><code class="name">var <span class="ident">topics_to_subscribe</span> : list[str]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobConfig(Struct, kw_only=True):
+    &#34;&#34;&#34;
+    DAQJobConfig is the base configuration class for DAQJobs.
+    Attributes:
+        verbosity (LogVerbosity): The verbosity level for logging. Defaults to LogVerbosity.INFO.
+        daq_job_type (str): The type of the DAQ job.
+        daq_job_unique_id (str): The unique identifier for the DAQ job.
+        use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
+    &#34;&#34;&#34;
+
+    daq_job_type: str
+    verbosity: LogVerbosity = LogVerbosity.INFO
+    daq_job_unique_id: str | None = None
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -165,12 +198,14 @@ el.replaceWith(d);
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
-    use_shm_when_possible: bool = True</code></pre>
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -188,12 +223,14 @@ el.replaceWith(d);
         daq_job_type (str): The type of the DAQ job.
         daq_job_unique_id (str): The unique identifier for the DAQ job.
         use_shm_when_possible (bool): Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.
+        topics_to_subscribe (list[str]): List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn&#39;t know how to handle will result in errors.
     &#34;&#34;&#34;
 
     daq_job_type: str
     verbosity: LogVerbosity = LogVerbosity.INFO
     daq_job_unique_id: str | None = None
-    use_shm_when_possible: bool = True</code></pre>
+    use_shm_when_possible: bool = True
+    topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -965,7 +1002,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"><p>Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.</p></div>
 <h3>Ancestors</h3>
@@ -999,7 +1036,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1025,7 +1062,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1051,7 +1088,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1077,7 +1114,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1103,7 +1140,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1129,7 +1166,7 @@ set the routes for the DAQJobProcess.</p>
     def pre_send(self):
         super().pre_send()
 
-        self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1148,7 +1185,7 @@ set the routes for the DAQJobProcess.</p>
 def pre_send(self):
     super().pre_send()
 
-    self.topics.add(Topic.stats(self.supervisor_id))</code></pre>
+    self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -3038,6 +3075,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <ul class="">
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.daq_job_type" href="#enrgdaq.daq.models.DAQJobConfig.daq_job_type">daq_job_type</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.daq_job_unique_id" href="#enrgdaq.daq.models.DAQJobConfig.daq_job_unique_id">daq_job_unique_id</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobConfig.topics_to_subscribe" href="#enrgdaq.daq.models.DAQJobConfig.topics_to_subscribe">topics_to_subscribe</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.use_shm_when_possible" href="#enrgdaq.daq.models.DAQJobConfig.use_shm_when_possible">use_shm_when_possible</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobConfig.verbosity" href="#enrgdaq.daq.models.DAQJobConfig.verbosity">verbosity</a></code></li>
 </ul>

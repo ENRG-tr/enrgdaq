@@ -78,7 +78,11 @@ el.replaceWith(d);
     def __init__(
         self, config: DAQJobHandleStatsConfig, supervisor_info: SupervisorInfo, **kwargs
     ):
-        self.topics_to_subscribe.append(Topic.stats(supervisor_info.supervisor_id))
+        self.topics_to_subscribe.append(
+            Topic.stats_supervisor(supervisor_info.supervisor_id)
+        )
+        if config.subscribe_to_all_stats:
+            self.topics_to_subscribe.append(Topic.stats_all())
         super().__init__(config, supervisor_info, **kwargs)
         self._stats = {}
         self._remote_stats = defaultdict()
@@ -349,7 +353,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobHandleStatsConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>subscribe_to_all_stats: bool = True,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -359,7 +363,7 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 <pre><code class="python">class DAQJobHandleStatsConfig(StorableDAQJobConfig):
     &#34;&#34;&#34;Configuration class for DAQJobHandleStats.&#34;&#34;&#34;
 
-    pass</code></pre>
+    subscribe_to_all_stats: bool = True</code></pre>
 </details>
 <div class="desc"><p>Configuration class for DAQJobHandleStats.</p></div>
 <h3>Ancestors</h3>
@@ -369,6 +373,22 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 <li>msgspec.Struct</li>
 <li>msgspec._core._StructMixin</li>
 </ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig.subscribe_to_all_stats"><code class="name">var <span class="ident">subscribe_to_all_stats</span> : bool</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobHandleStatsConfig(StorableDAQJobConfig):
+    &#34;&#34;&#34;Configuration class for DAQJobHandleStats.&#34;&#34;&#34;
+
+    subscribe_to_all_stats: bool = True</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
 </dd>
 <dt id="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageCombinedRemoteStats</span></span>
@@ -472,6 +492,9 @@ It extracts relevant statistics from the messages and stores them.</p></div>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig" href="#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig">DAQJobHandleStatsConfig</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig.subscribe_to_all_stats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobHandleStatsConfig.subscribe_to_all_stats">subscribe_to_all_stats</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats" href="#enrgdaq.daq.jobs.handle_stats.DAQJobMessageCombinedRemoteStats">DAQJobMessageCombinedRemoteStats</a></code></h4>

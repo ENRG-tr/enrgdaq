@@ -61,6 +61,7 @@ el.replaceWith(d);
     message queues, and provides methods for consuming and handling messages.
     Attributes:
         allowed_message_in_types (list[type[DAQJobMessage]]): List of allowed message types for input.
+        topics_to_subscribe (list[str]): List of topics to subscribe to.
         config_type (Any): Type of the configuration.
         config (Any): Configuration object.
         message_in (Queue[DAQJobMessage]): Queue for incoming messages.
@@ -144,7 +145,8 @@ el.replaceWith(d);
         self._last_trace_report_time = datetime.now()
 
         self.topics_to_subscribe.extend(
-            [
+            config.topics_to_subscribe
+            + [
                 Topic.supervisor_broadcast(self.supervisor_id),
                 Topic.daq_job_direct(type(self).__name__, self.unique_id),
             ]
@@ -513,6 +515,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dl>
 <dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
 <dd>List of allowed message types for input.</dd>
+<dt><strong><code>topics_to_subscribe</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to.</dd>
 <dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
 <dd>Type of the configuration.</dd>
 <dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
@@ -821,7 +825,7 @@ def supervisor_id(self):
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f013af732f0>> = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7ff0b58a30b0>> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1186,7 +1190,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f013af732f0>></code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7ff0b58a30b0>></code></dt>
 <dd>
 <details class="source">
 <summary>

@@ -154,6 +154,8 @@ el.replaceWith(d);
 <dd>The unique identifier for the DAQ job.</dd>
 <dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
+<dt><strong><code>topics_to_subscribe</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn't know how to handle will result in errors.</dd>
 </dl></div>
 </dd>
 </dl>
@@ -185,7 +187,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.daq.jobs.store.hdf5.DAQJobStoreHDF5Config"><code class="flex name class">
 <span>class <span class="ident">DAQJobStoreHDF5Config</span></span>
-<span>(</span><span>out_dir: str = 'out/',<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>out_dir: str = 'out/',<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -206,6 +208,8 @@ el.replaceWith(d);
 <dd>The unique identifier for the DAQ job.</dd>
 <dt><strong><code>use_shm_when_possible</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Whether to use shared memory when possible. It is guaranteed to never be used when set to False, although not guaranteed when set to True.</dd>
+<dt><strong><code>topics_to_subscribe</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to. Use with caution, making DAQJob subscribe to topics with messages it doesn't know how to handle will result in errors.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">

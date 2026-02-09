@@ -134,6 +134,8 @@ message queues, and provides methods for consuming and handling messages.</p>
 <dl>
 <dt><strong><code>allowed_message_in_types</code></strong> :&ensp;<code>list[type[DAQJobMessage]]</code></dt>
 <dd>List of allowed message types for input.</dd>
+<dt><strong><code>topics_to_subscribe</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>List of topics to subscribe to.</dd>
 <dt><strong><code>config_type</code></strong> :&ensp;<code>Any</code></dt>
 <dd>Type of the configuration.</dd>
 <dt><strong><code>config</code></strong> :&ensp;<code>Any</code></dt>
@@ -221,7 +223,7 @@ message queues, and provides methods for consuming and handling messages.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQXiaomiMijiaConfig"><code class="flex name class">
 <span>class <span class="ident">DAQXiaomiMijiaConfig</span></span>
-<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>mac_address: str,<br>poll_interval_seconds: int = 10,<br>connect_retries: int = 5,<br>connect_retry_delay: float = 2.0,<br>timeout_sec: float = 60.0,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True)</span>
+<span>(</span><span>store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a>,<br>mac_address: str,<br>poll_interval_seconds: int = 10,<br>connect_retries: int = 5,<br>connect_retry_delay: float = 2.0,<br>timeout_sec: float = 60.0,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">

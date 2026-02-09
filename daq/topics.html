@@ -153,7 +153,11 @@ class Topic:
         return f&#34;{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}&#34;
 
     @staticmethod
-    def stats(supervisor_id: str) -&gt; str:
+    def stats_all() -&gt; str:
+        return f&#34;{Topic.STATS}.supervisor&#34;
+
+    @staticmethod
+    def stats_supervisor(supervisor_id: str) -&gt; str:
         &#34;&#34;&#34;
         Topic for stats messages from DAQJobs to stats handler.
 
@@ -284,8 +288,8 @@ def daq_job_direct(job_class_name: str, unique_id: str) -&gt; str:
 <dd>daq_job.{job_class_name}.{unique_id}</dd>
 </dl></div>
 </dd>
-<dt id="enrgdaq.daq.topics.Topic.stats"><code class="name flex">
-<span>def <span class="ident">stats</span></span>(<span>supervisor_id: str) ‑> str</span>
+<dt id="enrgdaq.daq.topics.Topic.stats_all"><code class="name flex">
+<span>def <span class="ident">stats_all</span></span>(<span>) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -293,29 +297,10 @@ def daq_job_direct(job_class_name: str, unique_id: str) -&gt; str:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def stats(supervisor_id: str) -&gt; str:
-    &#34;&#34;&#34;
-    Topic for stats messages from DAQJobs to stats handler.
-
-    Args:
-        supervisor_id: The supervisor&#39;s unique identifier.
-
-    Returns:
-        Topic string: stats.supervisor.{supervisor_id}
-    &#34;&#34;&#34;
-    return f&#34;{Topic.STATS}.supervisor.{supervisor_id}&#34;</code></pre>
+def stats_all() -&gt; str:
+    return f&#34;{Topic.STATS}.supervisor&#34;</code></pre>
 </details>
-<div class="desc"><p>Topic for stats messages from DAQJobs to stats handler.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>supervisor_id</code></strong></dt>
-<dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
-<dd>stats.supervisor.{supervisor_id}</dd>
-</dl></div>
+<div class="desc"></div>
 </dd>
 <dt id="enrgdaq.daq.topics.Topic.stats_combined"><code class="name flex">
 <span>def <span class="ident">stats_combined</span></span>(<span>supervisor_id: str) ‑> str</span>
@@ -373,6 +358,39 @@ def stats_prefix() -&gt; str:
 <dl>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>stats</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.daq.topics.Topic.stats_supervisor"><code class="name flex">
+<span>def <span class="ident">stats_supervisor</span></span>(<span>supervisor_id: str) ‑> str</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def stats_supervisor(supervisor_id: str) -&gt; str:
+    &#34;&#34;&#34;
+    Topic for stats messages from DAQJobs to stats handler.
+
+    Args:
+        supervisor_id: The supervisor&#39;s unique identifier.
+
+    Returns:
+        Topic string: stats.supervisor.{supervisor_id}
+    &#34;&#34;&#34;
+    return f&#34;{Topic.STATS}.supervisor.{supervisor_id}&#34;</code></pre>
+</details>
+<div class="desc"><p>Topic for stats messages from DAQJobs to stats handler.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>supervisor_id</code></strong></dt>
+<dd>The supervisor's unique identifier.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
+<dd>stats.supervisor.{supervisor_id}</dd>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.topics.Topic.store"><code class="name flex">
@@ -604,9 +622,10 @@ def traces_combined(supervisor_id: str) -&gt; str:
 <li><code><a title="enrgdaq.daq.topics.Topic.SUPERVISOR" href="#enrgdaq.daq.topics.Topic.SUPERVISOR">SUPERVISOR</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.TRACES" href="#enrgdaq.daq.topics.Topic.TRACES">TRACES</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.daq_job_direct" href="#enrgdaq.daq.topics.Topic.daq_job_direct">daq_job_direct</a></code></li>
-<li><code><a title="enrgdaq.daq.topics.Topic.stats" href="#enrgdaq.daq.topics.Topic.stats">stats</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.stats_all" href="#enrgdaq.daq.topics.Topic.stats_all">stats_all</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.stats_combined" href="#enrgdaq.daq.topics.Topic.stats_combined">stats_combined</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.stats_prefix" href="#enrgdaq.daq.topics.Topic.stats_prefix">stats_prefix</a></code></li>
+<li><code><a title="enrgdaq.daq.topics.Topic.stats_supervisor" href="#enrgdaq.daq.topics.Topic.stats_supervisor">stats_supervisor</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.store" href="#enrgdaq.daq.topics.Topic.store">store</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.store_supervisor" href="#enrgdaq.daq.topics.Topic.store_supervisor">store_supervisor</a></code></li>
 <li><code><a title="enrgdaq.daq.topics.Topic.supervisor_broadcast" href="#enrgdaq.daq.topics.Topic.supervisor_broadcast">supervisor_broadcast</a></code></li>
