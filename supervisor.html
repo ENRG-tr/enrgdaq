@@ -442,6 +442,11 @@ class RestartDAQJobSchedule:
             new_daq_job_process = rebuild_daq_job(
                 restart_schedule.daq_job_process, self.config.info
             )
+            # Set ZMQ URLs and log queue for the restarted process
+            new_daq_job_process.log_queue = self._log_queue
+            new_daq_job_process.zmq_xpub_url = self.supervisor_xpub_url
+            new_daq_job_process.zmq_xsub_url = self.supervisor_xsub_url
+
             self.daq_job_processes.append(start_daq_job(new_daq_job_process))
 
             schedules_to_remove.append(restart_schedule)
@@ -906,6 +911,11 @@ def supervisor_id(self):
         new_daq_job_process = rebuild_daq_job(
             restart_schedule.daq_job_process, self.config.info
         )
+        # Set ZMQ URLs and log queue for the restarted process
+        new_daq_job_process.log_queue = self._log_queue
+        new_daq_job_process.zmq_xpub_url = self.supervisor_xpub_url
+        new_daq_job_process.zmq_xsub_url = self.supervisor_xsub_url
+
         self.daq_job_processes.append(start_daq_job(new_daq_job_process))
 
         schedules_to_remove.append(restart_schedule)

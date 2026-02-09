@@ -82,14 +82,6 @@ el.replaceWith(d);
         self._buffers = {}
         self._resolved_paths = {}
 
-    def start(self):
-        while not self._has_been_freed:
-            messages_processed = self.consume_all()
-            self._flush_ready_buffers()
-
-            if not messages_processed:
-                time.sleep(0.001)
-
     def handle_message(
         self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
     ) -&gt; bool:
