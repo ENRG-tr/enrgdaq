@@ -1,3 +1,6 @@
+import time
+from typing import override
+
 from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
@@ -25,6 +28,11 @@ class DAQJobHandleAlerts(DAQJob):
     allowed_message_in_types = [DAQJobMessageAlert]
     config_type = DAQJobHandleAlertsConfig
     config: DAQJobHandleAlertsConfig
+
+    @override
+    def start(self):
+        while not self._has_been_freed:
+            time.sleep(1)
 
     def handle_message(self, message: DAQJobMessage) -> bool:
         if not super().handle_message(message):
