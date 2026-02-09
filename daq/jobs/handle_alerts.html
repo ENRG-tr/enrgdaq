@@ -64,6 +64,11 @@ el.replaceWith(d);
     config_type = DAQJobHandleAlertsConfig
     config: DAQJobHandleAlertsConfig
 
+    @override
+    def start(self):
+        while not self._has_been_freed:
+            time.sleep(1)
+
     def handle_message(self, message: DAQJobMessage) -&gt; bool:
         if not super().handle_message(message):
             return False
@@ -116,6 +121,24 @@ el.replaceWith(d);
 <dd>
 <div class="desc"><p>Configuration class for DAQJobHandleAlerts.
 Inherits from StorableDAQJobConfig.</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start"><code class="name flex">
+<span>def <span class="ident">start</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@override
+def start(self):
+    while not self._has_been_freed:
+        time.sleep(1)</code></pre>
+</details>
+<div class="desc"></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
@@ -175,6 +198,7 @@ Inherits from StorableDAQJobConfig.</p></div>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.allowed_message_in_types">allowed_message_in_types</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config">config</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config_type" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.config_type">config_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start" href="#enrgdaq.daq.jobs.handle_alerts.DAQJobHandleAlerts.start">start</a></code></li>
 </ul>
 </li>
 <li>
