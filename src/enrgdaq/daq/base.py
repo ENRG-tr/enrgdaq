@@ -43,6 +43,7 @@ from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.arrow_ipc import try_zero_copy_pyarrow
 from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
+from enrgdaq.utils.time import sleep_for
 from enrgdaq.utils.watchdog import Watchdog
 
 DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS = 1.0
@@ -188,9 +189,13 @@ class DAQJob:
         self._publish_thread = threading.Thread(
             target=self._publish_thread_func, daemon=True
         )
+        self._report_thread = threading.Thread(
+            target=self._report_thread_func, daemon=True
+        )
         self._publish_buffer = queue.Queue()
         self._consume_thread.start()
         self._publish_thread.start()
+        self._report_thread.start()
 
     def get_job_started_message(self):
         return self._prepare_message(DAQJobMessageJobStarted())
@@ -251,9 +256,6 @@ class DAQJob:
                             source_supervisor=self.supervisor_id,
                         )
                     )
-
-                self.report_stats()
-                self.report_traces()
             except zmq.ContextTerminated:
                 break
             except Exception as e:
@@ -276,7 +278,19 @@ class DAQJob:
             if message is None:
                 break
             send_message(zmq_xsub, message, buffer)
+
+    def _report_thread_func(self):
+        """Periodically report stats and traces."""
+
+        interval = min(
+            DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS,
+            DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS,
+        )
+        while not self._has_been_freed:
+            start_time = datetime.now()
             self.report_stats()
+            self.report_traces()
+            sleep_for(interval, start_time)
 
     def _unwrap_message(self, message: DAQJobMessage) -> DAQJobMessage:
         if isinstance(message, DAQJobMessageSHM) or isinstance(
