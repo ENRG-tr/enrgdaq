@@ -177,12 +177,20 @@ class RestartDAQJobSchedule:
 
         self.message_broker = MessageBroker()
         random_id = str(uuid.uuid4())[:8]
-        self.supervisor_xpub_url = (
-            f&#34;ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xpub.ipc&#34;
-        )
-        self.supervisor_xsub_url = (
-            f&#34;ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xsub.ipc&#34;
-        )
+
+        # IPC is not supported on Windows, use TCP with dynamic ports instead
+        if sys.platform == &#34;win32&#34;:
+            xpub_port = get_available_port()
+            xsub_port = get_available_port()
+            self.supervisor_xpub_url = f&#34;tcp://127.0.0.1:{xpub_port}&#34;
+            self.supervisor_xsub_url = f&#34;tcp://127.0.0.1:{xsub_port}&#34;
+        else:
+            self.supervisor_xpub_url = (
+                f&#34;ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xpub.ipc&#34;
+            )
+            self.supervisor_xsub_url = (
+                f&#34;ipc:///tmp/supervisor_{self.supervisor_id}_{random_id}_xsub.ipc&#34;
+            )
 
         self.message_broker.add_xpub_socket(&#34;supervisor_xpub&#34;, self.supervisor_xpub_url)
         self.message_broker.add_xsub_socket(&#34;supervisor_xsub&#34;, self.supervisor_xsub_url)
