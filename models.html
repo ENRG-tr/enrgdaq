@@ -919,7 +919,7 @@ el.replaceWith(d);
 </dd>
 <dt id="enrgdaq.models.SupervisorInfo"><code class="flex name class">
 <span>class <span class="ident">SupervisorInfo</span></span>
-<span>(</span><span>supervisor_id: str)</span>
+<span>(</span><span>supervisor_id: str, supervisor_tags: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -931,15 +931,19 @@ el.replaceWith(d);
     A class to represent the information of a supervisor.
     Attributes:
         supervisor_id (str): The unique identifier for the supervisor.
+        supervisor_tags (list[str]): The tags associated with the supervisor.
     &#34;&#34;&#34;
 
-    supervisor_id: str</code></pre>
+    supervisor_id: str
+    supervisor_tags: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"><p>A class to represent the information of a supervisor.</p>
 <h2 id="attributes">Attributes</h2>
 <dl>
 <dt><strong><code>supervisor_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The unique identifier for the supervisor.</dd>
+<dt><strong><code>supervisor_tags</code></strong> :&ensp;<code>list[str]</code></dt>
+<dd>The tags associated with the supervisor.</dd>
 </dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
@@ -959,9 +963,30 @@ el.replaceWith(d);
     A class to represent the information of a supervisor.
     Attributes:
         supervisor_id (str): The unique identifier for the supervisor.
+        supervisor_tags (list[str]): The tags associated with the supervisor.
     &#34;&#34;&#34;
 
-    supervisor_id: str</code></pre>
+    supervisor_id: str
+    supervisor_tags: list[str] = field(default_factory=list)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.models.SupervisorInfo.supervisor_tags"><code class="name">var <span class="ident">supervisor_tags</span> : list[str]</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SupervisorInfo(Struct):
+    &#34;&#34;&#34;
+    A class to represent the information of a supervisor.
+    Attributes:
+        supervisor_id (str): The unique identifier for the supervisor.
+        supervisor_tags (list[str]): The tags associated with the supervisor.
+    &#34;&#34;&#34;
+
+    supervisor_id: str
+    supervisor_tags: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1037,6 +1062,7 @@ el.replaceWith(d);
 <h4><code><a title="enrgdaq.models.SupervisorInfo" href="#enrgdaq.models.SupervisorInfo">SupervisorInfo</a></code></h4>
 <ul class="">
 <li><code><a title="enrgdaq.models.SupervisorInfo.supervisor_id" href="#enrgdaq.models.SupervisorInfo.supervisor_id">supervisor_id</a></code></li>
+<li><code><a title="enrgdaq.models.SupervisorInfo.supervisor_tags" href="#enrgdaq.models.SupervisorInfo.supervisor_tags">supervisor_tags</a></code></li>
 </ul>
 </li>
 </ul>
