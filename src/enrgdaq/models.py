@@ -2,7 +2,7 @@ import logging
 from copy import deepcopy
 from enum import Enum
 
-from msgspec import Struct
+from msgspec import Struct, field
 
 
 class LogVerbosity(str, Enum):
@@ -99,9 +99,11 @@ class SupervisorInfo(Struct):
     A class to represent the information of a supervisor.
     Attributes:
         supervisor_id (str): The unique identifier for the supervisor.
+        supervisor_tags (list[str]): The tags associated with the supervisor.
     """
 
     supervisor_id: str
+    supervisor_tags: list[str] = field(default_factory=list)
 
 
 class RestartScheduleInfo(Struct):
