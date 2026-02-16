@@ -86,9 +86,18 @@ el.replaceWith(d);
                 # Send stop messages to all DAQ job processes to trigger restart
                 for daq_job_process in supervisor.daq_job_processes:
                     try:
-                        # Send a stop message to each DAQ job process via its message_in queue
-                        daq_job_process.message_in.put(
-                            DAQJobMessageStop(reason=&#34;Restart requested via CNC&#34;)
+                        assert (
+                            daq_job_process.daq_job_info
+                        ), &#34;DAQ job info not available&#34;
+                        self.cnc.supervisor.message_broker.send(
+                            DAQJobMessageStop(
+                                reason=&#34;Restart requested via CNC&#34;,
+                                topics={
+                                    Topic.daq_job_direct(
+                                        daq_job_process.daq_job_info.unique_id
+                                    )
+                                },
+                            )
                         )
                     except Exception as e:
                         self._logger.warning(
@@ -147,9 +156,18 @@ el.replaceWith(d);
             # Send stop messages to all DAQ job processes to trigger restart
             for daq_job_process in supervisor.daq_job_processes:
                 try:
-                    # Send a stop message to each DAQ job process via its message_in queue
-                    daq_job_process.message_in.put(
-                        DAQJobMessageStop(reason=&#34;Restart requested via CNC&#34;)
+                    assert (
+                        daq_job_process.daq_job_info
+                    ), &#34;DAQ job info not available&#34;
+                    self.cnc.supervisor.message_broker.send(
+                        DAQJobMessageStop(
+                            reason=&#34;Restart requested via CNC&#34;,
+                            topics={
+                                Topic.daq_job_direct(
+                                    daq_job_process.daq_job_info.unique_id
+                                )
+                            },
+                        )
                     )
                 except Exception as e:
                     self._logger.warning(

@@ -112,18 +112,17 @@ class Topic:
         return f&#34;{Topic.SUPERVISOR}.{supervisor_id}.{Topic.INTERNAL}&#34;
 
     @staticmethod
-    def daq_job_direct(job_class_name: str, unique_id: str) -&gt; str:
+    def daq_job_direct(unique_id: str) -&gt; str:
         &#34;&#34;&#34;
         Topic for direct messages to a specific DAQJob instance.
 
         Args:
-            job_class_name: The DAQJob class name (e.g., DAQJobStoreCSV).
             unique_id: The job&#39;s unique identifier.
 
         Returns:
-            Topic string: daq_job.{job_class_name}.{unique_id}
+            Topic string: daq_job.{unique_id}
         &#34;&#34;&#34;
-        return f&#34;{Topic.DAQ_JOB}.{job_class_name}.{unique_id}&#34;
+        return f&#34;{Topic.DAQ_JOB}.{unique_id}&#34;
 
     @staticmethod
     def store(store_class_name: str) -&gt; str:
@@ -253,7 +252,7 @@ class Topic:
 <h3>Static methods</h3>
 <dl>
 <dt id="enrgdaq.daq.topics.Topic.daq_job_direct"><code class="name flex">
-<span>def <span class="ident">daq_job_direct</span></span>(<span>job_class_name: str, unique_id: str) ‑> str</span>
+<span>def <span class="ident">daq_job_direct</span></span>(<span>unique_id: str) ‑> str</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -261,31 +260,28 @@ class Topic:
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">@staticmethod
-def daq_job_direct(job_class_name: str, unique_id: str) -&gt; str:
+def daq_job_direct(unique_id: str) -&gt; str:
     &#34;&#34;&#34;
     Topic for direct messages to a specific DAQJob instance.
 
     Args:
-        job_class_name: The DAQJob class name (e.g., DAQJobStoreCSV).
         unique_id: The job&#39;s unique identifier.
 
     Returns:
-        Topic string: daq_job.{job_class_name}.{unique_id}
+        Topic string: daq_job.{unique_id}
     &#34;&#34;&#34;
-    return f&#34;{Topic.DAQ_JOB}.{job_class_name}.{unique_id}&#34;</code></pre>
+    return f&#34;{Topic.DAQ_JOB}.{unique_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for direct messages to a specific DAQJob instance.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>job_class_name</code></strong></dt>
-<dd>The DAQJob class name (e.g., DAQJobStoreCSV).</dd>
 <dt><strong><code>unique_id</code></strong></dt>
 <dd>The job's unique identifier.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
-<dd>daq_job.{job_class_name}.{unique_id}</dd>
+<dd>daq_job.{unique_id}</dd>
 </dl></div>
 </dd>
 <dt id="enrgdaq.daq.topics.Topic.stats_all"><code class="name flex">

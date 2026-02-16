@@ -110,9 +110,15 @@ el.replaceWith(d);
                 if target_process:
                     # Send a stop message to the DAQ job process
                     try:
-                        target_process.message_in.put(
+                        assert target_process.daq_job_info is not None
+                        self.cnc.supervisor.message_broker.send(
                             DAQJobMessageStop(
-                                reason=&#34;Stop and remove requested via CNC&#34;
+                                reason=&#34;Stop and remove requested via CNC&#34;,
+                                topics={
+                                    Topic.daq_job_direct(
+                                        target_process.daq_job_info.unique_id
+                                    )
+                                },
                             )
                         )
 
@@ -211,9 +217,15 @@ el.replaceWith(d);
             if target_process:
                 # Send a stop message to the DAQ job process
                 try:
-                    target_process.message_in.put(
+                    assert target_process.daq_job_info is not None
+                    self.cnc.supervisor.message_broker.send(
                         DAQJobMessageStop(
-                            reason=&#34;Stop and remove requested via CNC&#34;
+                            reason=&#34;Stop and remove requested via CNC&#34;,
+                            topics={
+                                Topic.daq_job_direct(
+                                    target_process.daq_job_info.unique_id
+                                )
+                            },
                         )
                     )
 
