@@ -9,6 +9,7 @@ from enrgdaq.cnc.models import (
     CNCMessageResStopDAQJobs,
 )
 from enrgdaq.daq.models import DAQJobMessageStop
+from enrgdaq.daq.topics import Topic
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
@@ -45,9 +46,18 @@ class ReqStopDAQJobsHandler(CNCMessageHandler):
                 # Send stop messages to all DAQ job processes to trigger restart
                 for daq_job_process in supervisor.daq_job_processes:
                     try:
-                        # Send a stop message to each DAQ job process via its message_in queue
-                        daq_job_process.message_in.put(
-                            DAQJobMessageStop(reason="Restart requested via CNC")
+                        assert (
+                            daq_job_process.daq_job_info
+                        ), "DAQ job info not available"
+                        self.cnc.supervisor.message_broker.send(
+                            DAQJobMessageStop(
+                                reason="Restart requested via CNC",
+                                topics={
+                                    Topic.daq_job_direct(
+                                        daq_job_process.daq_job_info.unique_id
+                                    )
+                                },
+                            )
                         )
                     except Exception as e:
                         self._logger.warning(

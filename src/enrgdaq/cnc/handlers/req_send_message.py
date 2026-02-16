@@ -10,6 +10,8 @@ from enrgdaq.cnc.models import (
     CNCMessageReqSendMessage,
     CNCMessageResSendMessage,
 )
+from enrgdaq.daq.models import DAQJobMessage
+from enrgdaq.daq.topics import Topic
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
@@ -59,7 +61,7 @@ class ReqSendMessageHandler(CNCMessageHandler):
 
             # Decode the JSON payload
             try:
-                message_instance = msgspec.json.decode(
+                message_instance: DAQJobMessage = msgspec.json.decode(
                     msg.payload.encode(), type=message_cls
                 )
             except Exception as e:
@@ -97,12 +99,17 @@ class ReqSendMessageHandler(CNCMessageHandler):
                     for msg_type in daq_job_cls.allowed_message_in_types
                 )
 
-                if not accepts_message:
+                if not accepts_message or daq_job_process.daq_job_info is None:
                     continue
+
+                # Set the topic for the message as the target daq job id
+                message_instance.topics.add(
+                    Topic.daq_job_direct(daq_job_process.daq_job_info.unique_id)
+                )
 
                 # Send the message
                 try:
-                    daq_job_process.message_in.put_nowait(message_instance)
+                    self.cnc.supervisor.message_broker.send(message_instance)
                     jobs_notified += 1
                     self._logger.debug(
                         f"Sent {msg.message_type} to {daq_job_cls.__name__}"

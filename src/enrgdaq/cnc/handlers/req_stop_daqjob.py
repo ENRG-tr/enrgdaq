@@ -9,6 +9,7 @@ from enrgdaq.cnc.models import (
     CNCMessageResStopDAQJob,
 )
 from enrgdaq.daq.models import DAQJobMessageStop
+from enrgdaq.daq.topics import Topic
 
 if TYPE_CHECKING:
     from enrgdaq.cnc.base import SupervisorCNC
@@ -69,9 +70,15 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
                 if target_process:
                     # Send a stop message to the DAQ job process
                     try:
-                        target_process.message_in.put(
+                        assert target_process.daq_job_info is not None
+                        self.cnc.supervisor.message_broker.send(
                             DAQJobMessageStop(
-                                reason="Stop and remove requested via CNC"
+                                reason="Stop and remove requested via CNC",
+                                topics={
+                                    Topic.daq_job_direct(
+                                        target_process.daq_job_info.unique_id
+                                    )
+                                },
                             )
                         )
 

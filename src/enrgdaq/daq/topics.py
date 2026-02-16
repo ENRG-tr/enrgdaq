@@ -59,18 +59,17 @@ class Topic:
         return f"{Topic.SUPERVISOR}.{supervisor_id}.{Topic.INTERNAL}"
 
     @staticmethod
-    def daq_job_direct(job_class_name: str, unique_id: str) -> str:
+    def daq_job_direct(unique_id: str) -> str:
         """
         Topic for direct messages to a specific DAQJob instance.
 
         Args:
-            job_class_name: The DAQJob class name (e.g., DAQJobStoreCSV).
             unique_id: The job's unique identifier.
 
         Returns:
-            Topic string: daq_job.{job_class_name}.{unique_id}
+            Topic string: daq_job.{unique_id}
         """
-        return f"{Topic.DAQ_JOB}.{job_class_name}.{unique_id}"
+        return f"{Topic.DAQ_JOB}.{unique_id}"
 
     @staticmethod
     def store(store_class_name: str) -> str:

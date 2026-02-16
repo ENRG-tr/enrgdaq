@@ -175,7 +175,7 @@ class DAQJob:
             config.topics_to_subscribe
             + [
                 Topic.supervisor_broadcast(self.supervisor_id),
-                Topic.daq_job_direct(type(self).__name__, self.unique_id),
+                Topic.daq_job_direct(self.unique_id),
             ]
         )
         self.info.subscribed_topics = self.topics_to_subscribe
