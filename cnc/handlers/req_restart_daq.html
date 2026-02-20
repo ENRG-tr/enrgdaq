@@ -95,21 +95,22 @@ el.replaceWith(d);
                 message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
             else:
                 message = &#34;Restart requested via CNC&#34;
-            success = True
+
             self._logger.info(message)
 
             # Schedule exit
             threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+            return CNCMessageResRestartDAQ(success=True, message=message), True
+
         except subprocess.CalledProcessError as e:
-            success = False
             message = f&#34;Error during update: {str(e)}&#34;
             self._logger.error(message)
+            return CNCMessageResRestartDAQ(success=False, message=message), True
+
         except Exception as e:
-            success = False
             message = f&#34;Unexpected error during update: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResRestartDAQ(success=success, message=message), True
+            return CNCMessageResRestartDAQ(success=False, message=message), True
 
     def _exit(self):
         self.cnc.supervisor.stop()</code></pre>
@@ -160,21 +161,22 @@ el.replaceWith(d);
             message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
         else:
             message = &#34;Restart requested via CNC&#34;
-        success = True
+
         self._logger.info(message)
 
         # Schedule exit
         threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+        return CNCMessageResRestartDAQ(success=True, message=message), True
+
     except subprocess.CalledProcessError as e:
-        success = False
         message = f&#34;Error during update: {str(e)}&#34;
         self._logger.error(message)
+        return CNCMessageResRestartDAQ(success=False, message=message), True
+
     except Exception as e:
-        success = False
         message = f&#34;Unexpected error during update: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResRestartDAQ(success=success, message=message), True</code></pre>
+        return CNCMessageResRestartDAQ(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles an update and restart request.
 :param sender_identity: The ZMQ identity of the message sender.

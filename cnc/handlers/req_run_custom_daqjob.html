@@ -108,14 +108,16 @@ el.replaceWith(d);
                 # Start the DAQ job
                 self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
-                success = True
                 message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
                 self._logger.info(message)
+                return CNCMessageResRunCustomDAQJob(success=True, message=message), True
 
             except Exception as e:
-                success = False
                 message = f&#34;Error starting DAQ job: {str(e)}&#34;
                 self._logger.error(message)
+                return CNCMessageResRunCustomDAQJob(
+                    success=False, message=message
+                ), True
             finally:
                 # Clean up the temporary file
                 import os
@@ -123,11 +125,9 @@ el.replaceWith(d);
                 os.unlink(config_path)
 
         except Exception as e:
-            success = False
             message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+            return CNCMessageResRunCustomDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handler for CNCMessageReqRunCustomDAQJob messages.</p>
 <p>Initialize the handler.
@@ -188,14 +188,16 @@ el.replaceWith(d);
             # Start the DAQ job
             self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
-            success = True
             message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
             self._logger.info(message)
+            return CNCMessageResRunCustomDAQJob(success=True, message=message), True
 
         except Exception as e:
-            success = False
             message = f&#34;Error starting DAQ job: {str(e)}&#34;
             self._logger.error(message)
+            return CNCMessageResRunCustomDAQJob(
+                success=False, message=message
+            ), True
         finally:
             # Clean up the temporary file
             import os
@@ -203,11 +205,9 @@ el.replaceWith(d);
             os.unlink(config_path)
 
     except Exception as e:
-        success = False
         message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+        return CNCMessageResRunCustomDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles a run custom DAQJob request.
 :param sender_identity: The ZMQ identity of the message sender.

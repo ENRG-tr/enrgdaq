@@ -534,21 +534,22 @@ indicating if it's a forward reply.</p></div>
                 message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
             else:
                 message = &#34;Restart requested via CNC&#34;
-            success = True
+
             self._logger.info(message)
 
             # Schedule exit
             threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+            return CNCMessageResRestartDAQ(success=True, message=message), True
+
         except subprocess.CalledProcessError as e:
-            success = False
             message = f&#34;Error during update: {str(e)}&#34;
             self._logger.error(message)
+            return CNCMessageResRestartDAQ(success=False, message=message), True
+
         except Exception as e:
-            success = False
             message = f&#34;Unexpected error during update: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResRestartDAQ(success=success, message=message), True
+            return CNCMessageResRestartDAQ(success=False, message=message), True
 
     def _exit(self):
         self.cnc.supervisor.stop()</code></pre>
@@ -599,21 +600,22 @@ indicating if it's a forward reply.</p></div>
             message = f&#34;Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds.&#34;
         else:
             message = &#34;Restart requested via CNC&#34;
-        success = True
+
         self._logger.info(message)
 
         # Schedule exit
         threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+        return CNCMessageResRestartDAQ(success=True, message=message), True
+
     except subprocess.CalledProcessError as e:
-        success = False
         message = f&#34;Error during update: {str(e)}&#34;
         self._logger.error(message)
+        return CNCMessageResRestartDAQ(success=False, message=message), True
+
     except Exception as e:
-        success = False
         message = f&#34;Unexpected error during update: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResRestartDAQ(success=success, message=message), True</code></pre>
+        return CNCMessageResRestartDAQ(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles an update and restart request.
 :param sender_identity: The ZMQ identity of the message sender.
@@ -684,14 +686,16 @@ indicating if it's a forward reply.</p></div>
                 # Start the DAQ job
                 self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
-                success = True
                 message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
                 self._logger.info(message)
+                return CNCMessageResRunCustomDAQJob(success=True, message=message), True
 
             except Exception as e:
-                success = False
                 message = f&#34;Error starting DAQ job: {str(e)}&#34;
                 self._logger.error(message)
+                return CNCMessageResRunCustomDAQJob(
+                    success=False, message=message
+                ), True
             finally:
                 # Clean up the temporary file
                 import os
@@ -699,11 +703,9 @@ indicating if it's a forward reply.</p></div>
                 os.unlink(config_path)
 
         except Exception as e:
-            success = False
             message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+            return CNCMessageResRunCustomDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handler for CNCMessageReqRunCustomDAQJob messages.</p>
 <p>Initialize the handler.
@@ -764,14 +766,16 @@ indicating if it's a forward reply.</p></div>
             # Start the DAQ job
             self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
-            success = True
             message = f&#34;DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else &#39;Unknown&#39;}&#34;
             self._logger.info(message)
+            return CNCMessageResRunCustomDAQJob(success=True, message=message), True
 
         except Exception as e:
-            success = False
             message = f&#34;Error starting DAQ job: {str(e)}&#34;
             self._logger.error(message)
+            return CNCMessageResRunCustomDAQJob(
+                success=False, message=message
+            ), True
         finally:
             # Clean up the temporary file
             import os
@@ -779,11 +783,9 @@ indicating if it's a forward reply.</p></div>
             os.unlink(config_path)
 
     except Exception as e:
-        success = False
         message = f&#34;Error processing run custom DAQJob request: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResRunCustomDAQJob(success=success, message=message), True</code></pre>
+        return CNCMessageResRunCustomDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles a run custom DAQJob request.
 :param sender_identity: The ZMQ identity of the message sender.
@@ -1212,79 +1214,64 @@ Sends a custom message to DAQ job(s).</p>
 
         try:
             supervisor = self.cnc.supervisor
-            if supervisor:
-                # Find the DAQ job process with the specified name
-                target_process = None
-                for daq_job_process in supervisor.daq_job_processes:
-                    # If daq_job_unique_id is specified
-                    if (
-                        msg.daq_job_unique_id
-                        and daq_job_process.daq_job_info
-                        and daq_job_process.daq_job_info.unique_id
-                        == msg.daq_job_unique_id
-                    ):
-                        target_process = daq_job_process
-                        break
-                    # If daq_job_name is specified
-                    elif (
-                        msg.daq_job_name
-                        and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
-                    ):
-                        target_process = daq_job_process
-                        break
-
-                if target_process:
-                    # Send a stop message to the DAQ job process
-                    try:
-                        assert target_process.daq_job_info is not None
-                        self.cnc.supervisor.message_broker.send(
-                            DAQJobMessageStop(
-                                reason=&#34;Stop and remove requested via CNC&#34;,
-                                topics={
-                                    Topic.daq_job_direct(
-                                        target_process.daq_job_info.unique_id
-                                    )
-                                },
-                            )
-                        )
-
-                        # Remove the process from the supervisor&#39;s list
-                        supervisor.daq_job_processes.remove(target_process)
-                        if (
-                            msg.remove
-                            and target_process.daq_job_cls.__name__
-                            in supervisor.daq_job_stats
-                        ):
-                            supervisor.daq_job_stats.pop(
-                                target_process.daq_job_cls.__name__
-                            )
-
-                        success = True
-                        message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
-                            &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
-                        )
-                        self._logger.info(message)
-                    except Exception as e:
-                        success = False
-                        message = f&#34;Error during Stop DAQJob for &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
-                        self._logger.error(message, exc_info=True)
-                else:
-                    success = False
-                    message = (
-                        f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
-                    )
-                    self._logger.warning(message)
-            else:
-                success = False
+            if not supervisor:
                 message = &#34;Supervisor not available&#34;
                 self._logger.error(message)
+                return CNCMessageResStopDAQJob(success=False, message=message), True
+
+            # Find the DAQ job process with the specified name
+            target_process = None
+            for daq_job_process in supervisor.daq_job_processes:
+                # If daq_job_unique_id is specified
+                if (
+                    msg.daq_job_unique_id
+                    and daq_job_process.daq_job_info
+                    and daq_job_process.daq_job_info.unique_id == msg.daq_job_unique_id
+                ):
+                    target_process = daq_job_process
+                    break
+                # If daq_job_name is specified
+                elif (
+                    msg.daq_job_name
+                    and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
+                ):
+                    target_process = daq_job_process
+                    break
+
+            if not target_process:
+                message = f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
+                self._logger.warning(message)
+                return CNCMessageResStopDAQJob(success=False, message=message), True
+
+            # Send a stop message to the DAQ job process
+            assert target_process.daq_job_info is not None
+            self.cnc.supervisor.message_broker.send(
+                DAQJobMessageStop(
+                    reason=&#34;Stop and remove requested via CNC&#34;,
+                    topics={
+                        Topic.daq_job_direct(target_process.daq_job_info.unique_id)
+                    },
+                )
+            )
+
+            # Remove the process from the supervisor&#39;s list
+            supervisor.daq_job_processes.remove(target_process)
+            if (
+                msg.remove
+                and target_process.daq_job_cls.__name__ in supervisor.daq_job_stats
+            ):
+                supervisor.daq_job_stats.pop(target_process.daq_job_cls.__name__)
+
+            message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
+                &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
+            )
+            self._logger.info(message)
+            return CNCMessageResStopDAQJob(success=True, message=message), True
 
         except Exception as e:
-            success = False
             message = f&#34;Error stopping and removing DAQJob &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
             self._logger.error(message, exc_info=True)
-
-        return CNCMessageResStopDAQJob(success=success, message=message), True</code></pre>
+            return CNCMessageResStopDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handler for CNCMessageReqStopDAQJob messages.</p>
 <p>Initialize the handler.
@@ -1323,79 +1310,64 @@ Sends a custom message to DAQ job(s).</p>
 
     try:
         supervisor = self.cnc.supervisor
-        if supervisor:
-            # Find the DAQ job process with the specified name
-            target_process = None
-            for daq_job_process in supervisor.daq_job_processes:
-                # If daq_job_unique_id is specified
-                if (
-                    msg.daq_job_unique_id
-                    and daq_job_process.daq_job_info
-                    and daq_job_process.daq_job_info.unique_id
-                    == msg.daq_job_unique_id
-                ):
-                    target_process = daq_job_process
-                    break
-                # If daq_job_name is specified
-                elif (
-                    msg.daq_job_name
-                    and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
-                ):
-                    target_process = daq_job_process
-                    break
-
-            if target_process:
-                # Send a stop message to the DAQ job process
-                try:
-                    assert target_process.daq_job_info is not None
-                    self.cnc.supervisor.message_broker.send(
-                        DAQJobMessageStop(
-                            reason=&#34;Stop and remove requested via CNC&#34;,
-                            topics={
-                                Topic.daq_job_direct(
-                                    target_process.daq_job_info.unique_id
-                                )
-                            },
-                        )
-                    )
-
-                    # Remove the process from the supervisor&#39;s list
-                    supervisor.daq_job_processes.remove(target_process)
-                    if (
-                        msg.remove
-                        and target_process.daq_job_cls.__name__
-                        in supervisor.daq_job_stats
-                    ):
-                        supervisor.daq_job_stats.pop(
-                            target_process.daq_job_cls.__name__
-                        )
-
-                    success = True
-                    message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
-                        &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
-                    )
-                    self._logger.info(message)
-                except Exception as e:
-                    success = False
-                    message = f&#34;Error during Stop DAQJob for &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
-                    self._logger.error(message, exc_info=True)
-            else:
-                success = False
-                message = (
-                    f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
-                )
-                self._logger.warning(message)
-        else:
-            success = False
+        if not supervisor:
             message = &#34;Supervisor not available&#34;
             self._logger.error(message)
+            return CNCMessageResStopDAQJob(success=False, message=message), True
+
+        # Find the DAQ job process with the specified name
+        target_process = None
+        for daq_job_process in supervisor.daq_job_processes:
+            # If daq_job_unique_id is specified
+            if (
+                msg.daq_job_unique_id
+                and daq_job_process.daq_job_info
+                and daq_job_process.daq_job_info.unique_id == msg.daq_job_unique_id
+            ):
+                target_process = daq_job_process
+                break
+            # If daq_job_name is specified
+            elif (
+                msg.daq_job_name
+                and daq_job_process.daq_job_cls.__name__ == msg.daq_job_name
+            ):
+                target_process = daq_job_process
+                break
+
+        if not target_process:
+            message = f&#34;DAQ job with unique id &#39;{msg.daq_job_unique_id}&#39; not found&#34;
+            self._logger.warning(message)
+            return CNCMessageResStopDAQJob(success=False, message=message), True
+
+        # Send a stop message to the DAQ job process
+        assert target_process.daq_job_info is not None
+        self.cnc.supervisor.message_broker.send(
+            DAQJobMessageStop(
+                reason=&#34;Stop and remove requested via CNC&#34;,
+                topics={
+                    Topic.daq_job_direct(target_process.daq_job_info.unique_id)
+                },
+            )
+        )
+
+        # Remove the process from the supervisor&#39;s list
+        supervisor.daq_job_processes.remove(target_process)
+        if (
+            msg.remove
+            and target_process.daq_job_cls.__name__ in supervisor.daq_job_stats
+        ):
+            supervisor.daq_job_stats.pop(target_process.daq_job_cls.__name__)
+
+        message = f&#34;DAQJob {msg.daq_job_unique_id} &#34; + (
+            &#34;removed and stopped&#34; if msg.remove else &#34;stopped&#34;
+        )
+        self._logger.info(message)
+        return CNCMessageResStopDAQJob(success=True, message=message), True
 
     except Exception as e:
-        success = False
         message = f&#34;Error stopping and removing DAQJob &#39;{msg.daq_job_unique_id}&#39;: {str(e)}&#34;
         self._logger.error(message, exc_info=True)
-
-    return CNCMessageResStopDAQJob(success=success, message=message), True</code></pre>
+        return CNCMessageResStopDAQJob(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles a stop and remove DAQJob request.
 :param sender_identity: The ZMQ identity of the message sender.
@@ -1440,42 +1412,36 @@ Sends a custom message to DAQ job(s).</p>
             # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
             # by stopping all current processes which will trigger restart logic
             supervisor = self.cnc.supervisor
-            if supervisor:
-                # Send stop messages to all DAQ job processes to trigger restart
-                for daq_job_process in supervisor.daq_job_processes:
-                    try:
-                        assert (
-                            daq_job_process.daq_job_info
-                        ), &#34;DAQ job info not available&#34;
-                        self.cnc.supervisor.message_broker.send(
-                            DAQJobMessageStop(
-                                reason=&#34;Restart requested via CNC&#34;,
-                                topics={
-                                    Topic.daq_job_direct(
-                                        daq_job_process.daq_job_info.unique_id
-                                    )
-                                },
-                            )
-                        )
-                    except Exception as e:
-                        self._logger.warning(
-                            f&#34;Error sending stop message to DAQ job: {e}&#34;
-                        )
-
-                success = True
-                message = &#34;Stop signals sent to all DAQ jobs.&#34;
-                self._logger.info(message)
-            else:
-                success = False
+            if not supervisor:
                 message = &#34;Supervisor not available&#34;
                 self._logger.error(message)
+                return CNCMessageResStopDAQJobs(success=False, message=message), True
+
+            # Send stop messages to all DAQ job processes to trigger restart
+            for daq_job_process in supervisor.daq_job_processes:
+                try:
+                    assert daq_job_process.daq_job_info, &#34;DAQ job info not available&#34;
+                    self.cnc.supervisor.message_broker.send(
+                        DAQJobMessageStop(
+                            reason=&#34;Restart requested via CNC&#34;,
+                            topics={
+                                Topic.daq_job_direct(
+                                    daq_job_process.daq_job_info.unique_id
+                                )
+                            },
+                        )
+                    )
+                except Exception as e:
+                    self._logger.warning(f&#34;Error sending stop message to DAQ job: {e}&#34;)
+
+            message = &#34;Stop signals sent to all DAQ jobs.&#34;
+            self._logger.info(message)
+            return CNCMessageResStopDAQJobs(success=True, message=message), True
 
         except Exception as e:
-            success = False
             message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+            return CNCMessageResStopDAQJobs(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handler for CNCMessageReqStopDAQJobs messages.</p>
 <p>Initialize the handler.
@@ -1510,42 +1476,36 @@ Sends a custom message to DAQ job(s).</p>
         # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
         # by stopping all current processes which will trigger restart logic
         supervisor = self.cnc.supervisor
-        if supervisor:
-            # Send stop messages to all DAQ job processes to trigger restart
-            for daq_job_process in supervisor.daq_job_processes:
-                try:
-                    assert (
-                        daq_job_process.daq_job_info
-                    ), &#34;DAQ job info not available&#34;
-                    self.cnc.supervisor.message_broker.send(
-                        DAQJobMessageStop(
-                            reason=&#34;Restart requested via CNC&#34;,
-                            topics={
-                                Topic.daq_job_direct(
-                                    daq_job_process.daq_job_info.unique_id
-                                )
-                            },
-                        )
-                    )
-                except Exception as e:
-                    self._logger.warning(
-                        f&#34;Error sending stop message to DAQ job: {e}&#34;
-                    )
-
-            success = True
-            message = &#34;Stop signals sent to all DAQ jobs.&#34;
-            self._logger.info(message)
-        else:
-            success = False
+        if not supervisor:
             message = &#34;Supervisor not available&#34;
             self._logger.error(message)
+            return CNCMessageResStopDAQJobs(success=False, message=message), True
+
+        # Send stop messages to all DAQ job processes to trigger restart
+        for daq_job_process in supervisor.daq_job_processes:
+            try:
+                assert daq_job_process.daq_job_info, &#34;DAQ job info not available&#34;
+                self.cnc.supervisor.message_broker.send(
+                    DAQJobMessageStop(
+                        reason=&#34;Restart requested via CNC&#34;,
+                        topics={
+                            Topic.daq_job_direct(
+                                daq_job_process.daq_job_info.unique_id
+                            )
+                        },
+                    )
+                )
+            except Exception as e:
+                self._logger.warning(f&#34;Error sending stop message to DAQ job: {e}&#34;)
+
+        message = &#34;Stop signals sent to all DAQ jobs.&#34;
+        self._logger.info(message)
+        return CNCMessageResStopDAQJobs(success=True, message=message), True
 
     except Exception as e:
-        success = False
         message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+        return CNCMessageResStopDAQJobs(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles a restart DAQJobs request.
 :param sender_identity: The ZMQ identity of the message sender.

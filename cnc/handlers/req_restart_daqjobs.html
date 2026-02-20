@@ -82,42 +82,36 @@ el.replaceWith(d);
             # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
             # by stopping all current processes which will trigger restart logic
             supervisor = self.cnc.supervisor
-            if supervisor:
-                # Send stop messages to all DAQ job processes to trigger restart
-                for daq_job_process in supervisor.daq_job_processes:
-                    try:
-                        assert (
-                            daq_job_process.daq_job_info
-                        ), &#34;DAQ job info not available&#34;
-                        self.cnc.supervisor.message_broker.send(
-                            DAQJobMessageStop(
-                                reason=&#34;Restart requested via CNC&#34;,
-                                topics={
-                                    Topic.daq_job_direct(
-                                        daq_job_process.daq_job_info.unique_id
-                                    )
-                                },
-                            )
-                        )
-                    except Exception as e:
-                        self._logger.warning(
-                            f&#34;Error sending stop message to DAQ job: {e}&#34;
-                        )
-
-                success = True
-                message = &#34;Stop signals sent to all DAQ jobs.&#34;
-                self._logger.info(message)
-            else:
-                success = False
+            if not supervisor:
                 message = &#34;Supervisor not available&#34;
                 self._logger.error(message)
+                return CNCMessageResStopDAQJobs(success=False, message=message), True
+
+            # Send stop messages to all DAQ job processes to trigger restart
+            for daq_job_process in supervisor.daq_job_processes:
+                try:
+                    assert daq_job_process.daq_job_info, &#34;DAQ job info not available&#34;
+                    self.cnc.supervisor.message_broker.send(
+                        DAQJobMessageStop(
+                            reason=&#34;Restart requested via CNC&#34;,
+                            topics={
+                                Topic.daq_job_direct(
+                                    daq_job_process.daq_job_info.unique_id
+                                )
+                            },
+                        )
+                    )
+                except Exception as e:
+                    self._logger.warning(f&#34;Error sending stop message to DAQ job: {e}&#34;)
+
+            message = &#34;Stop signals sent to all DAQ jobs.&#34;
+            self._logger.info(message)
+            return CNCMessageResStopDAQJobs(success=True, message=message), True
 
         except Exception as e:
-            success = False
             message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
             self._logger.error(message)
-
-        return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+            return CNCMessageResStopDAQJobs(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handler for CNCMessageReqStopDAQJobs messages.</p>
 <p>Initialize the handler.
@@ -152,42 +146,36 @@ el.replaceWith(d);
         # Use the supervisor&#39;s built-in mechanism to restart DAQ jobs
         # by stopping all current processes which will trigger restart logic
         supervisor = self.cnc.supervisor
-        if supervisor:
-            # Send stop messages to all DAQ job processes to trigger restart
-            for daq_job_process in supervisor.daq_job_processes:
-                try:
-                    assert (
-                        daq_job_process.daq_job_info
-                    ), &#34;DAQ job info not available&#34;
-                    self.cnc.supervisor.message_broker.send(
-                        DAQJobMessageStop(
-                            reason=&#34;Restart requested via CNC&#34;,
-                            topics={
-                                Topic.daq_job_direct(
-                                    daq_job_process.daq_job_info.unique_id
-                                )
-                            },
-                        )
-                    )
-                except Exception as e:
-                    self._logger.warning(
-                        f&#34;Error sending stop message to DAQ job: {e}&#34;
-                    )
-
-            success = True
-            message = &#34;Stop signals sent to all DAQ jobs.&#34;
-            self._logger.info(message)
-        else:
-            success = False
+        if not supervisor:
             message = &#34;Supervisor not available&#34;
             self._logger.error(message)
+            return CNCMessageResStopDAQJobs(success=False, message=message), True
+
+        # Send stop messages to all DAQ job processes to trigger restart
+        for daq_job_process in supervisor.daq_job_processes:
+            try:
+                assert daq_job_process.daq_job_info, &#34;DAQ job info not available&#34;
+                self.cnc.supervisor.message_broker.send(
+                    DAQJobMessageStop(
+                        reason=&#34;Restart requested via CNC&#34;,
+                        topics={
+                            Topic.daq_job_direct(
+                                daq_job_process.daq_job_info.unique_id
+                            )
+                        },
+                    )
+                )
+            except Exception as e:
+                self._logger.warning(f&#34;Error sending stop message to DAQ job: {e}&#34;)
+
+        message = &#34;Stop signals sent to all DAQ jobs.&#34;
+        self._logger.info(message)
+        return CNCMessageResStopDAQJobs(success=True, message=message), True
 
     except Exception as e:
-        success = False
         message = f&#34;Error restarting DAQJobs: {str(e)}&#34;
         self._logger.error(message)
-
-    return CNCMessageResStopDAQJobs(success=success, message=message), True</code></pre>
+        return CNCMessageResStopDAQJobs(success=False, message=message), True</code></pre>
 </details>
 <div class="desc"><p>Handles a restart DAQJobs request.
 :param sender_identity: The ZMQ identity of the message sender.
