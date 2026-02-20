@@ -57,21 +57,22 @@ class ReqRestartHandler(CNCMessageHandler):
                 message = f"Update completed successfully. Will terminate after {CNC_REQ_UPDATE_AND_RESTART_SECONDS} seconds."
             else:
                 message = "Restart requested via CNC"
-            success = True
+
             self._logger.info(message)
 
             # Schedule exit
             threading.Timer(CNC_REQ_UPDATE_AND_RESTART_SECONDS, self._exit).start()
+            return CNCMessageResRestartDAQ(success=True, message=message), True
+
         except subprocess.CalledProcessError as e:
-            success = False
             message = f"Error during update: {str(e)}"
             self._logger.error(message)
+            return CNCMessageResRestartDAQ(success=False, message=message), True
+
         except Exception as e:
-            success = False
             message = f"Unexpected error during update: {str(e)}"
             self._logger.error(message)
-
-        return CNCMessageResRestartDAQ(success=success, message=message), True
+            return CNCMessageResRestartDAQ(success=False, message=message), True
 
     def _exit(self):
         self.cnc.supervisor.stop()

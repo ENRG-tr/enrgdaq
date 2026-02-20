@@ -67,14 +67,16 @@ class ReqRunCustomDAQJobHandler(CNCMessageHandler):
                 # Start the DAQ job
                 self.cnc.supervisor.start_daq_job_processes([daq_job_process])
 
-                success = True
                 message = f"DAQ job started with PID: {daq_job_process.process.pid if daq_job_process.process else 'Unknown'}"
                 self._logger.info(message)
+                return CNCMessageResRunCustomDAQJob(success=True, message=message), True
 
             except Exception as e:
-                success = False
                 message = f"Error starting DAQ job: {str(e)}"
                 self._logger.error(message)
+                return CNCMessageResRunCustomDAQJob(
+                    success=False, message=message
+                ), True
             finally:
                 # Clean up the temporary file
                 import os
@@ -82,8 +84,6 @@ class ReqRunCustomDAQJobHandler(CNCMessageHandler):
                 os.unlink(config_path)
 
         except Exception as e:
-            success = False
             message = f"Error processing run custom DAQJob request: {str(e)}"
             self._logger.error(message)
-
-        return CNCMessageResRunCustomDAQJob(success=success, message=message), True
+            return CNCMessageResRunCustomDAQJob(success=False, message=message), True
