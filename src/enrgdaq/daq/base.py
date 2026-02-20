@@ -258,6 +258,8 @@ class DAQJob:
                     )
             except zmq.ContextTerminated:
                 break
+            except DAQJobStopError:
+                break
             except Exception as e:
                 self._logger.error(
                     f"Error while unpacking message sent in {topic}: {e}",

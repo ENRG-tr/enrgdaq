@@ -84,7 +84,11 @@ class ReqStopDAQJobHandler(CNCMessageHandler):
 
                         # Remove the process from the supervisor's list
                         supervisor.daq_job_processes.remove(target_process)
-                        if msg.remove:
+                        if (
+                            msg.remove
+                            and target_process.daq_job_cls.__name__
+                            in supervisor.daq_job_stats
+                        ):
                             supervisor.daq_job_stats.pop(
                                 target_process.daq_job_cls.__name__
                             )
