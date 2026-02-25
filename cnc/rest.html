@@ -71,7 +71,7 @@ el.replaceWith(d);
     )
 
     # Helper to execute the sync command safely
-    def execute_command(client_id: str, msg, timeout=5):
+    def execute_command(client_id: str, msg, timeout=30):
         try:
             # Check if client exists first
             if client_id not in cnc_instance.clients:
