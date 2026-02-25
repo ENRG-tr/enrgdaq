@@ -69,7 +69,8 @@ UINT16_SIZE = ct.sizeof(ct.c_uint16)
 
 class BaselinePosition(str, Enum):
     """Position of the baseline in the ADC range."""
-    TOP = "TOP"        # Baseline at 1023 (max) - signals go negative
+
+    TOP = "TOP"  # Baseline at 1023 (max) - signals go negative
     MIDDLE = "MIDDLE"  # Baseline at 512 (center) - signals go both ways
     BOTTOM = "BOTTOM"  # Baseline at 0 (min) - signals go positive
 
@@ -113,7 +114,13 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     baseline_position: BaselinePosition = BaselinePosition.TOP
 
     save_npy_lz4: bool = False
-    output_filename: Optional[str] = None
+    output_filename: str | None = None
+
+    restart_driver: str | None = None
+    """
+    Command to restart the driver. If provided, the driver will be restarted
+    after the DAQ job is stopped.
+    """
 
 
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
@@ -193,7 +200,7 @@ class AcquisitionStats(Struct):
         mean_value_mv = 0.0
         if raw.acq_samples > 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
-        
+
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
@@ -258,6 +265,22 @@ class DAQJobCAENDigitizer(DAQJob):
                 )
                 self._logger.error(f"stdout: {ret.stdout}")
                 self._logger.error(f"stderr: {ret.stderr}")
+
+        if self.config.restart_driver:
+            self._logger.info("Restarting driver...")
+            ret = subprocess.run(
+                self.config.restart_driver.split(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            if ret.returncode != 0:
+                self._logger.error(
+                    f"Failed to restart driver with error code: {ret.returncode}"
+                )
+                self._logger.error(f"stdout: {ret.stdout}")
+                self._logger.error(f"stderr: {ret.stderr}")
+
         self._lib = ct.CDLL(DIGITIZER_C_DLL_PATH)
         self._lib.run_acquisition.argtypes = [ct.c_void_p]
         self._lib.stop_acquisition.argtypes = []
@@ -329,7 +352,9 @@ class DAQJobCAENDigitizer(DAQJob):
             args.handle = device.handle
             args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
             args.filter_threshold = self.config.filter_threshold_mv
-            args.calibration_target_baseline = self.config.baseline_position.get_target_value()
+            args.calibration_target_baseline = (
+                self.config.baseline_position.get_target_value()
+            )
             args.waveform_callback = self._waveform_callback_delegate
             args.stats_callback = self._stats_callback_delegate
 
@@ -351,9 +376,13 @@ class DAQJobCAENDigitizer(DAQJob):
         target_baseline = self.config.baseline_position.get_target_value()
         # For rising edge: baseline + mV, for falling edge: baseline - mV
         if self.config.trigger_polarity == dgtz.TriggerPolarity.ON_RISING_EDGE:
-            trigger_threshold_lsb = target_baseline + (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+            trigger_threshold_lsb = target_baseline + (
+                self.config.channel_self_trigger_threshold_mv * 1024 // 1000
+            )
         else:
-            trigger_threshold_lsb = target_baseline - (self.config.channel_self_trigger_threshold_mv * 1024 // 1000)
+            trigger_threshold_lsb = target_baseline - (
+                self.config.channel_self_trigger_threshold_mv * 1024 // 1000
+            )
         # Clamp to valid range (10-bit ADC: 0-1023)
         trigger_threshold_lsb = max(0, min(1023, trigger_threshold_lsb))
 
