@@ -269,7 +269,8 @@ class DAQJobCAENDigitizer(DAQJob):
         if self.config.restart_driver:
             self._logger.info("Restarting driver...")
             ret = subprocess.run(
-                self.config.restart_driver.split(),
+                self.config.restart_driver,
+                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
