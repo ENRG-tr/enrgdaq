@@ -116,7 +116,7 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     save_npy_lz4: bool = False
     output_filename: str | None = None
 
-    restart_driver: str | None = None
+    restart_driver_command: str | None = None
     """
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
@@ -266,10 +266,10 @@ class DAQJobCAENDigitizer(DAQJob):
                 self._logger.error(f"stdout: {ret.stdout}")
                 self._logger.error(f"stderr: {ret.stderr}")
 
-        if self.config.restart_driver:
+        if self.config.restart_driver_command is not None:
             self._logger.info("Restarting driver...")
             ret = subprocess.run(
-                self.config.restart_driver,
+                self.config.restart_driver_command,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -526,7 +526,7 @@ class DAQJobCAENDigitizer(DAQJob):
             self._lib.stop_acquisition()
         if self._device:
             self._logger.info("Closing Digitizer...")
-            self._device.__exit__(None, None, None)
+            self._device.close()
 
     def __del__(self):
         self._stop_acquisition()
