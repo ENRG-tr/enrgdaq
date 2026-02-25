@@ -1035,7 +1035,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         if self.config.restart_driver:
             self._logger.info(&#34;Restarting driver...&#34;)
             ret = subprocess.run(
-                self.config.restart_driver.split(),
+                self.config.restart_driver,
+                shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
