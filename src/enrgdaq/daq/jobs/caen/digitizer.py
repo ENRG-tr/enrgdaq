@@ -448,7 +448,6 @@ class DAQJobCAENDigitizer(DAQJob):
         self._put_message_out(
             DAQJobMessageStorePyArrow(
                 store_config=self.config.waveform_store_config,
-                tag="waveform",
                 table=table,
             ),
             use_shm=False,
@@ -511,7 +510,6 @@ class DAQJobCAENDigitizer(DAQJob):
         self._put_message_out(
             DAQJobMessageStorePyArrow(
                 store_config=self.config.stats_store_config,
-                tag="stats",
                 table=table,
             )
         )

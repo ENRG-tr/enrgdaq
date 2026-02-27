@@ -11,6 +11,7 @@ import msgspec
 from enrgdaq.daq.models import (
     DAQJobMessage,
 )
+from enrgdaq.utils.subclasses import all_subclasses
 
 
 def _get_message_label(message_name: str) -> str:
@@ -45,11 +46,9 @@ def get_message_templates() -> dict[str, dict]:
     """
     # List of message types that can be sent to DAQ jobs
     # These are the types that the send_message handler can decode and route
-    message_types = DAQJobMessage.__subclasses__()
-
     templates: dict[str, dict] = {}
 
-    for message_cls in message_types:
+    for message_cls in all_subclasses(DAQJobMessage):
         message_name = message_cls.__name__
 
         # Generate JSON schema using msgspec
