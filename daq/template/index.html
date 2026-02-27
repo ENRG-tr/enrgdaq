@@ -142,11 +142,9 @@ get_message_templates,
     &#34;&#34;&#34;
     # List of message types that can be sent to DAQ jobs
     # These are the types that the send_message handler can decode and route
-    message_types = DAQJobMessage.__subclasses__()
-
     templates: dict[str, dict] = {}
 
-    for message_cls in message_types:
+    for message_cls in all_subclasses(DAQJobMessage):
         message_name = message_cls.__name__
 
         # Generate JSON schema using msgspec

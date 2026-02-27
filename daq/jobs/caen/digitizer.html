@@ -1214,7 +1214,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         self._put_message_out(
             DAQJobMessageStorePyArrow(
                 store_config=self.config.waveform_store_config,
-                tag=&#34;waveform&#34;,
                 table=table,
             ),
             use_shm=False,
@@ -1277,7 +1276,6 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         self._put_message_out(
             DAQJobMessageStorePyArrow(
                 store_config=self.config.stats_store_config,
-                tag=&#34;stats&#34;,
                 table=table,
             )
         )

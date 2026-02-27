@@ -45,16 +45,17 @@ el.replaceWith(d);
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="enrgdaq.utils.subclasses.all_subclasses"><code class="name flex">
-<span>def <span class="ident">all_subclasses</span></span>(<span>cls)</span>
+<span>def <span class="ident">all_subclasses</span></span>(<span>cls: type) ‑> set[type]</span>
 </code></dt>
 <dd>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def all_subclasses(cls):
+<pre><code class="python">def all_subclasses(cls: type) -&gt; set[type]:
     &#34;&#34;&#34;
-    Returns a set of all subclasses of a given class.
+    Returns a set of all subclasses of a given class, ensuring that
+    modules in the same top-level package are imported so all subclasses are found.
 
     Args:
         cls (type): The class to get subclasses of.
@@ -62,12 +63,16 @@ el.replaceWith(d);
     Returns:
         set[type]: A set of all subclasses of the given class.
     &#34;&#34;&#34;
+    if hasattr(cls, &#34;__module__&#34;) and cls.__module__:
+        top_pkg = cls.__module__.split(&#34;.&#34;)[0]
+        _ensure_modules_imported(top_pkg)
 
     return set(cls.__subclasses__()).union(
         [s for c in cls.__subclasses__() for s in all_subclasses(c)]
     )</code></pre>
 </details>
-<div class="desc"><p>Returns a set of all subclasses of a given class.</p>
+<div class="desc"><p>Returns a set of all subclasses of a given class, ensuring that
+modules in the same top-level package are imported so all subclasses are found.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>cls</code></strong> :&ensp;<code>type</code></dt>
