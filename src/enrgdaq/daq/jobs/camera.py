@@ -79,6 +79,9 @@ class DAQJobCamera(DAQJob):
             )
 
     def start(self):
+        os.environ["OPENCV_VIDEOIO_PRIORITY_LIST"] = "V4L2"
+        os.environ["OPENCV_LOG_LEVEL"] = "ERROR"
+
         camera_index = self.config.camera_device_index
         if self.config.camera_device_name is not None:
             # We search for: /dev/v4l/by-id/usb-CAMERA_NAME-video-index0
@@ -94,7 +97,12 @@ class DAQJobCamera(DAQJob):
             # Extract from: ../../video0, get index 0
             camera_index = int(camera_device_path.split("video")[-1])
         assert camera_index is not None, "Camera not found"
-        self._cam = cv2.VideoCapture(camera_index)
+
+        device_path = f"/dev/video{camera_index}"
+        self._cam = cv2.VideoCapture(device_path, cv2.CAP_V4L2)
+
+        for _ in range(5):
+            self._cam.grab()
 
         last_no_movement_capture_time = datetime.now()
         while not self._has_been_freed:
