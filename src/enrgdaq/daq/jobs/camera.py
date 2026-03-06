@@ -98,9 +98,9 @@ class DAQJobCamera(DAQJob):
             camera_index = int(camera_device_path.split("video")[-1])
         assert camera_index is not None, "Camera not found"
 
-        device_path = f"/dev/video{camera_index}"
-        self._cam = cv2.VideoCapture(device_path, cv2.CAP_V4L2)
+        self._cam = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
 
+        # warmup
         for _ in range(5):
             self._cam.grab()
 
