@@ -1,7 +1,10 @@
+import time
 from typing import Any
 
 from enrgdaq.daq.alert.models import DAQJobMessageAlert
 from enrgdaq.daq.base import DAQJob
+
+DAQ_JOB_ALERT_LOOP_SLEEP_SECONDS = 1
 
 
 class DAQJobAlert(DAQJob):
@@ -13,5 +16,6 @@ class DAQJobAlert(DAQJob):
     def handle_message(self, message: DAQJobMessageAlert) -> bool:
         return super().handle_message(message)
 
-    def alert_loop(self):
-        raise NotImplementedError
+    def start(self):
+        while not self._has_been_freed:
+            time.sleep(DAQ_JOB_ALERT_LOOP_SLEEP_SECONDS)
