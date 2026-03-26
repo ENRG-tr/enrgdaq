@@ -101,7 +101,8 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     channel_self_trigger_channel_mask: int = 0
     trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
     channel_dc_offsets: dict[int, int] = {}
-    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.ACQ_ONLY
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
+    ext_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
@@ -407,6 +408,7 @@ class DAQJobCAENDigitizer(DAQJob):
                     channel, self.config.channel_dc_offsets[channel]
                 )
         device.set_sw_trigger_mode(self.config.sw_trigger_mode)
+        device.set_ext_trigger_input_mode(self.config.ext_trigger_mode)
         device.set_max_num_events_blt(self.config.max_num_events_blt)
         device.set_acquisition_mode(self.config.acquisition_mode)
         device.set_io_level(self.config.io_level)
