@@ -42,8 +42,613 @@ el.replaceWith(d);
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.message_broker.send_message"><code class="name flex">
+<span>def <span class="ident">send_message</span></span>(<span>socket: zmq.sugar.socket.Socket,<br>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="daq/models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>,<br>buffer: list | None = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send_message(
+    socket: zmq.Socket, message: DAQJobMessage, buffer: list | None = None
+):
+    if buffer is None:
+        buffer = []
+
+    buffer.clear()
+    message.pre_send()
+    header = pickle.dumps(
+        message,
+        protocol=pickle.HIGHEST_PROTOCOL,
+        buffer_callback=buffer.append,
+    )
+    payload = [&#34;&#34;, header] + [zmq.Frame(b) for b in buffer]
+
+    for topic in message.topics:
+        payload[0] = topic.encode()
+        socket.send_multipart(payload)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+</dl>
 </section>
 <section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="enrgdaq.message_broker.MessageBroker"><code class="flex name class">
+<span>class <span class="ident">MessageBroker</span></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MessageBroker:
+    &#34;&#34;&#34;
+    A message broker class that creates and manages XPUB and XSUB sockets for proxying messages.
+    Uses ZMQ proxy functionality in separate threads.
+
+    Attributes:
+        context (zmq.Context): The ZMQ context.
+        xpub_sockets (Dict[str, zmq.Socket]): A dictionary of XPUB sockets.
+        xsub_sockets (Dict[str, zmq.Socket]): A dictionary of XSUB sockets.
+        proxy_threads (Dict[str, threading.Thread]): A dictionary of proxy threads.
+        running (bool): Flag indicating if the broker is running.
+    &#34;&#34;&#34;
+
+    context: zmq.Context
+    xpub_sockets: Dict[str, zmq.Socket]
+    xsub_sockets: Dict[str, zmq.Socket]
+    proxy_threads: Dict[str, threading.Thread]
+    running: bool
+
+    def __init__(self):
+        self.context = zmq.Context()
+        self.xpub_sockets = {}
+        self.xsub_sockets = {}
+        self.proxy_threads = {}
+        self.running = False
+
+    def add_xpub_socket(self, name: str, address: str) -&gt; None:
+        &#34;&#34;&#34;
+        Add a new XPUB socket to the broker.
+
+        Args:
+            name: Unique name for the socket
+            address: ZMQ address (e.g., &#39;tcp://*:5555&#39;, &#39;ipc:///tmp/xpub.ipc&#39;)
+        &#34;&#34;&#34;
+        if name in self.xpub_sockets:
+            raise ValueError(f&#34;XPUB socket with name &#39;{name}&#39; already exists&#34;)
+
+        socket = self.context.socket(zmq.XPUB)
+        socket.bind(address)
+        self.xpub_sockets[name] = socket
+        logger.info(f&#34;Added XPUB socket &#39;{name}&#39; bound to {address}&#34;)
+
+    def add_xsub_socket(self, name: str, address: str) -&gt; None:
+        &#34;&#34;&#34;
+        Add a new XSUB socket to the broker.
+
+        Args:
+            name: Unique name for the socket
+            address: ZMQ address (e.g., &#39;tcp://*:5556&#39;, &#39;ipc:///tmp/xsub.ipc&#39;)
+        &#34;&#34;&#34;
+        if name in self.xsub_sockets:
+            raise ValueError(f&#34;XSUB socket with name &#39;{name}&#39; already exists&#34;)
+
+        socket = self.context.socket(zmq.XSUB)
+        socket.bind(address)
+        self.xsub_sockets[name] = socket
+        logger.info(f&#34;Added XSUB socket &#39;{name}&#39; bound to {address}&#34;)
+
+    def start_proxy(self, name: str, xpub_name: str, xsub_name: str) -&gt; None:
+        &#34;&#34;&#34;
+        Start a ZMQ proxy thread between an XPUB and XSUB socket.
+
+        Args:
+            name: Unique name for the proxy thread
+            xpub_name: Name of the XPUB socket to use
+            xsub_name: Name of the XSUB socket to use
+        &#34;&#34;&#34;
+        if name in self.proxy_threads:
+            raise ValueError(f&#34;Proxy with name &#39;{name}&#39; already exists&#34;)
+
+        if xpub_name not in self.xpub_sockets:
+            raise ValueError(f&#34;No XPUB socket with name &#39;{xpub_name}&#39; exists&#34;)
+
+        if xsub_name not in self.xsub_sockets:
+            raise ValueError(f&#34;No XSUB socket with name &#39;{xsub_name}&#39; exists&#34;)
+
+        xpub_socket = self.xpub_sockets[xpub_name]
+        xsub_socket = self.xsub_sockets[xsub_name]
+
+        def proxy_function():
+            try:
+                logger.info(
+                    f&#34;Starting proxy &#39;{name}&#39; between {xpub_name} and {xsub_name}&#34;
+                )
+                zmq.proxy(xpub_socket, xsub_socket)
+            except zmq.ContextTerminated:
+                logger.info(f&#34;Proxy &#39;{name}&#39; terminated due to context termination&#34;)
+            except Exception as e:
+                logger.error(f&#34;Error in proxy &#39;{name}&#39;: {e}&#34;)
+            finally:
+                logger.info(f&#34;Proxy &#39;{name}&#39; stopped&#34;)
+
+        thread = threading.Thread(target=proxy_function, daemon=True)
+        thread.start()
+        self.proxy_threads[name] = thread
+        logger.info(
+            f&#34;Started proxy thread &#39;{name}&#39; between {xpub_name} and {xsub_name}&#34;
+        )
+
+    def connect_sub_to_xpub(self, name: str, remote_xpub_address: str) -&gt; zmq.Socket:
+        &#34;&#34;&#34;
+        Create a SUB socket and connect it to a remote XPUB address.
+        Used by spoke supervisors to receive messages from the hub.
+
+        Args:
+            name: Unique name for the socket
+            remote_xpub_address: The remote XPUB address to connect to
+
+        Returns:
+            The created SUB socket
+        &#34;&#34;&#34;
+        socket = self.context.socket(zmq.SUB)
+        socket.connect(remote_xpub_address)
+        socket.setsockopt_string(zmq.SUBSCRIBE, &#34;&#34;)  # Subscribe to all topics
+        logger.info(f&#34;Created SUB socket &#39;{name}&#39; connected to {remote_xpub_address}&#34;)
+        return socket
+
+    def connect_pub_to_xsub(self, name: str, remote_xsub_address: str) -&gt; zmq.Socket:
+        &#34;&#34;&#34;
+        Create a PUB socket and connect it to a remote XSUB address.
+        Used by spoke supervisors to send messages to the hub.
+
+        Args:
+            name: Unique name for the socket
+            remote_xsub_address: The remote XSUB address to connect to
+
+        Returns:
+            The created PUB socket
+        &#34;&#34;&#34;
+        socket = self.context.socket(zmq.PUB)
+        socket.connect(remote_xsub_address)
+        logger.info(f&#34;Created PUB socket &#39;{name}&#39; connected to {remote_xsub_address}&#34;)
+        return socket
+
+    def stop(self) -&gt; None:
+        &#34;&#34;&#34;
+        Stop all proxy threads and close all sockets.
+        &#34;&#34;&#34;
+        logger.info(&#34;Stopping message broker...&#34;)
+
+        # Close all sockets
+        for name, socket in self.xpub_sockets.items():
+            logger.info(f&#34;Closing XPUB socket &#39;{name}&#39;&#34;)
+            socket.close()
+
+        for name, socket in self.xsub_sockets.items():
+            logger.info(f&#34;Closing XSUB socket &#39;{name}&#39;&#34;)
+            socket.close()
+
+        # Terminate context
+        logger.info(&#34;Terminating ZMQ context&#34;)
+        self.context.term()
+
+        logger.info(&#34;Message broker stopped&#34;)
+
+    def send(self, message: DAQJobMessage):
+        &#34;&#34;&#34;
+        Send a message to a topic, to all connected XPUB sockets.
+
+        Args:
+            topic: Topic to send the message to
+            message: Message to send
+        &#34;&#34;&#34;
+        for socket in self.xpub_sockets.values():
+            send_message(socket, message)
+
+        logger.debug(
+            f&#34;Sent {type(message).__name__} to {len(self.xpub_sockets)} XPUB sockets&#34;
+        )
+
+    def get_socket_addresses(self) -&gt; Dict[str, List[tuple]]:
+        &#34;&#34;&#34;
+        Get all configured socket addresses for monitoring/debugging purposes.
+
+        Returns:
+            Dictionary mapping socket type to list of (name, address) tuples
+        &#34;&#34;&#34;
+        addresses = {&#34;xpub&#34;: [], &#34;xsub&#34;: []}
+
+        # For XPUB sockets, we can get the bound addresses
+        for name, socket in self.xpub_sockets.items():
+            try:
+                addr_bytes = socket.getsockopt(zmq.LAST_ENDPOINT)
+                if isinstance(addr_bytes, bytes):
+                    addr = addr_bytes.decode(&#34;utf-8&#34;)
+                else:
+                    addr = str(addr_bytes)
+                addresses[&#34;xpub&#34;].append((name, addr))
+            except zmq.Again:
+                # Socket might not have an endpoint yet
+                addresses[&#34;xpub&#34;].append((name, &#34;unbound&#34;))
+
+        # For XSUB sockets, we can get the bound addresses
+        for name, socket in self.xsub_sockets.items():
+            try:
+                addr_bytes = socket.getsockopt(zmq.LAST_ENDPOINT)
+                if isinstance(addr_bytes, bytes):
+                    addr = addr_bytes.decode(&#34;utf-8&#34;)
+                else:
+                    addr = str(addr_bytes)
+                addresses[&#34;xsub&#34;].append((name, addr))
+            except zmq.Again:
+                # Socket might not have an endpoint yet
+                addresses[&#34;xsub&#34;].append((name, &#34;unbound&#34;))
+
+        return addresses</code></pre>
+</details>
+<div class="desc"><p>A message broker class that creates and manages XPUB and XSUB sockets for proxying messages.
+Uses ZMQ proxy functionality in separate threads.</p>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>context</code></strong> :&ensp;<code>zmq.Context</code></dt>
+<dd>The ZMQ context.</dd>
+<dt><strong><code>xpub_sockets</code></strong> :&ensp;<code>Dict[str, zmq.Socket]</code></dt>
+<dd>A dictionary of XPUB sockets.</dd>
+<dt><strong><code>xsub_sockets</code></strong> :&ensp;<code>Dict[str, zmq.Socket]</code></dt>
+<dd>A dictionary of XSUB sockets.</dd>
+<dt><strong><code>proxy_threads</code></strong> :&ensp;<code>Dict[str, threading.Thread]</code></dt>
+<dd>A dictionary of proxy threads.</dd>
+<dt><strong><code>running</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Flag indicating if the broker is running.</dd>
+</dl></div>
+<h3>Class variables</h3>
+<dl>
+<dt id="enrgdaq.message_broker.MessageBroker.context"><code class="name">var <span class="ident">context</span> : zmq.sugar.context.Context</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.proxy_threads"><code class="name">var <span class="ident">proxy_threads</span> : Dict[str, threading.Thread]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.running"><code class="name">var <span class="ident">running</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.xpub_sockets"><code class="name">var <span class="ident">xpub_sockets</span> : Dict[str, zmq.sugar.socket.Socket]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.xsub_sockets"><code class="name">var <span class="ident">xsub_sockets</span> : Dict[str, zmq.sugar.socket.Socket]</code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="enrgdaq.message_broker.MessageBroker.add_xpub_socket"><code class="name flex">
+<span>def <span class="ident">add_xpub_socket</span></span>(<span>self, name: str, address: str) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_xpub_socket(self, name: str, address: str) -&gt; None:
+    &#34;&#34;&#34;
+    Add a new XPUB socket to the broker.
+
+    Args:
+        name: Unique name for the socket
+        address: ZMQ address (e.g., &#39;tcp://*:5555&#39;, &#39;ipc:///tmp/xpub.ipc&#39;)
+    &#34;&#34;&#34;
+    if name in self.xpub_sockets:
+        raise ValueError(f&#34;XPUB socket with name &#39;{name}&#39; already exists&#34;)
+
+    socket = self.context.socket(zmq.XPUB)
+    socket.bind(address)
+    self.xpub_sockets[name] = socket
+    logger.info(f&#34;Added XPUB socket &#39;{name}&#39; bound to {address}&#34;)</code></pre>
+</details>
+<div class="desc"><p>Add a new XPUB socket to the broker.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the socket</dd>
+<dt><strong><code>address</code></strong></dt>
+<dd>ZMQ address (e.g., 'tcp://*:5555', 'ipc:///tmp/xpub.ipc')</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.add_xsub_socket"><code class="name flex">
+<span>def <span class="ident">add_xsub_socket</span></span>(<span>self, name: str, address: str) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def add_xsub_socket(self, name: str, address: str) -&gt; None:
+    &#34;&#34;&#34;
+    Add a new XSUB socket to the broker.
+
+    Args:
+        name: Unique name for the socket
+        address: ZMQ address (e.g., &#39;tcp://*:5556&#39;, &#39;ipc:///tmp/xsub.ipc&#39;)
+    &#34;&#34;&#34;
+    if name in self.xsub_sockets:
+        raise ValueError(f&#34;XSUB socket with name &#39;{name}&#39; already exists&#34;)
+
+    socket = self.context.socket(zmq.XSUB)
+    socket.bind(address)
+    self.xsub_sockets[name] = socket
+    logger.info(f&#34;Added XSUB socket &#39;{name}&#39; bound to {address}&#34;)</code></pre>
+</details>
+<div class="desc"><p>Add a new XSUB socket to the broker.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the socket</dd>
+<dt><strong><code>address</code></strong></dt>
+<dd>ZMQ address (e.g., 'tcp://*:5556', 'ipc:///tmp/xsub.ipc')</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.connect_pub_to_xsub"><code class="name flex">
+<span>def <span class="ident">connect_pub_to_xsub</span></span>(<span>self, name: str, remote_xsub_address: str) ‑> zmq.sugar.socket.Socket</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect_pub_to_xsub(self, name: str, remote_xsub_address: str) -&gt; zmq.Socket:
+    &#34;&#34;&#34;
+    Create a PUB socket and connect it to a remote XSUB address.
+    Used by spoke supervisors to send messages to the hub.
+
+    Args:
+        name: Unique name for the socket
+        remote_xsub_address: The remote XSUB address to connect to
+
+    Returns:
+        The created PUB socket
+    &#34;&#34;&#34;
+    socket = self.context.socket(zmq.PUB)
+    socket.connect(remote_xsub_address)
+    logger.info(f&#34;Created PUB socket &#39;{name}&#39; connected to {remote_xsub_address}&#34;)
+    return socket</code></pre>
+</details>
+<div class="desc"><p>Create a PUB socket and connect it to a remote XSUB address.
+Used by spoke supervisors to send messages to the hub.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the socket</dd>
+<dt><strong><code>remote_xsub_address</code></strong></dt>
+<dd>The remote XSUB address to connect to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The created PUB socket</p></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.connect_sub_to_xpub"><code class="name flex">
+<span>def <span class="ident">connect_sub_to_xpub</span></span>(<span>self, name: str, remote_xpub_address: str) ‑> zmq.sugar.socket.Socket</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def connect_sub_to_xpub(self, name: str, remote_xpub_address: str) -&gt; zmq.Socket:
+    &#34;&#34;&#34;
+    Create a SUB socket and connect it to a remote XPUB address.
+    Used by spoke supervisors to receive messages from the hub.
+
+    Args:
+        name: Unique name for the socket
+        remote_xpub_address: The remote XPUB address to connect to
+
+    Returns:
+        The created SUB socket
+    &#34;&#34;&#34;
+    socket = self.context.socket(zmq.SUB)
+    socket.connect(remote_xpub_address)
+    socket.setsockopt_string(zmq.SUBSCRIBE, &#34;&#34;)  # Subscribe to all topics
+    logger.info(f&#34;Created SUB socket &#39;{name}&#39; connected to {remote_xpub_address}&#34;)
+    return socket</code></pre>
+</details>
+<div class="desc"><p>Create a SUB socket and connect it to a remote XPUB address.
+Used by spoke supervisors to receive messages from the hub.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the socket</dd>
+<dt><strong><code>remote_xpub_address</code></strong></dt>
+<dd>The remote XPUB address to connect to</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The created SUB socket</p></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.get_socket_addresses"><code class="name flex">
+<span>def <span class="ident">get_socket_addresses</span></span>(<span>self) ‑> Dict[str, List[tuple]]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_socket_addresses(self) -&gt; Dict[str, List[tuple]]:
+    &#34;&#34;&#34;
+    Get all configured socket addresses for monitoring/debugging purposes.
+
+    Returns:
+        Dictionary mapping socket type to list of (name, address) tuples
+    &#34;&#34;&#34;
+    addresses = {&#34;xpub&#34;: [], &#34;xsub&#34;: []}
+
+    # For XPUB sockets, we can get the bound addresses
+    for name, socket in self.xpub_sockets.items():
+        try:
+            addr_bytes = socket.getsockopt(zmq.LAST_ENDPOINT)
+            if isinstance(addr_bytes, bytes):
+                addr = addr_bytes.decode(&#34;utf-8&#34;)
+            else:
+                addr = str(addr_bytes)
+            addresses[&#34;xpub&#34;].append((name, addr))
+        except zmq.Again:
+            # Socket might not have an endpoint yet
+            addresses[&#34;xpub&#34;].append((name, &#34;unbound&#34;))
+
+    # For XSUB sockets, we can get the bound addresses
+    for name, socket in self.xsub_sockets.items():
+        try:
+            addr_bytes = socket.getsockopt(zmq.LAST_ENDPOINT)
+            if isinstance(addr_bytes, bytes):
+                addr = addr_bytes.decode(&#34;utf-8&#34;)
+            else:
+                addr = str(addr_bytes)
+            addresses[&#34;xsub&#34;].append((name, addr))
+        except zmq.Again:
+            # Socket might not have an endpoint yet
+            addresses[&#34;xsub&#34;].append((name, &#34;unbound&#34;))
+
+    return addresses</code></pre>
+</details>
+<div class="desc"><p>Get all configured socket addresses for monitoring/debugging purposes.</p>
+<h2 id="returns">Returns</h2>
+<p>Dictionary mapping socket type to list of (name, address) tuples</p></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self,<br>message: <a title="enrgdaq.daq.models.DAQJobMessage" href="daq/models.html#enrgdaq.daq.models.DAQJobMessage">DAQJobMessage</a>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, message: DAQJobMessage):
+    &#34;&#34;&#34;
+    Send a message to a topic, to all connected XPUB sockets.
+
+    Args:
+        topic: Topic to send the message to
+        message: Message to send
+    &#34;&#34;&#34;
+    for socket in self.xpub_sockets.values():
+        send_message(socket, message)
+
+    logger.debug(
+        f&#34;Sent {type(message).__name__} to {len(self.xpub_sockets)} XPUB sockets&#34;
+    )</code></pre>
+</details>
+<div class="desc"><p>Send a message to a topic, to all connected XPUB sockets.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>topic</code></strong></dt>
+<dd>Topic to send the message to</dd>
+<dt><strong><code>message</code></strong></dt>
+<dd>Message to send</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.start_proxy"><code class="name flex">
+<span>def <span class="ident">start_proxy</span></span>(<span>self, name: str, xpub_name: str, xsub_name: str) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_proxy(self, name: str, xpub_name: str, xsub_name: str) -&gt; None:
+    &#34;&#34;&#34;
+    Start a ZMQ proxy thread between an XPUB and XSUB socket.
+
+    Args:
+        name: Unique name for the proxy thread
+        xpub_name: Name of the XPUB socket to use
+        xsub_name: Name of the XSUB socket to use
+    &#34;&#34;&#34;
+    if name in self.proxy_threads:
+        raise ValueError(f&#34;Proxy with name &#39;{name}&#39; already exists&#34;)
+
+    if xpub_name not in self.xpub_sockets:
+        raise ValueError(f&#34;No XPUB socket with name &#39;{xpub_name}&#39; exists&#34;)
+
+    if xsub_name not in self.xsub_sockets:
+        raise ValueError(f&#34;No XSUB socket with name &#39;{xsub_name}&#39; exists&#34;)
+
+    xpub_socket = self.xpub_sockets[xpub_name]
+    xsub_socket = self.xsub_sockets[xsub_name]
+
+    def proxy_function():
+        try:
+            logger.info(
+                f&#34;Starting proxy &#39;{name}&#39; between {xpub_name} and {xsub_name}&#34;
+            )
+            zmq.proxy(xpub_socket, xsub_socket)
+        except zmq.ContextTerminated:
+            logger.info(f&#34;Proxy &#39;{name}&#39; terminated due to context termination&#34;)
+        except Exception as e:
+            logger.error(f&#34;Error in proxy &#39;{name}&#39;: {e}&#34;)
+        finally:
+            logger.info(f&#34;Proxy &#39;{name}&#39; stopped&#34;)
+
+    thread = threading.Thread(target=proxy_function, daemon=True)
+    thread.start()
+    self.proxy_threads[name] = thread
+    logger.info(
+        f&#34;Started proxy thread &#39;{name}&#39; between {xpub_name} and {xsub_name}&#34;
+    )</code></pre>
+</details>
+<div class="desc"><p>Start a ZMQ proxy thread between an XPUB and XSUB socket.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>name</code></strong></dt>
+<dd>Unique name for the proxy thread</dd>
+<dt><strong><code>xpub_name</code></strong></dt>
+<dd>Name of the XPUB socket to use</dd>
+<dt><strong><code>xsub_name</code></strong></dt>
+<dd>Name of the XSUB socket to use</dd>
+</dl></div>
+</dd>
+<dt id="enrgdaq.message_broker.MessageBroker.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self) ‑> None</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self) -&gt; None:
+    &#34;&#34;&#34;
+    Stop all proxy threads and close all sockets.
+    &#34;&#34;&#34;
+    logger.info(&#34;Stopping message broker...&#34;)
+
+    # Close all sockets
+    for name, socket in self.xpub_sockets.items():
+        logger.info(f&#34;Closing XPUB socket &#39;{name}&#39;&#34;)
+        socket.close()
+
+    for name, socket in self.xsub_sockets.items():
+        logger.info(f&#34;Closing XSUB socket &#39;{name}&#39;&#34;)
+        socket.close()
+
+    # Terminate context
+    logger.info(&#34;Terminating ZMQ context&#34;)
+    self.context.term()
+
+    logger.info(&#34;Message broker stopped&#34;)</code></pre>
+</details>
+<div class="desc"><p>Stop all proxy threads and close all sockets.</p></div>
+</dd>
+</dl>
+</dd>
+</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -54,6 +659,33 @@ el.replaceWith(d);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="enrgdaq" href="index.html">enrgdaq</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.message_broker.send_message" href="#enrgdaq.message_broker.send_message">send_message</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="enrgdaq.message_broker.MessageBroker" href="#enrgdaq.message_broker.MessageBroker">MessageBroker</a></code></h4>
+<ul class="">
+<li><code><a title="enrgdaq.message_broker.MessageBroker.add_xpub_socket" href="#enrgdaq.message_broker.MessageBroker.add_xpub_socket">add_xpub_socket</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.add_xsub_socket" href="#enrgdaq.message_broker.MessageBroker.add_xsub_socket">add_xsub_socket</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.connect_pub_to_xsub" href="#enrgdaq.message_broker.MessageBroker.connect_pub_to_xsub">connect_pub_to_xsub</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.connect_sub_to_xpub" href="#enrgdaq.message_broker.MessageBroker.connect_sub_to_xpub">connect_sub_to_xpub</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.context" href="#enrgdaq.message_broker.MessageBroker.context">context</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.get_socket_addresses" href="#enrgdaq.message_broker.MessageBroker.get_socket_addresses">get_socket_addresses</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.proxy_threads" href="#enrgdaq.message_broker.MessageBroker.proxy_threads">proxy_threads</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.running" href="#enrgdaq.message_broker.MessageBroker.running">running</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.send" href="#enrgdaq.message_broker.MessageBroker.send">send</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.start_proxy" href="#enrgdaq.message_broker.MessageBroker.start_proxy">start_proxy</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.stop" href="#enrgdaq.message_broker.MessageBroker.stop">stop</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.xpub_sockets" href="#enrgdaq.message_broker.MessageBroker.xpub_sockets">xpub_sockets</a></code></li>
+<li><code><a title="enrgdaq.message_broker.MessageBroker.xsub_sockets" href="#enrgdaq.message_broker.MessageBroker.xsub_sockets">xsub_sockets</a></code></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
