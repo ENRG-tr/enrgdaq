@@ -80,14 +80,14 @@ class SupervisorCNC:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self._logger.setLevel(config.verbosity.to_logging_level())
 
-        if not self.is_server:
-            from .log_util import CNCLogHandler
+        # Add CNC log handler for both server and client instances
+        from .log_util import CNCLogHandler
 
-            cnc_handler = CNCLogHandler(self)
-            cnc_handler.setLevel(config.verbosity.to_logging_level())
+        cnc_handler = CNCLogHandler(self)
+        cnc_handler.setLevel(config.verbosity.to_logging_level())
 
-            self._logger.addHandler(cnc_handler)
-            self._logger.propagate = False
+        self._logger.addHandler(cnc_handler)
+        self._logger.propagate = False
 
         self.message_handlers = {
             CNCMessageHeartbeat: HeartbeatHandler(self),

@@ -52,6 +52,9 @@ class CNCLogHandler(logging.Handler):
             # For clients, we send the message directly to the server
             if not self.cnc_instance.is_server:
                 self.cnc_instance._send_zmq_message(None, cnc_log_msg)
+            else:
+                # For server, directly add to own logs since there's no ZMQ round-trip
+                self.cnc_instance.add_client_log(client_id, cnc_log_msg)
 
             # Propagate the log message to the root logger
             logging.getLogger().handle(record)
