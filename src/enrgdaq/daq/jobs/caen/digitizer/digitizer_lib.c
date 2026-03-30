@@ -134,6 +134,7 @@ void *processing_thread_func(void *arg)
     stats.max_value_mv = INT16_MIN;
 
     time_t last_log_time = time(NULL);
+    time_t last_send_time = time(NULL);  // Track last buffer send time
 
     if (g_is_debug_verbosity)
         fprintf(stdout, "Consumer thread started.\n");
@@ -162,15 +163,21 @@ void *processing_thread_func(void *arg)
         for (int ch = 0; ch < CHANNEL_COUNT; ch++)
             total_ch_size += item->ChSize[ch];
 
-        // Check if buffer is full
-        if (acq_buffer.len + total_ch_size > ACQ_BUFFER_SIZE)
+        // Check if buffer is full or last send was more than ACQ_BUFFER_TIMEOUT_SEC seconds ago
+        time_t current_time = time(NULL);
+        if (acq_buffer.len + total_ch_size > ACQ_BUFFER_SIZE ||
+            (acq_buffer.len > 0 && current_time - last_send_time >= ACQ_BUFFER_TIMEOUT_SEC))
         {
             if (g_is_debug_verbosity)
             {
-                fprintf(stdout, "Consumer buffer full with %u items.\n", acq_buffer.len);
+                if (acq_buffer.len + total_ch_size > ACQ_BUFFER_SIZE)
+                    fprintf(stdout, "Consumer buffer full with %u items.\n", acq_buffer.len);
+                else
+                    fprintf(stdout, "Consumer buffer timeout with %u items.\n", acq_buffer.len);
             }
             args->waveform_callback(&acq_buffer);
             acq_buffer.len = 0;
+            last_send_time = current_time;
             stats.buffer_flush_count++;
         }
 
