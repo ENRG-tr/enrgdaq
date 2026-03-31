@@ -69,7 +69,9 @@ el.replaceWith(d);
 
     for topic in message.topics:
         payload[0] = topic.encode()
-        socket.send_multipart(payload)</code></pre>
+        socket.send_multipart(payload)
+
+    return sum(len(b) for b in buffer)</code></pre>
 </details>
 <div class="desc"></div>
 </dd>

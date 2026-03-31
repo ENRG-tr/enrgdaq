@@ -252,7 +252,8 @@ el.replaceWith(d);
             message: DAQJobMessage = self._publish_buffer.get()
             if message is None:
                 break
-            send_message(zmq_xsub, message, buffer)
+            self._sent_count += 1
+            self._sent_bytes += send_message(zmq_xsub, message, buffer)
 
     def _report_thread_func(self):
         &#34;&#34;&#34;Periodically report stats and traces.&#34;&#34;&#34;
@@ -436,15 +437,9 @@ el.replaceWith(d);
         &#34;&#34;&#34;
         message = self._prepare_message(message, use_shm, modify_message_metadata)
         self._publish_buffer.put(message)
-        self._sent_count += 1
 
         # Record sent trace event (skip internal messages to avoid loops)
         if not isinstance(message, InternalDAQJobMessage):
-            # Estimate size using pickle (approximation)
-            try:
-                sent_size = len(pickle.dumps(message))
-            except Exception:
-                sent_size = 0
             self._trace_events.append(
                 DAQJobMessageTraceEvent(
                     message_id=message.id or &#34;unknown&#34;,
@@ -452,7 +447,7 @@ el.replaceWith(d);
                     event_type=&#34;sent&#34;,
                     topics=list(message.topics),
                     timestamp=datetime.now(),
-                    size_bytes=sent_size,
+                    size_bytes=-1,  # TODO: Have to wait _publish_thread for the actual size
                     source_job=type(self).__name__,
                     source_supervisor=self.supervisor_id,
                 )
@@ -840,7 +835,7 @@ def supervisor_id(self):
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f89b25646b0>> = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f89e1d54740>> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1205,7 +1200,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f89b25646b0>></code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f89e1d54740>></code></dt>
 <dd>
 <details class="source">
 <summary>
