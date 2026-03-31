@@ -1,8 +1,11 @@
 from collections import defaultdict
+
+
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
 import msgspec
+import pyarrow as pa
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import (
@@ -15,7 +18,7 @@ from enrgdaq.daq.models import (
     SupervisorRemoteStats,
 )
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.daq.topics import Topic
@@ -164,11 +167,17 @@ class DAQJobHandleStats(DAQJob):
                     ]
                 )
 
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
             )
         )
         self._put_message_out(
@@ -277,11 +286,19 @@ class DAQJobHandleStats(DAQJob):
                     _byte_to_mb(remote_stats.message_out_bytes),
                 ]
             )
+
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            # Create an empty table with the right schema
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
                 tag="remote",
             )
         )

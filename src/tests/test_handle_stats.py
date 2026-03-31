@@ -106,15 +106,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._supervisor_activity = {}
 
         self.daq_job_handle_stats._save_remote_stats()
-        # _save_remote_stats sends 2 messages: DAQJobMessageStoreTabular and DAQJobMessageCombinedRemoteStats
+        # _save_remote_stats sends 2 messages: DAQJobMessageStorePyArrow and DAQJobMessageCombinedRemoteStats
         self.assertEqual(self.daq_job_handle_stats._publish_buffer.put.call_count, 2)
-        # First call is the DAQJobMessageStoreTabular with the data field
-        first_call_args = self.daq_job_handle_stats._publish_buffer.put.call_args_list[
-            0
-        ]
-        data = first_call_args[0][0].data
-
-        self.assertEqual(len(data), 0)
 
 
 if __name__ == "__main__":

@@ -4,6 +4,7 @@ CAEN HV DAQ Job for controlling CAEN High Voltage power supplies.
 Uses the caen_libs caenhvwrapper library to communicate with CAEN HV devices.
 """
 
+import pyarrow as pa
 from datetime import datetime, timedelta
 from typing import Literal, Optional
 
@@ -52,7 +53,7 @@ except Exception:
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobConfig, DAQJobMessage
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     DAQJobStoreConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms, sleep_for
@@ -359,12 +360,15 @@ class DAQJobCAENHV(DAQJob):
                 data_rows.append(row)
 
             if data_rows:
+                table = pa.table(
+                    {key: [row[i] for row in data_rows] for i, key in enumerate(keys)}
+                )
+
                 self._put_message_out(
-                    DAQJobMessageStoreTabular(
+                    DAQJobMessageStorePyArrow(
                         store_config=self.config.store_config,
                         tag="ch_param",
-                        keys=keys,
-                        data=data_rows,
+                        table=table,
                     )
                 )
                 self._logger.debug(f"Sent {len(data_rows)} channel parameter readings")
@@ -396,12 +400,13 @@ class DAQJobCAENHV(DAQJob):
                 keys = ["timestamp", *channel_keys]
                 values = [timestamp, *values_for_param]
 
+                table = pa.table({key: [value] for key, value in zip(keys, values)})
+
                 self._put_message_out(
-                    DAQJobMessageStoreTabular(
+                    DAQJobMessageStorePyArrow(
                         store_config=self.config.timeseries_store_config,
                         tag=param_name,
-                        keys=keys,
-                        data=[values],
+                        table=table,
                     )
                 )
 

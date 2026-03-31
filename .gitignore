@@ -177,3 +177,5 @@ configs/server
 configs/disabled
 
 results/
+src/enrgdaq/daq/jobs/caen/hv.py
+src/enrgdaq/daq/jobs/handle_traces.py

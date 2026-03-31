@@ -18,7 +18,6 @@ from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
     DAQJobMessageStore,
     DAQJobMessageStorePyArrow,
-    DAQJobMessageStoreTabular,
     DAQJobStoreConfigCSV,
 )
 from enrgdaq.utils.file import modify_file_path
@@ -52,9 +51,7 @@ class DAQJobStoreCSV(DAQJobStore):
 
         self._open_csv_files = {}
 
-    def handle_message(
-        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
-    ) -> bool:
+    def handle_message(self, message: DAQJobMessageStorePyArrow) -> bool:
         if not super().handle_message(message):
             return False
 
@@ -72,7 +69,6 @@ class DAQJobStoreCSV(DAQJobStore):
         if file.overwrite:
             file.write_queue.clear()
 
-        # Handle PyArrow messages
         if isinstance(message, DAQJobMessageStorePyArrow):
             table = message.get_table()
             message.release()
@@ -81,8 +77,6 @@ class DAQJobStoreCSV(DAQJobStore):
             file.arrow_tables.append(table)
             return True
 
-        # Handle Tabular messages
-        # Write headers if the file is new
         if new_file or file.overwrite:
             file.write_queue.append(message.keys)
 
@@ -90,7 +84,7 @@ class DAQJobStoreCSV(DAQJobStore):
         if message.data is not None:
             for row in message.data:
                 file.write_queue.append(row)
-        elif message.data_columns is not None:
+        elif hasattr(message, "data_columns") and message.data_columns is not None:
             cols = [message.data_columns[k] for k in message.keys]
             if cols and all(isinstance(c, ndarray) for c in cols):
                 data_rows = np.stack(cols, axis=-1)
@@ -98,6 +92,16 @@ class DAQJobStoreCSV(DAQJobStore):
             else:
                 for row in zip(*cols):
                     file.write_queue.append(list(row))
+        else:
+            # Handle PyArrow table
+            table = message.get_table()
+            # Add header if needed
+            if new_file or file.overwrite:
+                file.write_queue.append(table.column_names)
+            # Add rows from table
+            for i in range(table.num_rows):
+                row = [table.column(j).to_pylist()[i] for j in range(table.num_columns)]
+                file.write_queue.append(row)
 
         return True
 

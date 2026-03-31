@@ -8,12 +8,14 @@ from enrgdaq.daq.models import (
     DAQJobMessageTraceReport,
 )
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.daq.topics import Topic
 from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
+
+import pyarrow as pa
 
 DAQ_JOB_HANDLE_TRACES_SLEEP_INTERVAL_SECONDS = 1
 
@@ -146,24 +148,40 @@ class DAQJobHandleTraces(DAQJob):
                     )
 
         # Output raw traces
+        if trace_data:
+            table = pa.table(
+                {
+                    key: [row[i] for row in trace_data]
+                    for i, key in enumerate(trace_keys)
+                }
+            )
+        else:
+            table = pa.table({key: [] for key in trace_keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=trace_keys,
-                data=trace_data,
+                table=table,
             )
         )
 
-        # Output latency stats if we have any
         if latency_data:
-            self._put_message_out(
-                DAQJobMessageStoreTabular(
-                    store_config=self.config.store_config,
-                    keys=latency_keys,
-                    data=latency_data,
-                    tag="latency",
-                )
+            table = pa.table(
+                {
+                    key: [row[i] for row in latency_data]
+                    for i, key in enumerate(latency_keys)
+                }
             )
+        else:
+            table = pa.table({key: [] for key in latency_keys})
+
+        self._put_message_out(
+            DAQJobMessageStorePyArrow(
+                store_config=self.config.store_config,
+                table=table,
+                tag="latency",
+            )
+        )
 
         # Broadcast combined traces for cross-supervisor visibility
         self._put_message_out(

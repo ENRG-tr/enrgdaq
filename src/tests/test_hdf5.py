@@ -8,7 +8,7 @@ import numpy as np
 
 from enrgdaq.daq.jobs.store.hdf5 import DAQJobStoreHDF5, DAQJobStoreHDF5Config
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     DAQJobStoreConfig,
     DAQJobStoreConfigHDF5,
 )
@@ -34,15 +34,17 @@ class TestHDF5Store(unittest.TestCase):
             shutil.rmtree(os.path.dirname(self.test_file_real_path))
 
     def test_handle_message(self):
+        import pyarrow as pa
+
         store_config = DAQJobStoreConfig(
             hdf5=DAQJobStoreConfigHDF5(
                 file_path=self.test_file, add_date=False, dataset_name="test_data"
             )
         )
-        message = DAQJobMessageStoreTabular(
+        table = pa.table({"col1": [1, 2], "col2": [3, 4]})
+        message = DAQJobMessageStorePyArrow(
             store_config=store_config,
-            keys=["col1", "col2"],
-            data_columns={"col1": np.array([1, 2]), "col2": np.array([3, 4])},
+            table=table,
         )
 
         self.assertTrue(self.hdf5_store.handle_message(message))
@@ -56,10 +58,10 @@ class TestHDF5Store(unittest.TestCase):
             self.assertTrue(np.array_equal(f["test_data/col2"][:], np.array([3, 4])))
 
         # Test extending the dataset
-        message_2 = DAQJobMessageStoreTabular(
+        table_2 = pa.table({"col1": [5, 6], "col2": [7, 8]})
+        message_2 = DAQJobMessageStorePyArrow(
             store_config=store_config,
-            keys=["col1", "col2"],
-            data_columns={"col1": np.array([5, 6]), "col2": np.array([7, 8])},
+            table=table_2,
         )
         self.assertTrue(self.hdf5_store.handle_message(message_2))
 
@@ -72,6 +74,8 @@ class TestHDF5Store(unittest.TestCase):
             )
 
     def test_directory_creation(self):
+        import pyarrow as pa
+
         dir_path = os.path.join(self.test_dir, "new_dir")
         file_path = os.path.join(dir_path, "test.h5")
         store_config = DAQJobStoreConfig(
@@ -79,10 +83,10 @@ class TestHDF5Store(unittest.TestCase):
                 file_path=file_path, add_date=False, dataset_name="test_data"
             )
         )
-        message = DAQJobMessageStoreTabular(
+        table = pa.table({"col1": [1]})
+        message = DAQJobMessageStorePyArrow(
             store_config=store_config,
-            keys=["col1"],
-            data_columns={"col1": np.array([1])},
+            table=table,
         )
 
         real_file_path = os.path.join("out", file_path)
@@ -93,6 +97,8 @@ class TestHDF5Store(unittest.TestCase):
         self.assertTrue(os.path.exists(real_file_path))
 
     def test_file_path_modification(self):
+        import pyarrow as pa
+
         date_str = datetime.now().strftime("%Y-%m-%d")
         tag = "run1"
         base_file_path = os.path.join(self.test_dir, "tagged_data.h5")
@@ -105,42 +111,44 @@ class TestHDF5Store(unittest.TestCase):
                 file_path=base_file_path, add_date=True, dataset_name="test_data"
             )
         )
-        message = DAQJobMessageStoreTabular(
+        table = pa.table({"col1": [1]})
+        message = DAQJobMessageStorePyArrow(
             store_config=store_config,
             tag=tag,
-            keys=["col1"],
-            data_columns={"col1": np.array([1])},
+            table=table,
         )
 
         self.assertTrue(self.hdf5_store.handle_message(message))
         self.assertTrue(os.path.exists(expected_file_path))
 
     def test_empty_data(self):
+        import pyarrow as pa
+
         store_config = DAQJobStoreConfig(
             hdf5=DAQJobStoreConfigHDF5(
                 file_path=self.test_file, add_date=False, dataset_name="test_data"
             )
         )
-        message = DAQJobMessageStoreTabular(
-            store_config=store_config, keys=[], data_columns={}
-        )
+        # Create an empty table with schema
+        table = pa.table({"col1": pa.array([], type=pa.int64())})
+        message = DAQJobMessageStorePyArrow(store_config=store_config, table=table)
 
         self.assertTrue(self.hdf5_store.handle_message(message))
-        # File should be created, but no datasets
-        self.assertTrue(os.path.exists(self.test_file_real_path))
-        with h5py.File(self.test_file_real_path, "r") as f:
-            self.assertEqual(len(f.keys()), 0)
+        # Empty table should not create a file
+        self.assertFalse(os.path.exists(self.test_file_real_path))
 
     def test_multiple_datasets(self):
+        import pyarrow as pa
+
         store_config1 = DAQJobStoreConfig(
             hdf5=DAQJobStoreConfigHDF5(
                 file_path=self.test_file, add_date=False, dataset_name="dataset1"
             )
         )
-        message1 = DAQJobMessageStoreTabular(
+        table1 = pa.table({"a": [1]})
+        message1 = DAQJobMessageStorePyArrow(
             store_config=store_config1,
-            keys=["a"],
-            data_columns={"a": np.array([1])},
+            table=table1,
         )
         self.assertTrue(self.hdf5_store.handle_message(message1))
 
@@ -149,10 +157,10 @@ class TestHDF5Store(unittest.TestCase):
                 file_path=self.test_file, add_date=False, dataset_name="dataset2"
             )
         )
-        message2 = DAQJobMessageStoreTabular(
+        table2 = pa.table({"b": [2]})
+        message2 = DAQJobMessageStorePyArrow(
             store_config=store_config2,
-            keys=["b"],
-            data_columns={"b": np.array([2])},
+            table=table2,
         )
         self.assertTrue(self.hdf5_store.handle_message(message2))
 

@@ -5,7 +5,7 @@ from enrgdaq.daq.alert.base import DAQJobMessageAlert
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.utils.time import get_unix_timestamp_ms
@@ -57,11 +57,19 @@ class DAQJobHandleAlerts(DAQJob):
             ]
         ]
 
+        import pyarrow as pa
+
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
             )
         )
 

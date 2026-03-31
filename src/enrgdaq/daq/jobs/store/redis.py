@@ -13,7 +13,6 @@ from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
     DAQJobMessageStorePyArrow,
     DAQJobMessageStoreRaw,
-    DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
 )
 
@@ -36,9 +35,8 @@ class DAQJobStoreRedis(DAQJobStore):
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
     allowed_message_in_types = [
-        DAQJobMessageStoreTabular,
-        DAQJobMessageStoreRaw,
         DAQJobMessageStorePyArrow,
+        DAQJobMessageStoreRaw,
     ]
 
     _write_queue: deque[RedisWriteQueueItem]
@@ -70,9 +68,7 @@ class DAQJobStoreRedis(DAQJobStore):
 
     def handle_message(
         self,
-        message: DAQJobMessageStoreTabular
-        | DAQJobMessageStoreRaw
-        | DAQJobMessageStorePyArrow,
+        message: DAQJobMessageStoreRaw | DAQJobMessageStorePyArrow,
     ) -> bool:
         if not super().handle_message(message):
             return False
@@ -92,15 +88,7 @@ class DAQJobStoreRedis(DAQJobStore):
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
             )
-        elif isinstance(message, DAQJobMessageStoreTabular):
-            # Add data to data dict that we can add to Redis
-            for i, row in enumerate(message.keys):
-                data[row] = [x[i] for x in message.data]
-            for row in message.data:
-                self._write_queue.append(
-                    RedisWriteQueueItem(store_config, data, message.tag)
-                )
-        else:
+        elif isinstance(message, DAQJobMessageStoreRaw):
             data = message.data
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
@@ -131,7 +119,7 @@ class DAQJobStoreRedis(DAQJobStore):
                 continue
             if not isinstance(msg.data, dict):
                 self._logger.error(
-                    "msg.data must be a dict or bytes, but got " f"{type(msg.data)}"
+                    f"msg.data must be a dict or bytes, but got {type(msg.data)}"
                 )
                 continue
 

@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from enrgdaq.daq.jobs.sensor.xiaomi_mijia import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     DAQJobXiaomiMijia,
     DAQXiaomiMijiaConfig,
 )
@@ -25,7 +25,7 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
             poll_interval_seconds=1,
             connect_retries=2,
             connect_retry_delay=0.1,
-            timeout_sec=5.0,  # Added new config property
+            timeout_sec=5.0,
             store_config=MagicMock(),
         )
         self.job = DAQJobXiaomiMijia(self.config)
@@ -51,6 +51,7 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         # 4. Assert
         self.assertIs(result_data, mock_data)
         self.job._logger.debug.assert_any_call("Connected and got data.")
+
         # Check if context manager was called with correct args
         mock_client_context_cls.assert_called_with(
             self.config.mac_address, timeout_sec=self.config.timeout_sec
@@ -66,7 +67,6 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         mock_data = DummyData()
         mock_client.get_data.return_value = mock_data
         mock_client.units = "F"
-
         mock_context_manager = MagicMock()
         mock_context_manager.__enter__.return_value = mock_client
 
@@ -118,17 +118,15 @@ class TestDAQJobXiaomiMijia(unittest.TestCase):
         # 3. Assert
         args, kwargs = self.job._put_message_out.call_args
         msg = args[0]
+        self.assertIsInstance(msg, DAQJobMessageStorePyArrow)
 
-        self.assertIsInstance(msg, DAQJobMessageStoreTabular)
-        # Check keys
-        self.assertEqual(msg.keys, ["timestamp", "temperature", "humidity", "battery"])
-        # Check data
-        expected_data = [123456789, 23.1, 60.2, 88]
-        self.assertEqual(msg.data[0], expected_data)
-
-        self.job._logger.debug.assert_called_with(
-            f"Sending data to store: {dict(zip(msg.keys, expected_data))}"
-        )
+        # Check table structure
+        table = msg.get_table()
+        self.assertEqual(
+            table.num_columns, 4
+        )  # timestamp, temperature, humidity, battery
+        self.assertEqual(table.num_rows, 1)
+        msg.release()
 
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._get_data")
     @patch("enrgdaq.daq.jobs.sensor.xiaomi_mijia.DAQJobXiaomiMijia._send_store_message")

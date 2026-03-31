@@ -12,7 +12,6 @@ from enrgdaq.daq.jobs.store.redis import (
 )
 from enrgdaq.daq.store.models import (
     DAQJobMessageStorePyArrow,
-    DAQJobMessageStoreTabular,
     DAQJobStoreConfigRedis,
 )
 from enrgdaq.models import SupervisorInfo
@@ -44,17 +43,27 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertIsNotNone(self.store._connection)
 
     def test_handle_message(self):
-        message = MagicMock(spec=DAQJobMessageStoreTabular)
-        message.store_config = MagicMock(
-            redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
+        # Create a PyArrow table for testing
+        import pyarrow as pa
+
+        table = pa.table(
+            {
+                "header1": ["row1_col1", "row2_col1"],
+                "header2": ["row1_col2", "row2_col2"],
+            }
         )
-        message.keys = ["header1", "header2"]
-        message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+
+        message = DAQJobMessageStorePyArrow(
+            store_config=MagicMock(
+                redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
+            ),
+            table=table,
+        )
 
         result = self.store.handle_message(message)
 
         self.assertTrue(result)
-        self.assertEqual(len(self.store._write_queue), 2)
+        self.assertEqual(len(self.store._write_queue), 1)
         self.assertEqual(self.store._write_queue[0].store_config.key, "test_key")
         self.assertEqual(
             self.store._write_queue[0].data["header1"], ["row1_col1", "row2_col1"]
@@ -154,17 +163,24 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertEqual(len(self.store._write_queue), 0)
 
     def test_handle_message_no_expiration(self):
-        message = MagicMock(spec=DAQJobMessageStoreTabular)
-        message.store_config = MagicMock(
-            redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=None)
+        table = pa.table(
+            {
+                "header1": ["row1_col1", "row2_col1"],
+                "header2": ["row1_col2", "row2_col2"],
+            }
         )
-        message.keys = ["header1", "header2"]
-        message.data = [["row1_col1", "row1_col2"], ["row2_col1", "row2_col2"]]
+
+        message = DAQJobMessageStorePyArrow(
+            store_config=MagicMock(
+                redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=None)
+            ),
+            table=table,
+        )
 
         result = self.store.handle_message(message)
 
         self.assertTrue(result)
-        self.assertEqual(len(self.store._write_queue), 2)
+        self.assertEqual(len(self.store._write_queue), 1)
         self.assertEqual(self.store._write_queue[0].store_config.key, "test_key")
         self.assertEqual(
             self.store._write_queue[0].data["header1"], ["row1_col1", "row2_col1"]
@@ -175,16 +191,27 @@ class TestDAQJobStoreRedis(unittest.TestCase):
         self.assertIsNone(self.store._write_queue[0].store_config.key_expiration_days)
 
     def test_handle_message_empty_data(self):
-        message = MagicMock(spec=DAQJobMessageStoreTabular)
-        message.store_config = MagicMock(
-            redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
+        # Create an empty PyArrow table for testing
+        import pyarrow as pa
+
+        table = pa.table(
+            {
+                "header1": pa.array([], type=pa.string()),
+                "header2": pa.array([], type=pa.string()),
+            }
         )
-        message.keys = ["header1", "header2"]
-        message.data = []
+
+        message = DAQJobMessageStorePyArrow(
+            store_config=MagicMock(
+                redis=DAQJobStoreConfigRedis(key="test_key", key_expiration_days=1)
+            ),
+            table=table,
+        )
 
         result = self.store.handle_message(message)
 
         self.assertTrue(result)
+        # Empty table should not add to queue
         self.assertEqual(len(self.store._write_queue), 0)
 
     def test_handle_message_pyarrow(self):

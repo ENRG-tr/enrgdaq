@@ -17,7 +17,7 @@ from enrgdaq.utils.subclasses import all_subclasses
 def _get_message_label(message_name: str) -> str:
     """Generate human-readable label from class name.
 
-    e.g., "DAQJobMessageStop" -> "Stop", "DAQJobMessageStoreTabular" -> "Store Tabular"
+    e.g., "DAQJobMessageStop" -> "Stop", "DAQJobMessageStorePyArrow" -> "Store PyArrow"
     """
     label = message_name
     if label.startswith("DAQJobMessage"):

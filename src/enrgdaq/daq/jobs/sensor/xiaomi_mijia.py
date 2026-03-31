@@ -3,7 +3,7 @@ import time
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms
@@ -101,10 +101,13 @@ class DAQJobXiaomiMijia(DAQJob):
         ]
 
         self._logger.debug(f"Sending data to store: {dict(zip(keys, values))}")
+        import pyarrow as pa
+
+        table = pa.table({key: [value] for key, value in zip(keys, values)})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=[values],
+                table=table,
             )
         )

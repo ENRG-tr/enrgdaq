@@ -13,7 +13,6 @@ from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
     DAQJobMessageStorePyArrow,
-    DAQJobMessageStoreTabular,
     DAQJobStoreConfigROOT,
 )
 from enrgdaq.utils.file import modify_file_path
@@ -86,7 +85,7 @@ class DAQJobStoreROOT(DAQJobStore):
     config_type = DAQJobStoreROOTConfig
     config: DAQJobStoreROOTConfig
     allowed_store_config_types = [DAQJobStoreConfigROOT]
-    allowed_message_in_types = [DAQJobMessageStoreTabular, DAQJobMessageStorePyArrow]
+    allowed_message_in_types = [DAQJobMessageStorePyArrow]
 
     _open_files: dict[str, uproot.WritableDirectory]
     _open_trees: dict[str, dict[str, uproot.WritableTree]]
@@ -101,26 +100,19 @@ class DAQJobStoreROOT(DAQJobStore):
         self._buffers = {}
         self._resolved_paths = {}
 
-    def handle_message(
-        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
-    ) -> bool:
+    def handle_message(self, message: DAQJobMessageStorePyArrow) -> bool:
         super().handle_message(message)
 
-        # Convert message to PyArrow table
         if isinstance(message, DAQJobMessageStorePyArrow):
             table = message.get_table()
             message.release()
             if table.num_rows == 0:
                 return True
-        else:
-            # Convert tabular data to PyArrow table
-            data_columns = message.data_columns
-            if not data_columns:
-                self._logger.warning(
-                    "Received tabular message with no data_column, DAQJobStoreROOT does not support that."
-                )
-                return True
-            table = pa.table(data_columns)
+
+        table = message.get_table()
+        message.release()
+        if table.num_rows == 0:
+            return True
 
         store_config = cast(DAQJobStoreConfigROOT, message.store_config.root)
         original_path = modify_file_path(

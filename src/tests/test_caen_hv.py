@@ -7,7 +7,10 @@ from enrgdaq.daq.jobs.caen.hv import (
     DAQJobCAENHVConfig,
     DAQJobMessageCAENHVSetChParam,
 )
-from enrgdaq.daq.store.models import DAQJobMessageStore, DAQJobStoreConfig
+from enrgdaq.daq.store.models import (
+    DAQJobMessageStorePyArrow,
+    DAQJobStoreConfig,
+)
 
 
 class MockBoard:
@@ -196,14 +199,15 @@ class TestDAQJobCAENHV(unittest.TestCase):
         # Should have called put_message_out once with tabular data
         daq_job._put_message_out.assert_called_once()
         message = daq_job._put_message_out.call_args[0][0]
-        self.assertIsInstance(message, DAQJobMessageStore)
+        self.assertIsInstance(message, DAQJobMessageStorePyArrow)
         self.assertEqual(message.tag, "ch_param")
-        # New format: param names are columns
-        self.assertIn("timestamp", message.keys)
-        self.assertIn("slot", message.keys)
-        self.assertIn("channel", message.keys)
-        self.assertIn("IMon", message.keys)  # param name as column
-        self.assertIn("VMon", message.keys)  # param name as column
+        table = message.get_table()
+        self.assertIn("timestamp", table.column_names)
+        self.assertIn("slot", table.column_names)
+        self.assertIn("channel", table.column_names)
+        self.assertIn("IMon", table.column_names)  # param name as column
+        self.assertIn("VMon", table.column_names)  # param name as column
+        message.release()
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     def test_poll_channel_params_skip_wronly(self, mock_hv):
@@ -426,9 +430,11 @@ class TestDAQJobCAENHV(unittest.TestCase):
         # Check keys contain channel identifiers
         first_call = daq_job._put_message_out.call_args_list[0]
         message = first_call[0][0]
-        self.assertIn("timestamp", message.keys)
-        self.assertIn("slot_1_channel_0", message.keys)
-        self.assertIn("slot_1_channel_1", message.keys)
+        table = message.get_table()
+        self.assertIn("timestamp", table.column_names)
+        self.assertIn("slot_1_channel_0", table.column_names)
+        self.assertIn("slot_1_channel_1", table.column_names)
+        message.release()
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     @patch(
@@ -481,7 +487,9 @@ class TestDAQJobCAENHV(unittest.TestCase):
         self.assertEqual(bulk_message.store_config, store_config)
         self.assertEqual(timeseries_message.store_config, timeseries_config)
         # Timeseries keys should include channel identifier
-        self.assertIn("slot_0_channel_0", timeseries_message.keys)
+        table = timeseries_message.get_table()
+        self.assertIn("slot_0_channel_0", table.column_names)
+        timeseries_message.release()
 
     @patch("enrgdaq.daq.jobs.caen.hv.hv")
     @patch(
@@ -523,12 +531,14 @@ class TestDAQJobCAENHV(unittest.TestCase):
         self.assertIn("IMon", tags)
         self.assertIn("VMon", tags)
 
-        # Each message should have all channels as keys
+        # Each message should have all channels as columns
         for call in daq_job._put_message_out.call_args_list:
             msg = call[0][0]
-            self.assertIn("slot_1_channel_0", msg.keys)
-            self.assertIn("slot_1_channel_1", msg.keys)
-            self.assertIn("slot_3_channel_0", msg.keys)
+            table = msg.get_table()
+            self.assertIn("slot_1_channel_0", table.column_names)
+            self.assertIn("slot_1_channel_1", table.column_names)
+            self.assertIn("slot_3_channel_0", table.column_names)
+            msg.release()
 
 
 class TestDAQJobCAENHVIntegration(unittest.TestCase):

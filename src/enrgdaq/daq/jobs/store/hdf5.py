@@ -6,7 +6,7 @@ import h5py
 from enrgdaq.daq.models import DAQJobConfig
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     DAQJobStoreConfigHDF5,
 )
 from enrgdaq.utils.file import modify_file_path
@@ -19,7 +19,7 @@ class DAQJobStoreHDF5Config(DAQJobConfig):
 class DAQJobStoreHDF5(DAQJobStore):
     config_type = DAQJobStoreHDF5Config
     allowed_store_config_types = [DAQJobStoreConfigHDF5]
-    allowed_message_in_types = [DAQJobMessageStoreTabular]
+    allowed_message_in_types = [DAQJobMessageStorePyArrow]
     _open_files: dict[str, Any]
 
     def __init__(self, config: Any, **kwargs):
@@ -30,10 +30,13 @@ class DAQJobStoreHDF5(DAQJobStore):
     def store_loop(self):
         pass
 
-    def handle_message(self, message: DAQJobMessageStoreTabular) -> bool:
+    def handle_message(self, message: DAQJobMessageStorePyArrow) -> bool:
         super().handle_message(message)
 
-        if message.data_columns is None:
+        table = message.get_table()
+        message.release()
+
+        if table.num_rows == 0:
             return True
 
         store_config = cast(DAQJobStoreConfigHDF5, message.store_config.hdf5)
@@ -55,7 +58,10 @@ class DAQJobStoreHDF5(DAQJobStore):
             hdf5_file = self._open_files[file_path]
 
         dataset_name = store_config.dataset_name
-        data_to_write = message.data_columns
+
+        data_to_write = {
+            col: table.column(col).to_numpy() for col in table.column_names
+        }
 
         if not data_to_write:
             return True

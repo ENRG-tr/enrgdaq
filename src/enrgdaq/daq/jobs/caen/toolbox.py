@@ -8,7 +8,7 @@ from msgspec import Struct
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.store.models import (
-    DAQJobMessageStoreTabular,
+    DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
 )
 from enrgdaq.utils.time import get_now_unix_timestamp_ms, sleep_for
@@ -87,16 +87,19 @@ class DAQJobCAENToolbox(DAQJob):
         while True:
             start_time = datetime.now()
             registers = self._dump_digitizer()
+            import pyarrow as pa
+
+            table = pa.table(
+                {
+                    "timestamp": [get_now_unix_timestamp_ms()],
+                    **{key: [value] for key, value in registers.items()},
+                }
+            )
+
             self._put_message_out(
-                DAQJobMessageStoreTabular(
+                DAQJobMessageStorePyArrow(
                     store_config=self.config.store_config,
-                    keys=["timestamp", *[x for x in registers]],
-                    data=[
-                        [
-                            get_now_unix_timestamp_ms(),
-                            *[registers[x] for x in registers],
-                        ]
-                    ],
+                    table=table,
                 )
             )
             sleep_for(DAQ_JOB_CAEN_TOOLBOX_SLEEP_INTERVAL, start_time)

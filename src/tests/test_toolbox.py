@@ -6,6 +6,7 @@ from enrgdaq.daq.jobs.caen.toolbox import (
     DAQJobCAENToolboxConfig,
     RegisterLabel,
 )
+from enrgdaq.daq.store.models import DAQJobMessageStorePyArrow
 
 
 class TestDAQJobCAENToolbox(unittest.TestCase):
@@ -91,8 +92,10 @@ class TestDAQJobCAENToolbox(unittest.TestCase):
             self.daq_job.start()
         message = self.daq_job._put_message_out.call_args[0][0]
         self.assertEqual(message.store_config, self.config.store_config)
-        self.assertEqual(message.keys, ["timestamp", "reg1", "reg2"])
-        self.assertEqual(message.data, [[1234567890, 1, 2]])
+        self.assertIsInstance(message, DAQJobMessageStorePyArrow)
+        table = message.get_table()
+        self.assertEqual(table.num_columns, 3)  # timestamp, reg1, reg2
+        message.release()
 
 
 if __name__ == "__main__":

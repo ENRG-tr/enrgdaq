@@ -2,11 +2,12 @@ from datetime import datetime
 from enum import Enum
 
 import psutil
+import pyarrow as pa
 from msgspec import field
 
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import DAQJobMessage
-from enrgdaq.daq.store.models import DAQJobMessageStoreTabular, StorableDAQJobConfig
+from enrgdaq.daq.store.models import DAQJobMessageStorePyArrow, StorableDAQJobConfig
 from enrgdaq.utils.time import get_now_unix_timestamp_ms, sleep_for
 
 DAQ_JOB_PC_METRICS_QUERY_INTERVAL_SECONDS = 1
@@ -72,11 +73,13 @@ class DAQJobPCMetrics(DAQJob):
     def _send_store_message(self, data: dict):
         keys = ["timestamp", *data.keys()]
         values = [get_now_unix_timestamp_ms(), *data.values()]
+
+        table = pa.table({key: [value] for key, value in zip(keys, values)})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
                 tag=self._supervisor_info.supervisor_id,
-                keys=keys,
-                data=[values],
+                table=table,
             )
         )

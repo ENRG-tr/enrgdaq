@@ -160,7 +160,7 @@ class ReqSendMessageHandler(CNCMessageHandler):
         from enrgdaq.daq.store.models import (
             DAQJobMessageStore,
             DAQJobMessageStoreRaw,
-            DAQJobMessageStoreTabular,
+            DAQJobMessageStorePyArrow,
         )
 
         # Build a dictionary of all known message types
@@ -170,7 +170,7 @@ class ReqSendMessageHandler(CNCMessageHandler):
             "DAQJobMessageStop": DAQJobMessageStop,
             "DAQJobMessageStore": DAQJobMessageStore,
             "DAQJobMessageStoreRaw": DAQJobMessageStoreRaw,
-            "DAQJobMessageStoreTabular": DAQJobMessageStoreTabular,
+            "DAQJobMessageStorePyArrow": DAQJobMessageStorePyArrow,
             "DAQJobMessageStatsRemote": DAQJobMessageStatsRemote,
             "DAQJobMessageCAENHVSetChParam": DAQJobMessageCAENHVSetChParam,
         }
