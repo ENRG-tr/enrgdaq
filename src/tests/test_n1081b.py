@@ -97,12 +97,12 @@ class TestDAQJobN1081B(unittest.TestCase):
         return_value={"data": {"counters": [{"lemo": 1, "value": 100}]}},
     )
     def test_send_store_message(self, mock_get_function_results):
-        self.daq_job.message_out = MagicMock()
+        self.daq_job._publish_buffer = MagicMock()
         self.daq_job._send_store_message(
             {"counters": [{"lemo": 1, "value": 100}]}, "SEC_A"
         )
-        self.daq_job.message_out.put.assert_called_once()
-        message = self.daq_job.message_out.put.call_args[0][0]
+        self.daq_job._publish_buffer.put.assert_called_once()
+        message = self.daq_job._publish_buffer.put.call_args[0][0]
         self.assertIsInstance(message, DAQJobMessageStore)
         self.assertEqual(message.tag, "SEC_A")
         self.assertIn("timestamp", message.table.column_names)
