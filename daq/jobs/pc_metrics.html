@@ -96,12 +96,14 @@ el.replaceWith(d);
     def _send_store_message(self, data: dict):
         keys = [&#34;timestamp&#34;, *data.keys()]
         values = [get_now_unix_timestamp_ms(), *data.values()]
+
+        table = pa.table({key: [value] for key, value in zip(keys, values)})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
                 tag=self._supervisor_info.supervisor_id,
-                keys=keys,
-                data=[values],
+                table=table,
             )
         )</code></pre>
 </details>

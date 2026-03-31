@@ -59,9 +59,8 @@ el.replaceWith(d);
     config_type = DAQJobStoreRedisConfig
     allowed_store_config_types = [DAQJobStoreConfigRedis]
     allowed_message_in_types = [
-        DAQJobMessageStoreTabular,
-        DAQJobMessageStoreRaw,
         DAQJobMessageStorePyArrow,
+        DAQJobMessageStoreRaw,
     ]
 
     _write_queue: deque[RedisWriteQueueItem]
@@ -93,9 +92,7 @@ el.replaceWith(d);
 
     def handle_message(
         self,
-        message: DAQJobMessageStoreTabular
-        | DAQJobMessageStoreRaw
-        | DAQJobMessageStorePyArrow,
+        message: DAQJobMessageStoreRaw | DAQJobMessageStorePyArrow,
     ) -&gt; bool:
         if not super().handle_message(message):
             return False
@@ -115,15 +112,7 @@ el.replaceWith(d);
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
             )
-        elif isinstance(message, DAQJobMessageStoreTabular):
-            # Add data to data dict that we can add to Redis
-            for i, row in enumerate(message.keys):
-                data[row] = [x[i] for x in message.data]
-            for row in message.data:
-                self._write_queue.append(
-                    RedisWriteQueueItem(store_config, data, message.tag)
-                )
-        else:
+        elif isinstance(message, DAQJobMessageStoreRaw):
             data = message.data
             self._write_queue.append(
                 RedisWriteQueueItem(store_config, data, message.tag)
@@ -154,7 +143,7 @@ el.replaceWith(d);
                 continue
             if not isinstance(msg.data, dict):
                 self._logger.error(
-                    &#34;msg.data must be a dict or bytes, but got &#34; f&#34;{type(msg.data)}&#34;
+                    f&#34;msg.data must be a dict or bytes, but got {type(msg.data)}&#34;
                 )
                 continue
 
@@ -290,7 +279,7 @@ el.replaceWith(d);
             continue
         if not isinstance(msg.data, dict):
             self._logger.error(
-                &#34;msg.data must be a dict or bytes, but got &#34; f&#34;{type(msg.data)}&#34;
+                f&#34;msg.data must be a dict or bytes, but got {type(msg.data)}&#34;
             )
             continue
 

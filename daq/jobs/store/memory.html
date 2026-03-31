@@ -64,9 +64,7 @@ el.replaceWith(d);
         super().__init__(config, **kwargs)
         self._memory = {}
 
-    def handle_message(
-        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
-    ) -&gt; bool:
+    def handle_message(self, message: DAQJobMessageStorePyArrow) -&gt; bool:
         if not super().handle_message(message):
             return False
 
@@ -75,22 +73,15 @@ el.replaceWith(d);
 
         timestamp = datetime.now()
 
-        if isinstance(message, DAQJobMessageStorePyArrow):
-            table = message.get_table()
-            message.release()
-            if table.num_rows == 0:
-                return True
-            self._memory[message.tag] = {
-                &#34;timestamp&#34;: timestamp,
-                &#34;keys&#34;: table.column_names,
-                &#34;table&#34;: table,
-            }
-        else:
-            self._memory[message.tag] = {
-                &#34;timestamp&#34;: timestamp,
-                &#34;keys&#34;: message.keys,
-                &#34;rows&#34;: message.data,
-            }
+        table = message.get_table()
+        message.release()
+        if table.num_rows == 0:
+            return True
+        self._memory[message.tag] = {
+            &#34;timestamp&#34;: timestamp,
+            &#34;keys&#34;: table.column_names,
+            &#34;table&#34;: table,
+        }
         return True
 
     def store_loop(self):

@@ -245,12 +245,15 @@ el.replaceWith(d);
                 data_rows.append(row)
 
             if data_rows:
+                table = pa.table(
+                    {key: [row[i] for row in data_rows] for i, key in enumerate(keys)}
+                )
+
                 self._put_message_out(
-                    DAQJobMessageStoreTabular(
+                    DAQJobMessageStorePyArrow(
                         store_config=self.config.store_config,
                         tag=&#34;ch_param&#34;,
-                        keys=keys,
-                        data=data_rows,
+                        table=table,
                     )
                 )
                 self._logger.debug(f&#34;Sent {len(data_rows)} channel parameter readings&#34;)
@@ -282,12 +285,13 @@ el.replaceWith(d);
                 keys = [&#34;timestamp&#34;, *channel_keys]
                 values = [timestamp, *values_for_param]
 
+                table = pa.table({key: [value] for key, value in zip(keys, values)})
+
                 self._put_message_out(
-                    DAQJobMessageStoreTabular(
+                    DAQJobMessageStorePyArrow(
                         store_config=self.config.timeseries_store_config,
                         tag=param_name,
-                        keys=keys,
-                        data=[values],
+                        table=table,
                     )
                 )
 

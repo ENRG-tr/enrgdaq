@@ -101,7 +101,7 @@ el.replaceWith(d);
             camera_index = int(camera_device_path.split(&#34;video&#34;)[-1])
         assert camera_index is not None, &#34;Camera not found&#34;
 
-        self._cam = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+        self._cam = cv2.VideoCapture(camera_index)
 
         # warmup
         for _ in range(5):
@@ -351,7 +351,7 @@ el.replaceWith(d);
         camera_index = int(camera_device_path.split(&#34;video&#34;)[-1])
     assert camera_index is not None, &#34;Camera not found&#34;
 
-    self._cam = cv2.VideoCapture(camera_index, cv2.CAP_V4L2)
+    self._cam = cv2.VideoCapture(camera_index)
 
     # warmup
     for _ in range(5):

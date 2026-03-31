@@ -107,16 +107,19 @@ el.replaceWith(d);
         while True:
             start_time = datetime.now()
             registers = self._dump_digitizer()
+            import pyarrow as pa
+
+            table = pa.table(
+                {
+                    &#34;timestamp&#34;: [get_now_unix_timestamp_ms()],
+                    **{key: [value] for key, value in registers.items()},
+                }
+            )
+
             self._put_message_out(
-                DAQJobMessageStoreTabular(
+                DAQJobMessageStorePyArrow(
                     store_config=self.config.store_config,
-                    keys=[&#34;timestamp&#34;, *[x for x in registers]],
-                    data=[
-                        [
-                            get_now_unix_timestamp_ms(),
-                            *[registers[x] for x in registers],
-                        ]
-                    ],
+                    table=table,
                 )
             )
             sleep_for(DAQ_JOB_CAEN_TOOLBOX_SLEEP_INTERVAL, start_time)</code></pre>
@@ -167,16 +170,19 @@ el.replaceWith(d);
     while True:
         start_time = datetime.now()
         registers = self._dump_digitizer()
+        import pyarrow as pa
+
+        table = pa.table(
+            {
+                &#34;timestamp&#34;: [get_now_unix_timestamp_ms()],
+                **{key: [value] for key, value in registers.items()},
+            }
+        )
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=[&#34;timestamp&#34;, *[x for x in registers]],
-                data=[
-                    [
-                        get_now_unix_timestamp_ms(),
-                        *[registers[x] for x in registers],
-                    ]
-                ],
+                table=table,
             )
         )
         sleep_for(DAQ_JOB_CAEN_TOOLBOX_SLEEP_INTERVAL, start_time)</code></pre>

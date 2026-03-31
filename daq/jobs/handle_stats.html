@@ -172,11 +172,17 @@ el.replaceWith(d);
                     ]
                 )
 
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
             )
         )
         self._put_message_out(
@@ -285,11 +291,19 @@ el.replaceWith(d);
                     _byte_to_mb(remote_stats.message_out_bytes),
                 ]
             )
+
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            # Create an empty table with the right schema
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
                 tag=&#34;remote&#34;,
             )
         )

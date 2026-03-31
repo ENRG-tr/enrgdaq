@@ -120,11 +120,14 @@ el.replaceWith(d);
         ]
 
         self._logger.debug(f&#34;Sending data to store: {dict(zip(keys, values))}&#34;)
+        import pyarrow as pa
+
+        table = pa.table({key: [value] for key, value in zip(keys, values)})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=[values],
+                table=table,
             )
         )</code></pre>
 </details>

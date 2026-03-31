@@ -92,11 +92,19 @@ el.replaceWith(d);
             ]
         ]
 
+        import pyarrow as pa
+
+        if data_to_send:
+            table = pa.table(
+                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
+            )
+        else:
+            table = pa.table({key: [] for key in keys})
+
         self._put_message_out(
-            DAQJobMessageStoreTabular(
+            DAQJobMessageStorePyArrow(
                 store_config=self.config.store_config,
-                keys=keys,
-                data=data_to_send,
+                table=table,
             )
         )
 

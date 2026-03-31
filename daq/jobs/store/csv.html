@@ -114,9 +114,7 @@ class CSVFile:
 
         self._open_csv_files = {}
 
-    def handle_message(
-        self, message: DAQJobMessageStoreTabular | DAQJobMessageStorePyArrow
-    ) -&gt; bool:
+    def handle_message(self, message: DAQJobMessageStorePyArrow) -&gt; bool:
         if not super().handle_message(message):
             return False
 
@@ -134,7 +132,6 @@ class CSVFile:
         if file.overwrite:
             file.write_queue.clear()
 
-        # Handle PyArrow messages
         if isinstance(message, DAQJobMessageStorePyArrow):
             table = message.get_table()
             message.release()
@@ -143,8 +140,6 @@ class CSVFile:
             file.arrow_tables.append(table)
             return True
 
-        # Handle Tabular messages
-        # Write headers if the file is new
         if new_file or file.overwrite:
             file.write_queue.append(message.keys)
 
@@ -152,7 +147,7 @@ class CSVFile:
         if message.data is not None:
             for row in message.data:
                 file.write_queue.append(row)
-        elif message.data_columns is not None:
+        elif hasattr(message, &#34;data_columns&#34;) and message.data_columns is not None:
             cols = [message.data_columns[k] for k in message.keys]
             if cols and all(isinstance(c, ndarray) for c in cols):
                 data_rows = np.stack(cols, axis=-1)
@@ -160,6 +155,16 @@ class CSVFile:
             else:
                 for row in zip(*cols):
                     file.write_queue.append(list(row))
+        else:
+            # Handle PyArrow table
+            table = message.get_table()
+            # Add header if needed
+            if new_file or file.overwrite:
+                file.write_queue.append(table.column_names)
+            # Add rows from table
+            for i in range(table.num_rows):
+                row = [table.column(j).to_pylist()[i] for j in range(table.num_columns)]
+                file.write_queue.append(row)
 
         return True
 
