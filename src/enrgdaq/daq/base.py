@@ -279,7 +279,8 @@ class DAQJob:
             message: DAQJobMessage = self._publish_buffer.get()
             if message is None:
                 break
-            send_message(zmq_xsub, message, buffer)
+            self._sent_count += 1
+            self._sent_bytes += send_message(zmq_xsub, message, buffer)
 
     def _report_thread_func(self):
         """Periodically report stats and traces."""
@@ -463,15 +464,9 @@ class DAQJob:
         """
         message = self._prepare_message(message, use_shm, modify_message_metadata)
         self._publish_buffer.put(message)
-        self._sent_count += 1
 
         # Record sent trace event (skip internal messages to avoid loops)
         if not isinstance(message, InternalDAQJobMessage):
-            # Estimate size using pickle (approximation)
-            try:
-                sent_size = len(pickle.dumps(message))
-            except Exception:
-                sent_size = 0
             self._trace_events.append(
                 DAQJobMessageTraceEvent(
                     message_id=message.id or "unknown",
@@ -479,7 +474,7 @@ class DAQJob:
                     event_type="sent",
                     topics=list(message.topics),
                     timestamp=datetime.now(),
-                    size_bytes=sent_size,
+                    size_bytes=-1,  # TODO: Have to wait _publish_thread for the actual size
                     source_job=type(self).__name__,
                     source_supervisor=self.supervisor_id,
                 )

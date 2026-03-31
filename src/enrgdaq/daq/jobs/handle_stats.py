@@ -1,6 +1,4 @@
 from collections import defaultdict
-
-
 from datetime import datetime, timedelta
 from typing import Dict, Optional
 
@@ -10,7 +8,6 @@ import pyarrow as pa
 from enrgdaq.daq.base import DAQJob
 from enrgdaq.daq.models import (
     DAQJobMessage,
-    DAQJobMessageStatsRemote,
     DAQJobMessageStatsReport,
     DAQJobRemoteStatsDict,
     DAQJobStats,
@@ -59,7 +56,6 @@ class DAQJobHandleStats(DAQJob):
     """
 
     allowed_message_in_types = [
-        DAQJobMessageStatsRemote,
         DAQJobMessageStatsReport,
     ]
     # Subscribe to "stats" prefix to receive stats from all supervisors
@@ -92,7 +88,7 @@ class DAQJobHandleStats(DAQJob):
 
     def handle_message(
         self,
-        message: DAQJobMessageStatsRemote | DAQJobMessageStatsReport,
+        message: DAQJobMessageStatsReport,
     ) -> bool:
         if not super().handle_message(message):
             return False
@@ -101,28 +97,33 @@ class DAQJobHandleStats(DAQJob):
         if not message.daq_job_info or not message.daq_job_info.supervisor_info:
             return True
 
-        supervisor_id = message.supervisor_id
+        remote_supervisor_id = message.supervisor_id
 
-        if isinstance(message, DAQJobMessageStatsReport):
-            # Per-job stats report from individual DAQJob
-            daq_job_type = message.daq_job_info.daq_job_type
-            if supervisor_id not in self._stats:
-                self._stats[supervisor_id] = {}
-            if daq_job_type not in self._stats[supervisor_id]:
-                self._stats[supervisor_id][daq_job_type] = DAQJobStats()
-            stats = self._stats[supervisor_id][daq_job_type]
-            stats.latency_stats = message.latency
-            stats.message_in_stats.set(message.processed_count)
-            stats.message_out_stats.set(message.sent_count)
+        # Per-job stats report from individual DAQJob
+        daq_job_type = message.daq_job_info.daq_job_type
+        if remote_supervisor_id not in self._stats:
+            self._stats[remote_supervisor_id] = {}
+        if daq_job_type not in self._stats[remote_supervisor_id]:
+            self._stats[remote_supervisor_id][daq_job_type] = DAQJobStats()
+        stats = self._stats[remote_supervisor_id][daq_job_type]
+        stats.latency_stats = message.latency
+        stats.message_in_stats.set(message.processed_count)
+        stats.message_out_stats.set(message.sent_count)
 
-            # Track supervisor activity and accumulate bytes
-            if supervisor_id not in self._supervisor_activity:
-                self._supervisor_activity[supervisor_id] = SupervisorRemoteStats()
-            activity = self._supervisor_activity[supervisor_id]
-            activity.last_active = datetime.now()
-            # Accumulate bytes (aggregate across all DAQJobs)
-            activity.message_in_bytes += message.processed_bytes
-            activity.message_out_bytes += message.sent_bytes
+        # Track supervisor activity and accumulate bytes
+        if remote_supervisor_id not in self._supervisor_activity:
+            self._supervisor_activity[remote_supervisor_id] = SupervisorRemoteStats()
+        activity = self._supervisor_activity[remote_supervisor_id]
+        activity.last_active = datetime.now()
+        # Accumulate bytes
+        activity.message_in_bytes = sum(
+            x.message_in_stats.count for x in self._stats[remote_supervisor_id].values()
+        )
+        activity.message_out_bytes = sum(
+            x.message_out_stats.count
+            for x in self._stats[remote_supervisor_id].values()
+        )
+
         return True
 
     def _save_stats(self):

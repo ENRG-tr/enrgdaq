@@ -29,6 +29,8 @@ def send_message(
         payload[0] = topic.encode()
         socket.send_multipart(payload)
 
+    return sum(len(b) for b in buffer)
+
 
 class MessageBroker:
     """
