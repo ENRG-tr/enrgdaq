@@ -16,7 +16,6 @@ Example:
 """
 
 import argparse
-import atexit
 import os
 import signal
 import tempfile
@@ -80,7 +79,7 @@ class BenchmarkConfig:
     output_stats_csv: str = "benchmark_stats.csv"
     void_memory_data: bool = True
     use_memory_store: bool = False
-    use_shm: bool = True
+    use_shm: bool = False
 
 
 def create_supervisor_info(supervisor_id: str) -> SupervisorInfo:
@@ -162,15 +161,17 @@ class BenchmarkRunner:
 
     def _handle_signal(self, signum, frame):
         """Handle termination signals."""
-        print("\nReceived termination signal, stopping...")
-        self._stop_flag.value = True
+        if not self._stop_flag.value:
+            self._stop_flag.value = True
 
-    def _cleanup(self):
-        """Clean up the supervisor."""
-        print("\nTerminating...")
-        self._stop_flag.value = True
+        print("\nReceived termination signal, stopping...")
         if self._supervisor:
-            cleanup_supervisor(self._supervisor)
+            for process in self._supervisor.daq_job_processes:
+                if not process.process or not process.process.pid:
+                    continue
+                os.kill(process.process.pid, signal.SIGKILL)
+
+        os.kill(os.getpid(), signal.SIGKILL)
 
     def _create_supervisor(self) -> Supervisor:
         """Create and configure the benchmark supervisor."""
@@ -352,11 +353,9 @@ class BenchmarkRunner:
         signal.signal(signal.SIGINT, self._handle_signal)
         signal.signal(signal.SIGTERM, self._handle_signal)
 
-        # Register cleanup on exit
-        atexit.register(self._cleanup)
-
         print("=" * 80)
         print("ENRGDAQ Benchmark")
+        print("Process PID:        {}".format(os.getpid()))
         print("=" * 80)
         print("Configuration:")
         print(f"  - Benchmark Jobs: {self.config.num_clients}")
@@ -448,13 +447,7 @@ class BenchmarkRunner:
             self._print_summary()
 
             # Clean up
-            self._cleanup()
-
-            # Unregister atexit since we've already cleaned up
-            try:
-                atexit.unregister(self._cleanup)
-            except Exception:
-                pass
+            self._handle_signal(None, None)
 
     def _print_summary(self):
         """Print benchmark summary statistics."""

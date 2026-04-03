@@ -29,7 +29,13 @@ def send_message(
         payload[0] = topic.encode()
         socket.send_multipart(payload)
 
-    return sum(len(b) for b in buffer)
+    buffer_length = 0
+    for b in buffer:
+        if isinstance(b, pickle.PickleBuffer):
+            buffer_length += len(memoryview(b))
+        else:
+            buffer_length += len(b)
+    return buffer_length
 
 
 class MessageBroker:

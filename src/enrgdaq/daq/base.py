@@ -8,7 +8,7 @@ import threading
 import uuid
 from datetime import datetime, timedelta
 from logging.handlers import QueueHandler
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from multiprocessing.shared_memory import SharedMemory
 from queue import Queue as ThreadQueue
 from typing import Any, Optional
@@ -41,10 +41,10 @@ from enrgdaq.daq.topics import Topic
 from enrgdaq.message_broker import send_message
 from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.arrow_ipc import try_zero_copy_pyarrow
-from enrgdaq.utils.queue import ZMQQueue
 from enrgdaq.utils.test import is_unit_testing
 from enrgdaq.utils.time import sleep_for
 from enrgdaq.utils.watchdog import Watchdog
+
 
 DAQ_JOB_STATS_REPORT_INTERVAL_SECONDS = 1.0
 DAQ_JOB_TRACE_REPORT_INTERVAL_SECONDS = 1.0
@@ -79,7 +79,7 @@ def _create_queue(maxsize: int = 0) -> Any:
     """
     if is_unit_testing():
         return ThreadQueue(maxsize=maxsize)
-    return ZMQQueue(maxsize=maxsize)
+    return Queue(maxsize=maxsize)  # ZMQQueue(maxsize=maxsize)
 
 
 class DAQJob:
