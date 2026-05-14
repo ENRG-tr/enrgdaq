@@ -186,6 +186,7 @@ el.replaceWith(d);
                 )
                 timeseries_table = pa.table(
                     {
+                        &#34;timestamp&#34;: [get_now_unix_timestamp_ms()],
                         &#34;rss_mb&#34;: [msg.resource_stats.rss_mb],
                         &#34;cpu_percent&#34;: [msg.resource_stats.cpu_percent],
                     }
