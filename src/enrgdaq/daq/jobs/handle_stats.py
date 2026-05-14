@@ -22,6 +22,8 @@ from enrgdaq.daq.store.models import (
 from enrgdaq.daq.topics import Topic
 from enrgdaq.models import SupervisorInfo
 from enrgdaq.utils.time import get_unix_timestamp_ms, sleep_for
+from enrgdaq.utils.time import get_now_unix_timestamp_ms
+
 
 DAQJobStatsDict = Dict[str, DAQJobStats]
 DAQJobRemoteStatsDict = Dict[str, DAQJobRemoteStatsDict]
@@ -180,6 +182,7 @@ class DAQJobHandleStats(DAQJob):
                 )
                 timeseries_table = pa.table(
                     {
+                        "timestamp": [get_now_unix_timestamp_ms()],
                         "rss_mb": [msg.resource_stats.rss_mb],
                         "cpu_percent": [msg.resource_stats.cpu_percent],
                     }

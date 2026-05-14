@@ -245,6 +245,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
         ts_msg = calls[0][0][0]
         self.assertIsInstance(ts_msg, DAQJobMessageStorePyArrow)
         ts_table = ts_msg.table
+        self.assertIn("timestamp", ts_table.column_names)
         self.assertIn("rss_mb", ts_table.column_names)
         self.assertIn("cpu_percent", ts_table.column_names)
         self.assertEqual(len(ts_table), 1)
