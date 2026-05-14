@@ -979,7 +979,7 @@ set the routes for the DAQJobProcess.</p>
 </dd>
 <dt id="enrgdaq.daq.models.DAQJobMessageStatsReport"><code class="flex name class">
 <span>class <span class="ident">DAQJobMessageStatsReport</span></span>
-<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>processed_count: int,<br>processed_bytes: int = 0,<br>sent_count: int,<br>sent_bytes: int = 0,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>)</span>
+<span>(</span><span>*,<br>id: str | None = &lt;factory&gt;,<br>timestamp: datetime.datetime | None = &lt;factory&gt;,<br>is_remote: bool = False,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>topics: set[str] = &lt;factory&gt;,<br>target_supervisor: bool = True,<br>processed_count: int,<br>processed_bytes: int = 0,<br>sent_count: int,<br>sent_bytes: int = 0,<br>latency: <a title="enrgdaq.daq.models.DAQJobLatencyStats" href="#enrgdaq.daq.models.DAQJobLatencyStats">DAQJobLatencyStats</a>,<br>resource_stats: <a title="enrgdaq.daq.models.DAQJobResourceStats" href="#enrgdaq.daq.models.DAQJobResourceStats">DAQJobResourceStats</a> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -997,6 +997,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1031,6 +1032,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1057,6 +1059,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1083,6 +1086,34 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
+
+    @override
+    def pre_send(self):
+        super().pre_send()
+
+        self.topics.add(Topic.stats_supervisor(self.supervisor_id))</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.models.DAQJobMessageStatsReport.resource_stats"><code class="name">var <span class="ident">resource_stats</span> : <a title="enrgdaq.daq.models.DAQJobResourceStats" href="#enrgdaq.daq.models.DAQJobResourceStats">DAQJobResourceStats</a></code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
+    &#34;&#34;&#34;
+    Periodic report of high-fidelity statistics from the DAQJob back to the Supervisor.
+    &#34;&#34;&#34;
+
+    target_supervisor: bool = True
+    processed_count: int
+    processed_bytes: int = 0
+    sent_count: int
+    sent_bytes: int = 0
+    latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1109,6 +1140,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1135,6 +1167,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -1161,6 +1194,7 @@ set the routes for the DAQJobProcess.</p>
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):
@@ -3147,6 +3181,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.pre_send" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.pre_send">pre_send</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_bytes" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.processed_bytes">processed_bytes</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.processed_count">processed_count</a></code></li>
+<li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.resource_stats" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.resource_stats">resource_stats</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_bytes" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.sent_bytes">sent_bytes</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.sent_count">sent_count</a></code></li>
 <li><code><a title="enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor" href="#enrgdaq.daq.models.DAQJobMessageStatsReport.target_supervisor">target_supervisor</a></code></li>
