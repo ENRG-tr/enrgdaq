@@ -169,6 +169,13 @@ class DAQJob:
         self._sent_count = 0
         self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
+        # Store Process object to reuse across calls - psutil.cpu_percent() returns 0.0 on first call
+        # per Process instance, so we need to keep the same instance and warm it up
+        try:
+            self._psutil_process = psutil.Process(os.getpid())
+            self._psutil_process.cpu_percent()  # warm-up call, discard result
+        except Exception:
+            self._psutil_process = None
 
         # Trace collection
         self._trace_events: list[DAQJobMessageTraceEvent] = []
@@ -510,7 +517,13 @@ class DAQJob:
         rss_mb = 0.0
         cpu_percent = 0.0
         try:
-            proc = psutil.Process(os.getpid())
+            # Reuse the stored psutil Process instance to get accurate CPU usage.
+            # psutil.cpu_percent() returns 0.0 on the first call per Process instance,
+            # so keeping the same instance across calls is essential.
+            proc = getattr(self, "_psutil_process", None)
+            if proc is None:
+                proc = psutil.Process(os.getpid())
+                self._psutil_process = proc  # cache for next call
             mem = proc.memory_info()
             rss_mb = mem.rss / (1024 * 1024)
             cpu_percent = proc.cpu_percent()
