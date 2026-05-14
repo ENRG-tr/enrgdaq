@@ -1,6 +1,8 @@
 import logging
 import multiprocessing
+import os
 import pickle
+import psutil
 import queue
 import re
 import sys
@@ -27,6 +29,7 @@ from enrgdaq.daq.models import (
     DAQJobMessageStop,
     DAQJobMessageTraceEvent,
     DAQJobMessageTraceReport,
+    DAQJobResourceStats,
     DAQJobStopError,
     InternalDAQJobMessage,
     LogVerbosity,
@@ -504,12 +507,26 @@ class DAQJob:
             return
 
         self._last_stats_report_time = datetime.now()
+        rss_mb = 0.0
+        cpu_percent = 0.0
+        try:
+            proc = psutil.Process(os.getpid())
+            mem = proc.memory_info()
+            rss_mb = mem.rss / (1024 * 1024)
+            cpu_percent = proc.cpu_percent()
+        except Exception:
+            pass
+
         report = DAQJobMessageStatsReport(
             processed_count=self._processed_count,
             processed_bytes=self._processed_bytes,
             sent_count=self._sent_count,
             sent_bytes=self._sent_bytes,
             latency=self.get_latency_stats(),
+            resource_stats=DAQJobResourceStats(
+                cpu_percent=cpu_percent,
+                rss_mb=rss_mb,
+            ),
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats

@@ -17,6 +17,7 @@ from enrgdaq.daq.models import (
 from enrgdaq.daq.store.models import (
     DAQJobMessageStorePyArrow,
     StorableDAQJobConfig,
+    DAQJobStoreConfig,
 )
 from enrgdaq.daq.topics import Topic
 from enrgdaq.models import SupervisorInfo
@@ -32,6 +33,7 @@ DAQ_JOB_HANDLE_STATS_REMOTE_ALIVE_SECONDS = 30
 class DAQJobHandleStatsConfig(StorableDAQJobConfig):
     """Configuration class for DAQJobHandleStats."""
 
+    timeseries_store_config: DAQJobStoreConfig
     subscribe_to_all_stats: bool = True
 
 
@@ -109,6 +111,7 @@ class DAQJobHandleStats(DAQJob):
         stats.latency_stats = message.latency
         stats.message_in_stats.set(message.processed_count)
         stats.message_out_stats.set(message.sent_count)
+        stats.resource_stats = message.resource_stats
 
         # Track supervisor activity and accumulate bytes
         if remote_supervisor_id not in self._supervisor_activity:
@@ -137,6 +140,14 @@ class DAQJobHandleStats(DAQJob):
                 datetime_to_str(record.last_updated),
                 record.count,
             ]
+
+        def data_to_pa_table(keys: list[str], data: list[list]):
+            # TODO: Maybe move it to some other file?
+            if not data:
+                return pa.table({key: [] for key in keys})
+            return pa.table(
+                {key: [row[i] for row in data] for i, key in enumerate(keys)}
+            )
 
         keys = [
             "supervisor",
@@ -167,13 +178,21 @@ class DAQJobHandleStats(DAQJob):
                         *unpack_record(msg.restart_stats),
                     ]
                 )
+                timeseries_table = pa.table(
+                    {
+                        "rss_mb": [msg.resource_stats.rss_mb],
+                        "cpu_percent": [msg.resource_stats.cpu_percent],
+                    }
+                )
+                self._put_message_out(
+                    DAQJobMessageStorePyArrow(
+                        store_config=self.config.timeseries_store_config,
+                        table=timeseries_table,
+                        tag=f"{supervisor_id}.{daq_job_type}",
+                    )
+                )
 
-        if data_to_send:
-            table = pa.table(
-                {key: [row[i] for row in data_to_send] for i, key in enumerate(keys)}
-            )
-        else:
-            table = pa.table({key: [] for key in keys})
+        table = data_to_pa_table(keys, data_to_send)
 
         self._put_message_out(
             DAQJobMessageStorePyArrow(

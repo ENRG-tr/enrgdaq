@@ -28,6 +28,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.config = DAQJobHandleStatsConfig(
             daq_job_type="",
             store_config=MagicMock(),
+            timeseries_store_config=MagicMock(),
         )
         self.supervisor_info = SupervisorInfo(supervisor_id="test_supervisor")
         # Pass zmq URLs to avoid thread assertions
@@ -83,6 +84,29 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.assertIn(
             "DAQJobTest", self.daq_job_handle_stats._stats["remote_supervisor"]
         )
+
+    def test_handle_message_stores_resource_stats(self):
+        """Test that resource_stats (rss_mb, cpu_percent) are stored from the report."""
+        message = self._create_stats_report()
+        # Attach resource stats
+        message.resource_stats.rss_mb = 256.5
+        message.resource_stats.cpu_percent = 42.3
+
+        self.daq_job_handle_stats.handle_message(message)
+
+        stats = self.daq_job_handle_stats._stats["remote_supervisor"]["DAQJobTest"]
+        self.assertAlmostEqual(stats.resource_stats.rss_mb, 256.5)
+        self.assertAlmostEqual(stats.resource_stats.cpu_percent, 42.3)
+
+    def test_handle_message_default_resource_stats(self):
+        """Test that resource_stats defaults to zeros when not set."""
+        message = self._create_stats_report()
+
+        self.daq_job_handle_stats.handle_message(message)
+
+        stats = self.daq_job_handle_stats._stats["remote_supervisor"]["DAQJobTest"]
+        self.assertEqual(stats.resource_stats.rss_mb, 0.0)
+        self.assertEqual(stats.resource_stats.cpu_percent, 0.0)
 
     def test_handle_message_no_supervisor_info(self):
         """Test that message without supervisor info is skipped."""
@@ -191,15 +215,15 @@ class TestDAQJobHandleStats(unittest.TestCase):
 
         self.daq_job_handle_stats._save_stats()
 
-        # Verify two messages were sent: StorePyArrow and CombinedStats
+        # Verify messages: 1 timeseries + 1 main StorePyArrow + 1 CombinedStats
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(calls), 3)
 
-        # First call should be DAQJobMessageStorePyArrow
-        store_msg = calls[0][0][0]
+        # Second call should be the main stats StorePyArrow
+        store_msg = calls[1][0][0]
         self.assertIsInstance(store_msg, DAQJobMessageStorePyArrow)
 
-        # Verify table has correct columns
+        # Verify table has correct columns (rss_mb/cpu_percent stored separately)
         table = store_msg.table
         expected_columns = [
             "supervisor",
@@ -216,6 +240,14 @@ class TestDAQJobHandleStats(unittest.TestCase):
         ]
         for col in expected_columns:
             self.assertIn(col, table.column_names)
+
+        # First call should be the timeseries StorePyArrow with rss_mb/cpu_percent
+        ts_msg = calls[0][0][0]
+        self.assertIsInstance(ts_msg, DAQJobMessageStorePyArrow)
+        ts_table = ts_msg.table
+        self.assertIn("rss_mb", ts_table.column_names)
+        self.assertIn("cpu_percent", ts_table.column_names)
+        self.assertEqual(len(ts_table), 1)
 
     def test_save_stats_empty_state(self):
         """Test _save_stats with no stats data."""
@@ -245,7 +277,10 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
 
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        store_msg = calls[0][0][0]
+        # calls[0..3] are timeseries messages (one per supervisor/job combo)
+        # calls[4] is the main stats table
+        # calls[5] is DAQJobMessageCombinedStats
+        store_msg = calls[4][0][0]
         table = store_msg.table
 
         # Should have 4 rows (2 supervisors x 2 job types)
@@ -271,8 +306,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
 
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        # Second message should be DAQJobMessageCombinedStats
-        combined_msg = calls[1][0][0]
+        # calls[0] = timeseries, calls[1] = main stats table, calls[2] = CombinedStats
+        combined_msg = calls[2][0][0]
         self.assertEqual(combined_msg.__class__.__name__, "DAQJobMessageCombinedStats")
         self.assertIn("remote_supervisor", combined_msg.stats)
 
@@ -284,7 +319,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
 
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        store_msg = calls[0][0][0]
+        # Main stats table is the second message (first is timeseries)
+        store_msg = calls[1][0][0]
         table = store_msg.table
 
         # last_message_in_date should be a timestamp (number or string)
@@ -300,7 +336,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
 
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        store_msg = calls[0][0][0]
+        # Main stats table is the second message (first is timeseries)
+        store_msg = calls[1][0][0]
         table = store_msg.table
 
         is_alive = table.column("is_alive").to_pylist()[0]
@@ -503,6 +540,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
         config = DAQJobHandleStatsConfig(
             daq_job_type="",
             store_config=MagicMock(),
+            timeseries_store_config=MagicMock(),
             subscribe_to_all_stats=False,
         )
         supervisor_info = SupervisorInfo(supervisor_id="test_sup")
@@ -533,6 +571,7 @@ class TestDAQJobHandleStats(unittest.TestCase):
         config = DAQJobHandleStatsConfig(
             daq_job_type="",
             store_config=MagicMock(),
+            timeseries_store_config=MagicMock(),
             subscribe_to_all_stats=True,
         )
         supervisor_info = SupervisorInfo(supervisor_id="test_sup")
@@ -632,8 +671,10 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
         self.daq_job_handle_stats._save_remote_stats()
 
-        # Verify messages were sent
-        self.assertEqual(self.daq_job_handle_stats._publish_buffer.put.call_count, 4)
+        # _save_stats: 2 timeseries + 1 main table + 1 CombinedStats = 4
+        # _save_remote_stats: 1 StorePyArrow + 1 CombinedRemoteStats = 2
+        # Total = 6
+        self.assertEqual(self.daq_job_handle_stats._publish_buffer.put.call_count, 6)
 
     def test_stats_persist_across_multiple_handle_calls(self):
         """Test that stats persist and accumulate across multiple handle calls."""
@@ -669,7 +710,8 @@ class TestDAQJobHandleStats(unittest.TestCase):
         self.daq_job_handle_stats._save_stats()
 
         calls = self.daq_job_handle_stats._publish_buffer.put.call_args_list
-        store_msg = calls[0][0][0]
+        # Main stats table is the second message (first is timeseries)
+        store_msg = calls[1][0][0]
         table = store_msg.table
 
         # last_message_in_date should be "N/A" for None
