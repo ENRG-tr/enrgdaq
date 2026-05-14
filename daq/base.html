@@ -139,6 +139,13 @@ el.replaceWith(d);
         self._sent_count = 0
         self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
+        # Store Process object to reuse across calls - psutil.cpu_percent() returns 0.0 on first call
+        # per Process instance, so we need to keep the same instance and warm it up
+        try:
+            self._psutil_process = psutil.Process(os.getpid())
+            self._psutil_process.cpu_percent()  # warm-up call, discard result
+        except Exception:
+            self._psutil_process = None
 
         # Trace collection
         self._trace_events: list[DAQJobMessageTraceEvent] = []
@@ -480,7 +487,13 @@ el.replaceWith(d);
         rss_mb = 0.0
         cpu_percent = 0.0
         try:
-            proc = psutil.Process(os.getpid())
+            # Reuse the stored psutil Process instance to get accurate CPU usage.
+            # psutil.cpu_percent() returns 0.0 on the first call per Process instance,
+            # so keeping the same instance across calls is essential.
+            proc = getattr(self, &#34;_psutil_process&#34;, None)
+            if proc is None:
+                proc = psutil.Process(os.getpid())
+                self._psutil_process = proc  # cache for next call
             mem = proc.memory_info()
             rss_mb = mem.rss / (1024 * 1024)
             cpu_percent = proc.cpu_percent()
@@ -797,7 +810,13 @@ def supervisor_id(self):
     rss_mb = 0.0
     cpu_percent = 0.0
     try:
-        proc = psutil.Process(os.getpid())
+        # Reuse the stored psutil Process instance to get accurate CPU usage.
+        # psutil.cpu_percent() returns 0.0 on the first call per Process instance,
+        # so keeping the same instance across calls is essential.
+        proc = getattr(self, &#34;_psutil_process&#34;, None)
+        if proc is None:
+            proc = psutil.Process(os.getpid())
+            self._psutil_process = proc  # cache for next call
         mem = proc.memory_info()
         rss_mb = mem.rss / (1024 * 1024)
         cpu_percent = proc.cpu_percent()
@@ -863,7 +882,7 @@ def supervisor_id(self):
 </dd>
 <dt id="enrgdaq.daq.base.DAQJobProcess"><code class="flex name class">
 <span>class <span class="ident">DAQJobProcess</span></span>
-<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7fc91d30cfb0>> = &lt;factory&gt;)</span>
+<span>(</span><span>*,<br>daq_job_cls: type[<a title="enrgdaq.daq.base.DAQJob" href="#enrgdaq.daq.base.DAQJob">DAQJob</a>],<br>supervisor_info: <a title="enrgdaq.models.SupervisorInfo" href="../models.html#enrgdaq.models.SupervisorInfo">SupervisorInfo</a>,<br>config: <a title="enrgdaq.daq.models.DAQJobConfig" href="models.html#enrgdaq.daq.models.DAQJobConfig">DAQJobConfig</a>,<br>process: multiprocessing.context.Process | None,<br>start_time: datetime.datetime = &lt;factory&gt;,<br>instance_id: int,<br>daq_job_info: <a title="enrgdaq.daq.models.DAQJobInfo" href="models.html#enrgdaq.daq.models.DAQJobInfo">DAQJobInfo</a> | None = None,<br>raw_config: str | None = None,<br>log_queue: typing.Any | None = None,<br>restart_on_crash: bool = True,<br>zmq_xpub_url: str | None = None,<br>zmq_xsub_url: str | None = None,<br>job_started_queue: <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f6dde4d4bc0>> = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1228,7 +1247,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </details>
 <div class="desc"></div>
 </dd>
-<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7fc91d30cfb0>></code></dt>
+<dt id="enrgdaq.daq.base.DAQJobProcess.job_started_queue"><code class="name">var <span class="ident">job_started_queue</span> : <bound method BaseContext.Queue of <multiprocessing.context.DefaultContext object at 0x7f6dde4d4bc0>></code></dt>
 <dd>
 <details class="source">
 <summary>
