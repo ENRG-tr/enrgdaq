@@ -15,6 +15,10 @@ from typing import Any
 
 import msgspec
 import psutil
+from psutil import (
+    AccessDenied as PsutilAccessDenied,
+    NoSuchProcess as PsutilNoSuchProcess,
+)
 import zmq
 
 from enrgdaq.cnc.base import (
@@ -35,6 +39,7 @@ from enrgdaq.daq.daq_job import (
 from enrgdaq.daq.models import (
     DAQJobInfo,
     DAQJobMessageStop,
+    DAQJobStats,
 )
 from enrgdaq.daq.store.base import DAQJobStore
 from enrgdaq.daq.topics import Topic
@@ -338,6 +343,12 @@ class Supervisor:
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
 
+        # Collect per-process resource stats (RSS, CPU)
+        self._collect_resource_stats()
+
+        # Collect ring buffer occupancy stats
+        self._collect_ring_buffer_stats()
+
     def get_status(self) -> SupervisorStatus:
         """
         Gets the status of the supervisor and its DAQ jobs.
@@ -396,6 +407,10 @@ class Supervisor:
             self._logger.info(
                 f"Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds"
             )
+
+            # Increment restart counter for this job type
+            self._increment_restart_counter(process)
+
             res.append(
                 RestartDAQJobSchedule(
                     daq_job_process=process,
@@ -430,6 +445,96 @@ class Supervisor:
         self.restart_schedules = [
             x for x in self.restart_schedules if x not in schedules_to_remove
         ]
+
+    def _collect_resource_stats(self):
+        """
+        Poll per-process RSS and CPU usage for each managed DAQJob.
+
+        Populates daq_job_stats with resource_stats so they flow through
+        the existing stats pipeline to DAQJobHandleStats and storage.
+        """
+        now = datetime.now()
+        if (
+            now - self._last_stats_message_time
+        ).total_seconds() < DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS:
+            return
+
+        for proc in self.daq_job_processes:
+            if not proc.process or not proc.process.is_alive():
+                continue
+            pid = proc.process.pid
+            if pid is None:
+                continue
+            if pid not in self._psutil_process_cache:
+                try:
+                    self._psutil_process_cache[pid] = psutil.Process(pid)
+                except (PsutilNoSuchProcess, PsutilAccessDenied):
+                    continue
+            try:
+                mem_info = self._psutil_process_cache[pid].memory_info()
+                rss_mb = mem_info.rss / (1024 * 1024)
+                cpu = self._psutil_process_cache[pid].cpu_percent()
+                job_cls_name = proc.daq_job_cls.__name__
+                sup_id = self.supervisor_id
+                if sup_id not in self.daq_job_stats:
+                    self.daq_job_stats[sup_id] = {}
+                if job_cls_name not in self.daq_job_stats[sup_id]:
+                    self.daq_job_stats[sup_id][job_cls_name] = DAQJobStats()
+                self.daq_job_stats[sup_id][job_cls_name].resource_stats.rss_mb = rss_mb
+                self.daq_job_stats[sup_id][
+                    job_cls_name
+                ].resource_stats.cpu_percent = cpu
+            except (PsutilNoSuchProcess, PsutilAccessDenied):
+                self._psutil_process_cache.pop(pid, None)
+
+    def _collect_ring_buffer_stats(self):
+        """
+        Collect ring buffer slot occupancy and byte counters.
+
+        Exports them as part of the supervisor's own stats so they
+        appear in the telemetry pipeline.
+        """
+        if sys.platform == "win32":
+            return
+        try:
+            from enrgdaq.utils.shared_ring_buffer import get_global_ring_buffer
+
+            ring_buffer = get_global_ring_buffer()
+            occupancy = ring_buffer.get_slot_occupancy()
+            bytes_written, bytes_read = ring_buffer.get_stats()
+
+            sup_id = self.supervisor_id
+            if sup_id not in self.daq_job_stats:
+                self.daq_job_stats[sup_id] = {}
+            if "RingBuffer" not in self.daq_job_stats[sup_id]:
+                self.daq_job_stats[sup_id]["RingBuffer"] = DAQJobStats()
+
+            # Embed slot occupancy as a pseudo-CPU metric for visibility
+            total = occupancy["free"] + occupancy["writing"] + occupancy["ready"]
+            if total > 0:
+                ready_pct = (occupancy["ready"] / total) * 100.0
+                self.daq_job_stats[sup_id][
+                    "RingBuffer"
+                ].resource_stats.cpu_percent = ready_pct
+                self.daq_job_stats[sup_id]["RingBuffer"].resource_stats.rss_mb = (
+                    bytes_written / (1024 * 1024)
+                )
+        except Exception:
+            pass
+
+    def _increment_restart_counter(self, process: DAQJobProcess):
+        """
+        Increment the restart counter for a DAQJob type.
+
+        This provides a structured metric for watchdog validation.
+        """
+        job_cls_name = process.daq_job_cls.__name__
+        sup_id = self.supervisor_id
+        if sup_id not in self.daq_job_stats:
+            self.daq_job_stats[sup_id] = {}
+        if job_cls_name not in self.daq_job_stats[sup_id]:
+            self.daq_job_stats[sup_id][job_cls_name] = DAQJobStats()
+        self.daq_job_stats[sup_id][job_cls_name].restart_stats.increase()
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
