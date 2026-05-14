@@ -376,6 +376,12 @@ class RestartDAQJobSchedule:
         # Restart jobs that have stopped or are scheduled to restart
         self.restart_daq_jobs()
 
+        # Collect per-process resource stats (RSS, CPU)
+        self._collect_resource_stats()
+
+        # Collect ring buffer occupancy stats
+        self._collect_ring_buffer_stats()
+
     def get_status(self) -&gt; SupervisorStatus:
         &#34;&#34;&#34;
         Gets the status of the supervisor and its DAQ jobs.
@@ -434,6 +440,10 @@ class RestartDAQJobSchedule:
             self._logger.info(
                 f&#34;Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds&#34;
             )
+
+            # Increment restart counter for this job type
+            self._increment_restart_counter(process)
+
             res.append(
                 RestartDAQJobSchedule(
                     daq_job_process=process,
@@ -468,6 +478,96 @@ class RestartDAQJobSchedule:
         self.restart_schedules = [
             x for x in self.restart_schedules if x not in schedules_to_remove
         ]
+
+    def _collect_resource_stats(self):
+        &#34;&#34;&#34;
+        Poll per-process RSS and CPU usage for each managed DAQJob.
+
+        Populates daq_job_stats with resource_stats so they flow through
+        the existing stats pipeline to DAQJobHandleStats and storage.
+        &#34;&#34;&#34;
+        now = datetime.now()
+        if (
+            now - self._last_stats_message_time
+        ).total_seconds() &lt; DAQ_SUPERVISOR_STATS_MESSAGE_INTERVAL_SECONDS:
+            return
+
+        for proc in self.daq_job_processes:
+            if not proc.process or not proc.process.is_alive():
+                continue
+            pid = proc.process.pid
+            if pid is None:
+                continue
+            if pid not in self._psutil_process_cache:
+                try:
+                    self._psutil_process_cache[pid] = psutil.Process(pid)
+                except (PsutilNoSuchProcess, PsutilAccessDenied):
+                    continue
+            try:
+                mem_info = self._psutil_process_cache[pid].memory_info()
+                rss_mb = mem_info.rss / (1024 * 1024)
+                cpu = self._psutil_process_cache[pid].cpu_percent()
+                job_cls_name = proc.daq_job_cls.__name__
+                sup_id = self.supervisor_id
+                if sup_id not in self.daq_job_stats:
+                    self.daq_job_stats[sup_id] = {}
+                if job_cls_name not in self.daq_job_stats[sup_id]:
+                    self.daq_job_stats[sup_id][job_cls_name] = DAQJobStats()
+                self.daq_job_stats[sup_id][job_cls_name].resource_stats.rss_mb = rss_mb
+                self.daq_job_stats[sup_id][
+                    job_cls_name
+                ].resource_stats.cpu_percent = cpu
+            except (PsutilNoSuchProcess, PsutilAccessDenied):
+                self._psutil_process_cache.pop(pid, None)
+
+    def _collect_ring_buffer_stats(self):
+        &#34;&#34;&#34;
+        Collect ring buffer slot occupancy and byte counters.
+
+        Exports them as part of the supervisor&#39;s own stats so they
+        appear in the telemetry pipeline.
+        &#34;&#34;&#34;
+        if sys.platform == &#34;win32&#34;:
+            return
+        try:
+            from enrgdaq.utils.shared_ring_buffer import get_global_ring_buffer
+
+            ring_buffer = get_global_ring_buffer()
+            occupancy = ring_buffer.get_slot_occupancy()
+            bytes_written, bytes_read = ring_buffer.get_stats()
+
+            sup_id = self.supervisor_id
+            if sup_id not in self.daq_job_stats:
+                self.daq_job_stats[sup_id] = {}
+            if &#34;RingBuffer&#34; not in self.daq_job_stats[sup_id]:
+                self.daq_job_stats[sup_id][&#34;RingBuffer&#34;] = DAQJobStats()
+
+            # Embed slot occupancy as a pseudo-CPU metric for visibility
+            total = occupancy[&#34;free&#34;] + occupancy[&#34;writing&#34;] + occupancy[&#34;ready&#34;]
+            if total &gt; 0:
+                ready_pct = (occupancy[&#34;ready&#34;] / total) * 100.0
+                self.daq_job_stats[sup_id][
+                    &#34;RingBuffer&#34;
+                ].resource_stats.cpu_percent = ready_pct
+                self.daq_job_stats[sup_id][&#34;RingBuffer&#34;].resource_stats.rss_mb = (
+                    bytes_written / (1024 * 1024)
+                )
+        except Exception:
+            pass
+
+    def _increment_restart_counter(self, process: DAQJobProcess):
+        &#34;&#34;&#34;
+        Increment the restart counter for a DAQJob type.
+
+        This provides a structured metric for watchdog validation.
+        &#34;&#34;&#34;
+        job_cls_name = process.daq_job_cls.__name__
+        sup_id = self.supervisor_id
+        if sup_id not in self.daq_job_stats:
+            self.daq_job_stats[sup_id] = {}
+        if job_cls_name not in self.daq_job_stats[sup_id]:
+            self.daq_job_stats[sup_id][job_cls_name] = DAQJobStats()
+        self.daq_job_stats[sup_id][job_cls_name].restart_stats.increase()
 
     def warn_for_lack_of_daq_jobs(self):
         DAQ_JOB_ABSENT_WARNINGS = {
@@ -719,6 +819,10 @@ def supervisor_id(self):
         self._logger.info(
             f&#34;Scheduling restart of {process.daq_job_cls.__name__} in {restart_offset.total_seconds()} seconds&#34;
         )
+
+        # Increment restart counter for this job type
+        self._increment_restart_counter(process)
+
         res.append(
             RestartDAQJobSchedule(
                 daq_job_process=process,
@@ -899,7 +1003,13 @@ def supervisor_id(self):
     self.restart_schedules.extend(self.get_restart_schedules(dead_processes))
 
     # Restart jobs that have stopped or are scheduled to restart
-    self.restart_daq_jobs()</code></pre>
+    self.restart_daq_jobs()
+
+    # Collect per-process resource stats (RSS, CPU)
+    self._collect_resource_stats()
+
+    # Collect ring buffer occupancy stats
+    self._collect_ring_buffer_stats()</code></pre>
 </details>
 <div class="desc"><p>A single iteration of the supervisor's main loop.</p></div>
 </dd>

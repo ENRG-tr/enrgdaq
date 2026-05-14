@@ -499,6 +499,25 @@ def view(self) -&gt; memoryview:
             self._bytes_read.value if self._bytes_read else 0,
         )
 
+    def get_slot_occupancy(self) -&gt; dict[str, int]:
+        &#34;&#34;&#34;
+        Get the number of slots in each state.
+
+        Returns:
+            dict with keys &#39;free&#39;, &#39;writing&#39;, &#39;ready&#39; and their counts.
+        &#34;&#34;&#34;
+        self._ensure_initialized()
+        free = writing = ready = 0
+        for i in range(self.slot_count):
+            state = self._slot_states[i]
+            if state == SLOT_FREE:
+                free += 1
+            elif state == SLOT_WRITING:
+                writing += 1
+            elif state &gt;= SLOT_READY:
+                ready += 1
+        return {&#34;free&#34;: free, &#34;writing&#34;: writing, &#34;ready&#34;: ready}
+
     def get_slot_view(self, slot_index: int) -&gt; memoryview:
         &#34;&#34;&#34;Get a memoryview into a specific slot.&#34;&#34;&#34;
         self._ensure_initialized()
@@ -730,6 +749,37 @@ or size too large.</p></div>
 </details>
 <div class="desc"><p>Get the memory address of a slot (for pa.foreign_buffer).</p></div>
 </dd>
+<dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_occupancy"><code class="name flex">
+<span>def <span class="ident">get_slot_occupancy</span></span>(<span>self) ‑> dict[str, int]</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_slot_occupancy(self) -&gt; dict[str, int]:
+    &#34;&#34;&#34;
+    Get the number of slots in each state.
+
+    Returns:
+        dict with keys &#39;free&#39;, &#39;writing&#39;, &#39;ready&#39; and their counts.
+    &#34;&#34;&#34;
+    self._ensure_initialized()
+    free = writing = ready = 0
+    for i in range(self.slot_count):
+        state = self._slot_states[i]
+        if state == SLOT_FREE:
+            free += 1
+        elif state == SLOT_WRITING:
+            writing += 1
+        elif state &gt;= SLOT_READY:
+            ready += 1
+    return {&#34;free&#34;: free, &#34;writing&#34;: writing, &#34;ready&#34;: ready}</code></pre>
+</details>
+<div class="desc"><p>Get the number of slots in each state.</p>
+<h2 id="returns">Returns</h2>
+<p>dict with keys 'free', 'writing', 'ready' and their counts.</p></div>
+</dd>
 <dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view"><code class="name flex">
 <span>def <span class="ident">get_slot_view</span></span>(<span>self, slot_index: int) ‑> memoryview</span>
 </code></dt>
@@ -860,6 +910,7 @@ or size too large.</p></div>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.allocate" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.allocate">allocate</a></code></li>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup">cleanup</a></code></li>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_address" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_address">get_slot_address</a></code></li>
+<li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_occupancy" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_occupancy">get_slot_occupancy</a></code></li>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view">get_slot_view</a></code></li>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_stats" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_stats">get_stats</a></code></li>
 <li><code><a title="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.mark_ready" href="#enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.mark_ready">mark_ready</a></code></li>
