@@ -264,6 +264,25 @@ class SharedMemoryRingBuffer:
             self._bytes_read.value if self._bytes_read else 0,
         )
 
+    def get_slot_occupancy(self) -> dict[str, int]:
+        """
+        Get the number of slots in each state.
+
+        Returns:
+            dict with keys 'free', 'writing', 'ready' and their counts.
+        """
+        self._ensure_initialized()
+        free = writing = ready = 0
+        for i in range(self.slot_count):
+            state = self._slot_states[i]
+            if state == SLOT_FREE:
+                free += 1
+            elif state == SLOT_WRITING:
+                writing += 1
+            elif state >= SLOT_READY:
+                ready += 1
+        return {"free": free, "writing": writing, "ready": ready}
+
     def get_slot_view(self, slot_index: int) -> memoryview:
         """Get a memoryview into a specific slot."""
         self._ensure_initialized()

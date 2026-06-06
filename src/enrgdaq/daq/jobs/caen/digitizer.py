@@ -386,7 +386,7 @@ class DAQJobCAENDigitizer(DAQJob):
                 self.config.channel_self_trigger_threshold_mv * 1024 // 1000
             )
         # Clamp to valid range (10-bit ADC: 0-1023)
-        trigger_threshold_lsb = max(0, min(1023, trigger_threshold_lsb))
+        trigger_threshold_lsb = max(0, min(1024, trigger_threshold_lsb))
 
         for channel in range(info.channels):
             device.set_channel_trigger_threshold(

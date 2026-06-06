@@ -103,10 +103,6 @@ class TestSupervisor(unittest.TestCase):
         self.assertEqual(result[0].daq_job_process, mock_process_with_restart)
         self.assertEqual(result[0].restart_at, datetime(2023, 1, 1, 12, 0, 10))
 
-    # test_get_supervisor_messages removed - method removed from Supervisor
-    # test_get_messages_from_daq_jobs removed - method removed from Supervisor
-    # test_send_messages_to_daq_jobs removed - method removed from Supervisor
-
 
 if __name__ == "__main__":
     unittest.main()

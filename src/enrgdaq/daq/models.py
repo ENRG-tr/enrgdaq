@@ -326,6 +326,7 @@ class DAQJobMessageStatsReport(InternalDAQJobMessage, kw_only=True):
     sent_count: int
     sent_bytes: int = 0
     latency: DAQJobLatencyStats
+    resource_stats: DAQJobResourceStats = field(default_factory=DAQJobResourceStats)
 
     @override
     def pre_send(self):

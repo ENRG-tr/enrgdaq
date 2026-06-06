@@ -1,6 +1,8 @@
 import logging
 import multiprocessing
+import os
 import pickle
+import psutil
 import queue
 import re
 import sys
@@ -27,6 +29,7 @@ from enrgdaq.daq.models import (
     DAQJobMessageStop,
     DAQJobMessageTraceEvent,
     DAQJobMessageTraceReport,
+    DAQJobResourceStats,
     DAQJobStopError,
     InternalDAQJobMessage,
     LogVerbosity,
@@ -166,6 +169,13 @@ class DAQJob:
         self._sent_count = 0
         self._sent_bytes = 0
         self._last_stats_report_time = datetime.now()
+        # Store Process object to reuse across calls - psutil.cpu_percent() returns 0.0 on first call
+        # per Process instance, so we need to keep the same instance and warm it up
+        try:
+            self._psutil_process = psutil.Process(os.getpid())
+            self._psutil_process.cpu_percent()  # warm-up call, discard result
+        except Exception:
+            self._psutil_process = None
 
         # Trace collection
         self._trace_events: list[DAQJobMessageTraceEvent] = []
@@ -504,12 +514,32 @@ class DAQJob:
             return
 
         self._last_stats_report_time = datetime.now()
+        rss_mb = 0.0
+        cpu_percent = 0.0
+        try:
+            # Reuse the stored psutil Process instance to get accurate CPU usage.
+            # psutil.cpu_percent() returns 0.0 on the first call per Process instance,
+            # so keeping the same instance across calls is essential.
+            proc = getattr(self, "_psutil_process", None)
+            if proc is None:
+                proc = psutil.Process(os.getpid())
+                self._psutil_process = proc  # cache for next call
+            mem = proc.memory_info()
+            rss_mb = mem.rss / (1024 * 1024)
+            cpu_percent = proc.cpu_percent()
+        except Exception:
+            pass
+
         report = DAQJobMessageStatsReport(
             processed_count=self._processed_count,
             processed_bytes=self._processed_bytes,
             sent_count=self._sent_count,
             sent_bytes=self._sent_bytes,
             latency=self.get_latency_stats(),
+            resource_stats=DAQJobResourceStats(
+                cpu_percent=cpu_percent,
+                rss_mb=rss_mb,
+            ),
         )
         self._put_message_out(report)
         self._latency_samples = []  # RESET after report to get interval stats
