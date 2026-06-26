@@ -1,0 +1,1332 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data Acquisition Framework for Neutrino Physics Experiments">
+      
+      
+        <meta name="author" content="ENRG Collaboration">
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>ENRGDAQ: A High-Performance Distributed Data Acquisition Framework - ENRGDAQ</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/mkdocs_puml/puml.css">
+    
+      <link rel="stylesheet" href="../../assets/mkdocs_puml/interaction.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#enrgdaq-a-high-performance-distributed-data-acquisition-framework" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ENRGDAQ" class="md-header__button md-logo" aria-label="ENRGDAQ" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ENRGDAQ
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              ENRGDAQ: A High-Performance Distributed Data Acquisition Framework
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ENRG-tr/enrgdaq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ENRG-tr/enrgdaq
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ENRGDAQ" class="md-nav__button md-logo" aria-label="ENRGDAQ" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ENRGDAQ
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ENRG-tr/enrgdaq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ENRG-tr/enrgdaq
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-daqjob/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Custom DAQJob
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-store-backend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Storage Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/hardware-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/message-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Message Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/storage-backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storage Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-core-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Core Architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="2. Core Architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#21-the-supervisor-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.1 The Supervisor Model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#22-dynamic-message-routing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.2 Dynamic Message Routing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#23-high-performance-ipc-throughput-optimization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2.3 High-Performance IPC &amp; Throughput Optimization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-performance-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Performance Analysis
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Performance Analysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-measured-throughput" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Measured Throughput
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-comparison-with-compiled-systems-c" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Comparison with Compiled Systems (C++)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-specialized-daq-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Specialized DAQ Jobs
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Specialized DAQ Jobs">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-hardware-drivers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Hardware Drivers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-storage-backend-daqjobstore" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Storage Backend (DAQJobStore)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-system-management-cnc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. System Management (CNC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-scaling-determinism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Scaling &amp; Determinism
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Scaling &amp; Determinism">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-process-level-concurrency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Process-Level Concurrency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-ml-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 ML Readiness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7-conclusions-for-jinst" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Conclusions for JINST
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="enrgdaq-a-high-performance-distributed-data-acquisition-framework">ENRGDAQ: A High-Performance Distributed Data Acquisition Framework</h1>
+<h2 id="1-overview">1. Overview</h2>
+<p><strong>ENRGDAQ</strong> is a modern, distributed data acquisition (DAQ) framework designed for the rigorous demands of high-throughput and low-latency instrumentation in experimental physics (e.g., JUNO, dark matter searches, and neutrino experiments). It leverages a multi-process, supervisor-orchestrated architecture to achieve high performance, process isolation, and fault tolerance.</p>
+<p>By decoupling hardware acquisition, data processing, and storage into independent, isolated processes, ENRGDAQ ensures that hardware triggers are never blocked by slow disk I/O or network backpressure.</p>
+<hr />
+<h2 id="2-core-architecture">2. Core Architecture</h2>
+<h3 id="21-the-supervisor-model">2.1 The Supervisor Model</h3>
+<p>The fundamental unit of orchestration is the <strong>Supervisor</strong>. A supervisor manages a local group of <strong>DAQ Jobs</strong>, providing:</p>
+<ul>
+<li><strong>Process Isolation</strong>: Every <code>DAQJob</code> runs in its own OS process (standard <code>multiprocessing</code>), preventing a crash or memory leak in one driver from affecting the entire system.</li>
+<li><strong>Lifecycle Management</strong>: Automated process startup, health monitoring, and crash recovery (auto-restart).</li>
+<li><strong>Hierarchical Scaling</strong>: Supervisors can be nested or distributed. A "Client Supervisor" typically handles local hardware, while a "Main Supervisor" aggregates data for global storage and monitoring.</li>
+</ul>
+<h3 id="22-dynamic-message-routing">2.2 Dynamic Message Routing</h3>
+<p>ENRGDAQ uses a unique hybrid routing mechanism:</p>
+<ul>
+<li><strong>Default Routing</strong>: Small control messages are routed through the Supervisor's internal queues.</li>
+<li><strong>Direct Job-to-Job Routing</strong>: For high-bandwidth paths (e.g., Digitizer → Store), the Supervisor dynamically pushes queue handles to the source job. This allows data to flow directly between processes without passing through the single-threaded bottleneck of the Supervisor's main loop.</li>
+</ul>
+<h3 id="23-high-performance-ipc-throughput-optimization">2.3 High-Performance IPC &amp; Throughput Optimization</h3>
+<p>To achieve multi-Gbps throughput, ENRGDAQ minimizes data movement overhead using several techniques:</p>
+<ul>
+<li><strong>Zero-Serialization ZMQ Pipeline</strong>: Utilizing <code>ZMQQueue</code> with ZMQ IPC and <strong>Pickle Protocol 5</strong>, large memory buffers (NumPy arrays, PyArrow Tables) are passed as out-of-band frames. This achieves <strong>Zero User-Space Copy</strong> (no data duplication within the application memory) by bypassing Python's recursive object pickling.</li>
+<li><strong>Arrow Native IPC</strong>: PyArrow Tables are serialized using the specialized Arrow Stream format, which provides efficient, flat-memory access during transmit/receive.</li>
+<li><strong>Shared Memory (SHM)</strong>: In specific local-node configurations, data is passed via <code>multiprocessing.shared_memory</code>, sending only a lightweight <code>SHMHandle</code> (metadata) through the messaging layer to achieve true zero-copy at the kernel level.</li>
+</ul>
+<hr />
+<h2 id="3-performance-analysis">3. Performance Analysis</h2>
+<h3 id="31-measured-throughput">3.1 Measured Throughput</h3>
+<p>Performance benchmarks conducted on high-end Unix hardware (Apple M-series) characterize the framework across two distinct regimes: single-link efficiency and system-wide aggregate scaling.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Metric</th>
+<th style="text-align: left;">Measured Value</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>System Aggregate Link</strong></td>
+<td style="text-align: left;"><strong>~8.5 Gbps (1.06 GB/s)</strong></td>
+<td style="text-align: left;">Total data moved across ZMQ/SHM bus.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Single-Link Throughput</strong></td>
+<td style="text-align: left;"><strong>~3.7 Gbps (460 MB/s)</strong></td>
+<td style="text-align: left;">Sustained rate for a single readout client.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Theoretical Peak</strong></td>
+<td style="text-align: left;"><strong>11.4 Gbps</strong></td>
+<td style="text-align: left;">Burst capability under optimal alignment.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Performance Narrative:</strong></p>
+<ul>
+<li><strong>Scaling Limits</strong>: Throughput scales linearly for 1–2 heavy clients (~8.5 Gbps aggregate). Beyond this point, throughput degrades due to context-switching contention and IPC overhead within the single-threaded ZMQ Proxy—a known ceiling for high-level language orchestration.</li>
+<li><strong>Latency vs. Throughput</strong>: The system exhibits an inherent steady-state latency of <strong>~60ms</strong>. Under extreme saturation (hammer-testing), this increases to <strong>~150–250ms ($p_{99}$)</strong> as ZMQ buffers absorb backpressure. This asynchronous, deep-buffered behavior is a deliberate design choice, trading millisecond-level reaction time for robust multi-Gbps burst absorption.</li>
+</ul>
+<h3 id="32-comparison-with-compiled-systems-c">3.2 Comparison with Compiled Systems (C++)</h3>
+<p>A core objective of ENRGDAQ is to minimize the performance gap between interpreted HLLs (Python) and compiled languages (C++).</p>
+<ul>
+<li><strong>Performance Trade-offs</strong>: While highly optimized C++ DAQ systems (e.g., ATLAS TDAQ) can reach 40-80 Gbps on local IPC, ENRGDAQ's <strong>11.4 Gbps</strong> is sufficient to saturate 10 Gbps network hardware and utilizes approximately 40% of the theoretical bandwidth of high-end Gen4 NVMe storage.</li>
+<li><strong>Development Efficiency</strong>: ENRGDAQ achieves approximately 15-25% of the raw throughput of a hand-tuned C++ system while reducing development complexity by an estimated order of magnitude (~10x effort reduction). This makes it suitable for mid-scale experiments where development speed is critical.</li>
+</ul>
+<hr />
+<h2 id="4-specialized-daq-jobs">4. Specialized DAQ Jobs</h2>
+<h3 id="41-hardware-drivers">4.1 Hardware Drivers</h3>
+<ul>
+<li><strong><code>DAQJobCAENDigitizer</code></strong>: The high-bandwidth path. Interfaces with hardware via a C-wrapper, translating raw binary streams into PyArrow tables for downstream processing.</li>
+<li><strong><code>DAQJobCAENHV</code></strong>: Precision control for High Voltage. Features a hardware <strong>Watchdog</strong> system to detect library-level hangs, common in vendor provided SDKs.</li>
+<li><strong><code>DAQJobCamera / N1081B</code></strong>: Drivers for auxiliary monitoring and timing hardware.</li>
+</ul>
+<h3 id="42-storage-backend-daqjobstore">4.2 Storage Backend (<code>DAQJobStore</code>)</h3>
+<ul>
+<li><strong><code>DAQJobStoreROOT</code></strong>: Implements a <strong>Buffering Writer</strong> that batches PyArrow tables before committing to disk, significantly reducing the overhead of high-frequency <code>TTree</code> metadata updates.</li>
+<li><strong><code>DAQJobStoreRedis</code></strong>: Optimized for real-time monitoring via <code>RedisTimeSeries</code>.</li>
+</ul>
+<hr />
+<h2 id="5-system-management-cnc">5. System Management (CNC)</h2>
+<p>The system is managed via a REST API and WebSocket gateway:</p>
+<ul>
+<li><strong>Runtime Configuration</strong>: Update hardware setpoints (e.g., trigger thresholds) without re-initializing the process tree.</li>
+<li><strong>Telemetry Aggregation</strong>: Centralized log and health status collection from distributed nodes.</li>
+</ul>
+<hr />
+<h2 id="6-scaling-determinism">6. Scaling &amp; Determinism</h2>
+<h3 id="61-process-level-concurrency">6.1 Process-Level Concurrency</h3>
+<p>ENRGDAQ circumvents the Python Global Interpreter Lock (GIL) by delegating each <code>DAQJob</code> to an independent OS-level process.</p>
+<ul>
+<li><strong>Throughput Scaling</strong>: Performance scales with available physical cores for ZMQ IO-threads and data serialization.</li>
+<li><strong>Flow Control</strong>: Employs ZMQ High Water Marks (HWM) to implement backpressure, ensuring system stability during I/O micro-bursts or storage latency spikes.</li>
+</ul>
+<h3 id="62-ml-readiness">6.2 ML Readiness</h3>
+<p>The use of <strong>PyArrow</strong> as the primary data exchange format enables immediate, zero-copy conversion to <strong>PyTorch Tensors</strong> or <strong>NumPy</strong> arrays, allowing researchers to integrate modern machine learning models for real-time inference (e.g., pulse shape discrimination) directly into the readout pipeline.</p>
+<hr />
+<h2 id="7-conclusions-for-jinst">7. Conclusions for JINST</h2>
+<p>ENRGDAQ demonstrates that HLLs like Python, when augmented with zero-user-space copy primitives and C++ backed data engines, provide sufficient performance (&gt;10 Gbps) for modern mid-scale physics instrumentation. The framework prioritizes scientist productivity and ease of extensibility while maintaining the throughput required for high-resolution waveform digitization.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.indexes", "toc.follow", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/mkdocs_puml/puml.js"></script>
+      
+        <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+      
+        <script src="../../assets/mkdocs_puml/interaction.js"></script>
+      
+    
+  </body>
+</html>

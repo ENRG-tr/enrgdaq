@@ -1,0 +1,1537 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Data Acquisition Framework for Neutrino Physics Experiments">
+      
+      
+        <meta name="author" content="ENRG Collaboration">
+      
+      
+      
+        <link rel="prev" href="../../guides/deployment/">
+      
+      
+        <link rel="next" href="../message-flow/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Architecture - ENRGDAQ</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/mkdocs_puml/puml.css">
+    
+      <link rel="stylesheet" href="../../assets/mkdocs_puml/interaction.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#architecture" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="ENRGDAQ" class="md-header__button md-logo" aria-label="ENRGDAQ" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ENRGDAQ
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Architecture
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/ENRG-tr/enrgdaq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ENRG-tr/enrgdaq
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="ENRGDAQ" class="md-nav__button md-logo" aria-label="ENRGDAQ" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ENRGDAQ
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/ENRG-tr/enrgdaq" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    ENRG-tr/enrgdaq
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../index.md" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-daqjob/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Custom DAQJob
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-store-backend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Storage Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/hardware-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/deployment/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Deployment
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#four-layer-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Four-layer design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Four-layer design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-control-plane-supervisor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Control Plane — Supervisor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-message-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Message Broker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-process-pool-daqjobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Process Pool — DAQJobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-data-plane-shared-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Data Plane — Shared Memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-architecture-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Node architecture diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ring-buffer-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ring buffer mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fault-tolerance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fault tolerance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-machine-federation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-machine federation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-plane-cnc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control plane (CNC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../message-flow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Message Flow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../storage-backends/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Storage Backends
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Operations
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/monitoring/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Monitoring
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../operations/troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/api/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#four-layer-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Four-layer design
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Four-layer design">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-control-plane-supervisor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Control Plane — Supervisor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-message-broker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Message Broker
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-process-pool-daqjobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Process Pool — DAQJobs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-data-plane-shared-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Data Plane — Shared Memory
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#node-architecture-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Node architecture diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ring-buffer-mechanism" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ring buffer mechanism
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fault-tolerance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fault tolerance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-machine-federation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-machine federation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#class-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Class hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#control-plane-cnc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Control plane (CNC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#next-steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Next steps
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="architecture">Architecture</h1>
+<p>This page explains the internals of ENRGDAQ — how the supervisor, message
+broker, DAQJobs, and shared memory work together to deliver high-throughput
+data acquisition.</p>
+<hr />
+<h2 id="four-layer-design">Four-layer design</h2>
+<p>ENRGDAQ is organized into four logical layers:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>┌────────────────────────────────────────────────┐
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>│  CONTROL PLANE   │  Supervisor orchestrator      │
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├──────────────────┼───────────────────────────────┤
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│  MESSAGE BROKER  │  ZMQ XPUB/XSUB proxy          │
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>├──────────────────┼───────────────────────────────┤
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│  PROCESS POOL    │  Isolated DAQJob processes     │
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>├──────────────────┼───────────────────────────────┤
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│  DATA PLANE      │  Shared memory ring buffer     │
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>└────────────────────────────────────────────────┘
+</code></pre></div>
+<h3 id="1-control-plane-supervisor">1. Control Plane — Supervisor</h3>
+<p>A single <code>Supervisor</code> process manages the entire system:</p>
+<ul>
+<li>Reads TOML config files from the config directory</li>
+<li>Spawns each DAQJob as an independent OS process using <code>fork()</code></li>
+<li>Monitors liveness via heartbeats and watchdog timers</li>
+<li>Restarts crashed jobs with configurable backoff</li>
+<li>Collects per-job statistics (message counts, latency, CPU/RSS)</li>
+<li>Hosts the CNC command server for remote management</li>
+</ul>
+<h3 id="2-message-broker">2. Message Broker</h3>
+<p>The broker runs inside the supervisor process. It uses ZMQ's built-in
+<code>zmq.proxy()</code> between XPUB and XSUB sockets:</p>
+<ul>
+<li><strong>XSUB</strong> — receives messages from producers</li>
+<li><strong>XPUB</strong> — distributes messages to subscribers based on topic prefix matching</li>
+</ul>
+<p>All messages are serialized with <strong>pickle</strong> (not msgspec). This is deliberate:
+pickle supports out-of-band <code>PickleBuffer</code> for zero-copy shared memory
+transfers, which msgspec does not.</p>
+<h3 id="3-process-pool-daqjobs">3. Process Pool — DAQJobs</h3>
+<p>Each DAQJob runs as a separate process with three daemon threads:</p>
+<table>
+<thead>
+<tr>
+<th>Thread</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_consume_thread</code></td>
+<td>Receives messages via ZMQ SUB, puts them on <code>message_in</code> queue</td>
+</tr>
+<tr>
+<td><code>_publish_thread</code></td>
+<td>Takes messages from <code>message_out</code> queue, publishes via ZMQ PUB</td>
+</tr>
+<tr>
+<td><code>_report_thread</code></td>
+<td>Periodically sends stats and trace reports to supervisor (1 Hz)</td>
+</tr>
+</tbody>
+</table>
+<p>Jobs use <code>_put_message_out()</code> to send data and <code>handle_message()</code> to receive.
+Every job is <strong>isolated</strong> — a crash in one job does not affect others.</p>
+<h3 id="4-data-plane-shared-memory">4. Data Plane — Shared Memory</h3>
+<p>Bulk data (waveforms, PyArrow tables) bypasses ZMQ entirely. The producer
+writes data directly to a slot in a <strong>pre-allocated shared memory ring
+buffer</strong>. The consumer reads from the same slot — no copies, no serialization.</p>
+<p>The ring buffer uses a claim-commit-release state machine:</p>
+<ul>
+<li><strong>FREE → CLAIMED</strong> (producer claims a slot)</li>
+<li><strong>CLAIMED → READY</strong> (producer finishes writing and commits)</li>
+<li><strong>READY → FREE</strong> (consumer finishes reading and releases)</li>
+</ul>
+<hr />
+<h2 id="node-architecture-diagram">Node architecture diagram</h2>
+<p>The diagram below shows all four layers and their interactions on a single
+machine. Red arrows are the zero-copy data path; blue arrows are ZMQ pub/sub.</p>
+<div class='puml-container'><div class="puml light" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="DESCRIPTION" style="width:442px;height:456px;background:#FFFFFF;" width="442px" height="456px" viewBox="0 0 442 456" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><g class="cluster" data-qualified-name="Instance" id="ent0001" data-source-line="8"><rect x="7" y="7" width="421" height="435.89" fill="none" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="10" y="21.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="177.6729" font-weight="700" font-family="sans-serif">Single ENRGDAQ Node</text></g><g class="cluster" data-qualified-name="Instance.CP" id="ent0002" data-source-line="9"><rect x="31" y="50" width="138" height="87.3" fill="#F5F5F5" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="34" y="64.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="106.7158" font-weight="700" font-family="sans-serif">Control Plane</text></g><g class="cluster" data-qualified-name="Instance.Broker" id="ent0004" data-source-line="12"><rect x="193" y="50" width="211" height="87.3" fill="#E8F5E9" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="196" y="64.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="167.6924" font-weight="700" font-family="sans-serif">ZMQ Message Broker</text></g><g class="cluster" data-qualified-name="Instance.Pool" id="ent0008" data-source-line="17"><rect x="116" y="186.3" width="243" height="87.29" fill="#FFFDE7" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="119" y="201.2951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="100.4131" font-weight="700" font-family="sans-serif">Process Pool</text></g><g class="cluster" data-qualified-name="Instance.DP" id="ent0011" data-source-line="21"><rect x="163" y="322.59" width="142" height="96.3" fill="#E3F2FD" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="166" y="337.5851" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="86.0508" font-weight="700" font-family="sans-serif">Data Plane</text></g><g class="entity" data-qualified-name="Instance.CP.Supervisor" id="ent0003" data-source-line="10"><rect x="47.37" y="85" width="105.251" height="36.2969" fill="#E8EAF6" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="57.37" y="107.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="85.251" font-weight="700" font-family="sans-serif">Supervisor</text></g><g class="entity" data-qualified-name="Instance.Broker.XSUB" id="ent0005" data-source-line="13"><rect x="325.54" y="85" width="62.916" height="36.2969" fill="#C8E6C9" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="335.54" y="107.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="42.916" font-weight="700" font-family="sans-serif">XSUB</text></g><g class="entity" data-qualified-name="Instance.Broker.XPUB" id="ent0006" data-source-line="14"><rect x="209.45" y="85" width="63.0938" height="36.2969" fill="#C8E6C9" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="219.45" y="107.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="43.0938" font-weight="700" font-family="sans-serif">XPUB</text></g><g class="entity" data-qualified-name="Instance.Pool.Producer" id="ent0009" data-source-line="18"><rect x="238.94" y="221.3" width="104.123" height="36.2969" fill="#FFCDD2" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="248.94" y="244.2951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="84.123" font-weight="700" font-family="sans-serif">Sensor Job</text></g><g class="entity" data-qualified-name="Instance.Pool.Consumer" id="ent0010" data-source-line="19"><rect x="131.74" y="221.3" width="92.5156" height="36.2969" fill="#C8E6C9" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="141.74" y="244.2951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="72.5156" font-weight="700" font-family="sans-serif">Store Job</text></g><g class="entity" data-qualified-name="Instance.DP.SHM" id="ent0012" data-source-line="22"><path d="M179.17,367.59 C179.17,357.59 234.0001,357.59 234.0001,357.59 C234.0001,357.59 288.8302,357.59 288.8302,367.59 L288.8302,392.8869 C288.8302,402.8869 234.0001,402.8869 234.0001,402.8869 C234.0001,402.8869 179.17,402.8869 179.17,392.8869 L179.17,367.59" style="stroke:#181818;stroke-width:0.5;" fill="#BBDEFB"/><path d="M179.17,367.59 C179.17,377.59 234.0001,377.59 234.0001,377.59 C234.0001,377.59 288.8302,377.59 288.8302,367.59" style="stroke:#181818;stroke-width:0.5;" fill="none"/><text x="189.17" y="394.5851" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="89.6602" font-weight="700" font-family="sans-serif">Ring Buffer</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0006" id="lnk7" data-source-line="15" data-link-type="dependency"><path d="M325.1,103.15 C308.89,103.15 294.23,103.15 278,103.15" style="stroke:#1976D2;stroke-width:2;" fill="none" id="XSUB-to-XPUB"/><polygon points="273,103.15,282,107.15,278,103.15,282,99.15,273,103.15" fill="#1976D2" style="stroke:#1976D2;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="281.04" y="96.2169" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="36.937" font-family="sans-serif">proxy</text></g><g class="link" data-entity-1="ent0003" data-entity-2="ent0009" id="lnk13" data-source-line="26" data-link-type="dependency"><path d="M135.49,121.74 C153.76,130.09 176.63,139.5 198,145.3 C223.96,152.34 236.86,136.66 258,153.3 C278.93,169.77 285.8975,196.3396 288.6975,216.0696" style="stroke:#607D8B;stroke-width:1;stroke-dasharray:7,7;" fill="none" id="Supervisor-to-Producer"/><polygon points="289.4,221.02,292.0957,211.5473,288.6975,216.0696,284.1751,212.6713,289.4,221.02" fill="#607D8B" style="stroke:#607D8B;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="273" y="166.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="53.3965" font-family="sans-serif">lifecycle</text></g><g class="link" data-entity-1="ent0003" data-entity-2="ent0010" id="lnk14" data-source-line="27" data-link-type="dependency"><path d="M106.91,121.72 C112.5,135.31 120.92,154.43 130,170.3 C140.28,188.26 151.0305,203.4347 161.1905,216.8447" style="stroke:#607D8B;stroke-width:1;stroke-dasharray:7,7;" fill="none" id="Supervisor-to-Consumer"/><polygon points="164.21,220.83,161.9632,211.2408,161.1905,216.8447,155.5867,216.072,164.21,220.83" fill="#607D8B" style="stroke:#607D8B;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="131" y="166.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="53.3965" font-family="sans-serif">lifecycle</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0009" id="lnk16" data-source-line="28" data-link-type="dependency"><path d="M351.1079,126.5637 C347.2879,140.1637 342.59,154.47 335,170.3 C326.29,188.45 313.58,207.59 304.06,220.95" style="stroke:#1976D2;stroke-width:2;" fill="none" id="XSUB-backto-Producer"/><polygon points="352.46,121.75,346.1753,129.333,351.1079,126.5637,353.8772,131.4964,352.46,121.75" fill="#1976D2" style="stroke:#1976D2;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="342" y="166.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0006" data-entity-2="ent0010" id="lnk17" data-source-line="29" data-link-type="dependency"><path d="M220.33,121.35 C211.22,130.02 201.2,141.24 195,153.3 C183.91,174.88 180.4135,198.014 179.0735,215.904" style="stroke:#4CAF50;stroke-width:2;" fill="none" id="XPUB-to-Consumer"/><polygon points="178.7,220.89,183.3611,212.2139,179.0735,215.904,175.3834,211.6164,178.7,220.89" fill="#4CAF50" style="stroke:#4CAF50;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="196" y="166.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><g class="link" data-entity-1="ent0009" data-entity-2="ent0012" id="lnk18" data-source-line="30" data-link-type="dependency"><path d="M291.47,257.83 C291.3,271.49 289.85,290.78 284,306.59 C277.1,325.26 267.4331,339.7954 256.5231,353.4354" style="stroke:#D32F2F;stroke-width:3;" fill="none" id="Producer-to-SHM"/><polygon points="253.4,357.34,262.1453,352.8102,256.5231,353.4354,255.8979,347.8132,253.4,357.34" fill="#D32F2F" style="stroke:#D32F2F;stroke-width:3;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="289" y="302.6569" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="51.4414" font-family="sans-serif">1. Write</text></g><g class="link" data-entity-1="ent0012" data-entity-2="ent0010" id="lnk19" data-source-line="31" data-link-type="dependency"><path d="M205.45,357.33 C190.96,344.36 174.81,326.57 167,306.59 C160.81,290.76 163.5494,276.1683 168.5194,262.5183" style="stroke:#D32F2F;stroke-width:3;" fill="none" id="SHM-to-Consumer"/><polygon points="170.23,257.82,163.3922,264.9084,168.5194,262.5183,170.9094,267.6454,170.23,257.82" fill="#D32F2F" style="stroke:#D32F2F;stroke-width:3;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="168" y="302.6569" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="116.1685" font-family="sans-serif">2. Zero-copy read</text></g><?plantuml-src ZL9TRzem57tFhxWhRwYGaevFQPC8IVObAbeqRMg59kDSY8LZHxRJ3atzxxC3fUa0QSwBOv_ZS-yvznqJb9SfGcPCeKU-hyXJUyrCLYvBZOfAOL2ODfMvFsMRZ33-JP57DDhFDwca-bTHvjpFYJQeV9DXZjfFSKLARdpErfbfEu2dDqmKH94SSYaapPJC4LQ4QwnTwOoayec9zT6DbI-ai8NCpPOZAAI6Y3MlGuHCKMC1dMxjK16nSOT1r_CE9BXeDkUisiKtTv-YyItSM7ApUG54mnUXBOmY_F70hXfhOhrGaiEC4u4LTZA3Hj9rtnxjrg5MUB0wPO7gaMcfcis5exmUG2CUnEEaLn6V_nMxdzx25BKcQuHGoGsgId6tTTIa6m_FgVwSVm_tUcuBZSaWxas6Py2pL_3i1BXweVNGw0pxlIYuD1cZ6s4h-n0ib0kuzN776q6XvE_jwNPcIbBBWPcKl6h4RQnvIHB5_RFceN0-VPNBVNtsbRIahlyacKHHS8PcfC8Qo-QcozonQfqTLHWHGshHHZRQ-3e9agXMNMenIwAh2RfpSngMgnMg_UJCFq-X4OPHd8HxYMVFg-LjFUnTzQD1U9aIdM6wiCCkh7k7haR0sGhfbjh1_W_UeQywx_3OwSJAmiKrtyLLBZdJcLUbP-7l9-EaU_K6VgoaowMcYYtVAaNNWRMgHhr-eJfJHj1fmm_5Z6tB_fx6lynIJIjempqgsQAosDgeIFeN?></g></svg></div><div class="puml dark" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="DESCRIPTION" style="width:442px;height:456px;background:#1B1B1B;" width="442px" height="456px" viewBox="0 0 442 456" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><rect x="0" y="0" width="442" height="456" fill="#1B1B1B" style="stroke:none;stroke-width:1;"/><g class="cluster" data-qualified-name="Instance" id="ent0001" data-source-line="8"><rect x="7" y="7" width="421" height="435.89" fill="none" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="10" y="21.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="177.6729" font-weight="700" font-family="sans-serif">Single ENRGDAQ Node</text></g><g class="cluster" data-qualified-name="Instance.CP" id="ent0002" data-source-line="9"><rect x="31" y="50" width="138" height="87.3" fill="#F5F5F5" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="34" y="64.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="106.7158" font-weight="700" font-family="sans-serif">Control Plane</text></g><g class="cluster" data-qualified-name="Instance.Broker" id="ent0004" data-source-line="12"><rect x="193" y="50" width="211" height="87.3" fill="#E8F5E9" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="196" y="64.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="167.6924" font-weight="700" font-family="sans-serif">ZMQ Message Broker</text></g><g class="cluster" data-qualified-name="Instance.Pool" id="ent0008" data-source-line="17"><rect x="116" y="186.3" width="243" height="87.29" fill="#FFFDE7" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="119" y="201.2951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="100.4131" font-weight="700" font-family="sans-serif">Process Pool</text></g><g class="cluster" data-qualified-name="Instance.DP" id="ent0011" data-source-line="21"><rect x="163" y="322.59" width="142" height="96.3" fill="#E3F2FD" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="166" y="337.5851" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="86.0508" font-weight="700" font-family="sans-serif">Data Plane</text></g><g class="entity" data-qualified-name="Instance.CP.Supervisor" id="ent0003" data-source-line="10"><rect x="47.37" y="85" width="105.251" height="36.2969" fill="#E8EAF6" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="57.37" y="107.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="85.251" font-weight="700" font-family="sans-serif">Supervisor</text></g><g class="entity" data-qualified-name="Instance.Broker.XSUB" id="ent0005" data-source-line="13"><rect x="325.54" y="85" width="62.916" height="36.2969" fill="#C8E6C9" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="335.54" y="107.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="42.916" font-weight="700" font-family="sans-serif">XSUB</text></g><g class="entity" data-qualified-name="Instance.Broker.XPUB" id="ent0006" data-source-line="14"><rect x="209.45" y="85" width="63.0938" height="36.2969" fill="#C8E6C9" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="219.45" y="107.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="43.0938" font-weight="700" font-family="sans-serif">XPUB</text></g><g class="entity" data-qualified-name="Instance.Pool.Producer" id="ent0009" data-source-line="18"><rect x="238.94" y="221.3" width="104.123" height="36.2969" fill="#FFCDD2" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="248.94" y="244.2951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="84.123" font-weight="700" font-family="sans-serif">Sensor Job</text></g><g class="entity" data-qualified-name="Instance.Pool.Consumer" id="ent0010" data-source-line="19"><rect x="131.74" y="221.3" width="92.5156" height="36.2969" fill="#C8E6C9" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="141.74" y="244.2951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="72.5156" font-weight="700" font-family="sans-serif">Store Job</text></g><g class="entity" data-qualified-name="Instance.DP.SHM" id="ent0012" data-source-line="22"><path d="M179.17,367.59 C179.17,357.59 234.0001,357.59 234.0001,357.59 C234.0001,357.59 288.8302,357.59 288.8302,367.59 L288.8302,392.8869 C288.8302,402.8869 234.0001,402.8869 234.0001,402.8869 C234.0001,402.8869 179.17,402.8869 179.17,392.8869 L179.17,367.59" style="stroke:#E7E7E7;stroke-width:0.5;" fill="#BBDEFB"/><path d="M179.17,367.59 C179.17,377.59 234.0001,377.59 234.0001,377.59 C234.0001,377.59 288.8302,377.59 288.8302,367.59" style="stroke:#E7E7E7;stroke-width:0.5;" fill="none"/><text x="189.17" y="394.5851" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="89.6602" font-weight="700" font-family="sans-serif">Ring Buffer</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0006" id="lnk7" data-source-line="15" data-link-type="dependency"><path d="M325.1,103.15 C308.89,103.15 294.23,103.15 278,103.15" style="stroke:#1976D2;stroke-width:2;" fill="none" id="XSUB-to-XPUB"/><polygon points="273,103.15,282,107.15,278,103.15,282,99.15,273,103.15" fill="#1976D2" style="stroke:#1976D2;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="281.04" y="96.2169" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="36.937" font-family="sans-serif">proxy</text></g><g class="link" data-entity-1="ent0003" data-entity-2="ent0009" id="lnk13" data-source-line="26" data-link-type="dependency"><path d="M135.49,121.74 C153.76,130.09 176.63,139.5 198,145.3 C223.96,152.34 236.86,136.66 258,153.3 C278.93,169.77 285.8975,196.3396 288.6975,216.0696" style="stroke:#607D8B;stroke-width:1;stroke-dasharray:7,7;" fill="none" id="Supervisor-to-Producer"/><polygon points="289.4,221.02,292.0957,211.5473,288.6975,216.0696,284.1751,212.6713,289.4,221.02" fill="#607D8B" style="stroke:#607D8B;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="273" y="166.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="53.3965" font-family="sans-serif">lifecycle</text></g><g class="link" data-entity-1="ent0003" data-entity-2="ent0010" id="lnk14" data-source-line="27" data-link-type="dependency"><path d="M106.91,121.72 C112.5,135.31 120.92,154.43 130,170.3 C140.28,188.26 151.0305,203.4347 161.1905,216.8447" style="stroke:#607D8B;stroke-width:1;stroke-dasharray:7,7;" fill="none" id="Supervisor-to-Consumer"/><polygon points="164.21,220.83,161.9632,211.2408,161.1905,216.8447,155.5867,216.072,164.21,220.83" fill="#607D8B" style="stroke:#607D8B;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="131" y="166.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="53.3965" font-family="sans-serif">lifecycle</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0009" id="lnk16" data-source-line="28" data-link-type="dependency"><path d="M351.1079,126.5637 C347.2879,140.1637 342.59,154.47 335,170.3 C326.29,188.45 313.58,207.59 304.06,220.95" style="stroke:#1976D2;stroke-width:2;" fill="none" id="XSUB-backto-Producer"/><polygon points="352.46,121.75,346.1753,129.333,351.1079,126.5637,353.8772,131.4964,352.46,121.75" fill="#1976D2" style="stroke:#1976D2;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="342" y="166.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0006" data-entity-2="ent0010" id="lnk17" data-source-line="29" data-link-type="dependency"><path d="M220.33,121.35 C211.22,130.02 201.2,141.24 195,153.3 C183.91,174.88 180.4135,198.014 179.0735,215.904" style="stroke:#4CAF50;stroke-width:2;" fill="none" id="XPUB-to-Consumer"/><polygon points="178.7,220.89,183.3611,212.2139,179.0735,215.904,175.3834,211.6164,178.7,220.89" fill="#4CAF50" style="stroke:#4CAF50;stroke-width:2;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="196" y="166.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><g class="link" data-entity-1="ent0009" data-entity-2="ent0012" id="lnk18" data-source-line="30" data-link-type="dependency"><path d="M291.47,257.83 C291.3,271.49 289.85,290.78 284,306.59 C277.1,325.26 267.4331,339.7954 256.5231,353.4354" style="stroke:#D32F2F;stroke-width:3;" fill="none" id="Producer-to-SHM"/><polygon points="253.4,357.34,262.1453,352.8102,256.5231,353.4354,255.8979,347.8132,253.4,357.34" fill="#D32F2F" style="stroke:#D32F2F;stroke-width:3;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="289" y="302.6569" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="51.4414" font-family="sans-serif">1. Write</text></g><g class="link" data-entity-1="ent0012" data-entity-2="ent0010" id="lnk19" data-source-line="31" data-link-type="dependency"><path d="M205.45,357.33 C190.96,344.36 174.81,326.57 167,306.59 C160.81,290.76 163.5494,276.1683 168.5194,262.5183" style="stroke:#D32F2F;stroke-width:3;" fill="none" id="SHM-to-Consumer"/><polygon points="170.23,257.82,163.3922,264.9084,168.5194,262.5183,170.9094,267.6454,170.23,257.82" fill="#D32F2F" style="stroke:#D32F2F;stroke-width:3;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="168" y="302.6569" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="116.1685" font-family="sans-serif">2. Zero-copy read</text></g><?plantuml-src ZL9TRzem57tFhxWhRwYGaevFQPC8IVObghHesjGAJSQv42k97TbEEpJrlyyEbAO3f3alZdsEpxtdt7UCqxnA45AjIpLnNKcUkXkcqsfLAPHKS8rSTwaet3dBKiBoRv8yebPkaIM2gbzbLUHkGPH6wUeK2rHkWcjIvTfDYCowzjvH6UCbaQI0Gd11KoaAX3N95JQkL4eIySJuvkZ6g9U2cpeMUfiZIAIQy4tUX72HeC8IUlt6eIGyiuTUtt4E9BXejnUiteKtTv-2wItS67AxVG54mHUk38mY_770h0PhPgoG8eSu9nnhx2o6LjIttnvjrw5MU30wLOdoaIaXs-sbfRmUG2iSXTDeK1EV_nMxdz_279KY6mHVYWnbhRZRMchK3yVdL7yklljxFRk5rcmK3cRZC-3u5HoV0DSlT1vQlV5m47YNEcKquwQo3zvIiasgEnztl0cKKlpUdcudbe8Q3iH2v7KZTcFCYw8W79ur3xdrwQjOxUiphoGLjVr7qIm8l3CqBIGsM2OtLHMMrUZigCA0QDA8DZ3HXjUH5mMDwXA3MH5LJz2TdLE_MgzHxYTdyNaEBTyFmiZVIpmxJYDlu-7WQXYC_Ck4g1IJfHbsRjmxT3M1dAsHRgaPxF_W7VfgyWwFdKwiAcrSYrrSrIfdAdNgz0py_MmQzQ_Um8-LLBLILBBLMwNWsZDMDQZNBrHhoWHwNVWXcJPjcT_J-9TPQcXvNRX7AJfKb5iJ5Kd-0W00?></g></svg></div></div>
+
+<p>See the full diagram in
+<a href="../diagrams/host_node_architecture.puml">host_node_architecture.puml</a>.</p>
+<hr />
+<h2 id="ring-buffer-mechanism">Ring buffer mechanism</h2>
+<p>The ring buffer is the heart of ENRGDAQ's high-throughput zero-copy path.
+It avoids all serialization and copy overhead for bulk data.</p>
+<div class='puml-container'><div class="puml light" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="SEQUENCE" style="width:682px;height:276px;background:#FFFFFF;" width="682px" height="276px" viewBox="0 0 682 276" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><g class="participant-lifeline" data-qualified-name="Producer" data-entity-uid="part1" id="part1-lifeline" data-source-line="2"><g><title>Producer</title><rect x="39.2949" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="43" y1="40.2969" x2="43" y2="235.0938" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant-lifeline" data-qualified-name="RB" data-entity-uid="part2" id="part2-lifeline" data-source-line="3"><g><title>Ring Buffer</title><rect x="295.9556" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="299.6899" y1="40.2969" x2="299.6899" y2="235.0938" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant-lifeline" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-lifeline" data-source-line="4"><g><title>Consumer</title><rect x="624.9351" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="628.2412" y1="40.2969" x2="628.2412" y2="235.0938" style="stroke:#181818;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant participant-head" data-qualified-name="Producer" data-entity-uid="part1" id="part1-head" data-source-line="2"><rect x="5" y="9" width="76.5898" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="12" y="28.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="62.5898" font-family="sans-serif">Producer</text></g><g class="participant participant-tail" data-qualified-name="Producer" data-entity-uid="part1" id="part1-tail" data-source-line="2"><rect x="5" y="234.0938" width="76.5898" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="12" y="254.0889" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="62.5898" font-family="sans-serif">Producer</text></g><g class="participant participant-head" data-qualified-name="RB" data-entity-uid="part2" id="part2-head" data-source-line="3"><rect x="255.6899" y="5" width="92.5313" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/><rect x="251.6899" y="9" width="92.5313" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/><text x="258.6899" y="28.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="78.5313" font-family="sans-serif">Ring Buffer</text></g><g class="participant participant-tail" data-qualified-name="RB" data-entity-uid="part2" id="part2-tail" data-source-line="3"><rect x="255.6899" y="234.0938" width="92.5313" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/><rect x="251.6899" y="238.0938" width="92.5313" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;"/><text x="258.6899" y="258.0889" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="78.5313" font-family="sans-serif">Ring Buffer</text></g><g class="participant participant-head" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-head" data-source-line="4"><rect x="586.2412" y="9" width="85.3877" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="593.2412" y="28.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="71.3877" font-family="sans-serif">Consumer</text></g><g class="participant participant-tail" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-tail" data-source-line="4"><rect x="586.2412" y="234.0938" width="85.3877" height="30.2969" fill="#E2E2F0" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="593.2412" y="254.0889" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="71.3877" font-family="sans-serif">Consumer</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg1" data-source-line="6"><polygon points="287.9556,67.4297,297.9556,71.4297,287.9556,75.4297,291.9556,71.4297" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="71.4297" x2="293.9556" y2="71.4297" style="stroke:#181818;stroke-width:1;"/><text x="50.2949" y="66.3638" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="207.3716" font-family="sans-serif">1. Claim Slot (FREE → CLAIMED)</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg2" data-source-line="7"><polygon points="287.9556,96.5625,297.9556,100.5625,287.9556,104.5625,291.9556,100.5625" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="100.5625" x2="293.9556" y2="100.5625" style="stroke:#181818;stroke-width:1;"/><text x="50.2949" y="95.4966" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="220.5811" font-family="sans-serif">2. Write payload (single memcpy)</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg3" data-source-line="8"><polygon points="287.9556,125.6953,297.9556,129.6953,287.9556,133.6953,291.9556,129.6953" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="129.6953" x2="293.9556" y2="129.6953" style="stroke:#181818;stroke-width:1;"/><text x="50.2949" y="124.6294" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="232.6606" font-family="sans-serif">3. Commit Slot (CLAIMED → READY)</text></g><g class="message" data-entity-1="part1" data-entity-2="part3" id="msg4" data-source-line="9"><polygon points="616.9351,154.8281,626.9351,158.8281,616.9351,162.8281,620.9351,158.8281" fill="#0000FF" style="stroke:#0000FF;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="158.8281" x2="622.9351" y2="158.8281" style="stroke:#0000FF;stroke-width:1;"/><text x="50.2949" y="153.7622" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="214.2207" font-family="sans-serif">4. Send handle (ZMQ: slot index)</text></g><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg5" data-source-line="10"><polygon points="310.9556,183.9609,300.9556,187.9609,310.9556,191.9609,306.9556,187.9609" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="304.9556" y1="187.9609" x2="627.9351" y2="187.9609" style="stroke:#181818;stroke-width:1;"/><text x="316.9556" y="182.895" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="304.9795" font-family="sans-serif">5. Read slot (zero-copy via pa.foreign_buffer())</text></g><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg6" data-source-line="11"><polygon points="310.9556,213.0938,300.9556,217.0938,310.9556,221.0938,306.9556,217.0938" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="304.9556" y1="217.0938" x2="627.9351" y2="217.0938" style="stroke:#181818;stroke-width:1;"/><text x="316.9556" y="212.0278" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="178.3755" font-family="sans-serif">6. Release (READY → FREE)</text></g><?plantuml-src RP1BJiCm54NdMSMZJD917V4TT52fdo0Xg0Jf0052bUky95RzYVmfb0Mm09R8Id2Yf0B1qFAzvnwz8wwOy3b2vLnjnqbYw2ifkQlynbiqJ2k7oX6cPRBasufoSMFe3frDv3RNpAvhBqKYgNLe4bUXH9laM50lN29uMJdI1AAQ6iSPhwboCBWpElSCpG2eXVuHCIq4CiUriZ38k2fXvekYIsMptuXvI7dPVVQFAEfXC9g42epXXC1SK2vX9RI3-2fBK_Zw-8JvxVHwcIw6Vnkd11uCTmWrtGjDSuXjS1484YMhz_yqpiA6bfAxRgHZjpjPEbqy_kmy7s-4nvV9GJe0pWciKELGKPM7eVXfUJy6sx2uol5j61so_UG5WGo3MnkAtz7e4TFr7dQS1czIQ8EyLEjDUy1u-0_XiY48f3RijPAjRdEVuJS0?></g></svg></div><div class="puml dark" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="SEQUENCE" style="width:682px;height:276px;background:#1B1B1B;" width="682px" height="276px" viewBox="0 0 682 276" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><rect x="0" y="0" width="682" height="276" fill="#1B1B1B" style="stroke:none;stroke-width:1;"/><g class="participant-lifeline" data-qualified-name="Producer" data-entity-uid="part1" id="part1-lifeline" data-source-line="2"><g><title>Producer</title><rect x="39.2949" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="43" y1="40.2969" x2="43" y2="235.0938" style="stroke:#E7E7E7;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant-lifeline" data-qualified-name="RB" data-entity-uid="part2" id="part2-lifeline" data-source-line="3"><g><title>Ring Buffer</title><rect x="295.9556" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="299.6899" y1="40.2969" x2="299.6899" y2="235.0938" style="stroke:#E7E7E7;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant-lifeline" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-lifeline" data-source-line="4"><g><title>Consumer</title><rect x="624.9351" y="40.2969" width="8" height="194.7969" fill="#000000" fill-opacity="0.00000"/><line x1="628.2412" y1="40.2969" x2="628.2412" y2="235.0938" style="stroke:#E7E7E7;stroke-width:0.5;stroke-dasharray:5,5;"/></g></g><g class="participant participant-head" data-qualified-name="Producer" data-entity-uid="part1" id="part1-head" data-source-line="2"><rect x="5" y="9" width="76.5898" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="12" y="28.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="62.5898" font-family="sans-serif">Producer</text></g><g class="participant participant-tail" data-qualified-name="Producer" data-entity-uid="part1" id="part1-tail" data-source-line="2"><rect x="5" y="234.0938" width="76.5898" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="12" y="254.0889" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="62.5898" font-family="sans-serif">Producer</text></g><g class="participant participant-head" data-qualified-name="RB" data-entity-uid="part2" id="part2-head" data-source-line="3"><rect x="255.6899" y="5" width="92.5313" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;"/><rect x="251.6899" y="9" width="92.5313" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;"/><text x="258.6899" y="28.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="78.5313" font-family="sans-serif">Ring Buffer</text></g><g class="participant participant-tail" data-qualified-name="RB" data-entity-uid="part2" id="part2-tail" data-source-line="3"><rect x="255.6899" y="234.0938" width="92.5313" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;"/><rect x="251.6899" y="238.0938" width="92.5313" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;"/><text x="258.6899" y="258.0889" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="78.5313" font-family="sans-serif">Ring Buffer</text></g><g class="participant participant-head" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-head" data-source-line="4"><rect x="586.2412" y="9" width="85.3877" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="593.2412" y="28.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="71.3877" font-family="sans-serif">Consumer</text></g><g class="participant participant-tail" data-qualified-name="Consumer" data-entity-uid="part3" id="part3-tail" data-source-line="4"><rect x="586.2412" y="234.0938" width="85.3877" height="30.2969" fill="#222222" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="593.2412" y="254.0889" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="71.3877" font-family="sans-serif">Consumer</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg1" data-source-line="6"><polygon points="287.9556,67.4297,297.9556,71.4297,287.9556,75.4297,291.9556,71.4297" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="71.4297" x2="293.9556" y2="71.4297" style="stroke:#E7E7E7;stroke-width:1;"/><text x="50.2949" y="66.3638" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="207.3716" font-family="sans-serif">1. Claim Slot (FREE → CLAIMED)</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg2" data-source-line="7"><polygon points="287.9556,96.5625,297.9556,100.5625,287.9556,104.5625,291.9556,100.5625" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="100.5625" x2="293.9556" y2="100.5625" style="stroke:#E7E7E7;stroke-width:1;"/><text x="50.2949" y="95.4966" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="220.5811" font-family="sans-serif">2. Write payload (single memcpy)</text></g><g class="message" data-entity-1="part1" data-entity-2="part2" id="msg3" data-source-line="8"><polygon points="287.9556,125.6953,297.9556,129.6953,287.9556,133.6953,291.9556,129.6953" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="129.6953" x2="293.9556" y2="129.6953" style="stroke:#E7E7E7;stroke-width:1;"/><text x="50.2949" y="124.6294" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="232.6606" font-family="sans-serif">3. Commit Slot (CLAIMED → READY)</text></g><g class="message" data-entity-1="part1" data-entity-2="part3" id="msg4" data-source-line="9"><polygon points="616.9351,154.8281,626.9351,158.8281,616.9351,162.8281,620.9351,158.8281" fill="#0000FF" style="stroke:#0000FF;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="43.2949" y1="158.8281" x2="622.9351" y2="158.8281" style="stroke:#0000FF;stroke-width:1;"/><text x="50.2949" y="153.7622" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="214.2207" font-family="sans-serif">4. Send handle (ZMQ: slot index)</text></g><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg5" data-source-line="10"><polygon points="310.9556,183.9609,300.9556,187.9609,310.9556,191.9609,306.9556,187.9609" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="304.9556" y1="187.9609" x2="627.9351" y2="187.9609" style="stroke:#E7E7E7;stroke-width:1;"/><text x="316.9556" y="182.895" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="304.9795" font-family="sans-serif">5. Read slot (zero-copy via pa.foreign_buffer())</text></g><g class="message" data-entity-1="part3" data-entity-2="part2" id="msg6" data-source-line="11"><polygon points="310.9556,213.0938,300.9556,217.0938,310.9556,221.0938,306.9556,217.0938" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><line x1="304.9556" y1="217.0938" x2="627.9351" y2="217.0938" style="stroke:#E7E7E7;stroke-width:1;"/><text x="316.9556" y="212.0278" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="178.3755" font-family="sans-serif">6. Release (READY → FREE)</text></g><?plantuml-src RP19JiD054JtFiKdREn5R34kieYKmKW88e6pG81GrEd-ZblfmUeX40x00JWY9w5jsH48bb-_wbMfZhYYmZE4ohdQZhBCaDTqmrtbrzwYeLevL2wbMcOBlgq85pU6xD3PJ6wPfdPLUoaoIQn3axaA9TgCOKcyS1aZPfis_wWcnd7AQw8S3EwCPfwY6G2nq1yHrK8WTLmh2uE2gmrCVLbsgcBw6p4BAY-xPtz4KG-3uJXOO0GdASm4uHAMGZk8hueyXw-FJvZTJguN-JpvwpXDuS5mXr2JlT24GMn35u4WKT9w_u_ZB6HeARdhGZfscrFaa_dZJy_pyLfuV1aVIWV0UGfBL0mgebW8YfyMzoEm3OihXcz9TD3saHSf51YwjQBu7OqUKbtlOST9w9sMsY3VgDMw7J1E_Y5SDWI1n8QyjcHRjzad-GO0?></g></svg></div></div>
+
+<p>The handle sent over ZMQ contains only metadata (buffer name, slot index,
+data size) — not the data itself. The consumer uses <code>pa.foreign_buffer()</code>
+to directly access the shared memory, achieving true zero-copy reads.</p>
+<p>Key properties:
+- <strong>Fixed-size slots</strong> (1 MB default) — configurable via <code>ring_buffer_slot_size_kb</code>
+- <strong>Overwrite protection</strong> — if all slots are occupied, the producer blocks
+  (backpressure) rather than silently dropping data
+- <strong>Reference counting</strong> — multiple consumers can read the same slot before
+  it is released</p>
+<p>See the full sequence diagram in
+<a href="../diagrams/ring_buffer_detail.puml">ring_buffer_detail.puml</a>.</p>
+<hr />
+<h2 id="fault-tolerance">Fault tolerance</h2>
+<p>The supervisor monitors all DAQJobs and recovers from failures:</p>
+<ol>
+<li><strong>Watchdog</strong> — each DAQJob has a watchdog timer. If the main thread
+   hangs (e.g., stuck in a hardware read), the watchdog force-kills the
+   process with <code>os._exit(1)</code>.</li>
+<li><strong>Heartbeat</strong> — DAQJobs send periodic heartbeat messages. If the
+   supervisor doesn't receive heartbeats from a job, it assumes the
+   process is dead.</li>
+<li><strong>Restart</strong> — the supervisor restarts crashed jobs with exponential
+   backoff (1s, 2s, 4s, ... up to a configurable maximum).</li>
+<li><strong>Isolation</strong> — jobs are independent OS processes. A segmentation
+   fault in one job does not crash others.</li>
+</ol>
+<p>See the full recovery flow in
+<a href="../diagrams/fault_tolerance_flow.puml">fault_tolerance_flow.puml</a>.</p>
+<hr />
+<h2 id="multi-machine-federation">Multi-machine federation</h2>
+<p>For deployments spanning multiple machines, ENRGDAQ uses a star topology:</p>
+<ul>
+<li>One <strong>server</strong> supervisor exposes XPUB/XSUB endpoints</li>
+<li><strong>Client</strong> supervisors connect to the server and forward their messages</li>
+<li>The server relays messages between all clients</li>
+</ul>
+<p>Messages are forwarded in one direction (client → server → all clients)
+to prevent routing loops.</p>
+<div class='puml-container'><div class="puml light" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="DESCRIPTION" style="width:341px;height:266px;background:#FFFFFF;" width="341px" height="266px" viewBox="0 0 341 266" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><g class="cluster" data-qualified-name="Server" id="ent0001" data-source-line="4"><rect x="72.71" y="138.3" width="172.5" height="114" fill="#E8EAF6" style="stroke:#181818;stroke-width:1;" rx="2.5" ry="2.5"/><text x="75.71" y="153.2951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="101.3838" font-weight="700" font-family="sans-serif">Server (Hub)</text></g><g class="entity" data-qualified-name="Server.XPUB_S" id="ent0002" data-source-line="5"><text x="181.4161" y="116.9982" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="91.5879" font-family="sans-serif">XPUB :16382</text><rect x="221.21" y="132.3" width="12" height="12" fill="#F1F1F1" style="stroke:#181818;stroke-width:1.5;"/></g><g class="entity" data-qualified-name="Server.XSUB_S" id="ent0003" data-source-line="6"><text x="44.6939" y="116.9982" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="92.0322" font-family="sans-serif">XSUB :16383</text><rect x="84.71" y="132.3" width="12" height="12" fill="#F1F1F1" style="stroke:#181818;stroke-width:1.5;"/></g><g class="entity" data-qualified-name="C1" id="ent0004" data-source-line="9"><rect x="47.77" y="7" width="73.8877" height="36.2969" fill="#FFF9C4" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="57.77" y="29.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="53.8877" font-family="sans-serif">Client 1</text></g><g class="entity" data-qualified-name="C2" id="ent0005" data-source-line="10"><rect x="197.77" y="7" width="73.8877" height="36.2969" fill="#FFF9C4" style="stroke:#181818;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="207.77" y="29.9951" fill="#000000" font-size="14" lengthAdjust="spacing" textLength="53.8877" font-family="sans-serif">Client 2</text></g><g class="link" data-entity-1="ent0004" data-entity-2="ent0003" id="lnk6" data-source-line="12" data-link-type="dependency"><path d="M47.35,42.22 C26.23,53.81 6,70.81 16.71,90.3 C31.81,117.78 65.7353,130.052 80.2753,134.352" style="stroke:#181818;stroke-width:1;" fill="none" id="C1-to-XSUB_S"/><polygon points="85.07,135.77,77.5739,129.3819,80.2753,134.352,75.3051,137.0534,85.07,135.77" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="17.71" y="86.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0003" id="lnk7" data-source-line="13" data-link-type="dependency"><path d="M220.33,43.53 C208.45,57.24 190.68,76.31 172.71,90.3 C146.56,110.66 115.1569,126.0485 101.1669,132.5285" style="stroke:#181818;stroke-width:1;" fill="none" id="C2-to-XSUB_S"/><polygon points="96.63,134.63,106.4777,134.4769,101.1669,132.5285,103.1153,127.2178,96.63,134.63" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="191.71" y="86.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0002" data-entity-2="ent0004" id="lnk8" data-source-line="14" data-link-type="dependency"><path d="M221.51,135.7 C198.97,129.77 121.77,108.46 104.71,90.3 C92.81,77.63 88.6693,62.9336 86.7193,48.7136" style="stroke:#181818;stroke-width:1;" fill="none" id="XPUB_S-to-C1"/><polygon points="86.04,43.76,83.2998,53.22,86.7193,48.7136,91.2256,52.1331,86.04,43.76" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="105.71" y="86.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><g class="link" data-entity-1="ent0002" data-entity-2="ent0005" id="lnk9" data-source-line="15" data-link-type="dependency"><path d="M232.76,132.39 C240.55,124.42 255.18,107.79 260.71,90.3 C265.82,74.14 260.203,60.4672 251.623,47.7272" style="stroke:#181818;stroke-width:1;" fill="none" id="XPUB_S-to-C2"/><polygon points="248.83,43.58,250.5397,53.2793,251.623,47.7272,257.1752,48.8105,248.83,43.58" fill="#181818" style="stroke:#181818;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="262.71" y="86.3669" fill="#000000" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><?plantuml-src TSv1IyCm50VmUp_5ixleOGtjPCmU12qhWWX24RoDj7qseMbQafSD4R-xQJUBGyqbvFr__5ykfAwKgn44qM1JnWm_H8qauKfdqLIz9jGKLNt7dcGhk5IFXk-HBElQkg_iRd2TOXstX8QHm0ujg_6DEqLCoKPGD8B0jb8FtF0EVDFGQzzPqBj2C5WHrut289WJ20iqUpHm-U3Agn2uXTDWiTrix_8rV0JWpz0RaXh2r-UNUqZZzMgJJ7XyxufpKdoJrP4K4_aysvefETxn9B8O5dcUtsJNVv3ZdYoPIU3vikuFUdbxweOK1bSgQKNWtR_PyQzpxcjIiAwqbP4b_agJd-aN?></g></svg></div><div class="puml dark" style=""><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" data-diagram-type="DESCRIPTION" style="width:341px;height:266px;background:#1B1B1B;" width="341px" height="266px" viewBox="0 0 341 266" zoomAndPan="magnify" preserveAspectRatio="xMidYMid meet" contentStyleType="text/css" class="diagram"><?plantuml 1.2026.7beta3?><defs/><g><rect x="0" y="0" width="341" height="266" fill="#1B1B1B" style="stroke:none;stroke-width:1;"/><g class="cluster" data-qualified-name="Server" id="ent0001" data-source-line="4"><rect x="72.71" y="138.3" width="172.5" height="114" fill="#E8EAF6" style="stroke:#E7E7E7;stroke-width:1;" rx="2.5" ry="2.5"/><text x="75.71" y="153.2951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="101.3838" font-weight="700" font-family="sans-serif">Server (Hub)</text></g><g class="entity" data-qualified-name="Server.XPUB_S" id="ent0002" data-source-line="5"><text x="181.4161" y="116.9982" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="91.5879" font-family="sans-serif">XPUB :16382</text><rect x="221.21" y="132.3" width="12" height="12" fill="#313139" style="stroke:#E7E7E7;stroke-width:1.5;"/></g><g class="entity" data-qualified-name="Server.XSUB_S" id="ent0003" data-source-line="6"><text x="44.6939" y="116.9982" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="92.0322" font-family="sans-serif">XSUB :16383</text><rect x="84.71" y="132.3" width="12" height="12" fill="#313139" style="stroke:#E7E7E7;stroke-width:1.5;"/></g><g class="entity" data-qualified-name="C1" id="ent0004" data-source-line="9"><rect x="47.77" y="7" width="73.8877" height="36.2969" fill="#FFF9C4" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="57.77" y="29.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="53.8877" font-family="sans-serif">Client 1</text></g><g class="entity" data-qualified-name="C2" id="ent0005" data-source-line="10"><rect x="197.77" y="7" width="73.8877" height="36.2969" fill="#FFF9C4" style="stroke:#E7E7E7;stroke-width:0.5;" rx="2.5" ry="2.5"/><text x="207.77" y="29.9951" fill="#FFFFFF" font-size="14" lengthAdjust="spacing" textLength="53.8877" font-family="sans-serif">Client 2</text></g><g class="link" data-entity-1="ent0004" data-entity-2="ent0003" id="lnk6" data-source-line="12" data-link-type="dependency"><path d="M47.35,42.22 C26.23,53.81 6,70.81 16.71,90.3 C31.81,117.78 65.7353,130.052 80.2753,134.352" style="stroke:#E7E7E7;stroke-width:1;" fill="none" id="C1-to-XSUB_S"/><polygon points="85.07,135.77,77.5739,129.3819,80.2753,134.352,75.3051,137.0534,85.07,135.77" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="17.71" y="86.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0005" data-entity-2="ent0003" id="lnk7" data-source-line="13" data-link-type="dependency"><path d="M220.33,43.53 C208.45,57.24 190.68,76.31 172.71,90.3 C146.56,110.66 115.1569,126.0485 101.1669,132.5285" style="stroke:#E7E7E7;stroke-width:1;" fill="none" id="C2-to-XSUB_S"/><polygon points="96.63,134.63,106.4777,134.4769,101.1669,132.5285,103.1153,127.2178,96.63,134.63" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="191.71" y="86.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="46.979" font-family="sans-serif">publish</text></g><g class="link" data-entity-1="ent0002" data-entity-2="ent0004" id="lnk8" data-source-line="14" data-link-type="dependency"><path d="M221.51,135.7 C198.97,129.77 121.77,108.46 104.71,90.3 C92.81,77.63 88.6693,62.9336 86.7193,48.7136" style="stroke:#E7E7E7;stroke-width:1;" fill="none" id="XPUB_S-to-C1"/><polygon points="86.04,43.76,83.2998,53.22,86.7193,48.7136,91.2256,52.1331,86.04,43.76" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="105.71" y="86.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><g class="link" data-entity-1="ent0002" data-entity-2="ent0005" id="lnk9" data-source-line="15" data-link-type="dependency"><path d="M232.76,132.39 C240.55,124.42 255.18,107.79 260.71,90.3 C265.82,74.14 260.203,60.4672 251.623,47.7272" style="stroke:#E7E7E7;stroke-width:1;" fill="none" id="XPUB_S-to-C2"/><polygon points="248.83,43.58,250.5397,53.2793,251.623,47.7272,257.1752,48.8105,248.83,43.58" fill="#E7E7E7" style="stroke:#E7E7E7;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:10;"/><text x="262.71" y="86.3669" fill="#FFFFFF" font-size="13" lengthAdjust="spacing" textLength="62.3911" font-family="sans-serif">subscribe</text></g><?plantuml-src TOvDIyD048Rl-HLZUj53ioILKdCGD3G88WX1y5Oscx5PijaikxCj8lvtyr63HPtBCFCyl3CNKWlbAuIQoBYKCSkFqLvIxKllq8fE4sgAHDUo9zdKNAf7omz8ZhLDrGctCxvLhEMEq3AgiKN7AdpZNX6hk6sYWGUkaTfmorleWqod-yY2tXM2HK5SxnK6mKmWBD0UqCBbWo-lGk0EJel5ThEzozVm4K1VfhCaDOIlpo_taCRhrIOPvM7U5UTAyQsi9gKObS-pgvcIGuz78ujXaUVvJNRzXpBToP9P2NfzMNL7lRmzPKCAnfTAkZhelN_PzElC-vWKd2-TiBB4NpJvIRy0?></g></svg></div></div>
+
+<p>See the full multi-machine diagram in
+<a href="../diagrams/multi_node_topology.puml">multi_node_topology.puml</a>.</p>
+<hr />
+<h2 id="class-hierarchy">Class hierarchy</h2>
+<p>All DAQJobs inherit from <code>DAQJob</code>. Storage backends inherit from
+<code>DAQJobStore</code> (which itself inherits from <code>DAQJob</code>):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>DAQJob
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  +-- DAQJobStore (abstract)
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  |     +-- DAQJobStoreCSV
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  |     +-- DAQJobStoreROOT
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  |     +-- DAQJobStoreHDF5
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  |     +-- DAQJobStoreMySQL
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>  |     +-- DAQJobStoreRedis
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>  |     +-- DAQJobStoreRaw
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>  |     +-- DAQJobStoreMemory
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>  +-- DAQJobAlert (abstract)
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>  |     +-- DAQJobAlertSlack
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>  +-- DAQJobHandleStats
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>  +-- DAQJobHandleAlerts
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>  +-- DAQJobHandleTraces
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>  +-- DAQJobBenchmark
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>  +-- DAQJobTest
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>  +-- DAQJobHealthcheck
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>  +-- DAQJobServeHTTP
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>  +-- DAQJobPCMetrics
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>  +-- DAQJobCamera
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>  +-- DAQJobXiaomiMijia
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>  +-- DAQJobCAENDigitizer
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>  +-- DAQJobCAENHV
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>  +-- DAQJobCaenN1081B
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>  +-- DAQJobCAENToolbox
+</code></pre></div>
+<p>See the full class hierarchy diagram in
+<a href="../diagrams/daqjob_hierarchy.puml">daqjob_hierarchy.puml</a>.</p>
+<hr />
+<h2 id="control-plane-cnc">Control plane (CNC)</h2>
+<p>The Command &amp; Control system provides remote management:</p>
+<ul>
+<li><strong>ZMQ ROUTER/DEALER</strong> — binary request/response protocol for CNC commands
+  (restart jobs, check status, send messages)</li>
+<li><strong>FastAPI REST API</strong> — HTTP wrapper around the ZMQ protocol, provides
+  <code>/status</code>, <code>/clients</code>, <code>/jobs</code>, <code>/restart</code>, <code>/templates</code> endpoints</li>
+<li><strong>Start topology</strong> — one CNC server, multiple CNC clients</li>
+</ul>
+<p>See <a href="../diagrams/control_plane_stack.puml">control_plane_stack.puml</a>.</p>
+<hr />
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="../message-flow/">Message Flow</a> — detailed topic routing and zero-copy paths</li>
+<li><a href="../storage-backends/">Storage Backends</a> — comparison of all 7 store types</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.indexes", "toc.follow", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../../assets/mkdocs_puml/puml.js"></script>
+      
+        <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+      
+        <script src="../../assets/mkdocs_puml/interaction.js"></script>
+      
+    
+  </body>
+</html>
