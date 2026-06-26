@@ -324,17 +324,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#who-is-this-for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Who is this for?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#quick-navigation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -350,28 +339,6 @@
     <span class="md-ellipsis">
       
         What ENRGDAQ does
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key concepts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#paper-citation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Paper &amp; citation
       
     </span>
   </a>
@@ -1052,17 +1019,6 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#who-is-this-for" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Who is this for?
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#quick-navigation" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1078,28 +1034,6 @@
     <span class="md-ellipsis">
       
         What ENRGDAQ does
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#key-concepts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Key concepts
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#paper-citation" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Paper &amp; citation
       
     </span>
   </a>
@@ -1130,13 +1064,6 @@
 <p><strong>ENRGDAQ</strong> is the data acquisition (DAQ) framework used by the ENRG collaboration for
 neutrino physics experiments. It handles the full pipeline — reading out hardware
 sensors, processing data at multi-Gbps rates, and storing results for analysis.</p>
-<hr />
-<h2 id="who-is-this-for">Who is this for?</h2>
-<p>This documentation is written for <strong>new lab members</strong> joining the ENRG collaboration.
-If you need to understand how data flows from detectors to disk, configure experiment
-runs, or write a custom sensor integration, you are in the right place.</p>
-<p>Already familiar with the system? The <a href="/enrgdaq/api/">API Reference</a> documents every module
-and class in detail.</p>
 <hr />
 <h2 id="quick-navigation">Quick navigation</h2>
 <table>
@@ -1191,27 +1118,6 @@ and class in detail.</p>
 <li><strong>Distributed scaling</strong> — federate multiple supervisor nodes across
   machines for larger deployments.</li>
 </ul>
-<hr />
-<h2 id="key-concepts">Key concepts</h2>
-<p>If you are new to ENRGDAQ, these three concepts are worth knowing up front:</p>
-<ol>
-<li><strong>DAQJob</strong> — a single independent process. A sensor driver, a storage
-   backend, or a monitoring handler. Each reads a TOML config file.</li>
-<li><strong>Message Broker</strong> — the internal pub/sub bus. Jobs publish messages on
-   named topics; other jobs subscribe to topics they care about.</li>
-<li><strong>Supervisor</strong> — the top-level process that spawns all jobs, hosts the
-   message broker, and reports system statistics.</li>
-</ol>
-<hr />
-<h2 id="paper-citation">Paper &amp; citation</h2>
-<p>ENRGDAQ is described in our NIM-A paper:</p>
-<blockquote>
-<p><em>"ENRGDAQ: A modular data acquisition framework for neutrino physics experiments"</em><br />
-Journal of Instrumentation (JINST)</p>
-</blockquote>
-<p>If you use ENRGDAQ in your work, please cite the paper. You can find the
-LaTeX source and preprint in the
-<a href="https://github.com/ENRG-tr/enrgdaq/tree/main/paper">repository</a>.</p>
 
 
 
