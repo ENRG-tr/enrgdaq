@@ -69,4 +69,4 @@ nav:
   - Operations:
       - operations/monitoring.md
       - operations/troubleshooting.md
-  - "API Reference": /api/
+  - "API Reference": /enrgdaq/api/

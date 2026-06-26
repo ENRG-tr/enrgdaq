@@ -12,7 +12,7 @@ This documentation is written for **new lab members** joining the ENRG collabora
 If you need to understand how data flows from detectors to disk, configure experiment
 runs, or write a custom sensor integration, you are in the right place.
 
-Already familiar with the system? The [API Reference](/api/) documents every module
+Already familiar with the system? The [API Reference](/enrgdaq/api/) documents every module
 and class in detail.
 
 ---
