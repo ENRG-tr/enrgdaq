@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 <meta name="generator" content="pdoc3 0.11.6">
 <title>enrgdaq.tools.analyze_digitizer_stats API documentation</title>
-<meta name="description" content="">
+<meta name="description" content="CAEN Digitizer Acquisition Stats Analyzer …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
@@ -36,12 +36,249 @@ el.replaceWith(d);
 <h1 class="title">Module <code>enrgdaq.tools.analyze_digitizer_stats</code></h1>
 </header>
 <section id="section-intro">
+<p>CAEN Digitizer Acquisition Stats Analyzer</p>
+<p>Generates multi-panel visualizations for long-term acquisition statistics.
+Usage: python analyze_stats.py <path_to_stats.csv></p>
 </section>
 <section>
 </section>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="enrgdaq.tools.analyze_digitizer_stats.create_analysis_figure"><code class="name flex">
+<span>def <span class="ident">create_analysis_figure</span></span>(<span>df: pandas.DataFrame, output_path: str = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def create_analysis_figure(df: pd.DataFrame, output_path: str = None):
+    &#34;&#34;&#34;Create the WCD Physics Dashboard (3x2 grid).&#34;&#34;&#34;
+    
+    fig, axes = plt.subplots(3, 2, figsize=(16, 15))
+    fig.suptitle(f&#39;WCD Physics Dashboard ({len(df)} samples, {len(df)//3600:.1f} hours)&#39;, 
+                 fontsize=16, fontweight=&#39;bold&#39;)
+    
+    # Plot 1: Event Rate &amp; Input Flux (Trigger Stability)
+    ax1 = axes[0, 0]
+    plot_time_series(ax1, df, &#39;acq_events&#39;, &#39;Trigger Rate&#39;, &#39;#2196F3&#39;, &#39;Hz&#39;, legend_loc=&#39;upper left&#39;)
+    ax1_twin = ax1.twinx()
+    # Normalize Raw Rate to MHz for readability
+    df[&#39;raw_rate_mhz&#39;] = df[&#39;raw_rate_hz&#39;] / 1e6
+    plot_time_series(ax1_twin, df, &#39;raw_rate_mhz&#39;, &#39;Input Rate&#39;, &#39;#E91E63&#39;, &#39;MHz&#39;, legend_loc=&#39;upper right&#39;)
+    ax1.set_title(&#39;Event Rate &amp; Input Flux&#39;, fontweight=&#39;bold&#39;)
+    
+    # Plot 2: Baseline &amp; Noise (Electronics Stability)
+    ax2 = axes[0, 1]
+    plot_time_series(ax2, df, &#39;mean_value_mv&#39;, &#39;Baseline&#39;, &#39;#9C27B0&#39;, &#39;mV&#39;, legend_loc=&#39;upper left&#39;)
+    ax2_twin = ax2.twinx()
+    plot_time_series(ax2_twin, df, &#39;rms_mv&#39;, &#39;RMS Noise&#39;, &#39;#FF9800&#39;, &#39;mV&#39;, legend_loc=&#39;upper right&#39;)
+    ax2.set_title(&#39;Baseline Stability &amp; Noise&#39;, fontweight=&#39;bold&#39;)
+
+    # Plot 3: Amplitude Spectrum (The Physics Signal)
+    ax3 = axes[1, 0]
+    bins = np.linspace(-1000, 200, 121) 
+    ax3.hist(df[&#39;min_value_mv&#39;].clip(-1000, 200), bins=bins, alpha=0.7, color=&#39;#E91E63&#39;, label=&#39;Peak Min&#39;, density=True)
+    ax3.set_xlabel(&#39;Amplitude (mV)&#39;)
+    ax3.set_ylabel(&#39;Density&#39;)
+    ax3.set_yscale(&#39;log&#39;)  # Log scale to see cosmic tail vs noise
+    ax3.set_title(&#39;Amplitude Spectrum (Log Scale)&#39;, fontweight=&#39;bold&#39;)
+    ax3.legend(loc=&#39;upper right&#39;, fontsize=8)
+    ax3.grid(True, alpha=0.3)
+
+    # Plot 4: Inter-arrival Times (Noise Hunt)
+    ax4 = axes[1, 1]
+    # Filter valid dt
+    valid_dt = df[&#39;dt_s&#39;][df[&#39;dt_s&#39;] &gt; 0]
+    if len(valid_dt) &gt; 0:
+        log_dt = np.log10(valid_dt)
+        ax4.hist(log_dt, bins=50, color=&#39;#607D8B&#39;, alpha=0.7, density=True)
+        ax4.set_xlabel(&#39;log10(dt) [seconds]&#39;)
+        ax4.set_title(&#39;Inter-arrival Time Distribution&#39;, fontweight=&#39;bold&#39;)
+        # Add labels for 60Hz/50Hz roughly -1.2 to -1.3 log seconds
+        # -1 = 0.1s, -2 = 0.01s (10ms). 16ms is ~ -1.8
+        ax4.axvline(np.log10(0.016), color=&#39;red&#39;, linestyle=&#39;:&#39;, alpha=0.5, label=&#39;60Hz&#39;)
+        ax4.axvline(np.log10(0.020), color=&#39;orange&#39;, linestyle=&#39;:&#39;, alpha=0.5, label=&#39;50Hz&#39;)
+        ax4.legend(fontsize=8)
+    
+    # Plot 5: Amplitude vs Pulse Width (Particle ID Proxy)
+    ax5 = axes[2, 0]
+    # We use timestamps to align, but simpler to use scatter of values
+    # Since we have time series data, we can just plot the correlation or time series of width
+    # Time series of width vs Time series of Amp is hard to read.
+    # Let&#39;s do a 2D Hist or Scatter. Since we have ~50k points, scatter might be heavy but manageable.
+    # We&#39;ll use a hexbin for density.
+    hb = ax5.hexbin(df[&#39;avg_event_size&#39;], df[&#39;min_value_mv&#39;], gridsize=30, cmap=&#39;inferno&#39;, mincnt=1)
+    ax5.set_xlabel(&#39;Avg Event Width (Samples)&#39;)
+    ax5.set_ylabel(&#39;Peak Amplitude (mV)&#39;)
+    ax5.set_title(&#39;Pulse Shape: Amp vs Width&#39;, fontweight=&#39;bold&#39;)
+    cb = fig.colorbar(hb, ax=ax5)
+    cb.set_label(&#39;Count&#39;)
+    
+    # Plot 6: SNR Trend (Overall Quality)
+    ax6 = axes[2, 1]
+    plot_time_series(ax6, df, &#39;snr&#39;, &#39;SNR&#39;, &#39;#3F51B5&#39;, &#39;Ratio&#39;, legend_loc=&#39;upper right&#39;)
+    ax6.axhline(y=5, color=&#39;red&#39;, linestyle=&#39;--&#39;, alpha=0.5, label=&#39;Min Detectable&#39;)
+    ax6.set_title(&#39;Signal-to-Noise Ratio&#39;, fontweight=&#39;bold&#39;)
+    ax6.legend(loc=&#39;lower left&#39;, fontsize=8) # Move legend to not block data
+    
+    
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.95)
+    
+    if output_path:
+        plt.savefig(output_path, dpi=150, bbox_inches=&#39;tight&#39;)
+        print(f&#34;Saved figure to: {output_path}&#34;)
+    
+    return fig</code></pre>
+</details>
+<div class="desc"><p>Create the WCD Physics Dashboard (3x2 grid).</p></div>
+</dd>
+<dt id="enrgdaq.tools.analyze_digitizer_stats.load_stats"><code class="name flex">
+<span>def <span class="ident">load_stats</span></span>(<span>csv_path: str) ‑> pandas.DataFrame</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_stats(csv_path: str) -&gt; pd.DataFrame:
+    &#34;&#34;&#34;Load and preprocess stats CSV.&#34;&#34;&#34;
+    df = pd.read_csv(csv_path)
+    
+    # Convert timestamp (unix ms) to datetime
+    df[&#39;datetime&#39;] = pd.to_datetime(df[&#39;timestamp&#39;], unit=&#39;ms&#39;)
+    
+    # Compute derived metrics
+    # 1. Inter-arrival Times (dt)
+    # Calculate time difference in seconds between consecutive events
+    # We use &#39;timestamp&#39; (ms). Diff gives ms. /1000 -&gt; seconds.
+    df[&#39;dt_s&#39;] = df[&#39;timestamp&#39;].diff() / 1000.0
+    
+    # 2. Dead Time Fraction
+    # Approximated by (1 - RawRate / TheoreticalMax).
+    # Theoretical Max for CAEN varies, but if we assume Raw Rate is the &#34;Input Rate&#34;,
+    # and we want to see how close we are to saturation.
+    # Actually, a better proxy for &#34;System Busy&#34; in this context might be simpler:
+    # Just show the Raw Rate itself as &#34;Input Flux&#34;.
+    df[&#39;raw_rate_hz&#39;] = df[&#39;total_samples_raw&#39;]  # Since it&#39;s per second
+    
+    # 3. RMS (Energy/Stability)
+    df[&#39;rms_mv&#39;] = np.sqrt(df[&#39;sum_value_mv_squared&#39;] / df[&#39;acq_samples&#39;].replace(0, np.nan))
+    
+    # 4. Average Event Size (Samples per Event) - Pulse Width Proxy
+    df[&#39;avg_event_size&#39;] = df[&#39;acq_samples&#39;] / df[&#39;acq_events&#39;].replace(0, np.nan)
+    
+    # 5. Signal-to-Noise Ratio (SNR)
+    noise = df[&#39;rms_mv&#39;].replace(0, np.nan)
+    signal_amp = (df[&#39;min_value_mv&#39;] - df[&#39;mean_value_mv&#39;]).abs()
+    df[&#39;snr&#39;] = signal_amp / noise
+
+    # 6. Bandwidth (KB/s) - Keep for summary but maybe not plot
+    df[&#39;bandwidth_kbps&#39;] = (df[&#39;acq_samples&#39;] * 2) / 1024
+    
+    return df</code></pre>
+</details>
+<div class="desc"><p>Load and preprocess stats CSV.</p></div>
+</dd>
+<dt id="enrgdaq.tools.analyze_digitizer_stats.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main():
+    parser = argparse.ArgumentParser(description=&#39;Analyze CAEN Digitizer acquisition stats&#39;)
+    parser.add_argument(&#39;csv_path&#39;, help=&#39;Path to stats CSV file&#39;)
+    parser.add_argument(&#39;-o&#39;, &#39;--output&#39;, help=&#39;Output PNG path (default: same as input with .png)&#39;)
+    parser.add_argument(&#39;--no-show&#39;, action=&#39;store_true&#39;, help=&#39;Do not display the plot&#39;)
+    
+    args = parser.parse_args()
+    
+    csv_path = Path(args.csv_path)
+    if not csv_path.exists():
+        print(f&#34;Error: File not found: {csv_path}&#34;)
+        sys.exit(1)
+    
+    print(f&#34;Loading {csv_path}...&#34;)
+    df = load_stats(str(csv_path))
+    
+    print_summary(df)
+    
+    print(&#34;\nGenerating plots...&#34;)
+    
+    if not args.no_show:
+        plt.show()</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.tools.analyze_digitizer_stats.plot_time_series"><code class="name flex">
+<span>def <span class="ident">plot_time_series</span></span>(<span>ax,<br>df: pandas.DataFrame,<br>col: str,<br>label: str,<br>color: str,<br>ylabel: str = None,<br>alpha: float = 0.7,<br>legend_loc: str = 'upper right')</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def plot_time_series(ax, df: pd.DataFrame, col: str, label: str, color: str, 
+                     ylabel: str = None, alpha: float = 0.7, legend_loc: str = &#39;upper right&#39;):
+    &#34;&#34;&#34;Plot a time series with optional smoothing overlay.&#34;&#34;&#34;
+    ax.plot(df[&#39;datetime&#39;], df[col], color=color, alpha=0.3, linewidth=0.5)
+    # Rolling mean for trend
+    if len(df) &gt; 60:
+        smooth = df[col].rolling(window=60, center=True).mean()
+        ax.plot(df[&#39;datetime&#39;], smooth, color=color, alpha=1.0, linewidth=1.5, label=f&#39;{label} (1-min avg)&#39;)
+    ax.set_ylabel(ylabel or label)
+    ax.legend(loc=legend_loc, fontsize=8)
+    ax.grid(True, alpha=0.3)</code></pre>
+</details>
+<div class="desc"><p>Plot a time series with optional smoothing overlay.</p></div>
+</dd>
+<dt id="enrgdaq.tools.analyze_digitizer_stats.print_summary"><code class="name flex">
+<span>def <span class="ident">print_summary</span></span>(<span>df: pandas.DataFrame)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def print_summary(df: pd.DataFrame):
+    &#34;&#34;&#34;Print summary statistics.&#34;&#34;&#34;
+    duration_hours = len(df) / 3600
+    
+    print(&#34;\n&#34; + &#34;=&#34;*60)
+    print(&#34;ACQUISITION STATS SUMMARY&#34;)
+    print(&#34;=&#34;*60)
+    print(f&#34;Duration: {duration_hours:.2f} hours ({len(df):,} samples)&#34;)
+    print(f&#34;Time range: {df[&#39;datetime&#39;].min()} to {df[&#39;datetime&#39;].max()}&#34;)
+    print()
+    
+    print(&#34;📊 WCD Physics Stats:&#34;)
+    print(f&#34;  Trigger Rate: {df[&#39;acq_events&#39;].mean():,.0f} ± {df[&#39;acq_events&#39;].std():,.0f} Hz&#34;)
+    print(f&#34;  Input Flux:   {(df[&#39;raw_rate_hz&#39;].mean()/1e6):.2f} MHz&#34;)
+    print(&#34;  Dead Fraction: N/A (Needs Max Rate)&#34;)
+    print()
+    
+    print(&#34;🔬 Signal &amp; Stability:&#34;)
+    print(f&#34;  Baseline:     {df[&#39;mean_value_mv&#39;].mean():.2f} ± {df[&#39;mean_value_mv&#39;].std():.2f} mV&#34;)
+    print(f&#34;  RMS Noise:    {df[&#39;rms_mv&#39;].mean():.2f} ± {df[&#39;rms_mv&#39;].std():.2f} mV&#34;)
+    print(f&#34;  SNR:          {df[&#39;snr&#39;].mean():.1f} ± {df[&#39;snr&#39;].std():.1f}&#34;)
+    print(f&#34;  Avg Pulse:    {df[&#39;avg_event_size&#39;].mean():.1f} samples ({df[&#39;avg_event_size&#39;].mean()*2:.1f} ns)&#34;)
+    print()
+    
+    print(&#34;📉 Spectrum:&#34;)
+    print(f&#34;  Peak Range:   {df[&#39;min_value_mv&#39;].min()} mV to {df[&#39;max_value_mv&#39;].max()} mV&#34;)
+    print(f&#34;  Data Volume:  {(df[&#39;bandwidth_kbps&#39;].mean()/1024):.2f} MB/s&#34;)
+    print(&#34;=&#34;*60)</code></pre>
+</details>
+<div class="desc"><p>Print summary statistics.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 </section>
@@ -54,6 +291,15 @@ el.replaceWith(d);
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="enrgdaq.tools" href="index.html">enrgdaq.tools</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="enrgdaq.tools.analyze_digitizer_stats.create_analysis_figure" href="#enrgdaq.tools.analyze_digitizer_stats.create_analysis_figure">create_analysis_figure</a></code></li>
+<li><code><a title="enrgdaq.tools.analyze_digitizer_stats.load_stats" href="#enrgdaq.tools.analyze_digitizer_stats.load_stats">load_stats</a></code></li>
+<li><code><a title="enrgdaq.tools.analyze_digitizer_stats.main" href="#enrgdaq.tools.analyze_digitizer_stats.main">main</a></code></li>
+<li><code><a title="enrgdaq.tools.analyze_digitizer_stats.plot_time_series" href="#enrgdaq.tools.analyze_digitizer_stats.plot_time_series">plot_time_series</a></code></li>
+<li><code><a title="enrgdaq.tools.analyze_digitizer_stats.print_summary" href="#enrgdaq.tools.analyze_digitizer_stats.print_summary">print_summary</a></code></li>
 </ul>
 </li>
 </ul>
