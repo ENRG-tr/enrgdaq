@@ -6,17 +6,6 @@ sensors, processing data at multi-Gbps rates, and storing results for analysis.
 
 ---
 
-## Who is this for?
-
-This documentation is written for **new lab members** joining the ENRG collaboration.
-If you need to understand how data flows from detectors to disk, configure experiment
-runs, or write a custom sensor integration, you are in the right place.
-
-Already familiar with the system? The [API Reference](/enrgdaq/api/) documents every module
-and class in detail.
-
----
-
 ## Quick navigation
 
 | I want to…                                    | Start here                                |
@@ -43,29 +32,3 @@ and class in detail.
   crashes it restarts automatically.
 - **Distributed scaling** — federate multiple supervisor nodes across
   machines for larger deployments.
-
----
-
-## Key concepts
-
-If you are new to ENRGDAQ, these three concepts are worth knowing up front:
-
-1. **DAQJob** — a single independent process. A sensor driver, a storage
-   backend, or a monitoring handler. Each reads a TOML config file.
-2. **Message Broker** — the internal pub/sub bus. Jobs publish messages on
-   named topics; other jobs subscribe to topics they care about.
-3. **Supervisor** — the top-level process that spawns all jobs, hosts the
-   message broker, and reports system statistics.
-
----
-
-## Paper & citation
-
-ENRGDAQ is described in our NIM-A paper:
-
-> *"ENRGDAQ: A modular data acquisition framework for neutrino physics experiments"*  
-> Journal of Instrumentation (JINST)
-
-If you use ENRGDAQ in your work, please cite the paper. You can find the
-LaTeX source and preprint in the
-[repository](https://github.com/ENRG-tr/enrgdaq/tree/main/paper).
