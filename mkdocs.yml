@@ -1,0 +1,72 @@
+site_name: ENRGDAQ
+site_description: Data Acquisition Framework for Neutrino Physics Experiments
+site_author: ENRG Collaboration
+repo_url: https://github.com/ENRG-tr/enrgdaq
+repo_name: ENRG-tr/enrgdaq
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+  - plantuml:
+      puml_url: https://www.plantuml.com/plantuml/
+      puml_keyword: puml
+      cache:
+        backend: local
+        local:
+          path: "~/.cache/mkdocs_puml"
+          join_project_name: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - footnotes
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/installation.md
+      - getting-started/quickstart.md
+      - getting-started/configuration.md
+  - Guides:
+      - guides/creating-daqjob.md
+      - guides/creating-store-backend.md
+      - guides/hardware-setup.md
+      - guides/deployment.md
+  - Reference:
+      - reference/architecture.md
+      - reference/message-flow.md
+      - reference/storage-backends.md
+  - Operations:
+      - operations/monitoring.md
+      - operations/troubleshooting.md
+  - "API Reference": /api/

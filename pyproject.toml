@@ -26,13 +26,12 @@ dependencies = [
     "uvicorn>=0.30.3",
     "tomli-w>=1.2.0",
     "zstandard>=0.25.0",
+    "pandas>=3.0.3",
 ]
 
 [dependency-groups]
 sensors = ["lywsd03mmc-client", "n1081b-sdk"]
-
-[tool.uv]
-dev-dependencies = ["pre-commit>=4.0.1", "ruff>=0.6.9", "snakeviz>=2.2.2"]
+dev = ["pre-commit>=4.0.1", "ruff>=0.6.9", "snakeviz>=2.2.2"]
 
 [tool.uv.sources]
 n1081b-sdk = { git = "https://github.com/ENRG-tr/N1081B-SDK-Python.git" }
