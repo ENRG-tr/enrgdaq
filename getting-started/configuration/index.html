@@ -1621,8 +1621,7 @@ automatically routes data to the matching store backend.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[store_config.mysql]</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">table_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;sensor_data&quot;</span>
 </code></pre></div>
-<p>MySQL connection parameters are read from environment variables or a local config.
-By default, the MySQL store connects to <code>localhost</code> with no password.</p>
+<p>MySQL connection parameters are set in the MySQL store job's own TOML config file (see <a href="../../reference/storage-backends/#mysql-store">Storage Backends</a> for details).</p>
 <h3 id="redis-store-options">Redis store options</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[store_config.redis]</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">key</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;daq:sensor1&quot;</span>
@@ -1658,16 +1657,15 @@ By default, the MySQL store connects to <code>localhost</code> with no password.
 </ul>
 <hr />
 <h2 id="config-discovery">Config discovery</h2>
-<p>The supervisor scans the config directory recursively. Each <code>.toml</code> file becomes
-one DAQJob. You can organize configs however you like:</p>
+<p>The supervisor scans all <code>*.toml</code> files in the config directory. Each <code>.toml</code> file becomes
+one DAQJob. You can organize configs however you like, but note that only files directly
+in the specified directory are loaded (subdirectories are not scanned):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>configs/run_42/
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>  supervisor.toml
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  sensors/
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    digitizer.toml
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>    camera.toml
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  storage/
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    csv_store.toml
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    root_store.toml
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>  digitizer.toml
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>  camera.toml
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>  csv_store.toml
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>  root_store.toml
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next steps</h2>

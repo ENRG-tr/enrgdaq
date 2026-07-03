@@ -1152,7 +1152,7 @@
 
 <h1 id="quickstart">Quickstart</h1>
 <p>This guide gets you from zero to a running DAQ system in 5 minutes using the
-built-in <code>DAQJobTest</code> job. No hardware required.</p>
+built-in <code>DAQJobTest</code> job.</p>
 <hr />
 <h2 id="1-create-a-config-file">1. Create a config file</h2>
 <p>Create a TOML file for the test job:</p>
@@ -1162,12 +1162,11 @@ built-in <code>DAQJobTest</code> job. No hardware required.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="n">daq_job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;DAQJobTest&quot;</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">rand_min</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">rand_max</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">100</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">interval_seconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">[store_config.csv]</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;out/test_data.csv&quot;</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">add_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">overwrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">[store_config.csv]</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="n">file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;out/test_data.csv&quot;</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">add_date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">overwrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 <p>This job generates random numbers once per second and writes them to a CSV file.</p>
 <hr />
@@ -1176,17 +1175,10 @@ built-in <code>DAQJobTest</code> job. No hardware required.</p>
 each job, and runs the message broker.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/my_first_run
 </code></pre></div>
-<p>You should see output like:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>[INFO] Supervisor initializing...
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>[INFO] Starting message broker...
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>[INFO] Spawning DAQJobTest (jid=1)...
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>[INFO] DAQJobTest (jid=1) started
-</code></pre></div>
-<p>The supervisor runs until you stop it with <code>Ctrl+C</code>.</p>
 <hr />
 <h2 id="3-check-the-output">3. Check the output</h2>
 <p>The test job writes random numbers to <code>out/test_data.csv</code>. After a few seconds:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>cat<span class="w"> </span>out/test_data.csv
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>cat<span class="w"> </span>out/test_data.csv
 </code></pre></div>
 <p>You will see rows with timestamp, random value, and job metadata.</p>
 <p>Two additional statistics files are generated automatically:</p>
@@ -1214,25 +1206,6 @@ each job, and runs the message broker.</p>
 are stopped gracefully.</p>
 <hr />
 <h2 id="what-just-happened">What just happened?</h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>                    ┌─────────────────┐
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>configs/            │   Supervisor     │
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  my_first_run/     │                  │
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    test_job.toml ─►│  ┌─────────────┐ │
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>                    │  │ Msg Broker  │ │
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>                    │  │ (XPUB/XSUB) │ │
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>                    │  └──────┬──────┘ │
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>                    │         │        │
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>                    │  ┌──────▼──────┐ │
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>                    │  │  DAQJobTest │ │
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>                    │  │  (producer) │ │
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>                    │  └──────┬──────┘ │
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>                    │         │        │
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>                    │  ┌──────▼──────┐ │
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>                    │  │DAQJobStoreCSV│ │
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>                    │  │  (consumer) │ │
-<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>                    │  └─────────────┘ │
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a>                    └─────────────────┘
-</code></pre></div>
 <ol>
 <li>The supervisor read <code>test_job.toml</code>, created a <code>DAQJobTest</code> config,
    and spawned the job process.</li>

@@ -975,10 +975,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-restart-a-specific-job" class="md-nav__link">
+  <a href="#example-stop-a-specific-job" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: restart a specific job
+        Example: stop a specific job
       
     </span>
   </a>
@@ -1283,10 +1283,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#example-restart-a-specific-job" class="md-nav__link">
+  <a href="#example-stop-a-specific-job" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Example: restart a specific job
+        Example: stop a specific job
       
     </span>
   </a>
@@ -1458,55 +1458,57 @@ the output directory (default: <code>out/</code>).</p>
 </thead>
 <tbody>
 <tr>
-<td><code>job_name</code></td>
+<td><code>supervisor</code></td>
+<td>Supervisor node ID</td>
+</tr>
+<tr>
+<td><code>daq_job</code></td>
 <td>DAQJob type name</td>
 </tr>
 <tr>
-<td><code>unique_id</code></td>
-<td>Unique job instance identifier</td>
+<td><code>is_alive</code></td>
+<td>Whether the process is alive (true/false)</td>
 </tr>
 <tr>
-<td><code>supervisor_id</code></td>
-<td>Supervisor node name</td>
+<td><code>last_message_in_date</code></td>
+<td>Timestamp of last message received</td>
 </tr>
 <tr>
 <td><code>message_in_count</code></td>
 <td>Total messages received</td>
 </tr>
 <tr>
+<td><code>last_message_out_date</code></td>
+<td>Timestamp of last message sent</td>
+</tr>
+<tr>
 <td><code>message_out_count</code></td>
 <td>Total messages sent</td>
 </tr>
 <tr>
-<td><code>latency_avg_ms</code></td>
-<td>Average end-to-end message latency</td>
+<td><code>message_in_queue_size</code></td>
+<td>Current message input queue depth</td>
 </tr>
 <tr>
-<td><code>latency_p95_ms</code></td>
-<td>95th percentile latency</td>
+<td><code>message_out_queue_size</code></td>
+<td>Current message output queue depth</td>
 </tr>
 <tr>
-<td><code>latency_p99_ms</code></td>
-<td>99th percentile latency</td>
+<td><code>last_restart_date</code></td>
+<td>Timestamp of last restart</td>
 </tr>
 <tr>
-<td><code>cpu_percent</code></td>
-<td>Process CPU usage (%)</td>
-</tr>
-<tr>
-<td><code>rss_mb</code></td>
-<td>Process RSS memory (MB)</td>
-</tr>
-<tr>
-<td><code>is_alive</code></td>
-<td>Whether the process is alive (True/False)</td>
+<td><code>restart_count</code></td>
+<td>Total number of restarts</td>
 </tr>
 </tbody>
 </table>
+<p>Latency (avg, p95, p99), CPU percentage, and RSS memory are stored
+separately as timeseries data via the stats handler's <code>timeseries_store_config</code>.</p>
 <p>Example:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>job_name,unique_id,message_in_count,message_out_count,latency_avg_ms,cpu_percent,rss_mb,is_alive
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>DAQJobCAENDigitizer,jid_1,0,15234,1.92,12.3,45.2,True
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>DAQJobStoreROOT,jid_2,15234,0,0.00,8.1,120.7,True
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>supervisor,daq_job,is_alive,last_message_in_date,message_in_count,restart_count
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>lab-server-1,DAQJobCAENDigitizer,true,1749000000000,15234,0
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>lab-server-1,DAQJobStoreROOT,true,1749000000000,15234,0
 </code></pre></div>
 <h3 id="stats_remotecsv-throughput-summary">stats_remote.csv: throughput summary</h3>
 <p>Aggregated supervisor-level metrics:</p>
@@ -1533,6 +1535,8 @@ the output directory (default: <code>out/</code>).</p>
 <p>When CNC is enabled (<code>cnc.rest_api_enabled = true</code>), ENRGDAQ exposes a
 REST API for remote monitoring and control.</p>
 <h3 id="endpoints">Endpoints</h3>
+<p>All endpoints are namespaced under <code>/clients/{client_id}/</code> where <code>client_id</code> is the
+supervisor ID of the target node.</p>
 <table>
 <thead>
 <tr>
@@ -1544,27 +1548,22 @@ REST API for remote monitoring and control.</p>
 <tbody>
 <tr>
 <td><code>GET</code></td>
-<td><code>/status</code></td>
-<td>All supervisor and job status</td>
-</tr>
-<tr>
-<td><code>GET</code></td>
 <td><code>/clients</code></td>
 <td>List of connected CNC clients</td>
 </tr>
 <tr>
 <td><code>GET</code></td>
-<td><code>/jobs</code></td>
-<td>List of all running DAQJobs</td>
+<td><code>/clients/{id}/status</code></td>
+<td>Full supervisor and job status</td>
 </tr>
 <tr>
 <td><code>GET</code></td>
-<td><code>/clients</code></td>
-<td>List of connected supervisors</td>
+<td><code>/clients/{id}/logs</code></td>
+<td>Recent log entries from the supervisor</td>
 </tr>
 <tr>
 <td><code>GET</code></td>
-<td><code>/templates/configs</code></td>
+<td><code>/templates/daqjobs</code></td>
 <td>JSON schemas for all job configs</td>
 </tr>
 <tr>
@@ -1579,38 +1578,45 @@ REST API for remote monitoring and control.</p>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/restart</code></td>
+<td><code>/clients/{id}/ping</code></td>
+<td>Ping a connected client</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/clients/{id}/restart_daq</code></td>
 <td>Restart the DAQ system</td>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/restart-daqjobs</code></td>
-<td>Restart specific DAQJobs</td>
+<td><code>/clients/{id}/stop_daqjobs</code></td>
+<td>Stop all DAQJobs</td>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/stop-daqjob</code></td>
+<td><code>/clients/{id}/stop_daqjob</code></td>
 <td>Stop a specific DAQJob</td>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/run-daqjob</code></td>
+<td><code>/clients/{id}/run_custom_daqjob</code></td>
 <td>Run a custom DAQJob ad-hoc</td>
 </tr>
 <tr>
 <td><code>POST</code></td>
-<td><code>/send-message</code></td>
+<td><code>/clients/{id}/send_message</code></td>
 <td>Inject a message into the broker</td>
 </tr>
 </tbody>
 </table>
 <h3 id="example-check-system-status">Example: check system status</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>http://localhost:8000/status<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>curl<span class="w"> </span>http://localhost:8000/clients<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># Then use the client ID from the response:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>http://localhost:8000/clients/&lt;supervisor_id&gt;/status<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
 </code></pre></div>
-<h3 id="example-restart-a-specific-job">Example: restart a specific job</h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/restart-daqjobs<span class="w"> </span><span class="se">\</span>
+<h3 id="example-stop-a-specific-job">Example: stop a specific job</h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/clients/&lt;supervisor_id&gt;/stop_daqjob<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;daq_job_unique_ids&quot;: [&quot;jid_1&quot;]}&#39;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;daq_job_unique_id&quot;: &quot;&lt;job_unique_id&gt;&quot;}&#39;</span>
 </code></pre></div>
 <hr />
 <h2 id="healthcheck">Healthcheck</h2>
