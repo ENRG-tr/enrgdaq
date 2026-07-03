@@ -1316,44 +1316,49 @@ fallback paths.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Producer._put_message_out(message)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>    │
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    ▼
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>message.pre_send()          # Auto-compute topics from store_config
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>_put_message_out calls _prepare_message()
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    │
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    ▼
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>try_zero_copy_pyarrow()     # If PyArrow + SHM enabled: write to ring buffer
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    │                         Replace table with RingBufferHandle
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>_prepare_message: try_zero_copy_pyarrow()    # If PyArrow + SHM: write to ring buffer
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    │                                           Replace table with RingBufferHandle
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    ▼
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>message_out queue
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>_prepare_message: pickle SHM fallback        # If non-PyArrow + SHM: pickle to SharedMemory
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    │
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    ▼
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>_publish_thread             # ZMQ PUB socket
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>_publish_buffer queue
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    │
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    ▼
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>Supervisor (zmq.proxy)      # XSUB → XPUB forwarding
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>_publish_thread             # ZMQ PUB socket, reads from _publish_buffer
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    │
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    ▼
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Subscriber&#39;s ZMQ SUB        # Topic prefix match
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Supervisor (zmq.proxy)      # XSUB → XPUB forwarding
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    │
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    ▼
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>_consume_thread             # ZMQ SUB receives
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>Subscriber&#39;s ZMQ SUB        # Topic prefix match
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>    │
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>    ▼
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>message_in queue
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>_consume_thread             # ZMQ SUB receives, calls handle_message() directly
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>    │
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>    ▼
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>handle_message(message)     # Consumer processes
 </code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code>_consume_thread</code> calls <code>handle_message()</code> <strong>directly</strong> — there is no
+intermediate <code>message_in</code> queue in the consume path. The <code>message_in</code> attribute
+exists but is not used by the default consume thread.</p>
+</div>
 <hr />
 <h2 id="topic-routing">Topic routing</h2>
 <p>Every message carries a <code>topics</code> set (a set of strings). The <code>pre_send()</code>
 method computes topics automatically based on the message type and config.</p>
 <h3 id="store-message-routing">Store message routing</h3>
 <p>When a producer sends a <code>DAQJobMessageStore*</code> with a <code>store_config</code>,
-the system inspects which store types are configured:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Simplified: what happens in pre_send()</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">store_config</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">store_config</span>  <span class="c1"># e.g., {csv: ..., root: ...}</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">for</span> <span class="n">store_type</span> <span class="ow">in</span> <span class="n">store_config</span><span class="o">.</span><span class="n">store_types</span><span class="p">:</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="k">for</span> <span class="n">store_job</span> <span class="ow">in</span> <span class="n">store_type_to_job</span><span class="p">[</span><span class="n">store_type</span><span class="p">]:</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>        <span class="n">message</span><span class="o">.</span><span class="n">topics</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;store.</span><span class="si">{</span><span class="n">store_job</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+the system inspects which store types are configured in the message's
+<code>pre_send()</code> and generates store topics based on the store config field names:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># In DAQJobMessageStore.pre_send():</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># For each non-None field on store_config (e.g., csv, root, hdf5),</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># generates topics like store.DAQJobStoreCSV, store.DAQJobStoreROOT, etc.</span>
 </code></pre></div>
 <p>So a message with <code>store_config = {csv: {...}, hdf5: {...}}</code> gets topics:</p>
 <ul>
@@ -1374,17 +1379,23 @@ proxy matches topic prefixes:</p>
 <ul>
 <li><code>stats.supervisor.{id}</code> — stats reports from jobs to supervisor</li>
 <li><code>traces.supervisor.{id}</code> — trace reports from jobs to supervisor</li>
-<li><code>supervisor.internal.{id}</code> — internal messages (job started, stop, routes)</li>
+<li><code>supervisor.{id}.internal</code> — internal messages (job started, stop, routes)</li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Topic format</p>
+<p>The topic format is <code>supervisor.{id}.internal</code> (with the supervisor ID
+<strong>before</strong> <code>internal</code>), not <code>supervisor.internal.{id}</code>.</p>
+</div>
 <p>This scoping prevents cross-supervisor leakage in federated deployments.</p>
 <hr />
 <h2 id="two-tier-zero-copy-system">Two-tier zero-copy system</h2>
 <p>ENRGDAQ uses two zero-copy strategies depending on the message type.</p>
 <h3 id="tier-1-pyarrow-ring-buffer-fastest">Tier 1: PyArrow ring buffer (fastest)</h3>
-<p>When a producer sends <code>DAQJobMessageStorePyArrow</code> with <code>use_shm=True</code>:</p>
+<p>When a producer sends <code>DAQJobMessageStorePyArrow</code>:</p>
 <ol>
 <li><strong>Claim a slot</strong> in the shared memory ring buffer</li>
-<li><strong>Write Arrow IPC</strong> directly into the slot (<code>pa.ipc.write_table()</code>)</li>
+<li><strong>Write Arrow IPC</strong> directly into the slot using
+   <code>pa.ipc.new_stream(sink, schema)</code> + <code>writer.write_table(table)</code></li>
 <li><strong>Replace the table</strong> in the message with a <code>RingBufferHandle</code>
    (only metadata: buffer name, slot index, data size)</li>
 <li><strong>Send the handle</strong> over ZMQ (few bytes)</li>
@@ -1394,7 +1405,9 @@ proxy matches topic prefixes:</p>
 <li>The consumer calls <code>handle.release()</code> to free the slot</li>
 </ol>
 <p>This path achieves <strong>zero user-space copies</strong> for the bulk data.
-Only the metadata handle travels over ZMQ.</p>
+Only the metadata handle travels over ZMQ.
+Shared memory is used when <code>use_shm_when_possible = True</code> on the
+<code>DAQJobConfig</code> — there is no per-message <code>use_shm</code> flag.</p>
 <h3 id="tier-2-pickle-in-sharedmemory-one-copy-saved">Tier 2: pickle-in-SharedMemory (one copy saved)</h3>
 <p>For non-PyArrow messages with <code>use_shm_when_possible=True</code>:</p>
 <ol>
@@ -1460,8 +1473,8 @@ but has the highest overhead.</p>
 </tr>
 <tr>
 <td><code>DAQJobMessageHeartbeat</code></td>
-<td>Liveness check</td>
-<td>Heartbeat timestamp</td>
+<td>Liveness signal</td>
+<td>Inherits timestamp only, no additional fields</td>
 </tr>
 </tbody>
 </table>
@@ -1480,15 +1493,12 @@ use within a trusted lab network.</p>
 </div>
 <hr />
 <h2 id="per-message-tracing">Per-message tracing</h2>
-<p>Every message carries a unique <code>id</code> (UUID). When <code>handle_traces</code> is
-enabled, the system tracks:</p>
-<ul>
-<li>When a message was sent (producer timestamp)</li>
-<li>When a message was received (consumer timestamp)</li>
-<li>Message type, size, source job, and source supervisor</li>
-</ul>
-<p>This enables end-to-end latency measurement across processes and machines.
-Trace events are published to <code>traces.supervisor.{id}</code> topics.</p>
+<p>Every message carries a unique <code>id</code> (UUID). Trace events are collected
+automatically in each DAQJob's <code>_trace_events</code> list. The <code>_report_thread</code>
+publishes trace reports periodically (every ~1 second) to the
+<code>traces.supervisor.{id}</code> topics. This enables end-to-end latency
+measurement across processes and machines.</p>
+<p>Tracing is always active — there is no toggle to disable it.</p>
 <hr />
 <h2 id="next-steps">Next steps</h2>
 <ul>

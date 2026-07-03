@@ -1248,10 +1248,11 @@ one central server and any number of clients.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/my_run/
 </code></pre></div>
 <p>All DAQJobs run as separate processes on the same machine. The message
-broker uses in-process ZMQ sockets (<code>inproc://</code>) for zero-network overhead.</p>
+broker uses IPC ZMQ sockets (<code>ipc://</code> on Unix) for low-latency communication.
+On Windows, <code>tcp://127.0.0.1</code> with dynamic ports is used as a fallback.</p>
 <hr />
 <h2 id="star-topology-federation">Star topology federation</h2>
-<p>For multi-machine setups, one supervisor acts as the <strong>server</strong> (hub) and all others connect as <strong>clients</strong></p>
+<p>For multi-machine setups, one supervisor acts as the <strong>server</strong> (hub) and all others connect as <strong>clients</strong>.</p>
 <hr />
 <h2 id="server-configuration">Server configuration</h2>
 <p>The server exposes two ZMQ endpoints that clients connect to:</p>
@@ -1262,30 +1263,28 @@ broker uses in-process ZMQ sockets (<code>inproc://</code>) for zero-network ove
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">[federation]</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:16382&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:16383&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:5560&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:5561&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
 </code></pre></div>
 <p>The server runs its own DAQJobs in addition to forwarding messages:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>--daq-job-config-path<span class="w"> </span>configs/server/<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>--supervisor-config<span class="w"> </span>configs/server/supervisor.toml
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/server/
 </code></pre></div>
+<p>The supervisor config (<code>supervisor.toml</code>) is loaded from inside the config
+directory — there is no separate <code>--supervisor-config</code> flag.</p>
 <hr />
 <h2 id="client-configuration">Client configuration</h2>
 <p>Each client connects to the server's endpoints:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># client1_supervisor.toml</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># client_supervisor.toml</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">[info]</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">supervisor_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;daq-client-1&quot;</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">supervisor_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;lab-bench-1&quot;</span><span class="p">]</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">[federation]</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">remote_server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:16382&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">remote_server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:16383&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">remote_server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:5560&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">remote_server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:5561&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
 </code></pre></div>
 <p>The client runs its own DAQJobs locally:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>--daq-job-config-path<span class="w"> </span>configs/client1/<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>--supervisor-config<span class="w"> </span>configs/client1/supervisor.toml
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/client/
 </code></pre></div>
 <hr />
 <h2 id="how-messages-flow-in-federation">How messages flow in federation</h2>
@@ -1301,7 +1300,7 @@ broker uses in-process ZMQ sockets (<code>inproc://</code>) for zero-network ove
 <h2 id="message-routing-in-federation">Message routing in federation</h2>
 <p>Most messages automatically target the <strong>local</strong> supervisor's stores by
 default. To send data to a remote supervisor, the producer must set
-<code>target_local_supervisor = false</code> (or the store config equivalent).</p>
+<code>target_local_supervisor = false</code> in the store message.</p>
 <p>This is controlled per-message, not per-config. If you want all messages
 from a job to be globally visible, set <code>target_local_supervisor</code> in the
 store config:</p>
@@ -1309,27 +1308,28 @@ store config:</p>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data.csv&quot;</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Not directly settable in TOML — controlled by the job code</span>
 </code></pre></div>
-<p>Remote message routing is handled by the <code>DAQJobRemote</code> job type:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">daq_job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;DAQJobRemote&quot;</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">zmq_proxy_pub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://1.2.3.4:10001&quot;</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">zmq_proxy_sub_urls</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;tcp://1.2.3.4:10002&quot;</span><span class="p">]</span>
-</code></pre></div>
+<p>Remote message routing in federation is handled by the
+<code>SupervisorFederationConfig</code> in the supervisor config. The server exposes
+<code>server_xpub_url</code> / <code>server_xsub_url</code> endpoints, and clients connect via
+<code>remote_server_xpub_url</code> / <code>remote_server_xsub_url</code>.</p>
 <hr />
 <h2 id="cnc-in-federation">CNC in federation</h2>
 <p>The Command &amp; Control (CNC) system also operates in a star topology.
 Configure CNC on both server and clients:</p>
 <p><strong>Server:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[cnc]</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">rest_api_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">rest_api_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="n">rest_api_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8000</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[cnc]</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">rest_api_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">rest_api_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">rest_api_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8000</span>
 </code></pre></div>
+<p>Note: the default <code>rest_api_host</code> is <code>"localhost"</code>. Set to <code>"0.0.0.0"</code>
+explicitly if you need remote access.</p>
 <p><strong>Client:</strong></p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">[cnc]</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="n">server_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;192.168.1.10&quot;</span><span class="w">   </span><span class="c1"># Server&#39;s IP</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="n">server_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1638</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[cnc]</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">server_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;192.168.1.10&quot;</span><span class="w">   </span><span class="c1"># Server&#39;s IP</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">server_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1638</span>
 </code></pre></div>
 <p>The server's REST API at port 8000 provides a unified view of all
 connected supervisors — jobs, stats, and logs.</p>
@@ -1346,12 +1346,12 @@ connected supervisors — jobs, stats, and logs.</p>
 </thead>
 <tbody>
 <tr>
-<td>16382</td>
+<td>5560</td>
 <td>ZMQ XPUB (server)</td>
 <td>Client → Server</td>
 </tr>
 <tr>
-<td>16383</td>
+<td>5561</td>
 <td>ZMQ XSUB (server)</td>
 <td>Client → Server</td>
 </tr>
@@ -1371,16 +1371,12 @@ connected supervisors — jobs, stats, and logs.</p>
 <hr />
 <h2 id="testing-federation-locally">Testing federation locally</h2>
 <p>You can test federation on a single machine by running two supervisors
-on different config directories:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1"># Terminal 1: Server</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--daq-job-config-path<span class="w"> </span>configs/server/<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span>--supervisor-config<span class="w"> </span>configs/server/supervisor.toml
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># Terminal 2: Client</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">  </span>--daq-job-config-path<span class="w"> </span>configs/client1/<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">  </span>--supervisor-config<span class="w"> </span>configs/client1/supervisor.toml
+on different config directories with different federation ports:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Terminal 1: Server</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/server/
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Terminal 2: Client</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/client/
 </code></pre></div>
 <p>The server and client communicate over <code>localhost</code>. No network setup needed.</p>
 <hr />

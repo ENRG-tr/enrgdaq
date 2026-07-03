@@ -1260,10 +1260,10 @@ data acquisition.</p>
 <p>A single <code>Supervisor</code> process manages the entire system:</p>
 <ul>
 <li>Reads TOML config files from the config directory</li>
-<li>Spawns each DAQJob as an independent OS process using <code>fork()</code></li>
-<li>Monitors liveness via heartbeats and watchdog timers</li>
-<li>Restarts crashed jobs with configurable backoff</li>
-<li>Collects per-job statistics (message counts, latency, CPU/RSS)</li>
+<li>Spawns each DAQJob as an independent OS process (using <code>fork()</code> on Linux/macOS by default, <code>spawn</code> on Windows; configurable via <code>multiprocessing_method</code>)</li>
+<li>Monitors liveness via OS-level <code>process.is_alive()</code> checks</li>
+<li>Restarts crashed jobs after a fixed timedelta delay</li>
+<li>Receives pre-aggregated statistics from <code>DAQJobHandleStats</code> (message counts, latency, CPU/RSS)</li>
 <li>Hosts the CNC command server for remote management</li>
 </ul>
 <h3 id="2-message-broker">2. Message Broker</h3>
@@ -1288,15 +1288,15 @@ transfers, which msgspec does not.</p>
 <tbody>
 <tr>
 <td><code>_consume_thread</code></td>
-<td>Receives messages via ZMQ SUB, puts them on <code>message_in</code> queue</td>
+<td>Receives messages via ZMQ SUB, calls <code>handle_message()</code> directly</td>
 </tr>
 <tr>
 <td><code>_publish_thread</code></td>
-<td>Takes messages from <code>message_out</code> queue, publishes via ZMQ PUB</td>
+<td>Takes messages from <code>_publish_buffer</code> queue, publishes via ZMQ PUB</td>
 </tr>
 <tr>
 <td><code>_report_thread</code></td>
-<td>Periodically sends stats and trace reports to supervisor (1 Hz)</td>
+<td>Periodically sends stats and trace reports to supervisor (~1 Hz)</td>
 </tr>
 </tbody>
 </table>
@@ -1310,13 +1310,12 @@ buffer</strong>. The consumer reads from the same slot.</p>
 <h2 id="fault-tolerance">Fault tolerance</h2>
 <p>The supervisor monitors all DAQJobs and recovers from failures:</p>
 <ol>
-<li><strong>Watchdog</strong> — each DAQJob has a watchdog timer. If the main thread
+<li><strong>Watchdog</strong> — each DAQJob has an optional watchdog timer. If the main thread
    hangs (e.g., stuck in a hardware read), the watchdog force-kills the
    process with <code>os._exit(1)</code>.</li>
-<li><strong>Heartbeat</strong> — DAQJobs send periodic heartbeat messages. If the
-   supervisor doesn't receive heartbeats from a job, it assumes the
-   process is dead.</li>
-<li><strong>Restart</strong> — the supervisor restarts crashed jobs</li>
+<li><strong>Process liveness</strong> — the supervisor checks <code>process.is_alive()</code> (OS-level
+   check) each loop iteration. If a process is dead, it is scheduled for restart.</li>
+<li><strong>Restart</strong> — the supervisor restarts crashed jobs after a configurable delay</li>
 <li><strong>Isolation</strong> — jobs are independent OS processes. A segmentation
    fault in one job does not crash others.</li>
 </ol>
@@ -1340,8 +1339,9 @@ buffer</strong>. The consumer reads from the same slot.</p>
 <li><strong>ZMQ ROUTER/DEALER</strong> — binary request/response protocol for CNC commands
   (restart jobs, check status, send messages)</li>
 <li><strong>FastAPI REST API</strong> — HTTP wrapper around the ZMQ protocol, provides
-  <code>/status</code>, <code>/clients</code>, <code>/jobs</code>, <code>/restart</code>, <code>/templates</code> endpoints</li>
-<li><strong>Start topology</strong> — one CNC server, multiple CNC clients</li>
+  <code>/clients</code>, <code>/clients/{id}/status</code>, <code>/clients/{id}/restart_daq</code>,
+  <code>/clients/{id}/stop_daqjob</code>, <code>/templates/*</code> endpoints</li>
+<li><strong>Star topology</strong> — one CNC server, multiple CNC clients</li>
 </ul>
 <h2 id="next-steps">Next steps</h2>
 <ul>

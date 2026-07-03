@@ -1261,7 +1261,7 @@ it handles:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">enrgdaq.daq.store.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAQJobStore</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="k">class</span><span class="w"> </span><span class="nc">DAQJobStoreJSON</span><span class="p">(</span><span class="n">DAQJobStore</span><span class="p">):</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">config_type</span> <span class="o">=</span> <span class="n">DAQJobStoreJSONConfig</span>  <span class="c1"># Own job config</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">config_type</span> <span class="o">=</span> <span class="n">DAQJobStoreJSONConfig</span>  <span class="c1"># Defined in Step 5 below</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">allowed_store_config_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">DAQJobStoreConfigJSON</span><span class="p">]</span>  <span class="c1"># Producer config types</span>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">allowed_message_in_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">DAQJobMessageStore</span><span class="p">]</span>  <span class="c1"># Message types to accept</span>
 </code></pre></div>

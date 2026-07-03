@@ -1760,9 +1760,9 @@ with SQL querying.</p>
 </code></pre></div>
 <h3 id="features_3">Features</h3>
 <ul>
-<li>Auto-creates table from message keys (if not exists)</li>
-<li>Column type inference from data</li>
-<li>Batch inserts for performance</li>
+<li>Direct INSERT statements into existing tables (tables must be created beforehand)</li>
+<li>Values are inserted as parameterized <code>%s</code> placeholders — no column type inference</li>
+<li>Single-row inserts per message row (no batch <code>executemany</code>)</li>
 </ul>
 <hr />
 <h2 id="redis-store">Redis Store</h2>
@@ -1809,8 +1809,8 @@ Useful for testing, in-memory buffering, or when disk I/O is not needed.</p>
 <ul>
 <li>Zero I/O — all data stays in RAM</li>
 <li>Accessible via the store job's API</li>
-<li>Optional disposal after N entries (<code>dispose_after_n_entries</code>)</li>
-<li>Optional void mode (<code>void_data = true</code>) for throughput testing</li>
+<li>The <code>dispose_after_n_entries</code> config field exists but is not currently implemented</li>
+<li><code>void_data</code> is set on the job config, not inside <code>[store_config.memory]</code> as the TOML nesting might suggest</li>
 </ul>
 <hr />
 <h2 id="choosing-a-backend">Choosing a backend</h2>

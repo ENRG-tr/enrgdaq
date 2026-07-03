@@ -1504,7 +1504,8 @@ the output directory (default: <code>out/</code>).</p>
 </tbody>
 </table>
 <p>Latency (avg, p95, p99), CPU percentage, and RSS memory are stored
-separately as timeseries data via the stats handler's <code>timeseries_store_config</code>.</p>
+separately as timeseries data via the stats handler's <code>timeseries_store_config</code>.
+They do <strong>not</strong> appear as columns in <code>stats.csv</code>.</p>
 <p>Example:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>supervisor,daq_job,is_alive,last_message_in_date,message_in_count,restart_count
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>lab-server-1,DAQJobCAENDigitizer,true,1749000000000,15234,0
@@ -1521,12 +1522,32 @@ separately as timeseries data via the stats handler's <code>timeseries_store_con
 </thead>
 <tbody>
 <tr>
-<td><code>supervisor_id</code></td>
+<td><code>supervisor</code></td>
 <td>Supervisor node name</td>
 </tr>
 <tr>
-<td><code>mb_per_second</code></td>
-<td>Aggregate throughput (MB/s)</td>
+<td><code>is_alive</code></td>
+<td>Whether the supervisor is active</td>
+</tr>
+<tr>
+<td><code>last_active</code></td>
+<td>Timestamp of last activity</td>
+</tr>
+<tr>
+<td><code>message_in_count</code></td>
+<td>Total messages received</td>
+</tr>
+<tr>
+<td><code>message_in_megabytes</code></td>
+<td>Total data received (MB)</td>
+</tr>
+<tr>
+<td><code>message_out_count</code></td>
+<td>Total messages sent</td>
+</tr>
+<tr>
+<td><code>message_out_megabytes</code></td>
+<td>Total data sent (MB)</td>
 </tr>
 </tbody>
 </table>
@@ -1614,14 +1635,47 @@ supervisor ID of the target node.</p>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>curl<span class="w"> </span>http://localhost:8000/clients/&lt;supervisor_id&gt;/status<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
 </code></pre></div>
 <h3 id="example-stop-a-specific-job">Example: stop a specific job</h3>
+<p>The <code>stop_daqjob</code> endpoint accepts a JSON body with the following fields:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>daq_job_unique_id</code></td>
+<td>string</td>
+<td>No</td>
+<td>Unique ID of the job to stop</td>
+</tr>
+<tr>
+<td><code>daq_job_name</code></td>
+<td>string</td>
+<td>No</td>
+<td>Name (type) of the job to stop</td>
+</tr>
+<tr>
+<td><code>remove</code></td>
+<td>bool</td>
+<td>No (default: <code>false</code>)</td>
+<td>Whether to remove the job config after stopping</td>
+</tr>
+</tbody>
+</table>
+<p>At least one of <code>daq_job_unique_id</code> or <code>daq_job_name</code> should be provided.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/clients/&lt;supervisor_id&gt;/stop_daqjob<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;daq_job_unique_id&quot;: &quot;&lt;job_unique_id&gt;&quot;}&#39;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;daq_job_unique_id&quot;: &quot;&lt;job_unique_id&gt;&quot;, &quot;remove&quot;: false}&#39;</span>
 </code></pre></div>
 <hr />
 <h2 id="healthcheck">Healthcheck</h2>
-<p>The <code>DAQJobHealthcheck</code> job monitors DAQJob statistics and sends alerts
-when configured conditions are violated.</p>
+<p>The <code>DAQJobHealthcheck</code> job monitors combined DAQJob statistics (from
+<code>DAQJobMessageCombinedStats</code>) and sends alerts when configured
+conditions are violated.</p>
 <h3 id="configuration">Configuration</h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">daq_job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;DAQJobHealthcheck&quot;</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
@@ -1631,7 +1685,7 @@ when configured conditions are violated.</p>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="n">alert_if_interval_is</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;unsatisfied&quot;</span><span class="w">   </span><span class="c1"># Alert if NOT updated recently</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;30s&quot;</span><span class="w">                       </span><span class="c1"># Must be updated within 30 seconds</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;Digitizer stopped sending data!&quot;</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ERROR&quot;</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;error&quot;</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
 <a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="k">[[healthcheck_stats]]</span>
 <a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="n">daq_job_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;DAQJobStoreROOT&quot;</span>
@@ -1639,8 +1693,13 @@ when configured conditions are violated.</p>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="n">alert_if_interval_is</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;unsatisfied&quot;</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="n">interval</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;30s&quot;</span>
 <a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">message</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ROOT store not receiving data!&quot;</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;WARNING&quot;</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="n">alert_info</span><span class="p">.</span><span class="n">severity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;warning&quot;</span>
 </code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Severity values are lowercase</p>
+<p>Valid severity values are <code>"info"</code>, <code>"warning"</code>, and <code>"error"</code> (lowercase).
+Using uppercase like <code>"ERROR"</code> will fail to serialize.</p>
+</div>
 <h3 id="alert-conditions">Alert conditions</h3>
 <table>
 <thead>
@@ -1705,18 +1764,15 @@ terminal output.</p>
 <li><code>ERROR</code> — failures that may affect data acquisition</li>
 </ul>
 <h3 id="supervisor-level-logging">Supervisor-level logging</h3>
-<p>The supervisor log shows system-wide events:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[INFO] Supervisor initializing...
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>[INFO] Starting message broker on inproc://...
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[INFO] Spawning DAQJobCAENDigitizer (jid=1)...
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>[INFO] Spawning DAQJobStoreROOT (jid=2)...
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>[ERROR] DAQJobCAENDigitizer (jid=1) crashed! Restarting in 1s...
+<p>The supervisor log shows system-wide events. The exact format includes
+timestamps, hostname, logger name, and log level:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>2026-01-01 12:00:00 hostname Supervisor(lab-server-1) INFO Supervisor initializing...
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>2026-01-01 12:00:01 hostname Supervisor(lab-server-1) INFO Starting DAQJobCAENDigitizer
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>2026-01-01 12:00:05 hostname Supervisor(lab-server-1) ERROR DAQJobCAENDigitizer crashed
 </code></pre></div>
 <h3 id="log-forwarding-cnc">Log forwarding (CNC)</h3>
 <p>When CNC is enabled, clients can request remote logs:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/send-message<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;type&quot;: &quot;req_log&quot;, &quot;job_id&quot;: &quot;jid_1&quot;}&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>curl<span class="w"> </span>http://localhost:8000/clients/&lt;supervisor_id&gt;/logs<span class="w"> </span><span class="p">|</span><span class="w"> </span>python<span class="w"> </span>-m<span class="w"> </span>json.tool
 </code></pre></div>
 <hr />
 <h2 id="next-steps">Next steps</h2>
