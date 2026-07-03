@@ -35,9 +35,13 @@ record_length = 1024               # Samples per waveform
 max_num_events_blt = 1
 
 # Trigger
-sw_trigger_mode = 1                # 0=DISABLED, 1=ACQ_ONLY, 2=EXTOUT_ONLY
+sw_trigger_mode = 0                # 0=DISABLED, 1=ACQ_ONLY, 2=EXTOUT_ONLY, 3=ACQ_AND_EXTOUT
 channel_self_trigger_threshold_mv = 100
 channel_self_trigger_channel_mask = 0b00000001
+
+# Additional options (not shown: trigger_polarity, ext_trigger_mode,
+# channel_dc_offsets, filter_threshold_mv, io_level, post_trigger_size,
+# acquisition_mode, restart_driver_command, save_npy_lz4, output_filename)
 
 # Baseline position
 baseline_position = "TOP"          # TOP, MIDDLE, BOTTOM
@@ -65,7 +69,7 @@ add_date = true
 
 - If the digitizer fails to initialize, check the optical link fiber connections
 - If `record_length` is too large for the digitizer's memory, the job will log an error
-- The job includes a watchdog. If it hangs during a hardware read, it force-exits and the supervisor restarts it
+- The digitizer job supports an optional watchdog (`watchdog_timeout_seconds`), disabled by default
 
 ---
 
@@ -161,7 +165,7 @@ add_date = true
 ### Troubleshooting
 
 - Verify the board is reachable: `ping 192.168.1.100`
-- The WebSocket endpoint is at `ws://<host>:8080/`
+- The WebSocket endpoint depends on the `n1081b-sdk` package internals
 - Wrong `password` raises a login error in the logs
 - The job retries the connection automatically if the WebSocket drops
 
@@ -191,7 +195,7 @@ movement_detection_frame_width = 500   # Downscaled frame width for detection
 
 # Time overlay
 enable_time_text = true
-time_text_position = "TOP_LEFT"        # TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+time_text_position = "top_left"        # top_left, top_right, bottom_left, bottom_right
 
 [store_config.raw]
 file_path = "camera_capture.jpg"
@@ -262,7 +266,7 @@ the host machine.
 ```toml
 daq_job_type = "DAQJobPCMetrics"
 
-poll_interval_seconds = 5
+poll_interval_seconds = 1
 
 [store_config.csv]
 file_path = "pc_metrics.csv"

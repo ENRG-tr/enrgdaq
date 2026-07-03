@@ -27,8 +27,8 @@ supervisor_tags = ["production", "wcd"]
 
 [federation]
 is_server = true
-server_xpub_url = "tcp://*:16382"
-server_xsub_url = "tcp://*:16383"
+server_xpub_url = "tcp://*:5560"
+server_xsub_url = "tcp://*:5561"
 
 [cnc]
 is_server = true
@@ -36,7 +36,7 @@ rest_api_enabled = true
 rest_api_host = "0.0.0.0"
 rest_api_port = 8000
 
-ring_buffer_size_mb = 512
+ring_buffer_size_mb = 256
 ring_buffer_slot_size_kb = 1024
 ```
 
@@ -48,6 +48,8 @@ ring_buffer_slot_size_kb = 1024
 | `federation.server_xpub_url` | string | — | XPUB endpoint to expose (server mode) |
 | `federation.server_xsub_url` | string | — | XSUB endpoint to expose (server mode) |
 | `cnc.is_server` | bool | `false` | Run the CNC command server |
+| `cnc.server_host` | string | `"localhost"` | CNC server hostname/IP for client connections |
+| `cnc.server_port` | int | `1638` | CNC ROUTER/DEALER protocol port |
 | `cnc.rest_api_enabled` | bool | `false` | Enable the CNC REST API |
 | `cnc.rest_api_host` | string | `"localhost"` | REST API bind address |
 | `cnc.rest_api_port` | int | `8000` | REST API port |
@@ -73,7 +75,7 @@ each job type defines its own config fields.
 |-------|------|---------|-------------|
 | `daq_job_type` | string | (required) | Python class name of the DAQJob |
 | `verbosity` | string | `"INFO"` | Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
-| `daq_job_unique_id` | string | auto | Unique identifier (auto-generated if absent) |
+| `daq_job_unique_id` | string or None | auto-generated | Unique identifier (None = auto-generated) |
 | `use_shm_when_possible` | bool | `true` | Use shared memory for message transfer |
 | `topics_to_subscribe` | string[] | `[]` | Extra ZMQ topics to subscribe to |
 
@@ -119,7 +121,7 @@ Also note that `store_config` is a convention: there are some jobs that use stor
 ```toml
 [store_config.csv]
 file_path = "data.csv"
-add_date = true          # Append date to filename (e.g., data_2026-01-01.csv)
+add_date = true          # Append date to filename (e.g., data_2026-01-01.csv). Default: false.
 overwrite = false        # Append to file instead of overwriting
 use_zstd = false         # Enable zstd streaming compression
 ```
@@ -158,7 +160,7 @@ MySQL connection parameters are set in the MySQL store job's own TOML config fil
 ```toml
 [store_config.redis]
 key = "daq:sensor1"
-key_expiration_days = 30  # Auto-delete keys older than 30 days
+key_expiration_days = 30  # Auto-delete keys older than N days. Default: None (never expire)
 use_timeseries = true     # Use RedisTimeSeries module
 ```
 

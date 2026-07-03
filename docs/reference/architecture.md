@@ -13,10 +13,10 @@ data acquisition.
 A single `Supervisor` process manages the entire system:
 
 - Reads TOML config files from the config directory
-- Spawns each DAQJob as an independent OS process using `fork()`
-- Monitors liveness via heartbeats and watchdog timers
-- Restarts crashed jobs with configurable backoff
-- Collects per-job statistics (message counts, latency, CPU/RSS)
+- Spawns each DAQJob as an independent OS process (using `fork()` on Linux/macOS by default, `spawn` on Windows; configurable via `multiprocessing_method`)
+- Monitors liveness via OS-level `process.is_alive()` checks
+- Restarts crashed jobs after a fixed timedelta delay
+- Receives pre-aggregated statistics from `DAQJobHandleStats` (message counts, latency, CPU/RSS)
 - Hosts the CNC command server for remote management
 
 ### 2. Message Broker
@@ -37,9 +37,9 @@ Each DAQJob runs as a separate process with three daemon threads:
 
 | Thread | Role |
 |--------|------|
-| `_consume_thread` | Receives messages via ZMQ SUB, puts them on `message_in` queue |
-| `_publish_thread` | Takes messages from `message_out` queue, publishes via ZMQ PUB |
-| `_report_thread` | Periodically sends stats and trace reports to supervisor (1 Hz) |
+| `_consume_thread` | Receives messages via ZMQ SUB, calls `handle_message()` directly |
+| `_publish_thread` | Takes messages from `_publish_buffer` queue, publishes via ZMQ PUB |
+| `_report_thread` | Periodically sends stats and trace reports to supervisor (~1 Hz) |
 
 Jobs use `_put_message_out()` to send data and `handle_message()` to receive.
 Every job is **isolated** — a crash in one job does not affect others.
@@ -56,13 +56,12 @@ buffer**. The consumer reads from the same slot.
 
 The supervisor monitors all DAQJobs and recovers from failures:
 
-1. **Watchdog** — each DAQJob has a watchdog timer. If the main thread
+1. **Watchdog** — each DAQJob has an optional watchdog timer. If the main thread
    hangs (e.g., stuck in a hardware read), the watchdog force-kills the
    process with `os._exit(1)`.
-2. **Heartbeat** — DAQJobs send periodic heartbeat messages. If the
-   supervisor doesn't receive heartbeats from a job, it assumes the
-   process is dead.
-3. **Restart** — the supervisor restarts crashed jobs
+2. **Process liveness** — the supervisor checks `process.is_alive()` (OS-level
+   check) each loop iteration. If a process is dead, it is scheduled for restart.
+3. **Restart** — the supervisor restarts crashed jobs after a configurable delay
 4. **Isolation** — jobs are independent OS processes. A segmentation
    fault in one job does not crash others.
 
@@ -94,8 +93,9 @@ The Command & Control system provides remote management:
 - **ZMQ ROUTER/DEALER** — binary request/response protocol for CNC commands
   (restart jobs, check status, send messages)
 - **FastAPI REST API** — HTTP wrapper around the ZMQ protocol, provides
-  `/status`, `/clients`, `/jobs`, `/restart`, `/templates` endpoints
-- **Start topology** — one CNC server, multiple CNC clients
+  `/clients`, `/clients/{id}/status`, `/clients/{id}/restart_daq`,
+  `/clients/{id}/stop_daqjob`, `/templates/*` endpoints
+- **Star topology** — one CNC server, multiple CNC clients
 
 ## Next steps
 

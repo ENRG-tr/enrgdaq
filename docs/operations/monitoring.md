@@ -30,6 +30,7 @@ One row per DAQJob, updated in real time:
 
 Latency (avg, p95, p99), CPU percentage, and RSS memory are stored
 separately as timeseries data via the stats handler's `timeseries_store_config`.
+They do **not** appear as columns in `stats.csv`.
 
 Example:
 
@@ -45,8 +46,13 @@ Aggregated supervisor-level metrics:
 
 | Column | Description |
 |--------|-------------|
-| `supervisor_id` | Supervisor node name |
-| `mb_per_second` | Aggregate throughput (MB/s) |
+| `supervisor` | Supervisor node name |
+| `is_alive` | Whether the supervisor is active |
+| `last_active` | Timestamp of last activity |
+| `message_in_count` | Total messages received |
+| `message_in_megabytes` | Total data received (MB) |
+| `message_out_count` | Total messages sent |
+| `message_out_megabytes` | Total data sent (MB) |
 
 ---
 
@@ -85,18 +91,29 @@ curl http://localhost:8000/clients/<supervisor_id>/status | python -m json.tool
 
 ### Example: stop a specific job
 
+The `stop_daqjob` endpoint accepts a JSON body with the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `daq_job_unique_id` | string | No | Unique ID of the job to stop |
+| `daq_job_name` | string | No | Name (type) of the job to stop |
+| `remove` | bool | No (default: `false`) | Whether to remove the job config after stopping |
+
+At least one of `daq_job_unique_id` or `daq_job_name` should be provided.
+
 ```bash
 curl -X POST http://localhost:8000/clients/<supervisor_id>/stop_daqjob \
   -H "Content-Type: application/json" \
-  -d '{"daq_job_unique_id": "<job_unique_id>"}'
+  -d '{"daq_job_unique_id": "<job_unique_id>", "remove": false}'
 ```
 
 ---
 
 ## Healthcheck
 
-The `DAQJobHealthcheck` job monitors DAQJob statistics and sends alerts
-when configured conditions are violated.
+The `DAQJobHealthcheck` job monitors combined DAQJob statistics (from
+`DAQJobMessageCombinedStats`) and sends alerts when configured
+conditions are violated.
 
 ### Configuration
 
@@ -109,7 +126,7 @@ stats_key = "message_out_stats"
 alert_if_interval_is = "unsatisfied"   # Alert if NOT updated recently
 interval = "30s"                       # Must be updated within 30 seconds
 alert_info.message = "Digitizer stopped sending data!"
-alert_info.severity = "ERROR"
+alert_info.severity = "error"
 
 [[healthcheck_stats]]
 daq_job_type = "DAQJobStoreROOT"
@@ -117,8 +134,12 @@ stats_key = "message_in_stats"
 alert_if_interval_is = "unsatisfied"
 interval = "30s"
 alert_info.message = "ROOT store not receiving data!"
-alert_info.severity = "WARNING"
+alert_info.severity = "warning"
 ```
+
+!!! warning "Severity values are lowercase"
+    Valid severity values are `"info"`, `"warning"`, and `"error"` (lowercase).
+    Using uppercase like `"ERROR"` will fail to serialize.
 
 ### Alert conditions
 
@@ -168,14 +189,13 @@ verbosity = "DEBUG"  # DEBUG, INFO, WARNING, ERROR
 
 ### Supervisor-level logging
 
-The supervisor log shows system-wide events:
+The supervisor log shows system-wide events. The exact format includes
+timestamps, hostname, logger name, and log level:
 
 ```
-[INFO] Supervisor initializing...
-[INFO] Starting message broker on inproc://...
-[INFO] Spawning DAQJobCAENDigitizer (jid=1)...
-[INFO] Spawning DAQJobStoreROOT (jid=2)...
-[ERROR] DAQJobCAENDigitizer (jid=1) crashed! Restarting in 1s...
+2026-01-01 12:00:00 hostname Supervisor(lab-server-1) INFO Supervisor initializing...
+2026-01-01 12:00:01 hostname Supervisor(lab-server-1) INFO Starting DAQJobCAENDigitizer
+2026-01-01 12:00:05 hostname Supervisor(lab-server-1) ERROR DAQJobCAENDigitizer crashed
 ```
 
 ### Log forwarding (CNC)
@@ -183,9 +203,7 @@ The supervisor log shows system-wide events:
 When CNC is enabled, clients can request remote logs:
 
 ```bash
-curl -X POST http://localhost:8000/send-message \
-  -H "Content-Type: application/json" \
-  -d '{"type": "req_log", "job_id": "jid_1"}'
+curl http://localhost:8000/clients/<supervisor_id>/logs | python -m json.tool
 ```
 
 ---

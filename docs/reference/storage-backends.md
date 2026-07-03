@@ -112,9 +112,9 @@ port = 3306
 
 ### Features
 
-- Auto-creates table from message keys (if not exists)
-- Column type inference from data
-- Batch inserts for performance
+- Direct INSERT statements into existing tables (tables must be created beforehand)
+- Values are inserted as parameterized `%s` placeholders — no column type inference
+- Single-row inserts per message row (no batch `executemany`)
 
 ---
 
@@ -179,8 +179,8 @@ Useful for testing, in-memory buffering, or when disk I/O is not needed.
 
 - Zero I/O — all data stays in RAM
 - Accessible via the store job's API
-- Optional disposal after N entries (`dispose_after_n_entries`)
-- Optional void mode (`void_data = true`) for throughput testing
+- The `dispose_after_n_entries` config field exists but is not currently implemented
+- `void_data` is set on the job config, not inside `[store_config.memory]` as the TOML nesting might suggest
 
 ---
 

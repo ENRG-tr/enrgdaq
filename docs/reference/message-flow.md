@@ -14,16 +14,19 @@ Messages in ENRGDAQ follow this path:
 Producer._put_message_out(message)
     │
     ▼
-message.pre_send()          # Auto-compute topics from store_config
+_put_message_out calls _prepare_message()
     │
     ▼
-try_zero_copy_pyarrow()     # If PyArrow + SHM enabled: write to ring buffer
-    │                         Replace table with RingBufferHandle
+_prepare_message: try_zero_copy_pyarrow()    # If PyArrow + SHM: write to ring buffer
+    │                                           Replace table with RingBufferHandle
     ▼
-message_out queue
+_prepare_message: pickle SHM fallback        # If non-PyArrow + SHM: pickle to SharedMemory
     │
     ▼
-_publish_thread             # ZMQ PUB socket
+_publish_buffer queue
+    │
+    ▼
+_publish_thread             # ZMQ PUB socket, reads from _publish_buffer
     │
     ▼
 Supervisor (zmq.proxy)      # XSUB → XPUB forwarding
@@ -32,14 +35,16 @@ Supervisor (zmq.proxy)      # XSUB → XPUB forwarding
 Subscriber's ZMQ SUB        # Topic prefix match
     │
     ▼
-_consume_thread             # ZMQ SUB receives
-    │
-    ▼
-message_in queue
+_consume_thread             # ZMQ SUB receives, calls handle_message() directly
     │
     ▼
 handle_message(message)     # Consumer processes
 ```
+
+!!! note
+    The `_consume_thread` calls `handle_message()` **directly** — there is no
+    intermediate `message_in` queue in the consume path. The `message_in` attribute
+    exists but is not used by the default consume thread.
 
 ---
 
@@ -51,14 +56,13 @@ method computes topics automatically based on the message type and config.
 ### Store message routing
 
 When a producer sends a `DAQJobMessageStore*` with a `store_config`,
-the system inspects which store types are configured:
+the system inspects which store types are configured in the message's
+`pre_send()` and generates store topics based on the store config field names:
 
 ```python
-# Simplified: what happens in pre_send()
-store_config = message.store_config  # e.g., {csv: ..., root: ...}
-for store_type in store_config.store_types:
-    for store_job in store_type_to_job[store_type]:
-        message.topics.add(f"store.{store_job.__name__}")
+# In DAQJobMessageStore.pre_send():
+# For each non-None field on store_config (e.g., csv, root, hdf5),
+# generates topics like store.DAQJobStoreCSV, store.DAQJobStoreROOT, etc.
 ```
 
 So a message with `store_config = {csv: {...}, hdf5: {...}}` gets topics:
@@ -84,7 +88,11 @@ Messages between a DAQJob and its supervisor use supervisor-scoped topics:
 
 - `stats.supervisor.{id}` — stats reports from jobs to supervisor
 - `traces.supervisor.{id}` — trace reports from jobs to supervisor
-- `supervisor.internal.{id}` — internal messages (job started, stop, routes)
+- `supervisor.{id}.internal` — internal messages (job started, stop, routes)
+
+!!! note "Topic format"
+    The topic format is `supervisor.{id}.internal` (with the supervisor ID
+    **before** `internal`), not `supervisor.internal.{id}`.
 
 This scoping prevents cross-supervisor leakage in federated deployments.
 
@@ -96,10 +104,11 @@ ENRGDAQ uses two zero-copy strategies depending on the message type.
 
 ### Tier 1: PyArrow ring buffer (fastest)
 
-When a producer sends `DAQJobMessageStorePyArrow` with `use_shm=True`:
+When a producer sends `DAQJobMessageStorePyArrow`:
 
 1. **Claim a slot** in the shared memory ring buffer
-2. **Write Arrow IPC** directly into the slot (`pa.ipc.write_table()`)
+2. **Write Arrow IPC** directly into the slot using
+   `pa.ipc.new_stream(sink, schema)` + `writer.write_table(table)`
 3. **Replace the table** in the message with a `RingBufferHandle`
    (only metadata: buffer name, slot index, data size)
 4. **Send the handle** over ZMQ (few bytes)
@@ -110,6 +119,8 @@ When a producer sends `DAQJobMessageStorePyArrow` with `use_shm=True`:
 
 This path achieves **zero user-space copies** for the bulk data.
 Only the metadata handle travels over ZMQ.
+Shared memory is used when `use_shm_when_possible = True` on the
+`DAQJobConfig` — there is no per-message `use_shm` flag.
 
 ### Tier 2: pickle-in-SharedMemory (one copy saved)
 
@@ -146,7 +157,7 @@ ENRGDAQ defines a hierarchy of message types, all inheriting from
 | `DAQJobMessageTraceReport` | Message trace events | List of per-message timing events |
 | `DAQJobMessageJobStarted` | Job lifecycle | Signals process started |
 | `DAQJobMessageStop` | Shutdown signal | Reason string |
-| `DAQJobMessageHeartbeat` | Liveness check | Heartbeat timestamp |
+| `DAQJobMessageHeartbeat` | Liveness signal | Inherits timestamp only, no additional fields |
 
 ---
 
@@ -168,15 +179,13 @@ This is because pickle protocol 5 supports **out-of-band buffers**
 
 ## Per-message tracing
 
-Every message carries a unique `id` (UUID). When `handle_traces` is
-enabled, the system tracks:
+Every message carries a unique `id` (UUID). Trace events are collected
+automatically in each DAQJob's `_trace_events` list. The `_report_thread`
+publishes trace reports periodically (every ~1 second) to the
+`traces.supervisor.{id}` topics. This enables end-to-end latency
+measurement across processes and machines.
 
-- When a message was sent (producer timestamp)
-- When a message was received (consumer timestamp)
-- Message type, size, source job, and source supervisor
-
-This enables end-to-end latency measurement across processes and machines.
-Trace events are published to `traces.supervisor.{id}` topics.
+Tracing is always active — there is no toggle to disable it.
 
 ---
 

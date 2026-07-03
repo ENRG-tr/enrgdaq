@@ -49,12 +49,12 @@ zero-copy shared memory. Throughput will be lower than on Linux/macOS.
 
 Some DAQJob types require optional hardware SDKs:
 
-- **CAEN digitizer & HV** — requires `caen-libs` (included in `requirements.txt`)
+- **CAEN digitizer & HV** — requires `caen-libs` (included in `pyproject.toml`)
 - **Xiaomi Mijia BLE sensor** — requires `lywsd03mmc-client` (installed via git)
-- **N1081B SDK** — requires `n1081b-sdk` (installed via git)
+- **N1081B SDK** — requires `n1081b-sdk` (installed via git, use `uv sync --group sensors`)
 
-These are included when you install with `uv sync`.
-If a hardware library is unavailable, the correspondingD AQJob logs a warning and
+These are included when you install with `uv sync` (some sensor SDKs require `uv sync --group sensors`).
+If a hardware library is unavailable, the corresponding DAQJob logs a warning and
 disables itself at runtime.
 
 ---
@@ -70,7 +70,7 @@ uv sync --group dev
 # Set up pre-commit hooks (lint checks before every commit)
 uv run pre-commit install
 
-# Run the test suite
+# Run the test suite (pytest must be installed in your environment)
 uv run pytest src/tests/ -v
 ```
 

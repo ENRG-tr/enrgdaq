@@ -14,7 +14,7 @@ A complete custom job requires:
 
 1. A **config class** (inherits `DAQJobConfig` or `StorableDAQJobConfig`)
 2. A **job class** (inherits `DAQJob`) with a `start()` method
-3. Preferably, alls to `_put_message_out()` to send data
+3. Preferably, calls to `_put_message_out()` to send data
 
 ---
 

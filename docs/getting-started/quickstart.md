@@ -51,12 +51,10 @@ cat out/test_data.csv
 
 You will see rows with timestamp, random value, and job metadata.
 
-Two additional statistics files are generated automatically:
-
-| File | Contents |
-|------|----------|
-| `out/stats.csv` | Per-job message counts and latencies |
-| `out/stats_remote.csv` | Aggregated throughput in MB/s |
+!!! note
+    Statistics files (`stats.csv` and `stats_remote.csv`) are only generated
+    when a `DAQJobHandleStats` job is configured. The quickstart config above
+    does not include one, so these files will not appear automatically.
 
 ---
 

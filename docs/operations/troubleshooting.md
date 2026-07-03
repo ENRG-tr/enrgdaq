@@ -71,7 +71,7 @@ the same job.
 
 ## High latency (> 100ms p95)
 
-**Symptoms:** `stats.csv` shows `latency_p95_ms` over 100ms.
+**Symptoms:** High message processing latency (visible in timeseries data).
 
 **Diagnosis:**
 
@@ -86,7 +86,7 @@ the same job.
 2. Verify ring buffer sizing:
    ```toml
    # In supervisor config
-   ring_buffer_size_mb = 512
+   ring_buffer_size_mb = 256
    ring_buffer_slot_size_kb = 1024   # Should be larger than largest message
    ```
 
@@ -112,12 +112,12 @@ the same job.
 1. Port conflicts (federation or CNC):
    ```bash
    # Check if the port is already in use
-   lsof -i :16382   # macOS/Linux
-   netstat -ano | findstr :16382  # Windows
+   lsof -i :5560   # macOS/Linux
+   netstat -ano | findstr :5560  # Windows
    ```
    Change the port in the config if needed.
 
-2. Firewall blocking federation ports. Ensure ports 16382, 16383,
+2. Firewall blocking federation ports. Ensure ports 5560, 5561,
    1638 are open between machines.
 
 3. Multiple supervisors on the same machine. Only one supervisor
@@ -155,7 +155,7 @@ the same job.
 
 ## CNC REST API not responding
 
-**Symptoms:** `curl http://localhost:8000/status` hangs or returns
+**Symptoms:** `curl http://localhost:8000/clients` hangs or returns
 connection refused.
 
 **Diagnosis:**
@@ -187,9 +187,9 @@ connection refused.
 1. macOS security requires camera permission. Grant terminal/IDE
    access in System Preferences → Security & Privacy → Camera.
 
-2. Use `camera_device_name` instead of index:
+2. Use `camera_device_name` instead of index (Linux only):
    ```toml
-   camera_device_name = "FaceTime HD Camera"
+   camera_device_name = "MyUSB-Camera"  # Uses /dev/v4l/by-id/, Linux only
    ```
 
 3. The camera job uses `multiprocessing_method = "spawn"` instead of
@@ -201,8 +201,9 @@ connection refused.
 
 - Shared memory ring buffers are **not supported**. Set
   `use_shm_when_possible = false` globally.
-- `fork()` is not available. DAQJobs run as threads instead of
-  processes.
+- `fork()` is not available, but DAQJobs still run as separate
+  `multiprocessing.Process` instances (using `spawn`), not as threads.
+  However, inter-process shared memory (ring buffer) is not supported.
 - Some hardware SDKs (CAEN, N1081B) are Linux-only.
 
 ---

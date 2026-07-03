@@ -63,7 +63,7 @@ it handles:
 from enrgdaq.daq.store.base import DAQJobStore
 
 class DAQJobStoreJSON(DAQJobStore):
-    config_type = DAQJobStoreJSONConfig  # Own job config
+    config_type = DAQJobStoreJSONConfig  # Defined in Step 5 below
     allowed_store_config_types = [DAQJobStoreConfigJSON]  # Producer config types
     allowed_message_in_types = [DAQJobMessageStore]  # Message types to accept
 ```
