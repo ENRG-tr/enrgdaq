@@ -1,7 +1,7 @@
 # Quickstart
 
 This guide gets you from zero to a running DAQ system in 5 minutes using the
-built-in `DAQJobTest` job. No hardware required.
+built-in `DAQJobTest` job.
 
 ---
 
@@ -19,11 +19,10 @@ Save the following as `configs/my_first_run/test_job.toml`:
 daq_job_type = "DAQJobTest"
 rand_min = 1
 rand_max = 100
-interval_seconds = 1.0
 
 [store_config.csv]
 file_path = "out/test_data.csv"
-add_date = true
+add_date = false
 overwrite = false
 ```
 
@@ -39,17 +38,6 @@ each job, and runs the message broker.
 ```bash
 uv run python src/run.py --daq-job-config-path configs/my_first_run
 ```
-
-You should see output like:
-
-```
-[INFO] Supervisor initializing...
-[INFO] Starting message broker...
-[INFO] Spawning DAQJobTest (jid=1)...
-[INFO] DAQJobTest (jid=1) started
-```
-
-The supervisor runs until you stop it with `Ctrl+C`.
 
 ---
 
@@ -80,27 +68,6 @@ are stopped gracefully.
 ---
 
 ## What just happened?
-
-```
-                    ┌─────────────────┐
-configs/            │   Supervisor     │
-  my_first_run/     │                  │
-    test_job.toml ─►│  ┌─────────────┐ │
-                    │  │ Msg Broker  │ │
-                    │  │ (XPUB/XSUB) │ │
-                    │  └──────┬──────┘ │
-                    │         │        │
-                    │  ┌──────▼──────┐ │
-                    │  │  DAQJobTest │ │
-                    │  │  (producer) │ │
-                    │  └──────┬──────┘ │
-                    │         │        │
-                    │  ┌──────▼──────┐ │
-                    │  │DAQJobStoreCSV│ │
-                    │  │  (consumer) │ │
-                    │  └─────────────┘ │
-                    └─────────────────┘
-```
 
 1. The supervisor read `test_job.toml`, created a `DAQJobTest` config,
    and spawned the job process.

@@ -151,8 +151,7 @@ compression_level = 5
 table_name = "sensor_data"
 ```
 
-MySQL connection parameters are read from environment variables or a local config.
-By default, the MySQL store connects to `localhost` with no password.
+MySQL connection parameters are set in the MySQL store job's own TOML config file (see [Storage Backends](../reference/storage-backends.md#mysql-store) for details).
 
 ### Redis store options
 
@@ -201,18 +200,17 @@ This config:
 
 ## Config discovery
 
-The supervisor scans the config directory recursively. Each `.toml` file becomes
-one DAQJob. You can organize configs however you like:
+The supervisor scans all `*.toml` files in the config directory. Each `.toml` file becomes
+one DAQJob. You can organize configs however you like, but note that only files directly
+in the specified directory are loaded (subdirectories are not scanned):
 
 ```
 configs/run_42/
   supervisor.toml
-  sensors/
-    digitizer.toml
-    camera.toml
-  storage/
-    csv_store.toml
-    root_store.toml
+  digitizer.toml
+  camera.toml
+  csv_store.toml
+  root_store.toml
 ```
 
 ---

@@ -98,15 +98,17 @@ with SQL querying.
 table_name = "sensor_data"
 ```
 
-Connection parameters are read from environment variables:
+Connection parameters are set in the MySQL store job's own TOML config file:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `MYSQL_HOST` | `localhost` | Database host |
-| `MYSQL_PORT` | `3306` | Database port |
-| `MYSQL_USER` | `root` | Database user |
-| `MYSQL_PASSWORD` | (empty) | Database password |
-| `MYSQL_DB` | `enrgdaq` | Database name |
+```toml
+# configs/store_mysql.toml
+daq_job_type = "DAQJobStoreMySQL"
+host = "localhost"
+user = "root"
+password = ""
+database = "enrgdaq"
+port = 3306
+```
 
 ### Features
 

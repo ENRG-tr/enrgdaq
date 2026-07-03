@@ -16,24 +16,27 @@ One row per DAQJob, updated in real time:
 
 | Column | Description |
 |--------|-------------|
-| `job_name` | DAQJob type name |
-| `unique_id` | Unique job instance identifier |
-| `supervisor_id` | Supervisor node name |
+| `supervisor` | Supervisor node ID |
+| `daq_job` | DAQJob type name |
+| `is_alive` | Whether the process is alive (true/false) |
+| `last_message_in_date` | Timestamp of last message received |
 | `message_in_count` | Total messages received |
+| `last_message_out_date` | Timestamp of last message sent |
 | `message_out_count` | Total messages sent |
-| `latency_avg_ms` | Average end-to-end message latency |
-| `latency_p95_ms` | 95th percentile latency |
-| `latency_p99_ms` | 99th percentile latency |
-| `cpu_percent` | Process CPU usage (%) |
-| `rss_mb` | Process RSS memory (MB) |
-| `is_alive` | Whether the process is alive (True/False) |
+| `message_in_queue_size` | Current message input queue depth |
+| `message_out_queue_size` | Current message output queue depth |
+| `last_restart_date` | Timestamp of last restart |
+| `restart_count` | Total number of restarts |
+
+Latency (avg, p95, p99), CPU percentage, and RSS memory are stored
+separately as timeseries data via the stats handler's `timeseries_store_config`.
 
 Example:
 
 ```csv
-job_name,unique_id,message_in_count,message_out_count,latency_avg_ms,cpu_percent,rss_mb,is_alive
-DAQJobCAENDigitizer,jid_1,0,15234,1.92,12.3,45.2,True
-DAQJobStoreROOT,jid_2,15234,0,0.00,8.1,120.7,True
+supervisor,daq_job,is_alive,last_message_in_date,message_in_count,restart_count
+lab-server-1,DAQJobCAENDigitizer,true,1749000000000,15234,0
+lab-server-1,DAQJobStoreROOT,true,1749000000000,15234,0
 ```
 
 ### stats_remote.csv: throughput summary
@@ -54,33 +57,38 @@ REST API for remote monitoring and control.
 
 ### Endpoints
 
+All endpoints are namespaced under `/clients/{client_id}/` where `client_id` is the
+supervisor ID of the target node.
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/status` | All supervisor and job status |
 | `GET` | `/clients` | List of connected CNC clients |
-| `GET` | `/jobs` | List of all running DAQJobs |
-| `GET` | `/clients` | List of connected supervisors |
-| `GET` | `/templates/configs` | JSON schemas for all job configs |
+| `GET` | `/clients/{id}/status` | Full supervisor and job status |
+| `GET` | `/clients/{id}/logs` | Recent log entries from the supervisor |
+| `GET` | `/templates/daqjobs` | JSON schemas for all job configs |
 | `GET` | `/templates/messages` | JSON schemas for all message types |
 | `GET` | `/templates/stores` | JSON schemas for all store configs |
-| `POST` | `/restart` | Restart the DAQ system |
-| `POST` | `/restart-daqjobs` | Restart specific DAQJobs |
-| `POST` | `/stop-daqjob` | Stop a specific DAQJob |
-| `POST` | `/run-daqjob` | Run a custom DAQJob ad-hoc |
-| `POST` | `/send-message` | Inject a message into the broker |
+| `POST` | `/clients/{id}/ping` | Ping a connected client |
+| `POST` | `/clients/{id}/restart_daq` | Restart the DAQ system |
+| `POST` | `/clients/{id}/stop_daqjobs` | Stop all DAQJobs |
+| `POST` | `/clients/{id}/stop_daqjob` | Stop a specific DAQJob |
+| `POST` | `/clients/{id}/run_custom_daqjob` | Run a custom DAQJob ad-hoc |
+| `POST` | `/clients/{id}/send_message` | Inject a message into the broker |
 
 ### Example: check system status
 
 ```bash
-curl http://localhost:8000/status | python -m json.tool
+curl http://localhost:8000/clients | python -m json.tool
+# Then use the client ID from the response:
+curl http://localhost:8000/clients/<supervisor_id>/status | python -m json.tool
 ```
 
-### Example: restart a specific job
+### Example: stop a specific job
 
 ```bash
-curl -X POST http://localhost:8000/restart-daqjobs \
+curl -X POST http://localhost:8000/clients/<supervisor_id>/stop_daqjob \
   -H "Content-Type: application/json" \
-  -d '{"daq_job_unique_ids": ["jid_1"]}'
+  -d '{"daq_job_unique_id": "<job_unique_id>"}'
 ```
 
 ---
