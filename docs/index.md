@@ -1,7 +1,7 @@
 # Welcome to ENRGDAQ
 
-**ENRGDAQ** is the data acquisition (DAQ) framework used by the ENRG collaboration for
-neutrino physics experiments. It handles the full pipeline — reading out hardware
+**ENRGDAQ** is the data acquisition (DAQ) framework used by the ENRG for
+neutrino physics experiments. It handles the full pipeline; reading out hardware
 sensors, processing data at multi-Gbps rates, and storing results for analysis.
 
 ---
