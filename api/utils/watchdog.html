@@ -177,7 +177,8 @@ to detect if a loop has stopped making progress.</p>
 If the loop doesn't reset the watchdog within the timeout period,
 the watchdog triggers and either signals the loop to exit or forces
 the process to terminate.</p>
-<h2 id="usage">Usage</h2>
+<p>Usage
+-----=</p>
 <h1 id="for-loops-that-can-check-is_triggered">For loops that can check is_triggered():</h1>
 <p>watchdog = Watchdog(timeout_seconds=60.0, logger=self._logger)</p>
 <p>try:
@@ -190,8 +191,9 @@ watchdog.reset()
 watchdog.stop()</p>
 <h1 id="for-loops-with-blocking-calls-that-may-hang">For loops with blocking calls that may hang:</h1>
 <p>watchdog = Watchdog(timeout_seconds=60.0, force_exit=True, logger=self._logger)</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>timeout_seconds</code></strong></dt>
 <dd>Time in seconds before the watchdog triggers.
 Set to 0 or negative to disable the watchdog.</dd>
@@ -267,8 +269,9 @@ def timeout_seconds(self) -&gt; float:
 </details>
 <div class="desc"><p>Check if the watchdog has been triggered.</p>
 <p>Use this as the loop exit condition.</p>
-<h2 id="returns">Returns</h2>
-<p>True if the watchdog has triggered and the loop should exit.</p></div>
+<p>Returns
+-----=
+True if the watchdog has triggered and the loop should exit.</p></div>
 </dd>
 <dt id="enrgdaq.utils.watchdog.Watchdog.reset"><code class="name flex">
 <span>def <span class="ident">reset</span></span>(<span>self) ‑> None</span>

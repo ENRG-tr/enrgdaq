@@ -216,7 +216,8 @@ el.replaceWith(d);
         app,
         host=cnc_instance.config.rest_api_host,
         port=cnc_instance.config.rest_api_port,
-        log_level=&#34;info&#34;,
+        log_level=&#34;warning&#34;,
+        access_log=False,
     )
     server = uvicorn.Server(config)
     rest_api_thread = threading.Thread(target=server.run, daemon=True)

@@ -73,8 +73,9 @@ el.replaceWith(d);
     topics_to_subscribe: list[str] = field(default_factory=list)</code></pre>
 </details>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
 <dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>
@@ -278,8 +279,9 @@ class DAQJobInfo:
         )</code></pre>
 </details>
 <div class="desc"><p>A class to represent the information of a DAQJob.</p>
-<h2 id="attributes">Attributes</h2>
-<p>daq_job_type : str
+<p>Attributes
+-----=
+daq_job_type : str
 The type of the DAQ job.
 unique_id : str
 A unique identifier for the DAQ job.
@@ -533,8 +535,9 @@ Measurements are in milliseconds.</p></div>
         pass</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The unique identifier for the message. Defaults to a UUID.</dd>
 <dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -781,8 +784,9 @@ def supervisor_id(self) -&gt; str:
     pass</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The unique identifier for the message. Defaults to a UUID.</dd>
 <dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -851,8 +855,9 @@ without a problem.</p></div>
 </details>
 <div class="desc"><p>DAQJobMessageRoutes is sent by the supervisor to the DAQJobProcess to
 set the routes for the DAQJobProcess.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>routes</code></strong> :&ensp;<code>RouteMapping</code></dt>
 <dd>route_key to queue mapping.</dd>
 </dl></div>
@@ -907,8 +912,9 @@ set the routes for the DAQJobProcess.</p>
     shm: SHMHandle</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The unique identifier for the message. Defaults to a UUID.</dd>
 <dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -1238,8 +1244,9 @@ def pre_send(self):
     reason: str</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The unique identifier for the message. Defaults to a UUID.</dd>
 <dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -1640,8 +1647,9 @@ def pre_send(self):
     is_alive: bool = True</code></pre>
 </details>
 <div class="desc"><p>A class to represent statistics for a DAQJob. Gets created and updated by Supervisor.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>message_in_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
 <dd>The statistics for incoming messages.</dd>
 <dt><strong><code>message_out_stats</code></strong> :&ensp;<code><a title="enrgdaq.daq.models.DAQJobStatsRecord" href="#enrgdaq.daq.models.DAQJobStatsRecord">DAQJobStatsRecord</a></code></dt>
@@ -1929,8 +1937,9 @@ def pre_send(self):
         self.last_updated = datetime.now()</code></pre>
 </details>
 <div class="desc"><p>A class to represent a record of statistics for a DAQJob.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>count</code></strong> :&ensp;<code>int</code></dt>
 <dd>The number of times the DAQJob has been called.</dd>
 <dt><strong><code>last_updated</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -2069,8 +2078,9 @@ def pre_send(self):
             self.topics.add(Topic.supervisor_internal(self.supervisor_id))</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessage is the base class for messages sent between DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>id</code></strong> :&ensp;<code>Optional[str]</code></dt>
 <dd>The unique identifier for the message. Defaults to a UUID.</dd>
 <dt><strong><code>timestamp</code></strong> :&ensp;<code>Optional[datetime]</code></dt>
@@ -2610,8 +2620,9 @@ The handle contains only metadata; the actual data remains in shared memory.</p>
     return table</code></pre>
 </details>
 <div class="desc"><p>Load PyArrow table from the ring buffer slot using zero-copy.</p>
-<h2 id="returns">Returns</h2>
 <dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code>pa.Table</code></dt>
 <dd>The PyArrow table (references shared memory directly).</dd>
 </dl></div>

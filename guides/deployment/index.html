@@ -23,7 +23,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -31,7 +31,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -1258,13 +1258,13 @@ On Windows, <code>tcp://127.0.0.1</code> with dynamic ports is used as a fallbac
 <p>The server exposes two ZMQ endpoints that clients connect to:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># server_supervisor.toml</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="k">[info]</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">supervisor_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;daq-server&quot;</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">supervisor_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;production&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;hub&quot;</span><span class="p">]</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">supervisor_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"daq-server"</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">supervisor_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"production"</span><span class="p">,</span><span class="w"> </span><span class="s2">"hub"</span><span class="p">]</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">[federation]</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:5560&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://0.0.0.0:5561&quot;</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="n">server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tcp://0.0.0.0:5560"</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="n">server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tcp://0.0.0.0:5561"</span><span class="w">   </span><span class="c1"># Bind to all interfaces</span>
 </code></pre></div>
 <p>The server runs its own DAQJobs in addition to forwarding messages:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/server/
@@ -1276,12 +1276,12 @@ directory — there is no separate <code>--supervisor-config</code> flag.</p>
 <p>Each client connects to the server's endpoints:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># client_supervisor.toml</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">[info]</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">supervisor_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;daq-client-1&quot;</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">supervisor_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;lab-bench-1&quot;</span><span class="p">]</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">supervisor_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"daq-client-1"</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">supervisor_tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">"lab-bench-1"</span><span class="p">]</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="k">[federation]</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">remote_server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:5560&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">remote_server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;tcp://192.168.1.10:5561&quot;</span><span class="w">  </span><span class="c1"># Server&#39;s IP</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="n">remote_server_xpub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tcp://192.168.1.10:5560"</span><span class="w">  </span><span class="c1"># Server's IP</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="n">remote_server_xsub_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tcp://192.168.1.10:5561"</span><span class="w">  </span><span class="c1"># Server's IP</span>
 </code></pre></div>
 <p>The client runs its own DAQJobs locally:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </span>src/run.py<span class="w"> </span>--daq-job-config-path<span class="w"> </span>configs/client/
@@ -1305,7 +1305,7 @@ default. To send data to a remote supervisor, the producer must set
 from a job to be globally visible, set <code>target_local_supervisor</code> in the
 store config:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">[store_config.csv]</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;data.csv&quot;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">file_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"data.csv"</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="c1"># Not directly settable in TOML — controlled by the job code</span>
 </code></pre></div>
 <p>Remote message routing in federation is handled by the
@@ -1320,7 +1320,7 @@ Configure CNC on both server and clients:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[cnc]</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">rest_api_enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">rest_api_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;0.0.0.0&quot;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">rest_api_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"0.0.0.0"</span>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">rest_api_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">8000</span>
 </code></pre></div>
 <p>Note: the default <code>rest_api_host</code> is <code>"localhost"</code>. Set to <code>"0.0.0.0"</code>
@@ -1328,7 +1328,7 @@ explicitly if you need remote access.</p>
 <p><strong>Client:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[cnc]</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">is_server</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">server_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;192.168.1.10&quot;</span><span class="w">   </span><span class="c1"># Server&#39;s IP</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">server_host</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"192.168.1.10"</span><span class="w">   </span><span class="c1"># Server's IP</span>
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">server_port</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1638</span>
 </code></pre></div>
 <p>The server's REST API at port 8000 provides a unified view of all
@@ -1437,7 +1437,7 @@ on different config directories with different federation ports:</p>
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.indexes", "toc.follow", "search.suggest", "search.highlight", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
         <script src="../../assets/mkdocs_puml/puml.js"></script>
       

@@ -89,8 +89,9 @@ el.replaceWith(d);
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>store_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a></code></dt>
 <dd>Configuration for the DAQ job store.</dd>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
@@ -334,8 +335,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
 </details>
 <div class="desc"><p>DAQJobMessageStorePyArrow is a high-performance message store using PyArrow's
 columnar format. Optimized for numerical data with zero-copy reads.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>table</code></strong> :&ensp;<code>pa.Table | None</code></dt>
 <dd>A PyArrow Table containing the columnar data.
 None when using zero-copy mode (handle is set instead).</dd>
@@ -517,8 +519,9 @@ When set, the table is loaded from shared memory using zero-copy.</dd>
     raise ValueError(&#34;Neither table nor handle is set&#34;)</code></pre>
 </details>
 <div class="desc"><p>Get the PyArrow table, loading from shared memory if using zero-copy.</p>
-<h2 id="returns">Returns</h2>
 <dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code>pa.Table</code></dt>
 <dd>The PyArrow table.</dd>
 </dl></div>
@@ -568,8 +571,9 @@ No-op if not using zero-copy mode.</p></div>
 </details>
 <div class="desc"><p>DAQJobMessageStoreRaw is a class that inherits from DAQJobMessageStore and represents
 a raw data message store for DAQ jobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>data</code></strong> :&ensp;<code>bytes</code></dt>
 <dd>The raw data associated with the DAQ job message.</dd>
 </dl></div>
@@ -616,8 +620,9 @@ a raw data message store for DAQ jobs.</p>
 </details>
 <div class="desc"><p>DAQJobMessageStore is a class that extends DAQJobMessage and is used to store
 configuration and data related to a DAQ (Data Acquisition) job.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>store_config</code></strong> :&ensp;<code><a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a></code></dt>
 <dd>Configuration for the DAQ job store.</dd>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
@@ -669,8 +674,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
     data_columns: Optional[dict[str, list[str | float | int] | ndarray]] = None</code></pre>
 </details>
 <div class="desc"><p>DAQJobMessageStoreTabular is a class that inherits from DAQJobMessageStore and represents a tabular data store for DAQ job messages.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>keys</code></strong> :&ensp;<code>list[str]</code></dt>
 <dd>A list of strings representing the keys or column names of the tabular data.</dd>
 <dt><strong><code>data</code></strong> :&ensp;<code>list[list[str | float | int]]</code></dt>
@@ -793,8 +799,9 @@ configuration and data related to a DAQ (Data Acquisition) job.</p>
         return store_type in self.store_types</code></pre>
 </details>
 <div class="desc"><p>Used to store the configuration of the DAQ Job Store, usually inside DAQJobConfig.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>csv</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigCSV" href="#enrgdaq.daq.store.models.DAQJobStoreConfigCSV">DAQJobStoreConfigCSV</a>]</code></dt>
 <dd>CSV store configuration.</dd>
 <dt><strong><code>root</code></strong> :&ensp;<code>Optional[<a title="enrgdaq.daq.store.models.DAQJobStoreConfigROOT" href="#enrgdaq.daq.store.models.DAQJobStoreConfigROOT">DAQJobStoreConfigROOT</a>]</code></dt>
@@ -1924,8 +1931,9 @@ that is expected to be extended by specific store configurations, such as CSV, M
     store_config: DAQJobStoreConfig</code></pre>
 </details>
 <div class="desc"><p>DAQJobConfig is the base configuration class for DAQJobs.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>verbosity</code></strong> :&ensp;<code>LogVerbosity</code></dt>
 <dd>The verbosity level for logging. Defaults to LogVerbosity.INFO.</dd>
 <dt><strong><code>daq_job_type</code></strong> :&ensp;<code>str</code></dt>

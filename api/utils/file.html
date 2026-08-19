@@ -98,21 +98,22 @@ el.replaceWith(d);
     return file_path</code></pre>
 </details>
 <div class="desc"><p>Modifies a file path by adding a date and/or a tag.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>file_path</code></strong> :&ensp;<code>str</code></dt>
 <dd>The original file path.</dd>
 <dt><strong><code>add_date</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Whether to add a date to the file path.</dd>
 <dt><strong><code>tag</code></strong> :&ensp;<code>str | None</code></dt>
 <dd>The tag to add to the file path.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code>str</code></dt>
 <dd>The modified file path.</dd>
 </dl>
-<h2 id="example">Example</h2>
+<p>Example
+-----=</p>
 <pre><code class="language-python-repl">&gt;&gt;&gt; modify_file_path(&quot;test.csv&quot;, True, &quot;tag1&quot;)
 '2023-01-01_test_tag1.csv'
 &gt;&gt;&gt; modify_file_path(&quot;boo/test.csv&quot;, True, &quot;tag2&quot;)

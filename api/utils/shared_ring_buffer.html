@@ -80,8 +80,9 @@ minimal memory copies.</p>
     )</code></pre>
 </details>
 <div class="desc"><p>Attach to an existing ring buffer (for use in child processes).</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>name</code></strong></dt>
 <dd>Name of the shared memory region.</dd>
 <dt><strong><code>total_size</code></strong></dt>
@@ -89,8 +90,9 @@ minimal memory copies.</p>
 <dt><strong><code>slot_size</code></strong></dt>
 <dd>Size per slot.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>A SharedMemoryRingBuffer attached to the existing shared memory.</p></div>
+<p>Returns
+-----=
+A SharedMemoryRingBuffer attached to the existing shared memory.</p></div>
 </dd>
 <dt id="enrgdaq.utils.shared_ring_buffer.cleanup_global_ring_buffer"><code class="name flex">
 <span>def <span class="ident">cleanup_global_ring_buffer</span></span>(<span>)</span>
@@ -154,8 +156,9 @@ minimal memory copies.</p>
 </details>
 <div class="desc"><p>Get or create the global ring buffer singleton.</p>
 <p>This is lazily initialized on first access.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>name</code></strong></dt>
 <dd>Name for the shared memory region.</dd>
 <dt><strong><code>total_size</code></strong></dt>
@@ -163,8 +166,9 @@ minimal memory copies.</p>
 <dt><strong><code>slot_size</code></strong></dt>
 <dd>Size per slot (only used on first call).</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>The global SharedMemoryRingBuffer instance.</p></div>
+<p>Returns
+-----=
+The global SharedMemoryRingBuffer instance.</p></div>
 </dd>
 <dt id="enrgdaq.utils.shared_ring_buffer.get_global_ring_buffer_stats"><code class="name flex">
 <span>def <span class="ident">get_global_ring_buffer_stats</span></span>(<span>) ‑> tuple[int, int]</span>
@@ -571,8 +575,9 @@ processes.</p>
 <p>The buffer is designed for single-producer, single-consumer scenarios
 but supports multiple consumers through reference counting.</p>
 <p>Initialize or attach to a shared memory ring buffer.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>name</code></strong></dt>
 <dd>Unique name for the shared memory region.</dd>
 <dt><strong><code>total_size</code></strong></dt>
@@ -691,13 +696,15 @@ but supports multiple consumers through reference counting.</p>
     return None</code></pre>
 </details>
 <div class="desc"><p>Allocate a slot that can hold the required size.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>required_size</code></strong></dt>
 <dd>Minimum size needed in bytes.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>RingBufferSlot if allocation successful, None if no slots available
+<p>Returns
+-----=
+RingBufferSlot if allocation successful, None if no slots available
 or size too large.</p></div>
 </dd>
 <dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.cleanup"><code class="name flex">
@@ -777,8 +784,9 @@ or size too large.</p></div>
     return {&#34;free&#34;: free, &#34;writing&#34;: writing, &#34;ready&#34;: ready}</code></pre>
 </details>
 <div class="desc"><p>Get the number of slots in each state.</p>
-<h2 id="returns">Returns</h2>
-<p>dict with keys 'free', 'writing', 'ready' and their counts.</p></div>
+<p>Returns
+-----=
+dict with keys 'free', 'writing', 'ready' and their counts.</p></div>
 </dd>
 <dt id="enrgdaq.utils.shared_ring_buffer.SharedMemoryRingBuffer.get_slot_view"><code class="name flex">
 <span>def <span class="ident">get_slot_view</span></span>(<span>self, slot_index: int) ‑> memoryview</span>

@@ -273,13 +273,13 @@ def daq_job_direct(unique_id: str) -&gt; str:
     return f&#34;{Topic.DAQ_JOB}.{unique_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for direct messages to a specific DAQJob instance.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>unique_id</code></strong></dt>
 <dd>The job's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>daq_job.{unique_id}</dd>
 </dl></div>
@@ -320,13 +320,13 @@ def stats_combined(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.STATS}.combined.supervisor.{supervisor_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for combined stats messages from DAQJobs to stats handler.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>stats.combined.supervisor.{supervisor_id}</dd>
 </dl></div>
@@ -350,8 +350,9 @@ def stats_prefix() -&gt; str:
     return Topic.STATS</code></pre>
 </details>
 <div class="desc"><p>Topic prefix for stats handler subscription (receives all stats).</p>
-<h2 id="returns">Returns</h2>
 <dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>stats</dd>
 </dl></div>
@@ -378,13 +379,13 @@ def stats_supervisor(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.STATS}.supervisor.{supervisor_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for stats messages from DAQJobs to stats handler.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>stats.supervisor.{supervisor_id}</dd>
 </dl></div>
@@ -411,13 +412,13 @@ def store(store_class_name: str) -&gt; str:
     return f&#34;{Topic.STORE}.{store_class_name}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for messages routed to a specific store type.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>store_class_name</code></strong></dt>
 <dd>The store class name (e.g., DAQJobStoreCSV).</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>store.{store_class_name}</dd>
 </dl></div>
@@ -445,15 +446,15 @@ def store_supervisor(supervisor_id: str, store_class_name: str) -&gt; str:
     return f&#34;{Topic.STORE}.supervisor.{supervisor_id}.{store_class_name}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for messages routed to a specific store type for a specific supervisor.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
 <dt><strong><code>store_class_name</code></strong></dt>
 <dd>The store class name (e.g., DAQJobStoreCSV).</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>store.supervisor.{supervisor_id}.{store_class_name}</dd>
 </dl></div>
@@ -480,13 +481,13 @@ def supervisor_broadcast(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.SUPERVISOR}.{supervisor_id}.{Topic.DAQ_JOB}.{Topic.BROADCAST}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for broadcasting to all DAQJobs under a supervisor.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>supervisor.{supervisor_id}.daq_job.broadcast</dd>
 </dl></div>
@@ -513,13 +514,13 @@ def supervisor_internal(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.SUPERVISOR}.{supervisor_id}.{Topic.INTERNAL}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for internal supervisor messages (e.g., routes, job started).</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>supervisor.{supervisor_id}.internal</dd>
 </dl></div>
@@ -546,13 +547,13 @@ def traces(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.TRACES}.supervisor.{supervisor_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for trace messages from DAQJobs to trace handler.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>traces.supervisor.{supervisor_id}</dd>
 </dl></div>
@@ -579,13 +580,13 @@ def traces_combined(supervisor_id: str) -&gt; str:
     return f&#34;{Topic.TRACES}.combined.supervisor.{supervisor_id}&#34;</code></pre>
 </details>
 <div class="desc"><p>Topic for combined trace messages from trace handler.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>supervisor_id</code></strong></dt>
 <dd>The supervisor's unique identifier.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code><a title="enrgdaq.daq.topics.Topic" href="#enrgdaq.daq.topics.Topic">Topic</a> string</code></dt>
 <dd>traces.combined.supervisor.{supervisor_id}</dd>
 </dl></div>

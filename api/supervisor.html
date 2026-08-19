@@ -614,8 +614,9 @@ class RestartDAQJobSchedule:
 </details>
 <div class="desc"><p>Supervisor class responsible for managing DAQ job threads, handling their lifecycle,
 and facilitating communication between them.</p>
-<h2 id="attributes">Attributes</h2>
 <dl>
+<dt>Attributes</dt>
+<dt>-----=</dt>
 <dt><strong><code>config</code></strong> :&ensp;<code>SupervisorConfig | None</code></dt>
 <dd>Configuration for the supervisor.</dd>
 <dt><strong><code>daq_job_processes</code></strong> :&ensp;<code>list[DAQJobProcess]</code></dt>
@@ -728,13 +729,13 @@ def supervisor_id(self):
     return res</code></pre>
 </details>
 <div class="desc"><p>Gets the restart schedules for the dead threads.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>dead_processes</code></strong> :&ensp;<code>list[DAQJobProcess]</code></dt>
 <dd>List of dead processes.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code>list[<a title="enrgdaq.supervisor.RestartDAQJobSchedule" href="#enrgdaq.supervisor.RestartDAQJobSchedule">RestartDAQJobSchedule</a>]</code></dt>
 <dd>List of restart schedules.</dd>
 </dl></div>
@@ -774,8 +775,9 @@ def supervisor_id(self):
     )</code></pre>
 </details>
 <div class="desc"><p>Gets the status of the supervisor and its DAQ jobs.</p>
-<h2 id="returns">Returns</h2>
 <dl>
+<dt>Returns</dt>
+<dt>-----=</dt>
 <dt><code>SupervisorStatus</code></dt>
 <dd>A struct containing the status.</dd>
 </dl></div>

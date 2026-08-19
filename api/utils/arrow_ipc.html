@@ -77,13 +77,15 @@ to/from shared memory buffers without intermediate copies.</p>
 <div class="desc"><p>Calculate the size needed to serialize a PyArrow table in IPC format.</p>
 <p>This includes schema overhead, so the actual size may vary slightly.
 We add a buffer for safety.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>table</code></strong></dt>
 <dd>The PyArrow table to measure.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>Estimated size in bytes.</p></div>
+<p>Returns
+-----=
+Estimated size in bytes.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.ipc_bytes_to_table"><code class="name flex">
 <span>def <span class="ident">ipc_bytes_to_table</span></span>(<span>data: bytes) ‑> pyarrow.lib.Table</span>
@@ -110,13 +112,15 @@ We add a buffer for safety.</p>
 </details>
 <div class="desc"><p>Deserialize a PyArrow table from IPC bytes.</p>
 <p>This is a fallback for when zero-copy is not available.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>data</code></strong></dt>
 <dd>Bytes containing the IPC-serialized table.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>The deserialized PyArrow Table.</p></div>
+<p>Returns
+-----=
+The deserialized PyArrow Table.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.read_table_from_address"><code class="name flex">
 <span>def <span class="ident">read_table_from_address</span></span>(<span>address: int, size: int, base: object) ‑> pyarrow.lib.Table</span>
@@ -149,8 +153,9 @@ We add a buffer for safety.</p>
 <div class="desc"><p>Read a PyArrow table from a memory address using zero-copy.</p>
 <p>This is useful when you have the raw memory address (e.g., from
 get_slot_address) rather than a memoryview.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>address</code></strong></dt>
 <dd>Memory address of the IPC data.</dd>
 <dt><strong><code>size</code></strong></dt>
@@ -159,8 +164,9 @@ get_slot_address) rather than a memoryview.</p>
 <dd>Python object to keep alive (prevents garbage collection
 of the underlying memory).</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>A PyArrow Table that references the memory directly.</p></div>
+<p>Returns
+-----=
+A PyArrow Table that references the memory directly.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.read_table_from_buffer"><code class="name flex">
 <span>def <span class="ident">read_table_from_buffer</span></span>(<span>buffer: memoryview, size: int) ‑> pyarrow.lib.Table</span>
@@ -206,17 +212,20 @@ of the underlying memory).</dd>
 <div class="desc"><p>Read a PyArrow table from a buffer using zero-copy.</p>
 <p>This uses pa.foreign_buffer to wrap the shared memory, allowing
 PyArrow to read directly from the memory without copying.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>buffer</code></strong></dt>
 <dd>A memoryview containing the IPC data.</dd>
 <dt><strong><code>size</code></strong></dt>
 <dd>Number of bytes of valid data in the buffer.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>A PyArrow Table that references the shared memory directly.</p>
-<h2 id="important">Important</h2>
-<p>The returned table references the shared memory buffer. The buffer
+<p>Returns
+-----=
+A PyArrow Table that references the shared memory directly.</p>
+<p>Important
+-----=
+The returned table references the shared memory buffer. The buffer
 must remain valid for as long as the table is in use.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.table_to_ipc_bytes"><code class="name flex">
@@ -248,13 +257,15 @@ must remain valid for as long as the table is in use.</p></div>
 <div class="desc"><p>Serialize a PyArrow table to bytes using IPC format.</p>
 <p>This is a fallback for when zero-copy is not available.
 Creates a copy of the data.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>table</code></strong></dt>
 <dd>The PyArrow table to serialize.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>Bytes containing the IPC-serialized table.</p></div>
+<p>Returns
+-----=
+Bytes containing the IPC-serialized table.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.try_zero_copy_pyarrow"><code class="name flex">
 <span>def <span class="ident">try_zero_copy_pyarrow</span></span>(<span>table: pyarrow.lib.Table, store_config: Any, tag: Any) ‑> tuple['RingBufferHandle | None', bool]</span>
@@ -328,8 +339,9 @@ Creates a copy of the data.</p>
         return None, False</code></pre>
 </details>
 <div class="desc"><p>Try to write a PyArrow table to the ring buffer for zero-copy transfer.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>table</code></strong></dt>
 <dd>The PyArrow table to transfer.</dd>
 <dt><strong><code>store_config</code></strong></dt>
@@ -337,8 +349,9 @@ Creates a copy of the data.</p>
 <dt><strong><code>tag</code></strong></dt>
 <dd>The tag to copy to the new message.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>A tuple of (RingBufferHandle or None, success: bool).
+<p>Returns
+-----=
+A tuple of (RingBufferHandle or None, success: bool).
 If successful, returns the handle; otherwise returns None.</p></div>
 </dd>
 <dt id="enrgdaq.utils.arrow_ipc.write_table_to_buffer"><code class="name flex">
@@ -380,17 +393,20 @@ If successful, returns the handle; otherwise returns None.</p></div>
 </details>
 <div class="desc"><p>Write a PyArrow table to a buffer using Arrow IPC streaming format.</p>
 <p>The table is serialized directly into the provided buffer memory.</p>
-<h2 id="args">Args</h2>
 <dl>
+<dt>Args</dt>
+<dt>-----=</dt>
 <dt><strong><code>table</code></strong></dt>
 <dd>The PyArrow table to write.</dd>
 <dt><strong><code>buffer</code></strong></dt>
 <dd>A memoryview providing the destination memory.</dd>
 </dl>
-<h2 id="returns">Returns</h2>
-<p>Number of bytes written.</p>
-<h2 id="raises">Raises</h2>
+<p>Returns
+-----=
+Number of bytes written.</p>
 <dl>
+<dt>Raises</dt>
+<dt>-----=</dt>
 <dt><code>ValueError</code></dt>
 <dd>If the buffer is too small.</dd>
 </dl></div>
