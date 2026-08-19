@@ -187,7 +187,8 @@ def start_rest_api(cnc_instance):
         app,
         host=cnc_instance.config.rest_api_host,
         port=cnc_instance.config.rest_api_port,
-        log_level="info",
+        log_level="warning",
+        access_log=False,
     )
     server = uvicorn.Server(config)
     rest_api_thread = threading.Thread(target=server.run, daemon=True)
