@@ -1,7 +1,11 @@
-# ENRGDAQ
+<p align="center">
+    <img width="256" height="256" alt="ENRGDAQ Logo" src="https://github.com/user-attachments/assets/fb92040b-7022-43a1-a5bb-cf0072047fce" />
+</p>
 
-Data acquisition framework for neutrino physics experiments.
-Handles readout, processing, and storage at multi-Gbps rates.
+<p align="center">
+    <strong>ENRGDAQ:</strong> Data acquisition framework for neutrino physics experiments. <br />
+    Handles readout, processing, and storage at multi-Gbps rates.
+</p>
 
 ## Quick start
 
