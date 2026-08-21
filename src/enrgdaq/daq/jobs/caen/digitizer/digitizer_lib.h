@@ -22,6 +22,11 @@ typedef struct
     int16_t min_value_mv;       // Minimum value_mv
     int16_t max_value_mv;       // Maximum value_mv
 
+    // Raw value statistics (adc*1000/1024, no baseline subtraction)
+    long sum_raw_value_mv;
+    int16_t min_raw_value_mv;
+    int16_t max_raw_value_mv;
+
     // Filter statistics
     long samples_filtered_out;  // Samples that didn't pass the threshold filter
     long total_samples_raw;     // Total raw samples before filtering

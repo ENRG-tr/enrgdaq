@@ -70,6 +70,14 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
         {
             uint16_t sample_value = args.event_copy->Waveforms[ch][i];
 
+            // Raw mV without baseline subtraction
+            int16_t raw_mV = (sample_value * 1000) / 1024;
+            args.stats->sum_raw_value_mv += raw_mV;
+            if (raw_mV < args.stats->min_raw_value_mv)
+                args.stats->min_raw_value_mv = raw_mV;
+            if (raw_mV > args.stats->max_raw_value_mv)
+                args.stats->max_raw_value_mv = raw_mV;
+
             // Calculate value_mv: (sample_value - baseline) * 1000 / 1024
             int16_t value_mv = (((int16_t)(sample_value - pre_trigger_baseline)) * 1000) / 1024;
 
@@ -132,6 +140,8 @@ void *processing_thread_func(void *arg)
     AcquisitionStats_t stats = {0};
     stats.min_value_mv = INT16_MAX;
     stats.max_value_mv = INT16_MIN;
+    stats.min_raw_value_mv = INT16_MAX;
+    stats.max_raw_value_mv = INT16_MIN;
 
     time_t last_log_time = time(NULL);
     time_t last_send_time = time(NULL);  // Track last buffer send time
@@ -216,6 +226,8 @@ void *processing_thread_func(void *arg)
             stats = (const AcquisitionStats_t){0};
             stats.min_value_mv = INT16_MAX;
             stats.max_value_mv = INT16_MIN;
+            stats.min_raw_value_mv = INT16_MAX;
+            stats.max_raw_value_mv = INT16_MIN;
             last_log_time = time(NULL);
         }
     }

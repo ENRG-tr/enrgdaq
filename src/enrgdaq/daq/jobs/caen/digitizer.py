@@ -170,6 +170,10 @@ class AcquisitionStatsRaw(ct.Structure):
         ("sum_value_mv_squared", ct.c_long),
         ("min_value_mv", ct.c_int16),
         ("max_value_mv", ct.c_int16),
+        # Raw value statistics (adc*1000/1024)
+        ("sum_raw_value_mv", ct.c_long),
+        ("min_raw_value_mv", ct.c_int16),
+        ("max_raw_value_mv", ct.c_int16),
         # Filter statistics
         ("samples_filtered_out", ct.c_long),
         ("total_samples_raw", ct.c_long),
@@ -190,6 +194,10 @@ class AcquisitionStats(Struct):
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -202,8 +210,11 @@ class AcquisitionStats(Struct):
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples > 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw > 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -212,6 +223,9 @@ class AcquisitionStats(Struct):
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -536,6 +550,10 @@ class DAQJobCAENDigitizer(DAQJob):
                 "sum_value_mv_squared": [stats.sum_value_mv_squared],
                 "min_value_mv": [stats.min_value_mv],
                 "max_value_mv": [stats.max_value_mv],
+                # Raw value statistics (adc*1000/1024)
+                "mean_raw_value_mv": [stats.mean_raw_value_mv],
+                "min_raw_value_mv": [stats.min_raw_value_mv],
+                "max_raw_value_mv": [stats.max_raw_value_mv],
                 # Filter statistics
                 "samples_filtered_out": [stats.samples_filtered_out],
                 "total_samples_raw": [stats.total_samples_raw],
