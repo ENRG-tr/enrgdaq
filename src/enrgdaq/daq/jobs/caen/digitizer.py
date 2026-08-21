@@ -123,6 +123,9 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     after the DAQ job is stopped.
     """
 
+    sw_trigger_interval_ms: int | None = None
+    """Auto SW trigger interval in ms. None or <=0 disables."""
+
 
 DIGITIZER_C_DLL_PATH = "./src/enrgdaq/daq/jobs/caen/digitizer/libdigitizer.so"
 
@@ -293,6 +296,10 @@ class DAQJobCAENDigitizer(DAQJob):
         self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
         self._converting_npy_lz4 = False
 
+        # auto SW trigger
+        self._sw_trigger_thread: threading.Thread | None = None
+        self._sw_trigger_stop_event = threading.Event()
+
     def start(self):
         if self._writer_thread:
             self._writer_thread.start()
@@ -346,6 +353,7 @@ class DAQJobCAENDigitizer(DAQJob):
         return True
 
     def _run_acquisition(self, device: dgtz.Device):
+        sw_thread = None
         try:
             self.board_info = device.get_info()
             self._configure_device(device, self.board_info)
@@ -360,11 +368,41 @@ class DAQJobCAENDigitizer(DAQJob):
             args.waveform_callback = self._waveform_callback_delegate
             args.stats_callback = self._stats_callback_delegate
 
+            # start auto SW trigger thread if configured
+            interval = self.config.sw_trigger_interval_ms
+            if interval is not None and interval > 0:
+                if self.config.sw_trigger_mode == dgtz.TriggerMode.DISABLED:
+                    self._logger.warning(
+                        "sw_trigger_interval_ms set but sw_trigger_mode is DISABLED"
+                    )
+                self._sw_trigger_stop_event.clear()
+                sw_thread = threading.Thread(
+                    target=self._sw_trigger_loop, args=(device, interval), daemon=True
+                )
+                self._sw_trigger_thread = sw_thread
+                sw_thread.start()
+                self._logger.info(f"Auto SW trigger every {interval} ms")
+
             self._lib.run_acquisition(ct.pointer(args))
         except Exception as e:
             self._logger.error(
                 f"Error during C-based acquisition setup: {e}", exc_info=True
             )
+        finally:
+            if sw_thread is not None:
+                self._sw_trigger_stop_event.set()
+                sw_thread.join(timeout=1.0)
+                self._sw_trigger_thread = None
+
+    def _sw_trigger_loop(self, device: dgtz.Device, interval_ms: int):
+        interval_s = interval_ms / 1000.0
+        while not self._sw_trigger_stop_event.wait(interval_s):
+            if self._has_been_freed:
+                break
+            try:
+                device.send_sw_trigger()
+            except Exception as e:
+                self._logger.warning(f"SW trigger failed: {e}")
 
     def _configure_device(self, device: dgtz.Device, info: dgtz.BoardInfo):
         """
@@ -517,6 +555,11 @@ class DAQJobCAENDigitizer(DAQJob):
         )
 
     def _stop_acquisition(self):
+        # stop auto trigger thread if running
+        if self._sw_trigger_thread is not None:
+            self._sw_trigger_stop_event.set()
+            self._sw_trigger_thread.join(timeout=1.0)
+            self._sw_trigger_thread = None
         if self._writer_thread and self._writer_queue:
             self._logger.info("Stopping writer thread...")
             self._writer_queue.put(None)
