@@ -91,7 +91,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats"><code class="flex name class">
 <span>class <span class="ident">AcquisitionStats</span></span>
-<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int)</span>
+<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>mean_raw_value_mv: float,<br>min_raw_value_mv: int,<br>max_raw_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -107,6 +107,10 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -119,8 +123,11 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -129,6 +136,9 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -267,6 +277,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -279,8 +293,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -289,6 +306,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -314,6 +334,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -326,8 +350,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -336,6 +363,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -361,6 +391,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -373,8 +407,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -383,6 +420,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -408,6 +448,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -420,8 +464,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -430,6 +477,66 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_raw_value_mv"><code class="name">var <span class="ident">max_raw_value_mv</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
+
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -455,6 +562,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -467,8 +578,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -477,6 +591,66 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_raw_value_mv"><code class="name">var <span class="ident">mean_raw_value_mv</span> : float</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
+
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -502,6 +676,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -514,8 +692,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -524,6 +705,66 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_raw_value_mv"><code class="name">var <span class="ident">min_raw_value_mv</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
+
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -549,6 +790,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -561,8 +806,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -571,6 +819,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -596,6 +847,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -608,8 +863,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -618,6 +876,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -643,6 +904,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -655,8 +920,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -665,6 +933,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -690,6 +961,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -702,8 +977,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -712,6 +990,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -737,6 +1018,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -749,8 +1034,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -759,6 +1047,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -784,6 +1075,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     sum_value_mv_squared: int
     min_value_mv: int
     max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
     # Filter statistics
     samples_filtered_out: int
     total_samples_raw: int
@@ -796,8 +1091,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
         mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
         if raw.acq_samples &gt; 0:
             mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
 
         return cls(
             acq_events=raw.acq_events,
@@ -806,6 +1104,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
             max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
             samples_filtered_out=raw.samples_filtered_out,
             total_samples_raw=raw.total_samples_raw,
             events_dropped=raw.events_dropped,
@@ -837,6 +1138,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         (&#34;sum_value_mv_squared&#34;, ct.c_long),
         (&#34;min_value_mv&#34;, ct.c_int16),
         (&#34;max_value_mv&#34;, ct.c_int16),
+        # Raw value statistics (adc*1000/1024)
+        (&#34;sum_raw_value_mv&#34;, ct.c_long),
+        (&#34;min_raw_value_mv&#34;, ct.c_int16),
+        (&#34;max_raw_value_mv&#34;, ct.c_int16),
         # Filter statistics
         (&#34;samples_filtered_out&#34;, ct.c_long),
         (&#34;total_samples_raw&#34;, ct.c_long),
@@ -871,7 +1176,15 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_raw_value_mv"><code class="name">var <span class="ident">max_raw_value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv"><code class="name">var <span class="ident">max_value_mv</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_raw_value_mv"><code class="name">var <span class="ident">min_raw_value_mv</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
@@ -888,6 +1201,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out"><code class="name">var <span class="ident">samples_filtered_out</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_raw_value_mv"><code class="name">var <span class="ident">sum_raw_value_mv</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
@@ -1298,6 +1615,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
                 &#34;sum_value_mv_squared&#34;: [stats.sum_value_mv_squared],
                 &#34;min_value_mv&#34;: [stats.min_value_mv],
                 &#34;max_value_mv&#34;: [stats.max_value_mv],
+                # Raw value statistics (adc*1000/1024)
+                &#34;mean_raw_value_mv&#34;: [stats.mean_raw_value_mv],
+                &#34;min_raw_value_mv&#34;: [stats.min_raw_value_mv],
+                &#34;max_raw_value_mv&#34;: [stats.max_raw_value_mv],
                 # Filter statistics
                 &#34;samples_filtered_out&#34;: [stats.samples_filtered_out],
                 &#34;total_samples_raw&#34;: [stats.total_samples_raw],
@@ -2971,8 +3292,11 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count">buffer_flush_count</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped">events_dropped</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw">from_raw</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_raw_value_mv">max_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv">max_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_raw_value_mv">mean_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.mean_value_mv">mean_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_raw_value_mv">min_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv">min_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us">processing_time_us</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth">queue_depth</a></code></li>
@@ -2988,11 +3312,14 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples">acq_samples</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count">buffer_flush_count</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped">events_dropped</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_raw_value_mv">max_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv">max_value_mv</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_raw_value_mv">min_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv">min_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us">processing_time_us</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth">queue_depth</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out">samples_filtered_out</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_raw_value_mv">sum_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv">sum_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv_squared" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv_squared">sum_value_mv_squared</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.total_samples_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.total_samples_raw">total_samples_raw</a></code></li>
