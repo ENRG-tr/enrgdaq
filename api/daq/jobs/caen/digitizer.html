@@ -1058,6 +1058,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         self._stats_callback_delegate = STATS_CALLBACK_FUNC(self._stats_callback)
         self._converting_npy_lz4 = False
 
+        # auto SW trigger
+        self._sw_trigger_thread: threading.Thread | None = None
+        self._sw_trigger_stop_event = threading.Event()
+
     def start(self):
         if self._writer_thread:
             self._writer_thread.start()
@@ -1111,6 +1115,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return True
 
     def _run_acquisition(self, device: dgtz.Device):
+        sw_thread = None
         try:
             self.board_info = device.get_info()
             self._configure_device(device, self.board_info)
@@ -1125,11 +1130,41 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             args.waveform_callback = self._waveform_callback_delegate
             args.stats_callback = self._stats_callback_delegate
 
+            # start auto SW trigger thread if configured
+            interval = self.config.sw_trigger_interval_ms
+            if interval is not None and interval &gt; 0:
+                if self.config.sw_trigger_mode == dgtz.TriggerMode.DISABLED:
+                    self._logger.warning(
+                        &#34;sw_trigger_interval_ms set but sw_trigger_mode is DISABLED&#34;
+                    )
+                self._sw_trigger_stop_event.clear()
+                sw_thread = threading.Thread(
+                    target=self._sw_trigger_loop, args=(device, interval), daemon=True
+                )
+                self._sw_trigger_thread = sw_thread
+                sw_thread.start()
+                self._logger.info(f&#34;Auto SW trigger every {interval} ms&#34;)
+
             self._lib.run_acquisition(ct.pointer(args))
         except Exception as e:
             self._logger.error(
                 f&#34;Error during C-based acquisition setup: {e}&#34;, exc_info=True
             )
+        finally:
+            if sw_thread is not None:
+                self._sw_trigger_stop_event.set()
+                sw_thread.join(timeout=1.0)
+                self._sw_trigger_thread = None
+
+    def _sw_trigger_loop(self, device: dgtz.Device, interval_ms: int):
+        interval_s = interval_ms / 1000.0
+        while not self._sw_trigger_stop_event.wait(interval_s):
+            if self._has_been_freed:
+                break
+            try:
+                device.send_sw_trigger()
+            except Exception as e:
+                self._logger.warning(f&#34;SW trigger failed: {e}&#34;)
 
     def _configure_device(self, device: dgtz.Device, info: dgtz.BoardInfo):
         &#34;&#34;&#34;
@@ -1282,6 +1317,11 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         )
 
     def _stop_acquisition(self):
+        # stop auto trigger thread if running
+        if self._sw_trigger_thread is not None:
+            self._sw_trigger_stop_event.set()
+            self._sw_trigger_thread.join(timeout=1.0)
+            self._sw_trigger_thread = None
         if self._writer_thread and self._writer_queue:
             self._logger.info(&#34;Stopping writer thread...&#34;)
             self._writer_queue.put(None)
@@ -1382,7 +1422,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobCAENDigitizerConfig</span></span>
-<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold_mv: int = 100,<br>channel_self_trigger_channel_mask: int = 0,<br>trigger_polarity: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a> = TriggerPolarity.ON_RISING_EDGE,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>ext_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>filter_threshold_mv: int = 50,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>baseline_position: <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a> = BaselinePosition.TOP,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>restart_driver_command: str | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
+<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold_mv: int = 100,<br>channel_self_trigger_channel_mask: int = 0,<br>trigger_polarity: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a> = TriggerPolarity.ON_RISING_EDGE,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>ext_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>filter_threshold_mv: int = 50,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>baseline_position: <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a> = BaselinePosition.TOP,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>restart_driver_command: str | None = None,<br>sw_trigger_interval_ms: int | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1426,7 +1466,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>Configuration class for the CAEN Digitizer DAQ Job.</p></div>
 <h3>Ancestors</h3>
@@ -1480,7 +1523,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1527,7 +1573,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1574,7 +1623,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1621,7 +1673,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1668,7 +1723,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1715,7 +1773,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1762,7 +1823,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1809,7 +1873,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1856,7 +1923,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1903,7 +1973,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1950,7 +2023,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -1997,7 +2073,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2044,7 +2123,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2091,7 +2173,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2138,7 +2223,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2185,7 +2273,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2232,7 +2323,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"><p>Command to restart the driver. If provided, the driver will be restarted
 after the DAQ job is stopped.</p></div>
@@ -2280,7 +2374,10 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2327,9 +2424,62 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_interval_ms"><code class="name">var <span class="ident">sw_trigger_interval_ms</span> : int | None</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
+    channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
+    ext_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
+    save_npy_lz4: bool = False
+    output_filename: str | None = None
+
+    restart_driver_command: str | None = None
+    &#34;&#34;&#34;
+    Command to restart the driver. If provided, the driver will be restarted
+    after the DAQ job is stopped.
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"><p>Auto SW trigger interval in ms. None or &lt;=0 disables.</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode"><code class="name">var <span class="ident">sw_trigger_mode</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a></code></dt>
 <dd>
@@ -2374,7 +2524,10 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2421,7 +2574,10 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2468,7 +2624,10 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2515,7 +2674,10 @@ after the DAQ job is stopped.</p></div>
     &#34;&#34;&#34;
     Command to restart the driver. If provided, the driver will be restarted
     after the DAQ job is stopped.
-    &#34;&#34;&#34;</code></pre>
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
 </details>
 <div class="desc"></div>
 </dd>
@@ -2877,6 +3039,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.restart_driver_command" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.restart_driver_command">restart_driver_command</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.save_npy_lz4">save_npy_lz4</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.stats_store_config">stats_store_config</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_interval_ms" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_interval_ms">sw_trigger_interval_ms</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.sw_trigger_mode">sw_trigger_mode</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.trigger_polarity" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.trigger_polarity">trigger_polarity</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.vme_base_address">vme_base_address</a></code></li>
