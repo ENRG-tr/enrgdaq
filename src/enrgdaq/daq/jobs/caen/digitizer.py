@@ -164,9 +164,10 @@ class WaveformSamplesRaw(ct.Structure):
 
 class AcquisitionStatsRaw(ct.Structure):
     _fields_ = [
-        # Basic counts
+        # Basic counts (acq_events/acq_samples count events passing the peak cut)
         ("acq_events", ct.c_long),
         ("acq_samples", ct.c_long),
+        ("raw_events", ct.c_long),
         # Value statistics (in mV)
         ("sum_value_mv", ct.c_long),
         ("sum_value_mv_squared", ct.c_long),
@@ -189,9 +190,10 @@ class AcquisitionStatsRaw(ct.Structure):
 
 
 class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -224,6 +226,7 @@ class AcquisitionStats(Struct):
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -554,6 +557,7 @@ class DAQJobCAENDigitizer(DAQJob):
                 # Basic counts
                 "acq_events": [stats.acq_events],
                 "acq_samples": [stats.acq_samples],
+                "raw_events": [stats.raw_events],
                 # Value statistics (in mV)
                 "mean_value_mv": [stats.mean_value_mv],
                 "sum_value_mv_squared": [stats.sum_value_mv_squared],

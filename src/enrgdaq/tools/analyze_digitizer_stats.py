@@ -34,7 +34,10 @@ def load_stats(csv_path: str) -> pd.DataFrame:
     # and we want to see how close we are to saturation.
     # Actually, a better proxy for "System Busy" in this context might be simpler:
     # Just show the Raw Rate itself as "Input Flux".
-    df['raw_rate_hz'] = df['total_samples_raw']  # Since it's per second
+    if 'raw_events' in df.columns:
+        df['raw_rate_hz'] = df['raw_events']  # Hardware events/s before peak cut
+    else:
+        df['raw_rate_hz'] = df['total_samples_raw']  # Legacy fallback
     
     # 3. RMS (Energy/Stability)
     df['rms_mv'] = np.sqrt(df['sum_value_mv_squared'] / df['acq_samples'].replace(0, np.nan))

@@ -12,9 +12,10 @@
 
 typedef struct
 {
-    // Basic counts
+    // Basic counts (acq_events/acq_samples count events passing the peak cut)
     long acq_events;
     long acq_samples;
+    long raw_events; // Hardware events seen before the peak cut
 
     // Value statistics (in mV)
     long sum_value_mv;          // Sum of all value_mv (for mean calculation)

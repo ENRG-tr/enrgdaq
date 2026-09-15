@@ -46,7 +46,7 @@ uint64_t get_pc_unix_ms_timestamp()
     return (uint64_t)(tv.tv_sec) * 1000 + (uint64_t)(tv.tv_usec) / 1000;
 }
 
-size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
+long filter_channel_waveforms(FilterWaveformsArgs_t args)
 {
     size_t sample_count = 0;
     uint16_t baselines[CHANNEL_COUNT] = {0};
@@ -95,7 +95,7 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
     if (event_peak < args.event_filter_out_peak_threshold)
     {
         args.stats->events_filtered_out++;
-        return 0;
+        return -1;
     }
 
     // Pass 2: sample-level filtering on passing events only.
@@ -193,7 +193,7 @@ void *processing_thread_func(void *arg)
         // Start timing for processing
         clock_gettime(CLOCK_MONOTONIC, &process_start);
 
-        stats.acq_events++;
+        stats.raw_events++;
 
         // Track queue depth (current work queue size)
         stats.queue_depth = g_work_queue.count;
@@ -234,11 +234,15 @@ void *processing_thread_func(void *arg)
 
         int64_t real_ns_timestamp_without_sample = (int64_t)correct_ttt_value * TTT_PERIOD_NS + rollover_offset_ns;
 
-        size_t sample_count = filter_channel_waveforms(
+        long filter_result = filter_channel_waveforms(
             (FilterWaveformsArgs_t){item, args->filter_threshold, args->event_filter_out_peak_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample, &stats});
 
-        stats.acq_samples += sample_count;
-        acq_buffer.len += sample_count;
+        if (filter_result >= 0)
+        {
+            stats.acq_events++;
+            stats.acq_samples += (size_t)filter_result;
+            acq_buffer.len += (size_t)filter_result;
+        }
 
         queue_push_ptr(&g_free_pool_queue, item);
 
