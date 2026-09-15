@@ -49,24 +49,29 @@ uint64_t get_pc_unix_ms_timestamp()
 size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
 {
     size_t sample_count = 0;
+    uint16_t baselines[CHANNEL_COUNT] = {0};
+    int event_peak = 0;
 
+    // Pass 1: per-channel baseline, event peak and raw stats over all samples.
     for (int ch = 0; ch < CHANNEL_COUNT; ch++)
     {
-        // First, calculate pre-trigger baseline (10% of waveforms)
+        uint32_t ch_size = args.event_copy->ChSize[ch];
         uint64_t value_lsb_sum = 0;
-        uint64_t value_lsb_count = 0;
-        for (int i = 0; i < args.event_copy->ChSize[ch] / 10; i++)
-        {
-            uint16_t sample_value = args.event_copy->Waveforms[ch][i];
-            value_lsb_sum += sample_value;
-            value_lsb_count++;
-        }
-        uint16_t pre_trigger_baseline = value_lsb_sum / value_lsb_count;
+        uint32_t nbase;
+
+        if (ch_size == 0)
+            continue;
+        nbase = ch_size / 10;
+        if (nbase == 0)
+            nbase = ch_size;
+        for (uint32_t i = 0; i < nbase; i++)
+            value_lsb_sum += args.event_copy->Waveforms[ch][i];
+        baselines[ch] = (uint16_t)(value_lsb_sum / nbase);
 
         // Track total raw samples
-        args.stats->total_samples_raw += args.event_copy->ChSize[ch];
+        args.stats->total_samples_raw += ch_size;
 
-        for (int i = 0; i < args.event_copy->ChSize[ch]; i++)
+        for (uint32_t i = 0; i < ch_size; i++)
         {
             uint16_t sample_value = args.event_copy->Waveforms[ch][i];
 
@@ -77,6 +82,30 @@ size_t filter_channel_waveforms(FilterWaveformsArgs_t args)
                 args.stats->min_raw_value_mv = raw_mV;
             if (raw_mV > args.stats->max_raw_value_mv)
                 args.stats->max_raw_value_mv = raw_mV;
+
+            // Peak deviation from baseline over the whole event
+            int16_t value_mv = (((int16_t)(sample_value - baselines[ch])) * 1000) / 1024;
+            int deviation = abs(value_mv);
+            if (deviation > event_peak)
+                event_peak = deviation;
+        }
+    }
+
+    // Event-level peak cut: drop the whole event before sample filtering.
+    if (event_peak < args.event_filter_out_peak_threshold)
+    {
+        args.stats->events_filtered_out++;
+        return 0;
+    }
+
+    // Pass 2: sample-level filtering on passing events only.
+    for (int ch = 0; ch < CHANNEL_COUNT; ch++)
+    {
+        uint16_t pre_trigger_baseline = baselines[ch];
+
+        for (int i = 0; i < args.event_copy->ChSize[ch]; i++)
+        {
+            uint16_t sample_value = args.event_copy->Waveforms[ch][i];
 
             // Calculate value_mv: (sample_value - baseline) * 1000 / 1024
             int16_t value_mv = (((int16_t)(sample_value - pre_trigger_baseline)) * 1000) / 1024;
@@ -206,7 +235,7 @@ void *processing_thread_func(void *arg)
         int64_t real_ns_timestamp_without_sample = (int64_t)correct_ttt_value * TTT_PERIOD_NS + rollover_offset_ns;
 
         size_t sample_count = filter_channel_waveforms(
-            (FilterWaveformsArgs_t){item, args->filter_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample, &stats});
+            (FilterWaveformsArgs_t){item, args->filter_threshold, args->event_filter_out_peak_threshold, args->channel_dc_offsets, &acq_buffer, ACQ_BUFFER_SIZE, pc_unix_ms_timestamp, real_ns_timestamp_without_sample, &stats});
 
         stats.acq_samples += sample_count;
         acq_buffer.len += sample_count;

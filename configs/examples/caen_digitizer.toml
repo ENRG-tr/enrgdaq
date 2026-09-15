@@ -28,6 +28,8 @@ trigger_polarity = 0
 # --------------------- Analysis Settings ---------------------
 # Keep samples that deviate more than this from baseline (symmetric filtering)
 filter_threshold_mv = 50  # Threshold in mV
+# Drop whole events whose peak deviation from baseline is below this (mV); 0 disables.
+event_filter_out_peak_threshold = 30
 
 # --------------------- Baseline Settings ---------------------
 # Baseline position for value_mv calculation. Options:

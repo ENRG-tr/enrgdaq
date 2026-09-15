@@ -5,8 +5,8 @@
 #include "CAENDigitizer.h"
 
 #define CHANNEL_COUNT 8
-#define MAX_SAMPLES_PER_CHANNEL 65536
-#define EVENT_POOL_SIZE 256
+#define MAX_SAMPLES_PER_CHANNEL 131072
+#define EVENT_POOL_SIZE 32
 #define ACQ_BUFFER_SIZE 1024 * 1024
 #define ACQ_BUFFER_TIMEOUT_SEC 300
 
@@ -36,6 +36,7 @@ typedef struct
     long queue_depth;           // Current work queue depth
     long processing_time_us;    // Time spent processing in this period
     long buffer_flush_count;    // Number of times buffer was flushed
+    long events_filtered_out;   // Events dropped by the event peak threshold cut
 } AcquisitionStats_t;
 
 typedef struct
@@ -74,12 +75,14 @@ typedef struct
     acquisition_stats_callback_t stats_callback;
 
     int *channel_dc_offsets;
+    int event_filter_out_peak_threshold;
 } RunAcquisitionArgs_t;
 
 typedef struct
 {
     EventDataCopy_t *event_copy;
     int filter_threshold;
+    int event_filter_out_peak_threshold;
     int *channel_dc_offsets;
     WaveformSamples_t *out_buffer;
     size_t out_buffer_max_samples;

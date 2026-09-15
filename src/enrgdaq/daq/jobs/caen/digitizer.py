@@ -106,7 +106,7 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -143,6 +143,7 @@ class RunAcquisitionArgs(ct.Structure):
         ("waveform_callback", WAVEFORM_CALLBACK_FUNC),
         ("stats_callback", STATS_CALLBACK_FUNC),
         ("channel_dc_offsets", ct.c_void_p),
+        ("event_filter_out_peak_threshold", ct.c_int),
     ]
 
 
@@ -182,6 +183,7 @@ class AcquisitionStatsRaw(ct.Structure):
         ("queue_depth", ct.c_long),
         ("processing_time_us", ct.c_long),
         ("buffer_flush_count", ct.c_long),
+        ("events_filtered_out", ct.c_long),
     ]
 
 
@@ -206,6 +208,8 @@ class AcquisitionStats(Struct):
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -232,6 +236,7 @@ class AcquisitionStats(Struct):
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )
 
 
@@ -376,6 +381,9 @@ class DAQJobCAENDigitizer(DAQJob):
             args.handle = device.handle
             args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
             args.filter_threshold = self.config.filter_threshold_mv
+            args.event_filter_out_peak_threshold = (
+                self.config.event_filter_out_peak_threshold
+            )
             args.calibration_target_baseline = (
                 self.config.baseline_position.get_target_value()
             )
