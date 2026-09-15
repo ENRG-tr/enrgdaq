@@ -106,7 +106,8 @@ class DAQJobCAENDigitizerConfig(DAQJobConfig):
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables
+    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
