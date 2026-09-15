@@ -571,6 +571,7 @@ class DAQJobCAENDigitizer(DAQJob):
                 "queue_depth": [stats.queue_depth],
                 "processing_time_us": [stats.processing_time_us],
                 "buffer_flush_count": [stats.buffer_flush_count],
+                "events_filtered_out": [stats.events_filtered_out],
             }
         )
 
