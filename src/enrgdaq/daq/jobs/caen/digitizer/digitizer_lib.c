@@ -139,7 +139,7 @@ long filter_channel_waveforms(FilterWaveformsArgs_t args)
             args.out_buffer->event_counter[buf_index] = args.event_copy->event_info.EventCounter;
 
             args.out_buffer->channel[buf_index] = (uint8_t)ch;
-            args.out_buffer->sample_index[buf_index] = (uint16_t)i;
+            args.out_buffer->sample_index[buf_index] = (uint32_t)i;
             args.out_buffer->value_mv[buf_index] = value_mv;
 
             sample_count++;
@@ -160,7 +160,7 @@ void *processing_thread_func(void *arg)
         .event_counter = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         //.trigger_time_tag = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         .channel = malloc(ACQ_BUFFER_SIZE * sizeof(uint8_t)),
-        .sample_index = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
+        .sample_index = malloc(ACQ_BUFFER_SIZE * sizeof(uint32_t)),
         //.value_lsb = malloc(ACQ_BUFFER_SIZE * sizeof(uint16_t)),
         .value_mv = malloc(ACQ_BUFFER_SIZE * sizeof(int16_t)),
         .len = 0};

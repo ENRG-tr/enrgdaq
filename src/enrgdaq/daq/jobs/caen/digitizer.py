@@ -156,7 +156,7 @@ class WaveformSamplesRaw(ct.Structure):
         ("event_counter", ct.POINTER(ct.c_uint32)),
         # ("trigger_time_tag", ct.POINTER(ct.c_uint32)),
         ("channel", ct.POINTER(ct.c_uint8)),
-        ("sample_index", ct.POINTER(ct.c_uint16)),
+        ("sample_index", ct.POINTER(ct.c_uint32)),
         # ("value_lsb", ct.POINTER(ct.c_uint16)),
         ("value_mv", ct.POINTER(ct.c_int16)),
     ]

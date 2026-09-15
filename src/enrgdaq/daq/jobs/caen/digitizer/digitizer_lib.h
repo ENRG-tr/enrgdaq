@@ -48,7 +48,7 @@ typedef struct
     uint32_t *event_counter;
     // uint32_t *trigger_time_tag;
     uint8_t *channel;
-    uint16_t *sample_index;
+    uint32_t *sample_index;
     // uint16_t *value_lsb;
     int16_t *value_mv;
 } WaveformSamples_t;
