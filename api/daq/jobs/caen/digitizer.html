@@ -91,7 +91,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats"><code class="flex name class">
 <span>class <span class="ident">AcquisitionStats</span></span>
-<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>mean_raw_value_mv: float,<br>min_raw_value_mv: int,<br>max_raw_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int)</span>
+<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>mean_raw_value_mv: float,<br>min_raw_value_mv: int,<br>max_raw_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int,<br>events_filtered_out: int)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -119,6 +119,8 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -145,6 +147,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"><p>A base class for defining efficient serializable objects.</p>
@@ -289,6 +292,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -315,6 +320,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -346,6 +352,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -372,6 +380,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -403,6 +412,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -429,6 +440,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -460,6 +472,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -486,6 +500,67 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_filtered_out"><code class="name">var <span class="ident">events_filtered_out</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts
+    acq_events: int
+    acq_samples: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
+
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -517,6 +592,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -543,6 +620,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -574,6 +652,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -600,6 +680,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -631,6 +712,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -657,6 +740,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -688,6 +772,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -714,6 +800,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -745,6 +832,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -771,6 +860,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -802,6 +892,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -828,6 +920,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -859,6 +952,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -885,6 +980,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -916,6 +1012,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -942,6 +1040,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -973,6 +1072,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -999,6 +1100,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -1030,6 +1132,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -1056,6 +1160,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -1087,6 +1192,8 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     queue_depth: int
     processing_time_us: int
     buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
 
     @classmethod
     def from_raw(cls, raw: AcquisitionStatsRaw):
@@ -1113,6 +1220,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             queue_depth=raw.queue_depth,
             processing_time_us=raw.processing_time_us,
             buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
         )</code></pre>
 </details>
 <div class="desc"></div>
@@ -1150,6 +1258,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         (&#34;queue_depth&#34;, ct.c_long),
         (&#34;processing_time_us&#34;, ct.c_long),
         (&#34;buffer_flush_count&#34;, ct.c_long),
+        (&#34;events_filtered_out&#34;, ct.c_long),
     ]</code></pre>
 </details>
 <div class="desc"><p>Structure base class</p></div>
@@ -1173,6 +1282,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped"><code class="name">var <span class="ident">events_dropped</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_filtered_out"><code class="name">var <span class="ident">events_filtered_out</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
@@ -1441,6 +1554,9 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
             args.handle = device.handle
             args.is_debug_verbosity = self.config.verbosity == LogVerbosity.DEBUG
             args.filter_threshold = self.config.filter_threshold_mv
+            args.event_filter_out_peak_threshold = (
+                self.config.event_filter_out_peak_threshold
+            )
             args.calibration_target_baseline = (
                 self.config.baseline_position.get_target_value()
             )
@@ -1743,7 +1859,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig"><code class="flex name class">
 <span>class <span class="ident">DAQJobCAENDigitizerConfig</span></span>
-<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold_mv: int = 100,<br>channel_self_trigger_channel_mask: int = 0,<br>trigger_polarity: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a> = TriggerPolarity.ON_RISING_EDGE,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>ext_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>filter_threshold_mv: int = 50,<br>io_level: <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a> = IOLevel.NIM,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>baseline_position: <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a> = BaselinePosition.TOP,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>restart_driver_command: str | None = None,<br>sw_trigger_interval_ms: int | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
+<span>(</span><span>connection_type: Literal['USB', 'PCI_EXPRESS_A4818', 'PCI_EXPRESS_A2818', 'OPTICAL_LINK'],<br>link_number: str,<br>conet_node: int = 0,<br>vme_base_address: int = 0,<br>record_length: int = 1024,<br>channel_enable_mask: int = 1,<br>channel_self_trigger_threshold_mv: int = 100,<br>channel_self_trigger_channel_mask: int = 0,<br>trigger_polarity: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerPolarity">TriggerPolarity</a> = TriggerPolarity.ON_RISING_EDGE,<br>channel_dc_offsets: dict[int, int] = &lt;factory&gt;,<br>sw_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>ext_trigger_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.TriggerMode" href="#enrgdaq.daq.jobs.caen.digitizer.TriggerMode">TriggerMode</a> = TriggerMode.DISABLED,<br>max_num_events_blt: int = 1,<br>acquisition_mode: <a title="enrgdaq.daq.jobs.caen.digitizer.AcqMode" href="#enrgdaq.daq.jobs.caen.digitizer.AcqMode">AcqMode</a> = AcqMode.SW_CONTROLLED,<br>filter_threshold_mv: int = 50,<br>event_filter_out_peak_threshold: int = 0,<br>post_trigger_size: int = 80,<br>waveform_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>stats_store_config: <a title="enrgdaq.daq.store.models.DAQJobStoreConfig" href="../../store/models.html#enrgdaq.daq.store.models.DAQJobStoreConfig">DAQJobStoreConfig</a> | None = None,<br>baseline_position: <a title="enrgdaq.daq.jobs.caen.digitizer.BaselinePosition" href="#enrgdaq.daq.jobs.caen.digitizer.BaselinePosition">BaselinePosition</a> = BaselinePosition.TOP,<br>save_npy_lz4: bool = False,<br>output_filename: str | None = None,<br>restart_driver_command: str | None = None,<br>sw_trigger_interval_ms: int | None = None,<br>*,<br>daq_job_type: str,<br>verbosity: <a title="enrgdaq.models.LogVerbosity" href="../../../models.html#enrgdaq.models.LogVerbosity">LogVerbosity</a> = LogVerbosity.INFO,<br>daq_job_unique_id: str | None = None,<br>use_shm_when_possible: bool = True,<br>topics_to_subscribe: list[str] = &lt;factory&gt;)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -1772,7 +1888,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -1829,7 +1945,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -1879,7 +1995,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -1929,7 +2045,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -1979,7 +2095,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2029,7 +2145,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2079,7 +2195,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2129,7 +2245,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2179,7 +2295,57 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    post_trigger_size: int = 80
+
+    waveform_store_config: Optional[DAQJobStoreConfig] = None
+    stats_store_config: Optional[DAQJobStoreConfig] = None
+
+    baseline_position: BaselinePosition = BaselinePosition.TOP
+
+    save_npy_lz4: bool = False
+    output_filename: str | None = None
+
+    restart_driver_command: str | None = None
+    &#34;&#34;&#34;
+    Command to restart the driver. If provided, the driver will be restarted
+    after the DAQ job is stopped.
+    &#34;&#34;&#34;
+
+    sw_trigger_interval_ms: int | None = None
+    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.event_filter_out_peak_threshold"><code class="name">var <span class="ident">event_filter_out_peak_threshold</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
+    &#34;&#34;&#34;
+    Configuration class for the CAEN Digitizer DAQ Job.
+    &#34;&#34;&#34;
+
+    connection_type: Literal[
+        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
+    ]
+    link_number: str
+    conet_node: int = 0
+    vme_base_address: int = 0
+    record_length: int = 1024
+    channel_enable_mask: int = 1
+    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
+    channel_self_trigger_channel_mask: int = 0
+    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
+    channel_dc_offsets: dict[int, int] = {}
+    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
+    ext_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
+    max_num_events_blt: int = 1
+    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
+    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2229,7 +2395,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2279,57 +2445,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
-    post_trigger_size: int = 80
-
-    waveform_store_config: Optional[DAQJobStoreConfig] = None
-    stats_store_config: Optional[DAQJobStoreConfig] = None
-
-    baseline_position: BaselinePosition = BaselinePosition.TOP
-
-    save_npy_lz4: bool = False
-    output_filename: str | None = None
-
-    restart_driver_command: str | None = None
-    &#34;&#34;&#34;
-    Command to restart the driver. If provided, the driver will be restarted
-    after the DAQ job is stopped.
-    &#34;&#34;&#34;
-
-    sw_trigger_interval_ms: int | None = None
-    &#34;&#34;&#34;Auto SW trigger interval in ms. None or &lt;=0 disables.&#34;&#34;&#34;</code></pre>
-</details>
-<div class="desc"></div>
-</dd>
-<dt id="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level"><code class="name">var <span class="ident">io_level</span> : <a title="enrgdaq.daq.jobs.caen.digitizer.IOLevel" href="#enrgdaq.daq.jobs.caen.digitizer.IOLevel">IOLevel</a></code></dt>
-<dd>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class DAQJobCAENDigitizerConfig(DAQJobConfig):
-    &#34;&#34;&#34;
-    Configuration class for the CAEN Digitizer DAQ Job.
-    &#34;&#34;&#34;
-
-    connection_type: Literal[
-        &#34;USB&#34;, &#34;PCI_EXPRESS_A4818&#34;, &#34;PCI_EXPRESS_A2818&#34;, &#34;OPTICAL_LINK&#34;
-    ]
-    link_number: str
-    conet_node: int = 0
-    vme_base_address: int = 0
-    record_length: int = 1024
-    channel_enable_mask: int = 1
-    channel_self_trigger_threshold_mv: int = 100  # Threshold in mV from baseline
-    channel_self_trigger_channel_mask: int = 0
-    trigger_polarity: dgtz.TriggerPolarity = dgtz.TriggerPolarity.ON_RISING_EDGE
-    channel_dc_offsets: dict[int, int] = {}
-    sw_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
-    ext_trigger_mode: dgtz.TriggerMode = dgtz.TriggerMode.DISABLED
-    max_num_events_blt: int = 1
-    acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
-    filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2379,7 +2495,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2429,7 +2545,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2479,7 +2595,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2529,7 +2645,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2579,7 +2695,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2629,7 +2745,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2680,7 +2796,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2730,7 +2846,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2780,7 +2896,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2830,7 +2946,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2880,7 +2996,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2930,7 +3046,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -2980,7 +3096,7 @@ after the DAQ job is stopped.</p></div>
     max_num_events_blt: int = 1
     acquisition_mode: dgtz.AcqMode = dgtz.AcqMode.SW_CONTROLLED
     filter_threshold_mv: int = 50  # Keep samples deviating more than this from baseline
-    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
+    event_filter_out_peak_threshold: int = 0  # Drop events whose peak deviation is below this (mV); 0 disables    io_level: dgtz.IOLevel = dgtz.IOLevel.NIM
     post_trigger_size: int = 80
 
     waveform_store_config: Optional[DAQJobStoreConfig] = None
@@ -3061,6 +3177,7 @@ errors defaults to 'strict'.</p></div>
         (&#34;waveform_callback&#34;, WAVEFORM_CALLBACK_FUNC),
         (&#34;stats_callback&#34;, STATS_CALLBACK_FUNC),
         (&#34;channel_dc_offsets&#34;, ct.c_void_p),
+        (&#34;event_filter_out_peak_threshold&#34;, ct.c_int),
     ]</code></pre>
 </details>
 <div class="desc"><p>Structure base class</p></div>
@@ -3076,6 +3193,10 @@ errors defaults to 'strict'.</p></div>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets"><code class="name">var <span class="ident">channel_dc_offsets</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.event_filter_out_peak_threshold"><code class="name">var <span class="ident">event_filter_out_peak_threshold</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
@@ -3291,6 +3412,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.acq_samples">acq_samples</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.buffer_flush_count">buffer_flush_count</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_dropped">events_dropped</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.events_filtered_out">events_filtered_out</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.from_raw">from_raw</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_raw_value_mv">max_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.max_value_mv">max_value_mv</a></code></li>
@@ -3312,6 +3434,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.acq_samples">acq_samples</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.buffer_flush_count">buffer_flush_count</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_dropped">events_dropped</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.events_filtered_out">events_filtered_out</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_raw_value_mv">max_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.max_value_mv">max_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_raw_value_mv">min_raw_value_mv</a></code></li>
@@ -3355,9 +3478,9 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold_mv" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.channel_self_trigger_threshold_mv">channel_self_trigger_threshold_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.conet_node">conet_node</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.connection_type">connection_type</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.event_filter_out_peak_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.event_filter_out_peak_threshold">event_filter_out_peak_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.ext_trigger_mode" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.ext_trigger_mode">ext_trigger_mode</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.filter_threshold_mv" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.filter_threshold_mv">filter_threshold_mv</a></code></li>
-<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.io_level">io_level</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.link_number">link_number</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.max_num_events_blt">max_num_events_blt</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename" href="#enrgdaq.daq.jobs.caen.digitizer.DAQJobCAENDigitizerConfig.output_filename">output_filename</a></code></li>
@@ -3385,6 +3508,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <ul class="">
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.calibration_target_baseline" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.calibration_target_baseline">calibration_target_baseline</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.channel_dc_offsets">channel_dc_offsets</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.event_filter_out_peak_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.event_filter_out_peak_threshold">event_filter_out_peak_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.filter_threshold">filter_threshold</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.handle">handle</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.is_debug_verbosity" href="#enrgdaq.daq.jobs.caen.digitizer.RunAcquisitionArgs.is_debug_verbosity">is_debug_verbosity</a></code></li>
