@@ -91,7 +91,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats"><code class="flex name class">
 <span>class <span class="ident">AcquisitionStats</span></span>
-<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>mean_raw_value_mv: float,<br>min_raw_value_mv: int,<br>max_raw_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int,<br>events_filtered_out: int)</span>
+<span>(</span><span>acq_events: int,<br>acq_samples: int,<br>raw_events: int,<br>mean_value_mv: float,<br>sum_value_mv_squared: int,<br>min_value_mv: int,<br>max_value_mv: int,<br>mean_raw_value_mv: float,<br>min_raw_value_mv: int,<br>max_raw_value_mv: int,<br>samples_filtered_out: int,<br>total_samples_raw: int,<br>events_dropped: int,<br>queue_depth: int,<br>processing_time_us: int,<br>buffer_flush_count: int,<br>events_filtered_out: int)</span>
 </code></dt>
 <dd>
 <details class="source">
@@ -99,9 +99,10 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -134,6 +135,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -272,9 +274,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -307,6 +310,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -332,9 +336,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -367,6 +372,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -392,9 +398,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -427,6 +434,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -452,9 +460,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -487,6 +496,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -512,9 +522,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -547,6 +558,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -572,9 +584,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -607,6 +620,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -632,9 +646,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -667,6 +682,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -692,9 +708,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -727,6 +744,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -752,9 +770,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -787,6 +806,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -812,9 +832,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -847,6 +868,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -872,9 +894,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -907,6 +930,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -932,9 +956,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -967,6 +992,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -992,9 +1018,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -1027,6 +1054,69 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
+            mean_value_mv=mean_value_mv,
+            sum_value_mv_squared=raw.sum_value_mv_squared,
+            min_value_mv=raw.min_value_mv,
+            max_value_mv=raw.max_value_mv,
+            mean_raw_value_mv=mean_raw_value_mv,
+            min_raw_value_mv=raw.min_raw_value_mv,
+            max_raw_value_mv=raw.max_raw_value_mv,
+            samples_filtered_out=raw.samples_filtered_out,
+            total_samples_raw=raw.total_samples_raw,
+            events_dropped=raw.events_dropped,
+            queue_depth=raw.queue_depth,
+            processing_time_us=raw.processing_time_us,
+            buffer_flush_count=raw.buffer_flush_count,
+            events_filtered_out=raw.events_filtered_out,
+        )</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.raw_events"><code class="name">var <span class="ident">raw_events</span> : int</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AcquisitionStats(Struct):
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
+    acq_events: int
+    acq_samples: int
+    raw_events: int
+    # Value statistics (in mV)
+    mean_value_mv: float  # Computed from sum_value_mv / acq_samples
+    sum_value_mv_squared: int
+    min_value_mv: int
+    max_value_mv: int
+    # Raw value statistics (adc*1000/1024)
+    mean_raw_value_mv: float
+    min_raw_value_mv: int
+    max_raw_value_mv: int
+    # Filter statistics
+    samples_filtered_out: int
+    total_samples_raw: int
+    # Performance statistics
+    events_dropped: int
+    queue_depth: int
+    processing_time_us: int
+    buffer_flush_count: int
+    # Event-level peak filter statistics
+    events_filtered_out: int
+
+    @classmethod
+    def from_raw(cls, raw: AcquisitionStatsRaw):
+        mean_value_mv = 0.0
+        mean_raw_value_mv = 0.0
+        if raw.acq_samples &gt; 0:
+            mean_value_mv = raw.sum_value_mv / raw.acq_samples
+        if raw.total_samples_raw &gt; 0:
+            mean_raw_value_mv = raw.sum_raw_value_mv / raw.total_samples_raw
+
+        return cls(
+            acq_events=raw.acq_events,
+            acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -1052,9 +1142,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -1087,6 +1178,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -1112,9 +1204,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -1147,6 +1240,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -1172,9 +1266,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class AcquisitionStats(Struct):
-    # Basic counts
+    # Basic counts (acq_events/acq_samples count events passing the peak cut)
     acq_events: int
     acq_samples: int
+    raw_events: int
     # Value statistics (in mV)
     mean_value_mv: float  # Computed from sum_value_mv / acq_samples
     sum_value_mv_squared: int
@@ -1207,6 +1302,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
         return cls(
             acq_events=raw.acq_events,
             acq_samples=raw.acq_samples,
+            raw_events=raw.raw_events,
             mean_value_mv=mean_value_mv,
             sum_value_mv_squared=raw.sum_value_mv_squared,
             min_value_mv=raw.min_value_mv,
@@ -1238,9 +1334,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 </summary>
 <pre><code class="python">class AcquisitionStatsRaw(ct.Structure):
     _fields_ = [
-        # Basic counts
+        # Basic counts (acq_events/acq_samples count events passing the peak cut)
         (&#34;acq_events&#34;, ct.c_long),
         (&#34;acq_samples&#34;, ct.c_long),
+        (&#34;raw_events&#34;, ct.c_long),
         # Value statistics (in mV)
         (&#34;sum_value_mv&#34;, ct.c_long),
         (&#34;sum_value_mv_squared&#34;, ct.c_long),
@@ -1310,6 +1407,10 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
 <dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth"><code class="name">var <span class="ident">queue_depth</span></code></dt>
+<dd>
+<div class="desc"><p>Structure/Union member</p></div>
+</dd>
+<dt id="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.raw_events"><code class="name">var <span class="ident">raw_events</span></code></dt>
 <dd>
 <div class="desc"><p>Structure/Union member</p></div>
 </dd>
@@ -1726,6 +1827,7 @@ we define a new <code>Struct</code> type for a frozen <code>Point</code> object.
                 # Basic counts
                 &#34;acq_events&#34;: [stats.acq_events],
                 &#34;acq_samples&#34;: [stats.acq_samples],
+                &#34;raw_events&#34;: [stats.raw_events],
                 # Value statistics (in mV)
                 &#34;mean_value_mv&#34;: [stats.mean_value_mv],
                 &#34;sum_value_mv_squared&#34;: [stats.sum_value_mv_squared],
@@ -3499,6 +3601,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.min_value_mv">min_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.processing_time_us">processing_time_us</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.queue_depth">queue_depth</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.raw_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.raw_events">raw_events</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.samples_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.samples_filtered_out">samples_filtered_out</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.sum_value_mv_squared" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.sum_value_mv_squared">sum_value_mv_squared</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.total_samples_raw" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStats.total_samples_raw">total_samples_raw</a></code></li>
@@ -3518,6 +3621,7 @@ Base 0 means to interpret the base from the string as an integer literal.</p>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.min_value_mv">min_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.processing_time_us">processing_time_us</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.queue_depth">queue_depth</a></code></li>
+<li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.raw_events" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.raw_events">raw_events</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.samples_filtered_out">samples_filtered_out</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_raw_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_raw_value_mv">sum_raw_value_mv</a></code></li>
 <li><code><a title="enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv" href="#enrgdaq.daq.jobs.caen.digitizer.AcquisitionStatsRaw.sum_value_mv">sum_value_mv</a></code></li>

@@ -164,7 +164,10 @@ Usage: python analyze_stats.py <path_to_stats.csv></p>
     # and we want to see how close we are to saturation.
     # Actually, a better proxy for &#34;System Busy&#34; in this context might be simpler:
     # Just show the Raw Rate itself as &#34;Input Flux&#34;.
-    df[&#39;raw_rate_hz&#39;] = df[&#39;total_samples_raw&#39;]  # Since it&#39;s per second
+    if &#39;raw_events&#39; in df.columns:
+        df[&#39;raw_rate_hz&#39;] = df[&#39;raw_events&#39;]  # Hardware events/s before peak cut
+    else:
+        df[&#39;raw_rate_hz&#39;] = df[&#39;total_samples_raw&#39;]  # Legacy fallback
     
     # 3. RMS (Energy/Stability)
     df[&#39;rms_mv&#39;] = np.sqrt(df[&#39;sum_value_mv_squared&#39;] / df[&#39;acq_samples&#39;].replace(0, np.nan))
