@@ -35,7 +35,7 @@ numpy==2.4.5 ; python_full_version >= '3.14'
 opencv-python==4.10.0.84
 packaging==24.1
 pandas==3.0.3
-pillow==11.3.0
+pillow==13.0.0
 psutil==6.1.1
 py-spy==0.4.1
 pyarrow==22.0.0
